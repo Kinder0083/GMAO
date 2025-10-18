@@ -1,0 +1,127 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { mockLocations } from '../mock/mockData';
+import { Plus, Search, MapPin, Building } from 'lucide-react';
+
+const Locations = () => {
+  const [locations] = useState(mockLocations);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredLocations = locations.filter(loc => {
+    return loc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           loc.ville.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           loc.type.toLowerCase().includes(searchTerm.toLowerCase());
+  });
+
+  const locationTypes = [...new Set(locations.map(loc => loc.type))];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Emplacements</h1>
+          <p className="text-gray-600 mt-1">Gérez vos sites et lieux de travail</p>
+        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus size={20} className="mr-2" />
+          Nouvel emplacement
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total emplacements</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{locations.length}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-xl">
+                <MapPin size={24} className="text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {locationTypes.slice(0, 3).map((type, index) => {
+          const count = locations.filter(loc => loc.type === type).length;
+          const colors = ['green', 'purple', 'orange'];
+          const color = colors[index % colors.length];
+          return (
+            <Card key={type} className="hover:shadow-lg transition-shadow">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{type}</p>
+                    <p className="text-3xl font-bold text-gray-900 mt-2">{count}</p>
+                  </div>
+                  <div className={`bg-${color}-100 p-3 rounded-xl`}>
+                    <Building size={24} className={`text-${color}-600`} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+
+      {/* Search */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+            <Input
+              placeholder="Rechercher par nom, ville ou type..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Locations Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredLocations.map((location) => (
+          <Card key={location.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                    <MapPin size={24} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-lg">{location.nom}</CardTitle>
+                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium mt-1 inline-block">
+                      {location.type}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-start gap-2">
+                  <Building size={16} className="text-gray-500 mt-0.5" />
+                  <div>
+                    <p className="text-gray-900 font-medium">{location.adresse}</p>
+                    <p className="text-gray-600">{location.codePostal} {location.ville}</p>
+                  </div>
+                </div>
+
+                <Button variant="outline" className="w-full mt-4 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-600">
+                  Voir les détails
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default Locations;

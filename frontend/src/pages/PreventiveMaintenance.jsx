@@ -1,0 +1,167 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { Button } from '../components/ui/button';
+import { mockPreventiveMaintenance } from '../mock/mockData';
+import { Plus, Calendar, Clock, CheckCircle } from 'lucide-react';
+
+const PreventiveMaintenance = () => {
+  const [maintenance] = useState(mockPreventiveMaintenance);
+
+  const getFrequencyBadge = (frequency) => {
+    const badges = {
+      'HEBDOMADAIRE': { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Hebdomadaire' },
+      'MENSUEL': { bg: 'bg-green-100', text: 'text-green-700', label: 'Mensuel' },
+      'TRIMESTRIEL': { bg: 'bg-purple-100', text: 'text-purple-700', label: 'Trimestriel' },
+      'ANNUEL': { bg: 'bg-orange-100', text: 'text-orange-700', label: 'Annuel' }
+    };
+    const badge = badges[frequency] || badges['MENSUEL'];
+    return (
+      <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge.bg} ${badge.text}`}>
+        {badge.label}
+      </span>
+    );
+  };
+
+  const upcomingMaintenance = maintenance.filter(m => m.statut === 'ACTIF');
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Maintenance Préventive</h1>
+          <p className="text-gray-600 mt-1">Planifiez et suivez vos maintenances programmées</p>
+        </div>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+          <Plus size={20} className="mr-2" />
+          Nouvelle planification
+        </Button>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Maintenances actives</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{upcomingMaintenance.length}</p>
+              </div>
+              <div className="bg-blue-100 p-3 rounded-xl">
+                <Calendar size={24} className="text-blue-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Prochainement</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">2</p>
+                <p className="text-xs text-gray-500 mt-1">Cette semaine</p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-xl">
+                <Clock size={24} className="text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Complétées ce mois</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">8</p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-xl">
+                <CheckCircle size={24} className="text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Maintenance Cards */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {maintenance.map((item) => (
+          <Card key={item.id} className="hover:shadow-xl transition-all duration-300">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-xl mb-2">{item.titre}</CardTitle>
+                  {getFrequencyBadge(item.frequence)}
+                </div>
+                <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
+                  {item.statut}
+                </span>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {/* Equipment */}
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-1">Équipement</p>
+                  <p className="font-medium text-gray-900">{item.equipement.nom}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  {/* Next Maintenance */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar size={16} className="text-blue-600" />
+                      <p className="text-xs text-gray-600">Prochaine maintenance</p>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">{item.prochaineMaintenance}</p>
+                  </div>
+
+                  {/* Last Maintenance */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <CheckCircle size={16} className="text-green-600" />
+                      <p className="text-xs text-gray-600">Dernière maintenance</p>
+                    </div>
+                    <p className="text-sm font-medium text-gray-900">{item.derniereMaintenance}</p>
+                  </div>
+                </div>
+
+                {/* Assigned To */}
+                <div>
+                  <p className="text-xs text-gray-600 mb-2">Assigné à</p>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-medium">
+                        {item.assigneA.prenom[0]}{item.assigneA.nom[0]}
+                      </span>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">
+                      {item.assigneA.prenom} {item.assigneA.nom}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Duration */}
+                <div className="flex items-center gap-2 pt-2 border-t">
+                  <Clock size={16} className="text-gray-500" />
+                  <span className="text-sm text-gray-700">Durée estimée: <span className="font-medium">{item.duree}h</span></span>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <Button variant="outline" className="flex-1 hover:bg-blue-50 hover:text-blue-600">
+                    Modifier
+                  </Button>
+                  <Button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white">
+                    Exécuter maintenant
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+export default PreventiveMaintenance;
