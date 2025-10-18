@@ -502,10 +502,139 @@ async def update_user(user_id: str, user_update: UserUpdate, current_user: dict 
 async def delete_user(user_id: str, current_user: dict = Depends(get_current_admin_user)):
     """Supprimer un utilisateur (admin uniquement)"""
     try:
+        # Empêcher de se supprimer soi-même
+        if str(user_id) == str(current_user.get('id')):
+            raise HTTPException(status_code=400, detail="Vous ne pouvez pas vous supprimer vous-même")
+        
         result = await db.users.delete_one({"_id": ObjectId(user_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
         return {"message": "Utilisateur supprimé"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.post("/users/invite", response_model=User)
+async def invite_user(user_invite: UserInvite, current_user: dict = Depends(get_current_admin_user)):
+    """Inviter un nouveau membre (admin uniquement)"""
+    # Vérifier si l'utilisateur existe déjà
+    existing_user = await db.users.find_one({"email": user_invite.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un utilisateur avec cet email existe déjà"
+        )
+    
+    # Générer un mot de passe temporaire
+    import secrets
+    import string
+    temp_password = ''.join(secrets.choice(string.ascii_letters + string.digits) for _ in range(12))
+    hashed_password = get_password_hash(temp_password)
+    
+    # Définir les permissions par défaut selon le rôle
+    if user_invite.permissions is None:
+        if user_invite.role == UserRole.ADMIN:
+            permissions = {
+                "dashboard": {"view": True, "edit": True, "delete": True},
+                "workOrders": {"view": True, "edit": True, "delete": True},
+                "assets": {"view": True, "edit": True, "delete": True},
+                "preventiveMaintenance": {"view": True, "edit": True, "delete": True},
+                "inventory": {"view": True, "edit": True, "delete": True},
+                "locations": {"view": True, "edit": True, "delete": True},
+                "vendors": {"view": True, "edit": True, "delete": True},
+                "reports": {"view": True, "edit": True, "delete": True}
+            }
+        elif user_invite.role == UserRole.TECHNICIEN:
+            permissions = {
+                "dashboard": {"view": True, "edit": False, "delete": False},
+                "workOrders": {"view": True, "edit": True, "delete": False},
+                "assets": {"view": True, "edit": True, "delete": False},
+                "preventiveMaintenance": {"view": True, "edit": True, "delete": False},
+                "inventory": {"view": True, "edit": True, "delete": False},
+                "locations": {"view": True, "edit": False, "delete": False},
+                "vendors": {"view": True, "edit": False, "delete": False},
+                "reports": {"view": True, "edit": False, "delete": False}
+            }
+        else:  # VISUALISEUR
+            permissions = {
+                "dashboard": {"view": True, "edit": False, "delete": False},
+                "workOrders": {"view": True, "edit": False, "delete": False},
+                "assets": {"view": True, "edit": False, "delete": False},
+                "preventiveMaintenance": {"view": True, "edit": False, "delete": False},
+                "inventory": {"view": True, "edit": False, "delete": False},
+                "locations": {"view": True, "edit": False, "delete": False},
+                "vendors": {"view": True, "edit": False, "delete": False},
+                "reports": {"view": True, "edit": False, "delete": False}
+            }
+    else:
+        permissions = user_invite.permissions.model_dump()
+    
+    # Créer l'utilisateur
+    user_dict = {
+        "nom": user_invite.nom,
+        "prenom": user_invite.prenom,
+        "email": user_invite.email,
+        "telephone": user_invite.telephone,
+        "role": user_invite.role,
+        "password": hashed_password,
+        "statut": "actif",
+        "dateCreation": datetime.utcnow(),
+        "derniereConnexion": None,
+        "permissions": permissions,
+        "_id": ObjectId()
+    }
+    
+    await db.users.insert_one(user_dict)
+    
+    # TODO: Envoyer un email avec le mot de passe temporaire
+    # Pour l'instant, on log juste le mot de passe (À REMPLACER EN PRODUCTION)
+    logger.info(f"Utilisateur {user_invite.email} créé avec mot de passe temporaire: {temp_password}")
+    
+    return User(**serialize_doc(user_dict))
+
+@api_router.get("/users/{user_id}/permissions", response_model=UserPermissions)
+async def get_user_permissions(user_id: str, current_user: dict = Depends(get_current_user)):
+    """Obtenir les permissions d'un utilisateur"""
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        permissions = user.get("permissions", {})
+        return UserPermissions(**permissions)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.put("/users/{user_id}/permissions", response_model=User)
+async def update_user_permissions(
+    user_id: str, 
+    permissions_update: UserPermissionsUpdate, 
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Mettre à jour les permissions d'un utilisateur (admin uniquement)"""
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+        
+        # Empêcher de modifier ses propres permissions
+        if str(user_id) == str(current_user.get('id')):
+            raise HTTPException(status_code=400, detail="Vous ne pouvez pas modifier vos propres permissions")
+        
+        permissions_dict = permissions_update.permissions.model_dump()
+        
+        await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"permissions": permissions_dict}}
+        )
+        
+        updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+        return User(**serialize_doc(updated_user))
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
