@@ -318,31 +318,42 @@ const Assets = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {getStatusBadge(equipment.statut)}
+                    <QuickStatusChanger 
+                      equipment={equipment} 
+                      onStatusChange={handleStatusChange}
+                    />
                     
                     <div className="space-y-2 text-sm">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">N° Série:</span>
-                        <span className="font-medium text-gray-900">{equipment.numeroSerie}</span>
-                      </div>
+                      {equipment.numeroSerie && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">N° Série:</span>
+                          <span className="font-medium text-gray-900">{equipment.numeroSerie}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between">
                         <span className="text-gray-600">Emplacement:</span>
                         <span className="font-medium text-gray-900">{equipment.emplacement?.nom || '-'}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Date d'achat:</span>
-                        <span className="font-medium text-gray-900">
-                          {equipment.dateAchat ? new Date(equipment.dateAchat).toLocaleDateString('fr-FR') : '-'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Coût d'achat:</span>
-                        <span className="font-medium text-gray-900">{equipment.coutAchat?.toLocaleString('fr-FR')} €</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Garantie:</span>
-                        <span className="font-medium text-gray-900">{equipment.garantie}</span>
-                      </div>
+                      {equipment.dateAchat && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Date d'achat:</span>
+                          <span className="font-medium text-gray-900">
+                            {new Date(equipment.dateAchat).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      )}
+                      {equipment.coutAchat && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Coût d'achat:</span>
+                          <span className="font-medium text-gray-900">{equipment.coutAchat.toLocaleString('fr-FR')} €</span>
+                        </div>
+                      )}
+                      {equipment.garantie && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Garantie:</span>
+                          <span className="font-medium text-gray-900">{equipment.garantie}</span>
+                        </div>
+                      )}
                       {equipment.derniereMaintenance && (
                         <div className="flex justify-between">
                           <span className="text-gray-600">Dernière maintenance:</span>
