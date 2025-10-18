@@ -281,6 +281,30 @@ class PreventiveMaintenance(PreventiveMaintenanceBase):
     class Config:
         from_attributes = True
 
+# Availability Models
+class UserAvailability(BaseModel):
+    user_id: str
+    date: datetime
+    disponible: bool = True
+    motif: Optional[str] = None  # Raison de l'indisponibilité (congé, maladie, etc.)
+
+class UserAvailabilityCreate(BaseModel):
+    user_id: str
+    date: datetime
+    disponible: bool = True
+    motif: Optional[str] = None
+
+class UserAvailabilityUpdate(BaseModel):
+    disponible: Optional[bool] = None
+    motif: Optional[str] = None
+
+class UserAvailabilityResponse(UserAvailability):
+    id: str
+    user: Optional[dict] = None
+
+    class Config:
+        from_attributes = True
+
 # Vendor Models
 class VendorBase(BaseModel):
     nom: str
