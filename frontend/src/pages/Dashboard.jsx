@@ -151,9 +151,9 @@ const Dashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {Object.entries(mockAnalytics.workOrdersParStatut).map(([statut, count]) => {
-                const total = Object.values(mockAnalytics.workOrdersParStatut).reduce((a, b) => a + b, 0);
-                const percentage = ((count / total) * 100).toFixed(0);
+              {Object.entries(analytics.workOrdersParStatut).map(([statut, count]) => {
+                const total = Object.values(analytics.workOrdersParStatut).reduce((a, b) => a + b, 0);
+                const percentage = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
                 const labels = {
                   'OUVERT': 'Ouvert',
                   'EN_COURS': 'En cours',
