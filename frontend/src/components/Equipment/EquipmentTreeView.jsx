@@ -72,13 +72,14 @@ const EquipmentTreeNode = ({
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-gray-900">{equipment.nom}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(equipment.statut)}`}>
-                    {getStatusLabel(equipment.statut)}
-                  </span>
+                  <QuickStatusChanger 
+                    equipment={equipment}
+                    onStatusChange={onStatusChange}
+                  />
                 </div>
                 <div className="flex gap-4 mt-1 text-sm text-gray-600">
-                  <span>Catégorie: {equipment.categorie}</span>
-                  <span>N° Série: {equipment.numeroSerie}</span>
+                  {equipment.categorie && <span>Catégorie: {equipment.categorie}</span>}
+                  {equipment.numeroSerie && <span>N° Série: {equipment.numeroSerie}</span>}
                   {equipment.emplacement && (
                     <span>Emplacement: {equipment.emplacement.nom}</span>
                   )}
