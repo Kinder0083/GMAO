@@ -224,7 +224,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Hors service</p>
-                    <p className="text-2xl font-bold text-gray-900">{mockAnalytics.equipementsParStatut.HORS_SERVICE}</p>
+                    <p className="text-2xl font-bold text-gray-900">{analytics.equipementsParStatut.HORS_SERVICE || 0}</p>
                   </div>
                 </div>
               </div>
