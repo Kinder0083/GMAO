@@ -107,7 +107,7 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Temps de réponse moyen</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{mockAnalytics.tempsReponse.moyen}h</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{analytics.tempsReponse.moyen}h</p>
                 <p className="text-xs text-green-600 mt-1 font-medium">-15% vs mois précédent</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-xl">
