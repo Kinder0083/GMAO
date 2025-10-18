@@ -194,10 +194,10 @@ class Equipment(EquipmentBase):
 # Location Models
 class LocationBase(BaseModel):
     nom: str
-    adresse: str
-    ville: str
-    codePostal: str
-    type: str
+    adresse: Optional[str] = None
+    ville: Optional[str] = None
+    codePostal: Optional[str] = None
+    type: Optional[str] = None
 
 class LocationCreate(LocationBase):
     pass
