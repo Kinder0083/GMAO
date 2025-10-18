@@ -216,6 +216,12 @@ const People = () => {
           ))
         )}
       </div>
+
+      <UserProfileDialog
+        open={profileDialogOpen}
+        onOpenChange={setProfileDialogOpen}
+        user={selectedUser}
+      />
     </div>
   );
 };
