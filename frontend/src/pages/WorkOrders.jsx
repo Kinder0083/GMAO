@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { mockWorkOrders } from '../mock/mockData';
-import { Plus, Search, Filter, Eye } from 'lucide-react';
+import { Plus, Search, Filter, Eye, Pencil, Trash2 } from 'lucide-react';
 import WorkOrderDialog from '../components/WorkOrders/WorkOrderDialog';
+import WorkOrderFormDialog from '../components/WorkOrders/WorkOrderFormDialog';
+import { workOrdersAPI } from '../services/api';
+import { useToast } from '../hooks/use-toast';
 
 const WorkOrders = () => {
   const [workOrders] = useState(mockWorkOrders);
