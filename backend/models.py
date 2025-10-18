@@ -41,6 +41,7 @@ class EquipmentStatus(str, Enum):
     OPERATIONNEL = "OPERATIONNEL"
     EN_MAINTENANCE = "EN_MAINTENANCE"
     HORS_SERVICE = "HORS_SERVICE"
+    ALERTE_S_EQUIP = "ALERTE_S_EQUIP"
 
 class Frequency(str, Enum):
     HEBDOMADAIRE = "HEBDOMADAIRE"
