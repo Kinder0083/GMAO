@@ -470,10 +470,83 @@ async def update_equipment(eq_id: str, eq_update: EquipmentUpdate, current_user:
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+async def check_and_update_parent_status(equipment_id: str):
+    """Vérifier et mettre à jour le statut du parent en fonction des enfants"""
+    # Récupérer l'équipement
+    equipment = await db.equipments.find_one({"_id": ObjectId(equipment_id)})
+    if not equipment:
+        return
+    
+    # Si cet équipement a un parent, vérifier le statut du parent
+    if equipment.get("parent_id"):
+        await update_parent_alert_status(equipment["parent_id"])
+
+async def update_parent_alert_status(parent_id: str):
+    """Mettre à jour le statut du parent en fonction des statuts des enfants"""
+    # Récupérer tous les enfants
+    children = await db.equipments.find({"parent_id": parent_id}).to_list(1000)
+    
+    if not children:
+        return
+    
+    # Vérifier si au moins un enfant est EN_MAINTENANCE ou HORS_SERVICE
+    has_problematic_child = any(
+        child.get("statut") in ["EN_MAINTENANCE", "HORS_SERVICE"] 
+        for child in children
+    )
+    
+    parent = await db.equipments.find_one({"_id": ObjectId(parent_id)})
+    if not parent:
+        return
+    
+    if has_problematic_child:
+        # Mettre le parent en ALERTE_S_EQUIP
+        await db.equipments.update_one(
+            {"_id": ObjectId(parent_id)},
+            {"$set": {"statut": "ALERTE_S_EQUIP"}}
+        )
+    else:
+        # Si tous les enfants sont OPERATIONNEL et le parent est en ALERTE, remettre à OPERATIONNEL
+        if parent.get("statut") == "ALERTE_S_EQUIP":
+            all_operational = all(
+                child.get("statut") == "OPERATIONNEL" 
+                for child in children
+            )
+            if all_operational:
+                await db.equipments.update_one(
+                    {"_id": ObjectId(parent_id)},
+                    {"$set": {"statut": "OPERATIONNEL"}}
+                )
+
 @api_router.patch("/equipments/{eq_id}/status")
 async def update_equipment_status(eq_id: str, statut: EquipmentStatus, current_user: dict = Depends(get_current_user)):
     """Mettre à jour rapidement le statut d'un équipement"""
     try:
+        equipment = await db.equipments.find_one({"_id": ObjectId(eq_id)})
+        if not equipment:
+            raise HTTPException(status_code=404, detail="Équipement non trouvé")
+        
+        # Vérifier si l'équipement a des enfants
+        children = await db.equipments.find({"parent_id": eq_id}).to_list(1000)
+        
+        # Si l'équipement a des enfants et qu'on essaie de changer depuis ALERTE_S_EQUIP
+        if children and equipment.get("statut") == "ALERTE_S_EQUIP":
+            # Vérifier si tous les enfants sont opérationnels
+            all_operational = all(child.get("statut") == "OPERATIONNEL" for child in children)
+            if not all_operational:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Impossible de changer le statut : des sous-équipements ne sont pas opérationnels"
+                )
+        
+        # Interdire de mettre manuellement en ALERTE_S_EQUIP
+        if statut == EquipmentStatus.ALERTE_S_EQUIP:
+            raise HTTPException(
+                status_code=400,
+                detail="Le statut 'Alerte S.Equip' est automatique et ne peut pas être défini manuellement"
+            )
+        
+        # Mettre à jour le statut
         result = await db.equipments.update_one(
             {"_id": ObjectId(eq_id)},
             {"$set": {"statut": statut}}
@@ -481,6 +554,9 @@ async def update_equipment_status(eq_id: str, statut: EquipmentStatus, current_u
         
         if result.matched_count == 0:
             raise HTTPException(status_code=404, detail="Équipement non trouvé")
+        
+        # Mettre à jour le statut du parent si nécessaire
+        await check_and_update_parent_status(eq_id)
         
         return {"message": "Statut mis à jour", "statut": statut}
     except HTTPException:
