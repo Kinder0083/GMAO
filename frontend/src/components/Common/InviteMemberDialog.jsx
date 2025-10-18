@@ -23,7 +23,8 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     prenom: '',
     email: '',
     telephone: '',
-    role: 'VISUALISEUR'
+    role: 'VISUALISEUR',
+    service: ''
   });
 
   const handleChange = (field, value) => {
