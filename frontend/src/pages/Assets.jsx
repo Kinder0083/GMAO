@@ -371,17 +371,19 @@ const Assets = () => {
                       )}
                     </div>
 
-                    <div className="flex gap-2 pt-2">
+                    <div className="flex flex-wrap gap-2 pt-2">
                       <Button 
                         variant="outline" 
-                        className="flex-1 hover:bg-blue-50 hover:text-blue-600"
+                        size="sm"
+                        className="flex-1 min-w-[100px] hover:bg-blue-50 hover:text-blue-600"
                         onClick={() => handleViewDetails(equipment)}
                       >
                         Voir détails
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="hover:bg-green-50 hover:text-green-600"
+                        size="sm"
+                        className="hover:bg-green-50 hover:text-green-600 h-9 w-9 p-0"
                         onClick={() => handleAddChild(equipment)}
                         title="Ajouter un sous-équipement"
                       >
@@ -389,14 +391,16 @@ const Assets = () => {
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="hover:bg-yellow-50 hover:text-yellow-600"
+                        size="sm"
+                        className="hover:bg-yellow-50 hover:text-yellow-600 h-9 w-9 p-0"
                         onClick={() => handleEdit(equipment)}
                       >
                         <Pencil size={16} />
                       </Button>
                       <Button 
                         variant="outline" 
-                        className="hover:bg-red-50 hover:text-red-600"
+                        size="sm"
+                        className="hover:bg-red-50 hover:text-red-600 h-9 w-9 p-0"
                         onClick={() => handleDelete(equipment)}
                       >
                         <Trash2 size={16} />
