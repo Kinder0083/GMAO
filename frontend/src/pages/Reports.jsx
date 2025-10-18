@@ -339,6 +339,12 @@ const Reports = () => {
           </div>
         </CardContent>
       </Card>
+
+      <CustomPeriodDialog
+        open={customPeriodOpen}
+        onOpenChange={setCustomPeriodOpen}
+        onApply={handleApplyCustomPeriod}
+      />
     </div>
   );
 };
