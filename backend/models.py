@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr, Field
-from typing import Optional, List
+from typing import Optional, List, Dict
 from datetime import datetime
 from enum import Enum
 
@@ -8,6 +8,22 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     TECHNICIEN = "TECHNICIEN"
     VISUALISEUR = "VISUALISEUR"
+
+# Permission Models
+class ModulePermission(BaseModel):
+    view: bool = False
+    edit: bool = False
+    delete: bool = False
+
+class UserPermissions(BaseModel):
+    dashboard: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    workOrders: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    assets: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    preventiveMaintenance: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    inventory: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    locations: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    vendors: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
+    reports: ModulePermission = ModulePermission(view=True, edit=False, delete=False)
 
 class WorkOrderStatus(str, Enum):
     OUVERT = "OUVERT"
