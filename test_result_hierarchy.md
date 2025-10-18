@@ -70,15 +70,18 @@ backend:
 
   - task: "Endpoint GET /api/equipments/{id}/children"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Nouveau endpoint pour récupérer tous les sous-équipements directs d'un équipement"
+      - working: true
+        agent: "testing"
+        comment: "✓ Endpoint testé avec succès. Récupération des enfants directs fonctionnelle - retourne uniquement les sous-équipements de niveau 1 (pas les petits-enfants). Chaque enfant inclut les infos parent et hasChildren correctes."
 
   - task: "Endpoint GET /api/equipments/{id}/hierarchy"
     implemented: true
