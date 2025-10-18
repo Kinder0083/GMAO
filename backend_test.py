@@ -18,7 +18,8 @@ class EquipmentHierarchyTester:
         self.base_url = BASE_URL
         self.admin_token = None
         self.admin_user_id = None
-        self.test_users = []
+        self.test_locations = []
+        self.test_equipments = []
         self.session = requests.Session()
         
     def log(self, message: str, level: str = "INFO"):
