@@ -160,110 +160,107 @@ class EquipmentHierarchyTester:
             self.log(f"✗ Failed to create parent equipment: {response.status_code} - {response.text}", "ERROR")
             return None
         
-    def test_invite_user(self) -> bool:
-        """Test POST /api/users/invite"""
-        self.log("\n=== Testing POST /api/users/invite ===")
+    def test_create_sub_equipment_with_inheritance(self, parent_id: str) -> Optional[str]:
+        """Test creating sub-equipment with location inheritance"""
+        self.log("\n=== Testing POST /api/equipments - Sub-equipment with Location Inheritance ===")
         
-        success = True
-        
-        # Test 1: Invite VISUALISEUR
-        invite_data = {
-            "nom": "Dupont",
-            "prenom": "Jean",
-            "email": "jean.dupont@company.com",
-            "telephone": "+33123456789",
-            "role": "VISUALISEUR"
+        # Create sub-equipment WITHOUT specifying location_id (should inherit from parent)
+        equipment_data = {
+            "nom": "Sous-module A1",
+            "categorie": "Composant",
+            "parent_id": parent_id,
+            "statut": "OPERATIONNEL",
+            "dateAchat": "2023-02-15T10:00:00Z",
+            "coutAchat": 5000.0,
+            "numeroSerie": "SM-A1-001",
+            "garantie": "1 an"
+            # Note: NO emplacement_id specified - should inherit from parent
         }
         
-        response = self.make_request("POST", "/users/invite", invite_data)
+        response = self.make_request("POST", "/equipments", equipment_data)
         
         if response.status_code == 200:
-            user_data = response.json()
-            self.test_users.append(user_data["id"])
-            self.log(f"✓ VISUALISEUR invited successfully: {user_data['email']}")
+            equipment = response.json()
+            equipment_id = equipment["id"]
+            self.test_equipments.append(equipment_id)
             
-            # Verify default permissions for VISUALISEUR
-            if "permissions" in user_data:
-                perms = user_data["permissions"]
-                if perms.get("dashboard", {}).get("view") != True or perms.get("dashboard", {}).get("edit") != False:
-                    self.log("✗ Incorrect default permissions for VISUALISEUR", "ERROR")
-                    success = False
-                else:
-                    self.log("✓ Default permissions correct for VISUALISEUR")
+            # Verify inheritance properties
+            if (equipment.get("parent_id") == parent_id and 
+                equipment.get("hasChildren") == False and
+                equipment.get("emplacement") is not None):
+                self.log(f"✓ Sub-equipment created with location inheritance: {equipment_id}")
+                self.log(f"  - Name: {equipment['nom']}")
+                self.log(f"  - Parent ID: {equipment.get('parent_id')}")
+                self.log(f"  - Inherited Location: {equipment.get('emplacement', {}).get('nom', 'N/A')}")
+                self.log(f"  - Has Children: {equipment.get('hasChildren', False)}")
+                return equipment_id
+            else:
+                self.log(f"✗ Sub-equipment inheritance properties incorrect", "ERROR")
+                self.log(f"  - Parent ID: {equipment.get('parent_id')} (expected: {parent_id})")
+                self.log(f"  - Location: {equipment.get('emplacement')}")
+                return None
         else:
-            self.log(f"✗ Failed to invite VISUALISEUR: {response.status_code} - {response.text}", "ERROR")
-            success = False
+            self.log(f"✗ Failed to create sub-equipment with inheritance: {response.status_code} - {response.text}", "ERROR")
+            return None
             
-        # Test 2: Invite TECHNICIEN
-        invite_data = {
-            "nom": "Martin",
-            "prenom": "Sophie",
-            "email": "sophie.martin@company.com", 
-            "telephone": "+33987654321",
-            "role": "TECHNICIEN"
+    def test_create_sub_equipment_with_explicit_location(self, parent_id: str, location_id: str) -> Optional[str]:
+        """Test creating sub-equipment with explicit location (no inheritance)"""
+        self.log("\n=== Testing POST /api/equipments - Sub-equipment with Explicit Location ===")
+        
+        # Create another test location first
+        location_data = {
+            "nom": "Atelier Secondaire",
+            "adresse": "456 Avenue de la Technologie",
+            "ville": "Lyon",
+            "codePostal": "69001",
+            "type": "Atelier"
         }
         
-        response = self.make_request("POST", "/users/invite", invite_data)
+        response = self.make_request("POST", "/locations", location_data)
+        if response.status_code != 200:
+            self.log(f"✗ Failed to create second location: {response.status_code}", "ERROR")
+            return None
+            
+        second_location = response.json()
+        second_location_id = second_location["id"]
+        self.test_locations.append(second_location_id)
         
-        if response.status_code == 200:
-            user_data = response.json()
-            self.test_users.append(user_data["id"])
-            self.log(f"✓ TECHNICIEN invited successfully: {user_data['email']}")
-            
-            # Verify default permissions for TECHNICIEN
-            if "permissions" in user_data:
-                perms = user_data["permissions"]
-                if (perms.get("workOrders", {}).get("view") != True or 
-                    perms.get("workOrders", {}).get("edit") != True or 
-                    perms.get("workOrders", {}).get("delete") != False):
-                    self.log("✗ Incorrect default permissions for TECHNICIEN", "ERROR")
-                    success = False
-                else:
-                    self.log("✓ Default permissions correct for TECHNICIEN")
-        else:
-            self.log(f"✗ Failed to invite TECHNICIEN: {response.status_code} - {response.text}", "ERROR")
-            success = False
-            
-        # Test 3: Invite ADMIN
-        invite_data = {
-            "nom": "Durand",
-            "prenom": "Pierre",
-            "email": "pierre.durand@company.com",
-            "telephone": "+33555666777", 
-            "role": "ADMIN"
+        # Create sub-equipment WITH explicit location_id (should NOT inherit)
+        equipment_data = {
+            "nom": "Sous-module A2",
+            "categorie": "Composant",
+            "parent_id": parent_id,
+            "emplacement_id": second_location_id,  # Explicit location - different from parent
+            "statut": "OPERATIONNEL",
+            "dateAchat": "2023-03-15T10:00:00Z",
+            "coutAchat": 3000.0,
+            "numeroSerie": "SM-A2-001",
+            "garantie": "1 an"
         }
         
-        response = self.make_request("POST", "/users/invite", invite_data)
+        response = self.make_request("POST", "/equipments", equipment_data)
         
         if response.status_code == 200:
-            user_data = response.json()
-            self.test_users.append(user_data["id"])
-            self.log(f"✓ ADMIN invited successfully: {user_data['email']}")
+            equipment = response.json()
+            equipment_id = equipment["id"]
+            self.test_equipments.append(equipment_id)
             
-            # Verify default permissions for ADMIN
-            if "permissions" in user_data:
-                perms = user_data["permissions"]
-                if (perms.get("dashboard", {}).get("view") != True or 
-                    perms.get("dashboard", {}).get("edit") != True or 
-                    perms.get("dashboard", {}).get("delete") != True):
-                    self.log("✗ Incorrect default permissions for ADMIN", "ERROR")
-                    success = False
-                else:
-                    self.log("✓ Default permissions correct for ADMIN")
+            # Verify explicit location is used (not inherited)
+            if (equipment.get("parent_id") == parent_id and 
+                equipment.get("hasChildren") == False and
+                equipment.get("emplacement", {}).get("id") == second_location_id):
+                self.log(f"✓ Sub-equipment created with explicit location: {equipment_id}")
+                self.log(f"  - Name: {equipment['nom']}")
+                self.log(f"  - Parent ID: {equipment.get('parent_id')}")
+                self.log(f"  - Explicit Location: {equipment.get('emplacement', {}).get('nom', 'N/A')}")
+                self.log(f"  - Has Children: {equipment.get('hasChildren', False)}")
+                return equipment_id
+            else:
+                self.log(f"✗ Sub-equipment explicit location properties incorrect", "ERROR")
+                return None
         else:
-            self.log(f"✗ Failed to invite ADMIN: {response.status_code} - {response.text}", "ERROR")
-            success = False
-            
-        # Test 4: Try to invite existing email (should fail)
-        response = self.make_request("POST", "/users/invite", invite_data)
-        
-        if response.status_code == 400:
-            self.log("✓ Correctly rejected duplicate email invitation")
-        else:
-            self.log(f"✗ Should have rejected duplicate email: {response.status_code}", "ERROR")
-            success = False
-            
-        return success
+            self.log(f"✗ Failed to create sub-equipment with explicit location: {response.status_code} - {response.text}", "ERROR")
+            return None
         
     def test_get_user_permissions(self) -> bool:
         """Test GET /api/users/{user_id}/permissions"""
