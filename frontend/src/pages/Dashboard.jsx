@@ -213,7 +213,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">En maintenance</p>
-                    <p className="text-2xl font-bold text-gray-900">{mockAnalytics.equipementsParStatut.EN_MAINTENANCE}</p>
+                    <p className="text-2xl font-bold text-gray-900">{analytics.equipementsParStatut.EN_MAINTENANCE || 0}</p>
                   </div>
                 </div>
               </div>
