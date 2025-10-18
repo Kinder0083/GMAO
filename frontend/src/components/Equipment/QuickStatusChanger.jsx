@@ -57,8 +57,8 @@ const QuickStatusChanger = ({ equipment, onStatusChange }) => {
     return labels[status] || status;
   };
 
-  // Désactiver la sélection si le statut est ALERTE_S_EQUIP (automatique)
-  const isDisabled = loading || equipment.statut === 'ALERTE_S_EQUIP';
+  // Ne pas désactiver - laisser le backend gérer les validations
+  const isDisabled = loading;
 
   return (
     <Select
@@ -67,7 +67,7 @@ const QuickStatusChanger = ({ equipment, onStatusChange }) => {
       disabled={isDisabled}
     >
       <SelectTrigger 
-        className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(equipment.statut)} ${isDisabled && equipment.statut === 'ALERTE_S_EQUIP' ? 'cursor-not-allowed' : ''}`}
+        className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(equipment.statut)}`}
       >
         <SelectValue>
           {getStatusLabel(equipment.statut)}
