@@ -161,21 +161,21 @@ const Assets = () => {
         </div>
         <div className="flex gap-3">
           {/* Toggle View Mode */}
-          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+          <div className="flex gap-1 bg-gray-200 p-1 rounded-lg border border-gray-300">
             <Button
-              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode('list')}
-              className={viewMode === 'list' ? 'bg-white shadow' : ''}
+              className={viewMode === 'list' ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'hover:bg-gray-100'}
             >
               <List size={18} className="mr-2" />
               Liste
             </Button>
             <Button
-              variant={viewMode === 'tree' ? 'default' : 'ghost'}
+              variant="ghost"
               size="sm"
               onClick={() => setViewMode('tree')}
-              className={viewMode === 'tree' ? 'bg-white shadow' : ''}
+              className={viewMode === 'tree' ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'hover:bg-gray-100'}
             >
               <GitBranch size={18} className="mr-2" />
               Arborescence
