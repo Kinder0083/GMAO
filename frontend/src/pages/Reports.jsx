@@ -38,6 +38,20 @@ const Reports = () => {
     );
   }
 
+  const handleCustomPeriod = () => {
+    toast({
+      title: 'Période personnalisée',
+      description: 'Sélectionnez vos dates de début et fin pour générer le rapport'
+    });
+  };
+
+  const handleExportPDF = () => {
+    toast({
+      title: 'Export PDF',
+      description: 'Génération du rapport PDF en cours... Cette fonctionnalité sera bientôt disponible'
+    });
+  };
+
   const periods = [
     { value: 'SEMAINE', label: 'Cette semaine' },
     { value: 'MOIS', label: 'Ce mois' },
