@@ -133,41 +133,75 @@ const Locations = () => {
 
       {/* Locations Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredLocations.map((location) => (
-          <Card key={location.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <MapPin size={24} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{location.nom}</CardTitle>
-                    <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium mt-1 inline-block">
-                      {location.type}
-                    </span>
+        {loading ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Chargement...</p>
+          </div>
+        ) : filteredLocations.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Aucun emplacement trouvé</p>
+          </div>
+        ) : (
+          filteredLocations.map((location) => (
+            <Card key={location.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <MapPin size={24} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{location.nom}</CardTitle>
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs font-medium mt-1 inline-block">
+                        {location.type}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <Building size={16} className="text-gray-500 mt-0.5" />
-                  <div>
-                    <p className="text-gray-900 font-medium">{location.adresse}</p>
-                    <p className="text-gray-600">{location.codePostal} {location.ville}</p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Building size={16} className="text-gray-500 mt-0.5" />
+                    <div>
+                      <p className="text-gray-900 font-medium">{location.adresse}</p>
+                      <p className="text-gray-600">{location.codePostal} {location.ville}</p>
+                    </div>
                   </div>
-                </div>
 
-                <Button variant="outline" className="w-full mt-4 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-600">
-                  Voir les détails
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 hover:bg-green-50 hover:text-green-600"
+                      onClick={() => {
+                        setSelectedLocation(location);
+                        setFormDialogOpen(true);
+                      }}
+                    >
+                      <Pencil size={16} className="mr-1" />
+                      Modifier
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="hover:bg-red-50 hover:text-red-600"
+                      onClick={() => handleDelete(location.id)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
+
+      <LocationFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        location={selectedLocation}
+        onSuccess={loadLocations}
+      />
     </div>
   );
 };
