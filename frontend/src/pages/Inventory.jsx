@@ -39,21 +39,29 @@ const Inventory = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet article ?')) {
-      try {
-        await inventoryAPI.delete(id);
-        toast({
-          title: 'Succès',
-          description: 'Article supprimé'
-        });
-        loadInventory();
-      } catch (error) {
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de supprimer l\'article',
-          variant: 'destructive'
-        });
-      }
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      await inventoryAPI.delete(itemToDelete);
+      toast({
+        title: 'Succès',
+        description: 'Article supprimé'
+      });
+      loadInventory();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'article',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
