@@ -148,13 +148,34 @@ const Assets = () => {
           <h1 className="text-3xl font-bold text-gray-900">Équipements</h1>
           <p className="text-gray-600 mt-1">Gérez votre parc d'équipements</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
-          setSelectedEquipment(null);
-          setFormDialogOpen(true);
-        }}>
-          <Plus size={20} className="mr-2" />
-          Nouvel équipement
-        </Button>
+        <div className="flex gap-3">
+          {/* Toggle View Mode */}
+          <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
+            <Button
+              variant={viewMode === 'list' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('list')}
+              className={viewMode === 'list' ? 'bg-white shadow' : ''}
+            >
+              <List size={18} className="mr-2" />
+              Liste
+            </Button>
+            <Button
+              variant={viewMode === 'tree' ? 'default' : 'ghost'}
+              size="sm"
+              onClick={() => setViewMode('tree')}
+              className={viewMode === 'tree' ? 'bg-white shadow' : ''}
+            >
+              <GitBranch size={18} className="mr-2" />
+              Arborescence
+            </Button>
+          </div>
+          
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleAdd}>
+            <Plus size={20} className="mr-2" />
+            Nouvel équipement
+          </Button>
+        </div>
       </div>
 
       {/* Stats Cards */}
