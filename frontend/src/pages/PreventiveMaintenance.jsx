@@ -1,11 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
-import { mockPreventiveMaintenance } from '../mock/mockData';
 import { Plus, Calendar, Clock, CheckCircle } from 'lucide-react';
+import PreventiveMaintenanceFormDialog from '../components/PreventiveMaintenance/PreventiveMaintenanceFormDialog';
+import { preventiveMaintenanceAPI, workOrdersAPI } from '../services/api';
+import { useToast } from '../hooks/use-toast';
 
 const PreventiveMaintenance = () => {
-  const [maintenance] = useState(mockPreventiveMaintenance);
+  const { toast } = useToast();
+  const [maintenance, setMaintenance] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [selectedMaintenance, setSelectedMaintenance] = useState(null);
+
+  useEffect(() => {
+    loadMaintenance();
+  }, []);
+
+  const loadMaintenance = async () => {
+    try {
+      setLoading(true);
+      const response = await preventiveMaintenanceAPI.getAll();
+      setMaintenance(response.data);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les maintenances préventives',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleExecuteNow = async (pm) => {
+    if (window.confirm('Voulez-vous créer un ordre de travail pour cette maintenance ?')) {
+      try {
+        // Créer un ordre de travail basé sur la maintenance préventive
+        await workOrdersAPI.create({
+          titre: pm.titre,
+          description: `Maintenance préventive: ${pm.titre}`,
+          statut: 'OUVERT',
+          priorite: 'MOYENNE',
+          equipement_id: pm.equipement?.id,
+          assigne_a_id: pm.assigneA?.id,
+          tempsEstime: pm.duree,
+          dateLimite: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // +7 jours
+        });
+        
+        toast({
+          title: 'Succès',
+          description: 'Ordre de travail créé avec succès'
+        });
+      } catch (error) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de créer l\'ordre de travail',
+          variant: 'destructive'
+        });
+      }
+    }
+  };
 
   const getFrequencyBadge = (frequency) => {
     const badges = {
