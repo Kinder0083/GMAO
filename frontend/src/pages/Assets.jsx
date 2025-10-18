@@ -1,14 +1,59 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { mockEquipments } from '../mock/mockData';
-import { Plus, Search, Wrench, AlertCircle, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, Search, Wrench, AlertCircle, CheckCircle2, Clock, Pencil, Trash2 } from 'lucide-react';
+import EquipmentFormDialog from '../components/Equipment/EquipmentFormDialog';
+import { equipmentsAPI } from '../services/api';
+import { useToast } from '../hooks/use-toast';
 
 const Assets = () => {
-  const [equipments] = useState(mockEquipments);
+  const { toast } = useToast();
+  const [equipments, setEquipments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+
+  useEffect(() => {
+    loadEquipments();
+  }, []);
+
+  const loadEquipments = async () => {
+    try {
+      setLoading(true);
+      const response = await equipmentsAPI.getAll();
+      setEquipments(response.data);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les équipements',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet équipement ?')) {
+      try {
+        await equipmentsAPI.delete(id);
+        toast({
+          title: 'Succès',
+          description: 'Équipement supprimé'
+        });
+        loadEquipments();
+      } catch (error) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de supprimer l\'équipement',
+          variant: 'destructive'
+        });
+      }
+    }
+  };
 
   const filteredEquipments = equipments.filter(eq => {
     const matchesSearch = eq.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
