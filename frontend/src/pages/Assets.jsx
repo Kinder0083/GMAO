@@ -309,6 +309,14 @@ const Assets = () => {
         equipment={selectedEquipment}
         onSuccess={loadEquipments}
       />
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={confirmDelete}
+        title="Supprimer l'équipement"
+        description="Êtes-vous sûr de vouloir supprimer cet équipement ? Cette action est irréversible."
+      />
     </div>
   );
 };
