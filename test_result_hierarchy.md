@@ -25,15 +25,18 @@ backend:
 
   - task: "Endpoint POST /api/equipments avec héritage emplacement"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modification de l'endpoint pour gérer le parent_id et hériter automatiquement de l'emplacement du parent si non spécifié"
+      - working: true
+        agent: "testing"
+        comment: "✓ Endpoint testé avec succès. Héritage d'emplacement fonctionnel: sous-équipement créé sans emplacement_id hérite correctement de l'emplacement du parent. Validation ajoutée pour s'assurer qu'un emplacement valide existe après héritage."
 
   - task: "Endpoint GET /api/equipments avec infos hiérarchie"
     implemented: true
