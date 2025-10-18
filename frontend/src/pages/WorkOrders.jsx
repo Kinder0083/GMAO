@@ -9,11 +9,53 @@ import { workOrdersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 
 const WorkOrders = () => {
-  const [workOrders] = useState(mockWorkOrders);
+  const { toast } = useToast();
+  const [workOrders, setWorkOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('ALL');
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [selectedWorkOrder, setSelectedWorkOrder] = useState(null);
+
+  useEffect(() => {
+    loadWorkOrders();
+  }, []);
+
+  const loadWorkOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await workOrdersAPI.getAll();
+      setWorkOrders(response.data);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les ordres de travail',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet ordre de travail ?')) {
+      try {
+        await workOrdersAPI.delete(id);
+        toast({
+          title: 'Succès',
+          description: 'Ordre de travail supprimé'
+        });
+        loadWorkOrders();
+      } catch (error) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de supprimer l\'ordre de travail',
+          variant: 'destructive'
+        });
+      }
+    }
+  };
 
   const filteredWorkOrders = workOrders.filter(wo => {
     const matchesSearch = wo.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
