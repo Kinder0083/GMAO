@@ -202,7 +202,7 @@ const Dashboard = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-600">Opérationnel</p>
-                    <p className="text-2xl font-bold text-gray-900">{mockAnalytics.equipementsParStatut.OPERATIONNEL}</p>
+                    <p className="text-2xl font-bold text-gray-900">{analytics.equipementsParStatut.OPERATIONNEL || 0}</p>
                   </div>
                 </div>
               </div>
