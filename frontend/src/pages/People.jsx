@@ -125,12 +125,7 @@ const People = () => {
           <h1 className="text-3xl font-bold text-gray-900">Équipes</h1>
           <p className="text-gray-600 mt-1">Gérez les membres de votre équipe</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
-          toast({
-            title: 'Fonctionnalité à venir',
-            description: 'L\'invitation de membres sera bientôt disponible'
-          });
-        }}>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setInviteDialogOpen(true)}>
           <Plus size={20} className="mr-2" />
           Inviter un membre
         </Button>
