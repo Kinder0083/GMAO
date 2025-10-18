@@ -172,6 +172,7 @@ const EquipmentTreeView = ({ equipments, onEdit, onDelete, onAddChild, onViewDet
           onDelete={onDelete}
           onAddChild={onAddChild}
           onViewDetails={onViewDetails}
+          onStatusChange={onStatusChange}
           allEquipments={equipments}
         />
       ))}
