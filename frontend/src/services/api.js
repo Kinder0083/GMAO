@@ -58,7 +58,9 @@ export const equipmentsAPI = {
   getById: (id) => api.get(`/equipments/${id}`),
   create: (data) => api.post('/equipments', data),
   update: (id, data) => api.put(`/equipments/${id}`, data),
-  delete: (id) => api.delete(`/equipments/${id}`)
+  delete: (id) => api.delete(`/equipments/${id}`),
+  getChildren: (id) => api.get(`/equipments/${id}/children`),
+  getHierarchy: (id) => api.get(`/equipments/${id}/hierarchy`)
 };
 
 // ==================== LOCATIONS ====================
