@@ -94,26 +94,53 @@ const Locations = () => {
           </CardContent>
         </Card>
 
-        {locationTypes.slice(0, 3).map((type, index) => {
-          const count = locations.filter(loc => loc.type === type).length;
-          const colors = ['green', 'purple', 'orange'];
-          const color = colors[index % colors.length];
-          return (
-            <Card key={type} className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-600">{type}</p>
-                    <p className="text-3xl font-bold text-gray-900 mt-2">{count}</p>
-                  </div>
-                  <div className={`bg-${color}-100 p-3 rounded-xl`}>
-                    <Building size={24} className={`text-${color}-600`} />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">PRODUCTION</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {locations.filter(loc => loc.type === 'PRODUCTION').length}
+                </p>
+              </div>
+              <div className="bg-green-100 p-3 rounded-xl">
+                <Building size={24} className="text-green-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">BUREAU</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {locations.filter(loc => loc.type === 'BUREAU').length}
+                </p>
+              </div>
+              <div className="bg-purple-100 p-3 rounded-xl">
+                <Building size={24} className="text-purple-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">ATELIER</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">
+                  {locations.filter(loc => loc.type === 'ATELIER').length}
+                </p>
+              </div>
+              <div className="bg-orange-100 p-3 rounded-xl">
+                <Building size={24} className="text-orange-600" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search */}
