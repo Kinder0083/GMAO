@@ -460,6 +460,35 @@ async def update_equipment(eq_id: str, eq_update: EquipmentUpdate, current_user:
         if eq.get("emplacement_id"):
             eq["emplacement"] = await get_location_by_id(eq["emplacement_id"])
         
+        if eq.get("parent_id"):
+            eq["parent"] = await get_equipment_by_id(eq["parent_id"])
+        
+        children_count = await db.equipments.count_documents({"parent_id": eq["id"]})
+        eq["hasChildren"] = children_count > 0
+        
+        return Equipment(**eq)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.patch("/equipments/{eq_id}/status")
+async def update_equipment_status(eq_id: str, statut: EquipmentStatus, current_user: dict = Depends(get_current_user)):
+    """Mettre à jour rapidement le statut d'un équipement"""
+    try:
+        result = await db.equipments.update_one(
+            {"_id": ObjectId(eq_id)},
+            {"$set": {"statut": statut}}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="Équipement non trouvé")
+        
+        return {"message": "Statut mis à jour", "statut": statut}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+            eq["emplacement"] = await get_location_by_id(eq["emplacement_id"])
+        
         return Equipment(**eq)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
