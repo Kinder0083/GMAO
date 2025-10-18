@@ -4,6 +4,7 @@ import { Button } from '../components/ui/button';
 import { BarChart3, TrendingUp, Download, Calendar } from 'lucide-react';
 import { reportsAPI, equipmentsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import CustomPeriodDialog from '../components/Common/CustomPeriodDialog';
 
 const Reports = () => {
   const { toast } = useToast();
@@ -11,6 +12,8 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
   const [equipments, setEquipments] = useState([]);
+  const [customPeriodOpen, setCustomPeriodOpen] = useState(false);
+  const [customDates, setCustomDates] = useState(null);
 
   useEffect(() => {
     loadData();
