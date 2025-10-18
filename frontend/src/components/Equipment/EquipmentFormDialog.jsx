@@ -76,10 +76,18 @@ const EquipmentFormDialog = ({ open, onOpenChange, equipment, onSuccess, parentI
 
     try {
       const submitData = {
-        ...formData,
-        coutAchat: parseFloat(formData.coutAchat),
-        dateAchat: new Date(formData.dateAchat).toISOString()
+        nom: formData.nom,
+        statut: formData.statut,
+        emplacement_id: formData.emplacement_id,
       };
+
+      // Ajouter les champs optionnels seulement s'ils sont remplis
+      if (formData.categorie) submitData.categorie = formData.categorie;
+      if (formData.numeroSerie) submitData.numeroSerie = formData.numeroSerie;
+      if (formData.dateAchat) submitData.dateAchat = new Date(formData.dateAchat).toISOString();
+      if (formData.coutAchat) submitData.coutAchat = parseFloat(formData.coutAchat);
+      if (formData.garantie) submitData.garantie = formData.garantie;
+      if (formData.parent_id) submitData.parent_id = formData.parent_id;
 
       if (equipment) {
         await equipmentsAPI.update(equipment.id, submitData);
