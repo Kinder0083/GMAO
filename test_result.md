@@ -101,3 +101,182 @@
 #====================================================================================================
 # Testing Data - Main Agent and testing sub agent both should log testing data below this section
 #====================================================================================================
+
+user_problem_statement: |
+  L'utilisateur demande l'implémentation d'un système de gestion des permissions pour les administrateurs :
+  1. Ajouter une icône de suppression (corbeille) pour chaque membre de l'équipe visible uniquement aux administrateurs
+  2. Créer un système de permissions granulaires avec 3 niveaux (Visualisation/Édition/Suppression) pour tous les modules
+  3. Transformer la page "Équipes" pour inclure une fonctionnalité "Inviter des membres"
+  4. Créer une interface de gestion des autorisations pour configurer les permissions de chaque utilisateur
+
+backend:
+  - task: "Modèle de permissions granulaires"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Création des modèles UserPermissions, ModulePermission, UserInvite et UserPermissionsUpdate dans models.py"
+
+  - task: "Endpoint POST /api/users/invite"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint créé pour inviter un nouveau membre avec génération de mot de passe temporaire et permissions par défaut selon le rôle"
+
+  - task: "Endpoint GET /api/users/{user_id}/permissions"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint créé pour récupérer les permissions d'un utilisateur"
+
+  - task: "Endpoint PUT /api/users/{user_id}/permissions"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint créé pour mettre à jour les permissions d'un utilisateur (admin only). Empêche de modifier ses propres permissions"
+
+  - task: "Endpoint DELETE /api/users/{user_id} amélioré"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint modifié pour empêcher un admin de se supprimer lui-même"
+
+  - task: "Permissions par défaut lors de l'enregistrement"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Mise à jour de l'endpoint /api/auth/register pour ajouter les permissions par défaut selon le rôle"
+
+frontend:
+  - task: "API functions pour les permissions"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/services/api.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Ajout des fonctions invite, getPermissions et updatePermissions dans usersAPI"
+
+  - task: "Composant InviteMemberDialog"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Common/InviteMemberDialog.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Création du composant pour inviter un nouveau membre avec formulaire complet (nom, prénom, email, téléphone, rôle)"
+
+  - task: "Composant PermissionsManagementDialog"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Common/PermissionsManagementDialog.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Création du composant pour gérer les permissions d'un utilisateur avec checkboxes pour chaque module et niveau (view/edit/delete)"
+
+  - task: "Mise à jour de la page People"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/People.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Ajout des boutons admin-only : bouton Inviter (fonctionnel), bouton Permissions et bouton Supprimer (corbeille) pour chaque membre"
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 1
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Endpoint POST /api/users/invite"
+    - "Endpoint GET /api/users/{user_id}/permissions"
+    - "Endpoint PUT /api/users/{user_id}/permissions"
+    - "Endpoint DELETE /api/users/{user_id} amélioré"
+    - "Permissions par défaut lors de l'enregistrement"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      J'ai implémenté le système complet de gestion des permissions :
+      
+      BACKEND:
+      - Modèles de permissions avec 8 modules (dashboard, workOrders, assets, preventiveMaintenance, inventory, locations, vendors, reports)
+      - Chaque module a 3 niveaux : view, edit, delete
+      - Endpoint POST /api/users/invite pour inviter des membres (génère un mot de passe temporaire)
+      - Endpoint GET /api/users/{user_id}/permissions pour récupérer les permissions
+      - Endpoint PUT /api/users/{user_id}/permissions pour mettre à jour (admin only)
+      - Endpoint DELETE /api/users/{user_id} amélioré (empêche l'auto-suppression)
+      - Permissions par défaut définies selon le rôle lors de l'enregistrement
+      
+      FRONTEND:
+      - Composant InviteMemberDialog pour inviter des membres
+      - Composant PermissionsManagementDialog pour gérer les permissions avec interface intuitive
+      - Page People mise à jour avec boutons admin-only (Permissions et Supprimer)
+      
+      TESTS À EFFECTUER:
+      1. Créer un compte admin si pas déjà fait
+      2. Tester l'invitation d'un nouveau membre avec différents rôles
+      3. Vérifier que les permissions par défaut sont correctes selon le rôle
+      4. Tester la récupération des permissions d'un utilisateur
+      5. Tester la mise à jour des permissions (admin only)
+      6. Vérifier qu'un admin ne peut pas modifier ses propres permissions
+      7. Tester la suppression d'un utilisateur
+      8. Vérifier qu'un admin ne peut pas se supprimer lui-même
+      
+      CREDENTIALS DE TEST:
+      - Email: admin@example.com
+      - Password: password123
