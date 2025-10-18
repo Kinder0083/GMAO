@@ -94,9 +94,18 @@ const Assets = () => {
     navigate(`/assets/${equipment.id}`);
   };
 
+  const handleStatusChange = (equipmentId, newStatus) => {
+    // Mettre à jour localement l'état
+    setEquipments(prevEquipments =>
+      prevEquipments.map(eq =>
+        eq.id === equipmentId ? { ...eq, statut: newStatus } : eq
+      )
+    );
+  };
+
   const filteredEquipments = equipments.filter(eq => {
     const matchesSearch = eq.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         eq.numeroSerie.toLowerCase().includes(searchTerm.toLowerCase());
+                         (eq.numeroSerie && eq.numeroSerie.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = filterStatus === 'ALL' || eq.statut === filterStatus;
     return matchesSearch && matchesStatus;
   });
