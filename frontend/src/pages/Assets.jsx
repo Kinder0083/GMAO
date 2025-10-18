@@ -286,6 +286,7 @@ const Assets = () => {
                 onDelete={handleDelete}
                 onAddChild={handleAddChild}
                 onViewDetails={handleViewDetails}
+                onStatusChange={handleStatusChange}
               />
             )}
           </CardContent>
