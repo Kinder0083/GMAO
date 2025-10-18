@@ -6,6 +6,7 @@ import { Plus, Search, Wrench, AlertCircle, CheckCircle2, Clock, Pencil, Trash2,
 import { useNavigate } from 'react-router-dom';
 import EquipmentFormDialog from '../components/Equipment/EquipmentFormDialog';
 import EquipmentTreeView from '../components/Equipment/EquipmentTreeView';
+import QuickStatusChanger from '../components/Equipment/QuickStatusChanger';
 import DeleteConfirmDialog from '../components/Common/DeleteConfirmDialog';
 import { equipmentsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
