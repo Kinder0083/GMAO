@@ -1,14 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { mockUsers } from '../mock/mockData';
 import { Plus, Search, Users as UsersIcon, Mail, Phone } from 'lucide-react';
+import { usersAPI } from '../services/api';
+import { useToast } from '../hooks/use-toast';
 
 const People = () => {
-  const [users] = useState(mockUsers);
+  const { toast } = useToast();
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('ALL');
+
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await usersAPI.getAll();
+      setUsers(response.data);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les utilisateurs',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -32,6 +55,17 @@ const People = () => {
     );
   };
 
+  const handleViewProfile = (user) => {
+    toast({
+      title: 'Profil utilisateur',
+      description: `Affichage du profil de ${user.prenom} ${user.nom}`
+    });
+  };
+
+  const handleContact = (user) => {
+    window.location.href = `mailto:${user.email}`;
+  };
+
   const roles = [
     { value: 'ALL', label: 'Tous', count: users.length },
     { value: 'ADMIN', label: 'Administrateurs', count: users.filter(u => u.role === 'ADMIN').length },
@@ -46,7 +80,12 @@ const People = () => {
           <h1 className="text-3xl font-bold text-gray-900">Équipes</h1>
           <p className="text-gray-600 mt-1">Gérez les membres de votre équipe</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+          toast({
+            title: 'Fonctionnalité à venir',
+            description: 'L\'invitation de membres sera bientôt disponible'
+          });
+        }}>
           <Plus size={20} className="mr-2" />
           Inviter un membre
         </Button>
@@ -109,52 +148,72 @@ const People = () => {
 
       {/* Users Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredUsers.map((user) => (
-          <Card key={user.id} className="hover:shadow-xl transition-all duration-300">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                {/* Avatar */}
-                <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mb-4 shadow-lg">
-                  <span className="text-white text-2xl font-bold">
-                    {user.prenom[0]}{user.nom[0]}
-                  </span>
-                </div>
-
-                {/* Name */}
-                <h3 className="text-xl font-bold text-gray-900 mb-1">
-                  {user.prenom} {user.nom}
-                </h3>
-
-                {/* Role Badge */}
-                <div className="mb-4">
-                  {getRoleBadge(user.role)}
-                </div>
-
-                {/* Contact Info */}
-                <div className="space-y-2 w-full">
-                  <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
-                    <Mail size={16} />
-                    <span className="truncate">{user.email}</span>
+        {loading ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Chargement...</p>
+          </div>
+        ) : filteredUsers.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Aucun utilisateur trouvé</p>
+          </div>
+        ) : (
+          filteredUsers.map((user) => (
+            <Card key={user.id} className="hover:shadow-xl transition-all duration-300">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  {/* Avatar */}
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-700 rounded-full flex items-center justify-center mb-4 shadow-lg">
+                    <span className="text-white text-2xl font-bold">
+                      {user.prenom[0]}{user.nom[0]}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
-                    <Phone size={16} />
-                    <span>{user.telephone}</span>
+
+                  {/* Name */}
+                  <h3 className="text-xl font-bold text-gray-900 mb-1">
+                    {user.prenom} {user.nom}
+                  </h3>
+
+                  {/* Role Badge */}
+                  <div className="mb-4">
+                    {getRoleBadge(user.role)}
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-2 w-full">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
+                      <Mail size={16} />
+                      <span className="truncate">{user.email}</span>
+                    </div>
+                    {user.telephone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 justify-center">
+                        <Phone size={16} />
+                        <span>{user.telephone}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 mt-6 w-full">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 hover:bg-blue-50 hover:text-blue-600"
+                      onClick={() => handleViewProfile(user)}
+                    >
+                      Voir profil
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 hover:bg-gray-100"
+                      onClick={() => handleContact(user)}
+                    >
+                      Contacter
+                    </Button>
                   </div>
                 </div>
-
-                {/* Actions */}
-                <div className="flex gap-2 mt-6 w-full">
-                  <Button variant="outline" className="flex-1 hover:bg-blue-50 hover:text-blue-600">
-                    Voir profil
-                  </Button>
-                  <Button variant="outline" className="flex-1 hover:bg-gray-100">
-                    Contacter
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );
