@@ -587,14 +587,14 @@ class EquipmentHierarchyTester:
 
 def main():
     """Main test execution"""
-    tester = PermissionsAPITester()
+    tester = EquipmentHierarchyTester()
     results = tester.run_all_tests()
     
     # Exit with error code if any tests failed
     if not all(results.values()):
         sys.exit(1)
     else:
-        print("\n🎉 All tests passed!")
+        print("\n🎉 All equipment hierarchy tests passed!")
         sys.exit(0)
 
 if __name__ == "__main__":
