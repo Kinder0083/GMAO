@@ -44,10 +44,16 @@ const Reports = () => {
   }
 
   const handleCustomPeriod = () => {
+    setCustomPeriodOpen(true);
+  };
+
+  const handleApplyCustomPeriod = (dates) => {
+    setCustomDates(dates);
     toast({
-      title: 'Période personnalisée',
-      description: 'Sélectionnez vos dates de début et fin pour générer le rapport'
+      title: 'Période personnalisée appliquée',
+      description: `Du ${new Date(dates.startDate).toLocaleDateString('fr-FR')} au ${new Date(dates.endDate).toLocaleDateString('fr-FR')}`
     });
+    // Ici vous pourriez recharger les données avec la nouvelle période
   };
 
   const handleExportPDF = () => {
