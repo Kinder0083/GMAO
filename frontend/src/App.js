@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import WorkOrders from "./pages/WorkOrders";
 import Assets from "./pages/Assets";
+import EquipmentDetail from "./pages/EquipmentDetail";
 import Inventory from "./pages/Inventory";
 import Locations from "./pages/Locations";
 import PreventiveMaintenance from "./pages/PreventiveMaintenance";
