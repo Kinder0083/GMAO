@@ -17,6 +17,7 @@ import Locations from "./pages/Locations";
 import PreventiveMaintenance from "./pages/PreventiveMaintenance";
 import Reports from "./pages/Reports";
 import People from "./pages/People";
+import Planning from "./pages/Planning";
 import Vendors from "./pages/Vendors";
 import Settings from "./pages/Settings";
 
