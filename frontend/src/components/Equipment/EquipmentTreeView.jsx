@@ -87,12 +87,12 @@ const EquipmentTreeNode = ({
               </div>
 
               {/* Actions */}
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-shrink-0">
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => navigate(`/assets/${equipment.id}`)}
-                  className="hover:bg-blue-50"
+                  className="hover:bg-blue-50 h-8 w-8 p-0"
                 >
                   <Eye size={16} />
                 </Button>
@@ -100,7 +100,7 @@ const EquipmentTreeNode = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => onAddChild(equipment)}
-                  className="hover:bg-green-50"
+                  className="hover:bg-green-50 h-8 w-8 p-0"
                   title="Ajouter un sous-équipement"
                 >
                   <Plus size={16} />
@@ -109,7 +109,7 @@ const EquipmentTreeNode = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEdit(equipment)}
-                  className="hover:bg-blue-50"
+                  className="hover:bg-yellow-50 h-8 w-8 p-0"
                 >
                   <Edit size={16} />
                 </Button>
@@ -117,7 +117,7 @@ const EquipmentTreeNode = ({
                   variant="ghost"
                   size="sm"
                   onClick={() => onDelete(equipment)}
-                  className="hover:bg-red-50"
+                  className="hover:bg-red-50 h-8 w-8 p-0"
                 >
                   <Trash2 size={16} />
                 </Button>
