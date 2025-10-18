@@ -59,10 +59,8 @@ const People = () => {
   };
 
   const handleViewProfile = (user) => {
-    toast({
-      title: 'Profil utilisateur',
-      description: `Affichage du profil de ${user.prenom} ${user.nom}`
-    });
+    setSelectedUser(user);
+    setProfileDialogOpen(true);
   };
 
   const handleContact = (user) => {
