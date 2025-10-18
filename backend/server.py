@@ -487,11 +487,6 @@ async def update_equipment_status(eq_id: str, statut: EquipmentStatus, current_u
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-            eq["emplacement"] = await get_location_by_id(eq["emplacement_id"])
-        
-        return Equipment(**eq)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/equipments/{eq_id}")
 async def delete_equipment(eq_id: str, current_user: dict = Depends(get_current_user)):
