@@ -122,7 +122,7 @@ const Reports = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Maintenances préventives</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">{mockAnalytics.nombreMaintenancesPrev}</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{analytics.nombreMaintenancesPrev}</p>
                 <p className="text-xs text-gray-500 mt-1">Ce mois</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-xl">
