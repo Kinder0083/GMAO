@@ -167,64 +167,96 @@ const WorkOrders = () => {
           <CardTitle>Liste des ordres ({filteredWorkOrders.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">ID</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Titre</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Priorité</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Assigné à</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Emplacement</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Équipement</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date limite</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredWorkOrders.map((wo) => (
-                  <tr key={wo.id} className="border-b hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">#{wo.id}</td>
-                    <td className="py-3 px-4">{getStatusBadge(wo.statut)}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">{wo.titre}</td>
-                    <td className="py-3 px-4">{getPriorityBadge(wo.priorite)}</td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
-                      {wo.assigneA ? (
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                            <span className="text-white text-xs font-medium">
-                              {wo.assigneA.prenom[0]}{wo.assigneA.nom[0]}
-                            </span>
-                          </div>
-                          <span>{wo.assigneA.prenom} {wo.assigneA.nom}</span>
-                        </div>
-                      ) : (
-                        <span className="text-gray-400">Non assigné</span>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
-                      {wo.emplacement ? wo.emplacement.nom : '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">
-                      {wo.equipement ? wo.equipement.nom : '-'}
-                    </td>
-                    <td className="py-3 px-4 text-sm text-gray-700">{wo.dateLimite}</td>
-                    <td className="py-3 px-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleViewWorkOrder(wo)}
-                        className="hover:bg-blue-50 hover:text-blue-600"
-                      >
-                        <Eye size={16} />
-                      </Button>
-                    </td>
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Chargement...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">ID</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Titre</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Priorité</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Assigné à</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Emplacement</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Équipement</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Date limite</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredWorkOrders.map((wo) => (
+                    <tr key={wo.id} className="border-b hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">#{wo.numero}</td>
+                      <td className="py-3 px-4">{getStatusBadge(wo.statut)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">{wo.titre}</td>
+                      <td className="py-3 px-4">{getPriorityBadge(wo.priorite)}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        {wo.assigneA ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs font-medium">
+                                {wo.assigneA.prenom[0]}{wo.assigneA.nom[0]}
+                              </span>
+                            </div>
+                            <span>{wo.assigneA.prenom} {wo.assigneA.nom}</span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Non assigné</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        {wo.emplacement ? wo.emplacement.nom : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        {wo.equipement ? wo.equipement.nom : '-'}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-700">
+                        {wo.dateLimite ? new Date(wo.dateLimite).toLocaleDateString('fr-FR') : '-'}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedWorkOrder(wo);
+                              setDialogOpen(true);
+                            }}
+                            className="hover:bg-blue-50 hover:text-blue-600"
+                          >
+                            <Eye size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedWorkOrder(wo);
+                              setFormDialogOpen(true);
+                            }}
+                            className="hover:bg-green-50 hover:text-green-600"
+                          >
+                            <Pencil size={16} />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(wo.id)}
+                            className="hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -232,6 +264,13 @@ const WorkOrders = () => {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         workOrder={selectedWorkOrder}
+      />
+
+      <WorkOrderFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        workOrder={selectedWorkOrder}
+        onSuccess={loadWorkOrders}
       />
     </div>
   );
