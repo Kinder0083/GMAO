@@ -10,15 +10,18 @@ user_problem_statement: |
 backend:
   - task: "Modèle Equipment avec parent_id"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/models.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Ajout du champ parent_id dans EquipmentBase, EquipmentCreate, EquipmentUpdate et Equipment. Ajout du champ hasChildren dans Equipment"
+      - working: true
+        agent: "testing"
+        comment: "✓ Modèle testé avec succès. Correction appliquée: emplacement_id rendu optionnel dans EquipmentCreate pour permettre l'héritage depuis le parent. Structure hiérarchique fonctionnelle avec parent_id et hasChildren."
 
   - task: "Endpoint POST /api/equipments avec héritage emplacement"
     implemented: true
