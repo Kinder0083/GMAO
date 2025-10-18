@@ -60,6 +60,7 @@ class UserBase(BaseModel):
     email: EmailStr
     telephone: Optional[str] = None
     role: UserRole = UserRole.VISUALISEUR
+    service: Optional[str] = None
 
 class UserCreate(UserBase):
     password: str
@@ -70,6 +71,7 @@ class UserInvite(BaseModel):
     email: EmailStr
     telephone: Optional[str] = None
     role: UserRole = UserRole.VISUALISEUR
+    service: Optional[str] = None
     permissions: Optional[UserPermissions] = None
 
 class UserUpdate(BaseModel):
@@ -78,6 +80,7 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     telephone: Optional[str] = None
     role: Optional[UserRole] = None
+    service: Optional[str] = None
 
 class UserPermissionsUpdate(BaseModel):
     permissions: UserPermissions
