@@ -54,11 +54,12 @@ const EquipmentFormDialog = ({ open, onOpenChange, equipment, onSuccess, parentI
           dateAchat: '',
           coutAchat: '',
           numeroSerie: '',
-          garantie: ''
+          garantie: '',
+          parent_id: parentId || null
         });
       }
     }
-  }, [open, equipment]);
+  }, [open, equipment, parentId, defaultLocation]);
 
   const loadLocations = async () => {
     try {
