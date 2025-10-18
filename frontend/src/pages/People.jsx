@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Plus, Search, Users as UsersIcon, Mail, Phone } from 'lucide-react';
+import { Plus, Search, Users as UsersIcon, Mail, Phone, Trash2, Settings } from 'lucide-react';
 import UserProfileDialog from '../components/Common/UserProfileDialog';
+import InviteMemberDialog from '../components/Common/InviteMemberDialog';
+import PermissionsManagementDialog from '../components/Common/PermissionsManagementDialog';
+import DeleteConfirmDialog from '../components/Common/DeleteConfirmDialog';
 import { usersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 
