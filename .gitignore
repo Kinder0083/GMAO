@@ -48,4 +48,7 @@ backup*/
 # Environment
 .env
 .env.local
-.env.*.local
+.env.*.local-e 
+# Environment files
+*.env
+*.env.*
