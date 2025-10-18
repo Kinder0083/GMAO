@@ -174,53 +174,90 @@ const Inventory = () => {
           <CardTitle>Liste des articles ({filteredInventory.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Référence</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Nom</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Catégorie</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Quantité</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min.</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Prix unitaire</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Valeur totale</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Fournisseur</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Emplacement</th>
-                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredInventory.map((item) => {
-                  const status = getStockStatus(item);
-                  const StatusIcon = status.icon;
-                  return (
-                    <tr key={item.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.reference}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.nom}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{item.categorie}</td>
-                      <td className="py-3 px-4 text-sm text-gray-900 font-bold">{item.quantite}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{item.quantiteMin}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{item.prixUnitaire.toFixed(2)} €</td>
-                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">
-                        {(item.quantite * item.prixUnitaire).toFixed(2)} €
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{item.fournisseur}</td>
-                      <td className="py-3 px-4 text-sm text-gray-600">{item.emplacement}</td>
-                      <td className="py-3 px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color} flex items-center gap-1 w-fit`}>
-                          <StatusIcon size={14} />
-                          {status.label}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Chargement...</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Référence</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Nom</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Catégorie</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Quantité</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Min.</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Prix unitaire</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Valeur totale</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Fournisseur</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Emplacement</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredInventory.map((item) => {
+                    const status = getStockStatus(item);
+                    const StatusIcon = status.icon;
+                    return (
+                      <tr key={item.id} className="border-b hover:bg-gray-50 transition-colors">
+                        <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.reference}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.nom}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700">{item.categorie}</td>
+                        <td className="py-3 px-4 text-sm text-gray-900 font-bold">{item.quantite}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{item.quantiteMin}</td>
+                        <td className="py-3 px-4 text-sm text-gray-700">{item.prixUnitaire.toFixed(2)} €</td>
+                        <td className="py-3 px-4 text-sm text-gray-900 font-medium">
+                          {(item.quantite * item.prixUnitaire).toFixed(2)} €
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-700">{item.fournisseur}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{item.emplacement}</td>
+                        <td className="py-3 px-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color} flex items-center gap-1 w-fit`}>
+                            <StatusIcon size={14} />
+                            {status.label}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex gap-2">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedItem(item);
+                                setFormDialogOpen(true);
+                              }}
+                              className="hover:bg-green-50 hover:text-green-600"
+                            >
+                              <Pencil size={16} />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(item.id)}
+                              className="hover:bg-red-50 hover:text-red-600"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      <InventoryFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        item={selectedItem}
+        onSuccess={loadInventory}
+      />
     </div>
   );
 };
