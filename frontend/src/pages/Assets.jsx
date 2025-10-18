@@ -204,60 +204,100 @@ const Assets = () => {
 
       {/* Equipment Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredEquipments.map((equipment) => (
-          <Card key={equipment.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group">
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                    <Wrench size={24} className="text-blue-600" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{equipment.nom}</CardTitle>
-                    <p className="text-sm text-gray-500 mt-1">{equipment.categorie}</p>
-                  </div>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {getStatusBadge(equipment.statut)}
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">N° Série:</span>
-                    <span className="font-medium text-gray-900">{equipment.numeroSerie}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Emplacement:</span>
-                    <span className="font-medium text-gray-900">{equipment.emplacement.nom}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Date d'achat:</span>
-                    <span className="font-medium text-gray-900">{equipment.dateAchat}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Coût d'achat:</span>
-                    <span className="font-medium text-gray-900">{equipment.coutAchat.toLocaleString('fr-FR')} €</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Garantie:</span>
-                    <span className="font-medium text-gray-900">{equipment.garantie}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Dernière maintenance:</span>
-                    <span className="font-medium text-gray-900">{equipment.derniereMaintenance}</span>
+        {loading ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Chargement...</p>
+          </div>
+        ) : filteredEquipments.length === 0 ? (
+          <div className="col-span-full text-center py-8">
+            <p className="text-gray-500">Aucun équipement trouvé</p>
+          </div>
+        ) : (
+          filteredEquipments.map((equipment) => (
+            <Card key={equipment.id} className="hover:shadow-xl transition-all duration-300 cursor-pointer group">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 transition-colors">
+                      <Wrench size={24} className="text-blue-600" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">{equipment.nom}</CardTitle>
+                      <p className="text-sm text-gray-500 mt-1">{equipment.categorie}</p>
+                    </div>
                   </div>
                 </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {getStatusBadge(equipment.statut)}
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">N° Série:</span>
+                      <span className="font-medium text-gray-900">{equipment.numeroSerie}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Emplacement:</span>
+                      <span className="font-medium text-gray-900">{equipment.emplacement?.nom || '-'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Date d'achat:</span>
+                      <span className="font-medium text-gray-900">
+                        {equipment.dateAchat ? new Date(equipment.dateAchat).toLocaleDateString('fr-FR') : '-'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Coût d'achat:</span>
+                      <span className="font-medium text-gray-900">{equipment.coutAchat?.toLocaleString('fr-FR')} €</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Garantie:</span>
+                      <span className="font-medium text-gray-900">{equipment.garantie}</span>
+                    </div>
+                    {equipment.derniereMaintenance && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Dernière maintenance:</span>
+                        <span className="font-medium text-gray-900">
+                          {new Date(equipment.derniereMaintenance).toLocaleDateString('fr-FR')}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                <Button variant="outline" className="w-full mt-4 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-600">
-                  Voir les détails
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                  <div className="flex gap-2 pt-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1 hover:bg-green-50 hover:text-green-600"
+                      onClick={() => {
+                        setSelectedEquipment(equipment);
+                        setFormDialogOpen(true);
+                      }}
+                    >
+                      <Pencil size={16} className="mr-1" />
+                      Modifier
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="hover:bg-red-50 hover:text-red-600"
+                      onClick={() => handleDelete(equipment.id)}
+                    >
+                      <Trash2 size={16} />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
+
+      <EquipmentFormDialog
+        open={formDialogOpen}
+        onOpenChange={setFormDialogOpen}
+        equipment={selectedEquipment}
+        onSuccess={loadEquipments}
+      />
     </div>
   );
 };
