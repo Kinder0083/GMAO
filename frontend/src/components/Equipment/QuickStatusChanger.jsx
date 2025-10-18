@@ -1,0 +1,95 @@
+import React, { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import { equipmentsAPI } from '../../services/api';
+import { useToast } from '../../hooks/use-toast';
+
+const QuickStatusChanger = ({ equipment, onStatusChange }) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      setLoading(true);
+      await equipmentsAPI.updateStatus(equipment.id, newStatus);
+      
+      toast({
+        title: 'Succès',
+        description: 'Statut mis à jour'
+      });
+
+      if (onStatusChange) {
+        onStatusChange(equipment.id, newStatus);
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le statut',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'OPERATIONNEL': 'bg-green-100 text-green-700 hover:bg-green-200',
+      'EN_MAINTENANCE': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
+      'HORS_SERVICE': 'bg-red-100 text-red-700 hover:bg-red-200'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-700';
+  };
+
+  const getStatusLabel = (status) => {
+    const labels = {
+      'OPERATIONNEL': 'Opérationnel',
+      'EN_MAINTENANCE': 'En maintenance',
+      'HORS_SERVICE': 'Hors service'
+    };
+    return labels[status] || status;
+  };
+
+  return (
+    <Select
+      value={equipment.statut}
+      onValueChange={handleStatusChange}
+      disabled={loading}
+    >
+      <SelectTrigger 
+        className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(equipment.statut)}`}
+      >
+        <SelectValue>
+          {getStatusLabel(equipment.statut)}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        <SelectItem value="OPERATIONNEL">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-600"></span>
+            Opérationnel
+          </span>
+        </SelectItem>
+        <SelectItem value="EN_MAINTENANCE">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-600"></span>
+            En maintenance
+          </span>
+        </SelectItem>
+        <SelectItem value="HORS_SERVICE">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-red-600"></span>
+            Hors service
+          </span>
+        </SelectItem>
+      </SelectContent>
+    </Select>
+  );
+};
+
+export default QuickStatusChanger;
