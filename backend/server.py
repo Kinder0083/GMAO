@@ -575,6 +575,94 @@ async def delete_equipment(eq_id: str, current_user: dict = Depends(get_current_
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# ==================== AVAILABILITY ROUTES ====================
+@api_router.get("/availabilities")
+async def get_availabilities(
+    start_date: str = None,
+    end_date: str = None,
+    user_id: str = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupérer les disponibilités du personnel"""
+    query = {}
+    
+    if user_id:
+        query["user_id"] = user_id
+    
+    if start_date and end_date:
+        query["date"] = {
+            "$gte": datetime.fromisoformat(start_date),
+            "$lte": datetime.fromisoformat(end_date)
+        }
+    
+    availabilities = await db.availabilities.find(query).to_list(1000)
+    
+    for avail in availabilities:
+        avail["id"] = str(avail["_id"])
+        del avail["_id"]
+        if avail.get("user_id"):
+            avail["user"] = await get_user_by_id(avail["user_id"])
+    
+    return availabilities
+
+@api_router.post("/availabilities")
+async def create_availability(
+    availability: UserAvailabilityCreate,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Créer une disponibilité (admin uniquement)"""
+    avail_dict = availability.model_dump()
+    avail_dict["_id"] = ObjectId()
+    
+    await db.availabilities.insert_one(avail_dict)
+    
+    avail = serialize_doc(avail_dict)
+    if avail.get("user_id"):
+        avail["user"] = await get_user_by_id(avail["user_id"])
+    
+    return avail
+
+@api_router.put("/availabilities/{avail_id}")
+async def update_availability(
+    avail_id: str,
+    availability_update: UserAvailabilityUpdate,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Mettre à jour une disponibilité (admin uniquement)"""
+    try:
+        update_data = {k: v for k, v in availability_update.model_dump().items() if v is not None}
+        
+        await db.availabilities.update_one(
+            {"_id": ObjectId(avail_id)},
+            {"$set": update_data}
+        )
+        
+        avail = await db.availabilities.find_one({"_id": ObjectId(avail_id)})
+        avail = serialize_doc(avail)
+        
+        if avail.get("user_id"):
+            avail["user"] = await get_user_by_id(avail["user_id"])
+        
+        return avail
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.delete("/availabilities/{avail_id}")
+async def delete_availability(
+    avail_id: str,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Supprimer une disponibilité (admin uniquement)"""
+    try:
+        result = await db.availabilities.delete_one({"_id": ObjectId(avail_id)})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Disponibilité non trouvée")
+        return {"message": "Disponibilité supprimée"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 # ==================== LOCATIONS ROUTES ====================
 @api_router.get("/locations", response_model=List[Location])
 async def get_locations(current_user: dict = Depends(get_current_user)):
