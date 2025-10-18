@@ -41,7 +41,8 @@ const QuickStatusChanger = ({ equipment, onStatusChange }) => {
     const colors = {
       'OPERATIONNEL': 'bg-green-100 text-green-700 hover:bg-green-200',
       'EN_MAINTENANCE': 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200',
-      'HORS_SERVICE': 'bg-red-100 text-red-700 hover:bg-red-200'
+      'HORS_SERVICE': 'bg-red-100 text-red-700 hover:bg-red-200',
+      'ALERTE_S_EQUIP': 'bg-purple-100 text-purple-700 hover:bg-purple-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-700';
   };
@@ -50,19 +51,23 @@ const QuickStatusChanger = ({ equipment, onStatusChange }) => {
     const labels = {
       'OPERATIONNEL': 'Opérationnel',
       'EN_MAINTENANCE': 'En maintenance',
-      'HORS_SERVICE': 'Hors service'
+      'HORS_SERVICE': 'Hors service',
+      'ALERTE_S_EQUIP': 'Alerte S.Equip'
     };
     return labels[status] || status;
   };
+
+  // Désactiver la sélection si le statut est ALERTE_S_EQUIP (automatique)
+  const isDisabled = loading || equipment.statut === 'ALERTE_S_EQUIP';
 
   return (
     <Select
       value={equipment.statut}
       onValueChange={handleStatusChange}
-      disabled={loading}
+      disabled={isDisabled}
     >
       <SelectTrigger 
-        className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(equipment.statut)}`}
+        className={`px-3 py-1 rounded-full text-xs font-medium border-0 ${getStatusColor(equipment.statut)} ${isDisabled && equipment.statut === 'ALERTE_S_EQUIP' ? 'cursor-not-allowed' : ''}`}
       >
         <SelectValue>
           {getStatusLabel(equipment.statut)}
