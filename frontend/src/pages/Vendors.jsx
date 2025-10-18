@@ -1,13 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { mockVendors } from '../mock/mockData';
-import { Plus, Search, Building, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Search, Building, Mail, Phone, MapPin, Pencil, Trash2 } from 'lucide-react';
+import VendorFormDialog from '../components/Vendors/VendorFormDialog';
+import { vendorsAPI } from '../services/api';
+import { useToast } from '../hooks/use-toast';
 
 const Vendors = () => {
-  const [vendors] = useState(mockVendors);
+  const { toast } = useToast();
+  const [vendors, setVendors] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [formDialogOpen, setFormDialogOpen] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState(null);
+
+  useEffect(() => {
+    loadVendors();
+  }, []);
+
+  const loadVendors = async () => {
+    try {
+      setLoading(true);
+      const response = await vendorsAPI.getAll();
+      setVendors(response.data);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les fournisseurs',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
+      try {
+        await vendorsAPI.delete(id);
+        toast({
+          title: 'Succès',
+          description: 'Fournisseur supprimé'
+        });
+        loadVendors();
+      } catch (error) {
+        toast({
+          title: 'Erreur',
+          description: 'Impossible de supprimer le fournisseur',
+          variant: 'destructive'
+        });
+      }
+    }
+  };
 
   const filteredVendors = vendors.filter(vendor => {
     return vendor.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
