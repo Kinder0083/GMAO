@@ -40,21 +40,29 @@ const Assets = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet équipement ?')) {
-      try {
-        await equipmentsAPI.delete(id);
-        toast({
-          title: 'Succès',
-          description: 'Équipement supprimé'
-        });
-        loadEquipments();
-      } catch (error) {
-        toast({
-          title: 'Erreur',
-          description: 'Impossible de supprimer l\'équipement',
-          variant: 'destructive'
-        });
-      }
+    setItemToDelete(id);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+    
+    try {
+      await equipmentsAPI.delete(itemToDelete);
+      toast({
+        title: 'Succès',
+        description: 'Équipement supprimé'
+      });
+      loadEquipments();
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de supprimer l\'équipement',
+        variant: 'destructive'
+      });
+    } finally {
+      setDeleteDialogOpen(false);
+      setItemToDelete(null);
     }
   };
 
