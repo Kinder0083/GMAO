@@ -45,7 +45,7 @@ const Reports = () => {
     { value: 'ANNEE', label: 'Cette année' }
   ];
 
-  const coutsMaintenance = Object.entries(mockAnalytics.coutsMaintenance);
+  const coutsMaintenance = Object.entries(analytics.coutsMaintenance);
 
   return (
     <div className="space-y-6">
