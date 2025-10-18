@@ -2,14 +2,16 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from auth import decode_access_token
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+from bson import ObjectId
 
 security = HTTPBearer()
 
-mongo_url = os.environ['MONGO_URL']
-client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ.get('DB_NAME', 'gmao_atlas')]
+# Database will be injected from server.py
+db = None
+
+def set_database(database):
+    global db
+    db = database
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -30,7 +32,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user = await db.users.find_one({"_id": user_id})
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
