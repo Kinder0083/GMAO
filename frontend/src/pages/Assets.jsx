@@ -94,13 +94,9 @@ const Assets = () => {
     navigate(`/assets/${equipment.id}`);
   };
 
-  const handleStatusChange = (equipmentId, newStatus) => {
-    // Mettre à jour localement l'état
-    setEquipments(prevEquipments =>
-      prevEquipments.map(eq =>
-        eq.id === equipmentId ? { ...eq, statut: newStatus } : eq
-      )
-    );
+  const handleStatusChange = async (equipmentId, newStatus) => {
+    // Recharger toute la liste pour obtenir les changements de statut parent
+    await loadEquipments();
   };
 
   const filteredEquipments = equipments.filter(eq => {
