@@ -189,9 +189,9 @@ const Reports = () => {
               <div>
                 <h4 className="text-sm font-semibold text-gray-700 mb-3">Par statut</h4>
                 <div className="space-y-3">
-                  {Object.entries(mockAnalytics.workOrdersParStatut).map(([statut, count]) => {
-                    const total = Object.values(mockAnalytics.workOrdersParStatut).reduce((a, b) => a + b, 0);
-                    const percentage = ((count / total) * 100).toFixed(0);
+                  {Object.entries(analytics.workOrdersParStatut).map(([statut, count]) => {
+                    const total = Object.values(analytics.workOrdersParStatut).reduce((a, b) => a + b, 0);
+                    const percentage = total > 0 ? ((count / total) * 100).toFixed(0) : 0;
                     const labels = {
                       'OUVERT': { label: 'Ouvert', color: 'bg-gray-500' },
                       'EN_COURS': { label: 'En cours', color: 'bg-blue-500' },
