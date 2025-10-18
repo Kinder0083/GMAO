@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Plus, Search, Users as UsersIcon, Mail, Phone } from 'lucide-react';
+import UserProfileDialog from '../components/Common/UserProfileDialog';
 import { usersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 
@@ -12,6 +13,8 @@ const People = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState('ALL');
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState(null);
 
   useEffect(() => {
     loadUsers();
