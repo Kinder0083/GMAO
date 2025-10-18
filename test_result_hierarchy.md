@@ -40,15 +40,18 @@ backend:
 
   - task: "Endpoint GET /api/equipments avec infos hiérarchie"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Modification pour inclure les infos du parent et le flag hasChildren pour chaque équipement"
+      - working: true
+        agent: "testing"
+        comment: "✓ Endpoint testé avec succès. GET /api/equipments retourne correctement hasChildren=true pour équipements parents et hasChildren=false pour enfants. Infos parent complètes (id, nom) incluses pour les sous-équipements."
 
   - task: "Endpoint GET /api/equipments/{id}"
     implemented: true
