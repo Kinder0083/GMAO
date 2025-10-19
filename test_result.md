@@ -180,11 +180,8 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Endpoint POST /api/users/invite"
-    - "Endpoint GET /api/users/{user_id}/permissions"
-    - "Endpoint PUT /api/users/{user_id}/permissions"
-    - "Endpoint DELETE /api/users/{user_id} amélioré"
-    - "Permissions par défaut lors de l'enregistrement"
+    - "Endpoint GET /api/export/{module}"
+    - "Endpoint POST /api/import/{module}"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
