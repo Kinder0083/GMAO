@@ -1,26 +1,34 @@
-# GMAO Atlas
+# GMAO Iris
 
-Application de Gestion de Maintenance Assistée par Ordinateur (GMAO) - Clone d'Atlas CMMS
+Application de Gestion de Maintenance Assistée par Ordinateur (GMAO) - Clone d'Atlas CMMS avec fonctionnalités premium
 
-## Fonctionnalités
+**Version:** 1.0.0  
+**Concepteur:** Grèg
+
+## 🎯 Fonctionnalités
 
 ### Gestion des Ordres de Travail
 - Création, assignation et suivi des ordres de maintenance
 - Gestion des priorités et statuts
 - Historique complet des interventions
 - Suivi du temps estimé vs temps réel
+- **📎 Pièces jointes multiples** (photos, vidéos, documents jusqu'à 25MB)
+- Filtrage avancé par date et période personnalisée
 
 ### Gestion des Équipements
 - Inventaire complet des équipements
-- Suivi de l'état opérationnel
+- **📊 Structure hiérarchique** (équipements parents/enfants)
+- Suivi de l'état opérationnel avec changement rapide de statut
 - Historique des maintenances
 - Gestion des garanties et coûts
+- Vue en liste et en arborescence
 
 ### Maintenance Préventive
 - Planification des maintenances récurrentes
 - Fréquences personnalisables (hebdomadaire, mensuel, trimestriel, annuel)
 - Alertes automatiques
 - Checklists de maintenance
+- Exécution immédiate possible
 
 ### Inventaire
 - Gestion des pièces détachées
@@ -32,22 +40,34 @@ Application de Gestion de Maintenance Assistée par Ordinateur (GMAO) - Clone d'
 - Tableaux de bord en temps réel
 - Statistiques détaillées
 - Analyse des coûts
-- Rapports de performance
+- **📊 Exports multiples** : PDF, Excel, CSV (Admins uniquement)
+- Rapports personnalisables par période
 
 ### Gestion Multi-utilisateurs
 - 3 rôles : Administrateur, Technicien, Visualiseur
-- Permissions granulaires
+- **🔐 Permissions granulaires** par module (view, edit, delete)
 - Authentification JWT sécurisée
+- Gestion des équipes et services
+- Planning de disponibilité
 
-## Technologies
+### Import/Export (Admin)
+- Import/export de données en masse
+- Support CSV et Excel
+- Mode ajout ou écrasement
+- Gestion des doublons
+- Confirmation avant import
+
+## 🚀 Technologies
 
 - **Frontend**: React 19 avec shadcn/ui et Tailwind CSS
-- **Backend**: FastAPI (Python 3.11)
-- **Base de données**: MongoDB 7.0
+- **Backend**: FastAPI (Python 3.11+)
+- **Base de données**: MongoDB 7.0+
 - **Authentification**: JWT avec bcrypt
-- **Conteneurisation**: Docker et Docker Compose
+- **Serveur Web**: Nginx
+- **Process Manager**: Supervisor
+- **Conteneurisation**: Compatible Docker et Proxmox LXC
 
-## Installation
+## 📦 Installation
 
 ### Prérequis
 
