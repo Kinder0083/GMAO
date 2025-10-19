@@ -58,10 +58,19 @@ class PMStatus(str, Enum):
 class UserBase(BaseModel):
     nom: str
     prenom: str
-    email: EmailStr
+    email: str  # Changé de EmailStr à str pour accepter .local
     telephone: Optional[str] = None
     role: UserRole = UserRole.VISUALISEUR
     service: Optional[str] = None
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        # Validation basique d'email qui accepte les domaines locaux
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.local$'
+        if not re.match(email_pattern, v):
+            raise ValueError('Format d\'email invalide')
+        return v.lower()
 
 class UserCreate(UserBase):
     password: str
