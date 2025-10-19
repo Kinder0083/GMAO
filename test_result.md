@@ -223,3 +223,35 @@ agent_communication:
       CREDENTIALS DE TEST :
       - Email: admin@example.com
       - Password: password123
+  
+  - agent: "testing"
+    message: |
+      ✅ TESTS IMPORT/EXPORT COMPLÉTÉS AVEC SUCCÈS
+      
+      RÉSULTATS DES TESTS BACKEND :
+      
+      🔐 AUTHENTIFICATION ADMIN : ✓ PASS
+      - Login admin fonctionnel avec token JWT
+      - Rôle ADMIN correctement vérifié
+      
+      📤 TESTS EXPORT : ✓ TOUS PASSENT
+      - CSV module spécifique (work-orders) : ✓ Content-Type et headers corrects
+      - XLSX module spécifique (equipments) : ✓ Content-Type et headers corrects  
+      - XLSX toutes données : ✓ Fichier multi-feuilles généré
+      - CSV toutes données : ✓ Échoue correctement avec 400
+      - Modules testés : work-orders, equipments, users, inventory, locations, vendors
+      
+      📥 TESTS IMPORT : ✓ TOUS PASSENT
+      - Mode 'add' : ✓ 3 locations ajoutées avec succès
+      - Mode 'replace' : ✓ 1 location mise à jour avec succès
+      - Support XLSX : ✓ 2 utilisateurs importés avec succès
+      - Gestion erreurs : ✓ Module invalide (400), Format invalide (400)
+      - Structure réponse : ✓ {total, inserted, updated, skipped, errors}
+      
+      🔒 CONTRÔLE D'ACCÈS : ✓ TOUS PASSENT
+      - Export non-admin : ✓ 403 Forbidden
+      - Import non-admin : ✓ 403 Forbidden
+      
+      SCORE FINAL : 11/11 tests Import/Export réussis (100%)
+      
+      ✅ La fonctionnalité Import/Export est entièrement fonctionnelle et sécurisée.
