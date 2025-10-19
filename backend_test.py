@@ -589,16 +589,611 @@ class EquipmentHierarchyTester:
         
         return results
 
+class ImportExportTester:
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.admin_token = None
+        self.viewer_token = None
+        self.admin_user_id = None
+        self.viewer_user_id = None
+        self.session = requests.Session()
+        
+    def log(self, message: str, level: str = "INFO"):
+        """Log test messages"""
+        print(f"[{level}] {message}")
+        
+    def make_request(self, method: str, endpoint: str, data: Dict = None, headers: Dict = None, token: str = None, files: Dict = None) -> requests.Response:
+        """Make HTTP request with proper headers"""
+        url = f"{self.base_url}{endpoint}"
+        
+        request_headers = {}
+        if not files:  # Only set Content-Type for non-file uploads
+            request_headers["Content-Type"] = "application/json"
+        if headers:
+            request_headers.update(headers)
+            
+        if token:
+            request_headers["Authorization"] = f"Bearer {token}"
+        elif self.admin_token:
+            request_headers["Authorization"] = f"Bearer {self.admin_token}"
+            
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=request_headers)
+            elif method.upper() == "POST":
+                if files:
+                    response = self.session.post(url, files=files, headers=request_headers)
+                else:
+                    response = self.session.post(url, json=data, headers=request_headers)
+            elif method.upper() == "PUT":
+                response = self.session.put(url, json=data, headers=request_headers)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url, headers=request_headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            self.log(f"{method} {endpoint} -> {response.status_code}")
+            return response
+        except Exception as e:
+            self.log(f"Request failed: {e}", "ERROR")
+            raise
+            
+    def setup_admin_user(self) -> bool:
+        """Create or login as admin user"""
+        self.log("Setting up admin user...")
+        
+        # Try to login first
+        login_data = {
+            "email": "admin@example.com",
+            "password": "password123"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            self.admin_token = data["access_token"]
+            self.admin_user_id = data["user"]["id"]
+            self.log(f"Admin login successful. User ID: {self.admin_user_id}")
+            return True
+        elif response.status_code == 401:
+            # Admin doesn't exist, create it
+            self.log("Admin user not found, creating...")
+            register_data = {
+                "nom": "Admin",
+                "prenom": "System",
+                "email": "admin@example.com",
+                "telephone": "+33123456789",
+                "password": "password123",
+                "role": "ADMIN"
+            }
+            
+            response = self.make_request("POST", "/auth/register", register_data, token=None)
+            if response.status_code == 200:
+                self.log("Admin user created successfully")
+                # Now login
+                return self.setup_admin_user()
+            else:
+                self.log(f"Failed to create admin user: {response.status_code} - {response.text}", "ERROR")
+                return False
+        else:
+            self.log(f"Login failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def setup_viewer_user(self) -> bool:
+        """Create or login as viewer user for access control tests"""
+        self.log("Setting up viewer user...")
+        
+        # Try to login first
+        login_data = {
+            "email": "viewer@example.com",
+            "password": "password123"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            self.viewer_token = data["access_token"]
+            self.viewer_user_id = data["user"]["id"]
+            self.log(f"Viewer login successful. User ID: {self.viewer_user_id}")
+            return True
+        elif response.status_code == 401:
+            # Viewer doesn't exist, create it
+            self.log("Viewer user not found, creating...")
+            register_data = {
+                "nom": "Viewer",
+                "prenom": "Test",
+                "email": "viewer@example.com",
+                "telephone": "+33987654321",
+                "password": "password123",
+                "role": "VISUALISEUR"
+            }
+            
+            response = self.make_request("POST", "/auth/register", register_data, token=None)
+            if response.status_code == 200:
+                self.log("Viewer user created successfully")
+                # Now login
+                return self.setup_viewer_user()
+            else:
+                self.log(f"Failed to create viewer user: {response.status_code} - {response.text}", "ERROR")
+                return False
+        else:
+            self.log(f"Viewer login failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_admin_authentication(self) -> bool:
+        """Test 1: Authentication Admin"""
+        self.log("\n=== Test 1: Authentication Admin ===")
+        
+        login_data = {
+            "email": "admin@example.com",
+            "password": "password123"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            if "access_token" in data and "user" in data:
+                self.admin_token = data["access_token"]
+                user = data["user"]
+                if user.get("role") == "ADMIN":
+                    self.log("✓ Admin authentication successful")
+                    self.log(f"  - Token received: {self.admin_token[:20]}...")
+                    self.log(f"  - User role: {user.get('role')}")
+                    return True
+                else:
+                    self.log(f"✗ User role is not ADMIN: {user.get('role')}", "ERROR")
+                    return False
+            else:
+                self.log("✗ Missing access_token or user in response", "ERROR")
+                return False
+        else:
+            self.log(f"✗ Admin login failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_export_csv_module_specific(self) -> bool:
+        """Test 2: Export CSV - Module spécifique"""
+        self.log("\n=== Test 2: Export CSV - Module spécifique (work-orders) ===")
+        
+        response = self.make_request("GET", "/export/work-orders?format=csv")
+        
+        if response.status_code == 200:
+            # Check Content-Type
+            content_type = response.headers.get("content-type", "")
+            if "text/csv" in content_type:
+                self.log("✓ Correct Content-Type: text/csv")
+            else:
+                self.log(f"✗ Incorrect Content-Type: {content_type}", "ERROR")
+                return False
+                
+            # Check Content-Disposition header
+            content_disposition = response.headers.get("content-disposition", "")
+            if "attachment" in content_disposition and "filename" in content_disposition:
+                self.log(f"✓ Content-Disposition header present: {content_disposition}")
+            else:
+                self.log(f"✗ Missing or incorrect Content-Disposition header: {content_disposition}", "ERROR")
+                return False
+                
+            # Check if response has content
+            if len(response.content) > 0:
+                self.log(f"✓ CSV export successful, size: {len(response.content)} bytes")
+                return True
+            else:
+                self.log("✗ Empty CSV response", "ERROR")
+                return False
+        else:
+            self.log(f"✗ CSV export failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_export_xlsx_module_specific(self) -> bool:
+        """Test 3: Export XLSX - Module spécifique"""
+        self.log("\n=== Test 3: Export XLSX - Module spécifique (equipments) ===")
+        
+        response = self.make_request("GET", "/export/equipments?format=xlsx")
+        
+        if response.status_code == 200:
+            # Check Content-Type
+            content_type = response.headers.get("content-type", "")
+            expected_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            if expected_type in content_type:
+                self.log("✓ Correct Content-Type for XLSX")
+            else:
+                self.log(f"✗ Incorrect Content-Type: {content_type}", "ERROR")
+                return False
+                
+            # Check Content-Disposition header
+            content_disposition = response.headers.get("content-disposition", "")
+            if "attachment" in content_disposition and "filename" in content_disposition:
+                self.log(f"✓ Content-Disposition header present: {content_disposition}")
+            else:
+                self.log(f"✗ Missing or incorrect Content-Disposition header: {content_disposition}", "ERROR")
+                return False
+                
+            # Check if response has content
+            if len(response.content) > 0:
+                self.log(f"✓ XLSX export successful, size: {len(response.content)} bytes")
+                return True
+            else:
+                self.log("✗ Empty XLSX response", "ERROR")
+                return False
+        else:
+            self.log(f"✗ XLSX export failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_export_xlsx_all_data(self) -> bool:
+        """Test 4: Export XLSX - Toutes les données"""
+        self.log("\n=== Test 4: Export XLSX - Toutes les données ===")
+        
+        response = self.make_request("GET", "/export/all?format=xlsx")
+        
+        if response.status_code == 200:
+            # Check Content-Type
+            content_type = response.headers.get("content-type", "")
+            expected_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            if expected_type in content_type:
+                self.log("✓ Correct Content-Type for XLSX")
+            else:
+                self.log(f"✗ Incorrect Content-Type: {content_type}", "ERROR")
+                return False
+                
+            # Check if response has content (should contain multiple sheets)
+            if len(response.content) > 0:
+                self.log(f"✓ XLSX export all data successful, size: {len(response.content)} bytes")
+                # Note: We could use openpyxl to verify multiple sheets, but for now just check size
+                return True
+            else:
+                self.log("✗ Empty XLSX response", "ERROR")
+                return False
+        else:
+            self.log(f"✗ XLSX export all data failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_export_csv_all_data_should_fail(self) -> bool:
+        """Test 5: Export CSV - Toutes les données (devrait échouer)"""
+        self.log("\n=== Test 5: Export CSV - Toutes les données (devrait échouer) ===")
+        
+        response = self.make_request("GET", "/export/all?format=csv")
+        
+        if response.status_code == 400:
+            try:
+                error_data = response.json()
+                if "detail" in error_data:
+                    self.log(f"✓ Correctly failed with 400: {error_data['detail']}")
+                    return True
+                else:
+                    self.log("✓ Correctly failed with 400 (no detail message)")
+                    return True
+            except:
+                self.log("✓ Correctly failed with 400 (non-JSON response)")
+                return True
+        else:
+            self.log(f"✗ Should have failed with 400, got: {response.status_code}", "ERROR")
+            return False
+            
+    def create_test_csv_file(self) -> str:
+        """Create a test CSV file for import testing"""
+        csv_content = """name,description,address
+Test Location Import 1,Description for location 1,123 Import Street
+Test Location Import 2,Description for location 2,456 Import Avenue
+Test Location Import 3,Description for location 3,789 Import Boulevard"""
+        
+        # Create temporary file
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+        temp_file.write(csv_content)
+        temp_file.close()
+        
+        return temp_file.name
+        
+    def test_import_mode_add(self) -> bool:
+        """Test 6: Import - Mode Add"""
+        self.log("\n=== Test 6: Import - Mode Add ===")
+        
+        # Create test CSV file
+        csv_file_path = self.create_test_csv_file()
+        
+        try:
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test_locations.csv', f, 'text/csv')}
+                response = self.make_request("POST", "/import/locations?mode=add", files=files)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Check response structure
+                required_fields = ["total", "inserted", "updated", "skipped", "errors"]
+                for field in required_fields:
+                    if field not in data:
+                        self.log(f"✗ Missing field in response: {field}", "ERROR")
+                        return False
+                        
+                self.log(f"✓ Import successful with correct response structure")
+                self.log(f"  - Total: {data['total']}")
+                self.log(f"  - Inserted: {data['inserted']}")
+                self.log(f"  - Updated: {data['updated']}")
+                self.log(f"  - Skipped: {data['skipped']}")
+                self.log(f"  - Errors: {len(data['errors'])}")
+                
+                # Check that some items were inserted
+                if data['inserted'] > 0:
+                    self.log(f"✓ Successfully inserted {data['inserted']} items")
+                    return True
+                else:
+                    self.log("✗ No items were inserted", "ERROR")
+                    return False
+            else:
+                self.log(f"✗ Import failed: {response.status_code} - {response.text}", "ERROR")
+                return False
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(csv_file_path):
+                os.unlink(csv_file_path)
+                
+    def test_import_mode_replace(self) -> bool:
+        """Test 7: Import - Mode Replace"""
+        self.log("\n=== Test 7: Import - Mode Replace ===")
+        
+        # First, get existing locations to create a CSV with existing IDs
+        response = self.make_request("GET", "/locations")
+        
+        if response.status_code != 200:
+            self.log("✗ Could not fetch existing locations for replace test", "ERROR")
+            return False
+            
+        locations = response.json()
+        if not locations:
+            self.log("⚠ No existing locations found, skipping replace test", "WARN")
+            return True
+            
+        # Create CSV with existing ID
+        existing_location = locations[0]
+        csv_content = f"""id,nom,description,adresse
+{existing_location['id']},Updated Location Name,Updated description,Updated address"""
+        
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+        temp_file.write(csv_content)
+        temp_file.close()
+        
+        try:
+            with open(temp_file.name, 'rb') as f:
+                files = {'file': ('test_locations_replace.csv', f, 'text/csv')}
+                response = self.make_request("POST", "/import/locations?mode=replace", files=files)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                self.log(f"✓ Replace import successful")
+                self.log(f"  - Total: {data['total']}")
+                self.log(f"  - Updated: {data['updated']}")
+                
+                # Check that items were updated
+                if data['updated'] > 0:
+                    self.log(f"✓ Successfully updated {data['updated']} items")
+                    return True
+                else:
+                    # Could be inserted if ID didn't exist
+                    if data['inserted'] > 0:
+                        self.log(f"✓ Successfully inserted {data['inserted']} items (ID not found)")
+                        return True
+                    else:
+                        self.log("✗ No items were updated or inserted", "ERROR")
+                        return False
+            else:
+                self.log(f"✗ Replace import failed: {response.status_code} - {response.text}", "ERROR")
+                return False
+                
+        finally:
+            # Clean up temporary file
+            if os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
+                
+    def test_import_invalid_module(self) -> bool:
+        """Test 8: Import - Module invalide"""
+        self.log("\n=== Test 8: Import - Module invalide ===")
+        
+        csv_file_path = self.create_test_csv_file()
+        
+        try:
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test.csv', f, 'text/csv')}
+                response = self.make_request("POST", "/import/invalid-module", files=files)
+            
+            if response.status_code == 400:
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data:
+                        self.log(f"✓ Correctly rejected invalid module: {error_data['detail']}")
+                        return True
+                except:
+                    pass
+                self.log("✓ Correctly rejected invalid module with 400")
+                return True
+            else:
+                self.log(f"✗ Should have failed with 400, got: {response.status_code}", "ERROR")
+                return False
+                
+        finally:
+            if os.path.exists(csv_file_path):
+                os.unlink(csv_file_path)
+                
+    def test_import_invalid_format(self) -> bool:
+        """Test 9: Import - Format invalide"""
+        self.log("\n=== Test 9: Import - Format invalide ===")
+        
+        # Create a .txt file instead of CSV
+        temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
+        temp_file.write("This is not a CSV file")
+        temp_file.close()
+        
+        try:
+            with open(temp_file.name, 'rb') as f:
+                files = {'file': ('test.txt', f, 'text/plain')}
+                response = self.make_request("POST", "/import/locations", files=files)
+            
+            if response.status_code == 400:
+                try:
+                    error_data = response.json()
+                    if "detail" in error_data:
+                        self.log(f"✓ Correctly rejected invalid format: {error_data['detail']}")
+                        return True
+                except:
+                    pass
+                self.log("✓ Correctly rejected invalid format with 400")
+                return True
+            else:
+                self.log(f"✗ Should have failed with 400, got: {response.status_code}", "ERROR")
+                return False
+                
+        finally:
+            if os.path.exists(temp_file.name):
+                os.unlink(temp_file.name)
+                
+    def test_access_control_non_admin_export(self) -> bool:
+        """Test 10a: Access Control - Non-Admin Export"""
+        self.log("\n=== Test 10a: Access Control - Non-Admin Export ===")
+        
+        if not self.setup_viewer_user():
+            self.log("✗ Could not setup viewer user", "ERROR")
+            return False
+            
+        # Try to export with viewer token
+        response = self.make_request("GET", "/export/work-orders", token=self.viewer_token)
+        
+        if response.status_code in [401, 403]:
+            self.log(f"✓ Correctly denied non-admin export access: {response.status_code}")
+            return True
+        else:
+            self.log(f"✗ Should have denied access, got: {response.status_code}", "ERROR")
+            return False
+            
+    def test_access_control_non_admin_import(self) -> bool:
+        """Test 10b: Access Control - Non-Admin Import"""
+        self.log("\n=== Test 10b: Access Control - Non-Admin Import ===")
+        
+        csv_file_path = self.create_test_csv_file()
+        
+        try:
+            with open(csv_file_path, 'rb') as f:
+                files = {'file': ('test.csv', f, 'text/csv')}
+                response = self.make_request("POST", "/import/locations", files=files, token=self.viewer_token)
+            
+            if response.status_code in [401, 403]:
+                self.log(f"✓ Correctly denied non-admin import access: {response.status_code}")
+                return True
+            else:
+                self.log(f"✗ Should have denied access, got: {response.status_code}", "ERROR")
+                return False
+                
+        finally:
+            if os.path.exists(csv_file_path):
+                os.unlink(csv_file_path)
+                
+    def run_all_tests(self) -> Dict[str, bool]:
+        """Run all Import/Export tests"""
+        self.log("Starting GMAO Atlas Import/Export Tests...")
+        self.log(f"Backend URL: {self.base_url}")
+        
+        results = {}
+        
+        # Setup admin user
+        if not self.setup_admin_user():
+            self.log("Failed to setup admin user. Aborting tests.", "ERROR")
+            return {"setup": False}
+            
+        # Run Import/Export tests
+        self.log("\n" + "="*60)
+        self.log("IMPORT/EXPORT FUNCTIONALITY TESTS")
+        self.log("="*60)
+        
+        # Test 1: Admin Authentication
+        results["admin_authentication"] = self.test_admin_authentication()
+        
+        # Test 2: Export CSV - Module specific
+        results["export_csv_module"] = self.test_export_csv_module_specific()
+        
+        # Test 3: Export XLSX - Module specific
+        results["export_xlsx_module"] = self.test_export_xlsx_module_specific()
+        
+        # Test 4: Export XLSX - All data
+        results["export_xlsx_all"] = self.test_export_xlsx_all_data()
+        
+        # Test 5: Export CSV - All data (should fail)
+        results["export_csv_all_fail"] = self.test_export_csv_all_data_should_fail()
+        
+        # Test 6: Import - Mode Add
+        results["import_mode_add"] = self.test_import_mode_add()
+        
+        # Test 7: Import - Mode Replace
+        results["import_mode_replace"] = self.test_import_mode_replace()
+        
+        # Test 8: Import - Invalid module
+        results["import_invalid_module"] = self.test_import_invalid_module()
+        
+        # Test 9: Import - Invalid format
+        results["import_invalid_format"] = self.test_import_invalid_format()
+        
+        # Test 10: Access Control
+        results["access_control_export"] = self.test_access_control_non_admin_export()
+        results["access_control_import"] = self.test_access_control_non_admin_import()
+        
+        # Summary
+        self.log("\n" + "="*60)
+        self.log("IMPORT/EXPORT TEST RESULTS SUMMARY")
+        self.log("="*60)
+        
+        passed = 0
+        total = len(results)
+        
+        for test_name, result in results.items():
+            status = "✓ PASS" if result else "✗ FAIL"
+            self.log(f"{test_name}: {status}")
+            if result:
+                passed += 1
+                
+        self.log(f"\nImport/Export Tests: {passed}/{total} tests passed")
+        
+        return results
+
 def main():
     """Main test execution"""
-    tester = EquipmentHierarchyTester()
-    results = tester.run_all_tests()
+    # Run Equipment Hierarchy Tests
+    print("="*80)
+    print("RUNNING EQUIPMENT HIERARCHY TESTS")
+    print("="*80)
+    
+    hierarchy_tester = EquipmentHierarchyTester()
+    hierarchy_results = hierarchy_tester.run_all_tests()
+    
+    # Run Import/Export Tests
+    print("\n" + "="*80)
+    print("RUNNING IMPORT/EXPORT TESTS")
+    print("="*80)
+    
+    import_export_tester = ImportExportTester()
+    import_export_results = import_export_tester.run_all_tests()
+    
+    # Combined results
+    all_results = {**hierarchy_results, **import_export_results}
+    
+    print("\n" + "="*80)
+    print("OVERALL TEST SUMMARY")
+    print("="*80)
+    
+    total_passed = sum(1 for result in all_results.values() if result)
+    total_tests = len(all_results)
+    
+    print(f"Total Tests: {total_tests}")
+    print(f"Passed: {total_passed}")
+    print(f"Failed: {total_tests - total_passed}")
     
     # Exit with error code if any tests failed
-    if not all(results.values()):
+    if not all(all_results.values()):
+        print("\n❌ Some tests failed!")
         sys.exit(1)
     else:
-        print("\n🎉 All equipment hierarchy tests passed!")
+        print("\n🎉 All tests passed!")
         sys.exit(0)
 
 if __name__ == "__main__":
