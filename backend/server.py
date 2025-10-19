@@ -214,6 +214,10 @@ async def get_work_orders(
         wo["id"] = str(wo["_id"])
         del wo["_id"]
         
+        # S'assurer que attachments existe
+        if "attachments" not in wo:
+            wo["attachments"] = []
+        
         if wo.get("assigne_a_id"):
             wo["assigneA"] = await get_user_by_id(wo["assigne_a_id"])
         if wo.get("emplacement_id"):
