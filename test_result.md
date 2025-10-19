@@ -113,27 +113,33 @@ user_problem_statement: |
 backend:
   - task: "Endpoint GET /api/export/{module}"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Endpoint existant pour exporter les données d'un module (work-orders, equipments, users, inventory, locations, vendors, all). Supporte CSV et XLSX. Admin uniquement."
+      - working: true
+        agent: "testing"
+        comment: "✓ TESTÉ ET FONCTIONNEL - Tous les tests d'export passent avec succès : CSV pour modules spécifiques (work-orders, equipments, users, inventory, locations, vendors), XLSX pour modules spécifiques et toutes les données. Headers Content-Type et Content-Disposition corrects. Contrôle d'accès Admin fonctionnel (403 pour non-admin). Export CSV 'all' échoue correctement avec 400."
 
   - task: "Endpoint POST /api/import/{module}"
     implemented: true
-    working: "NA"
+    working: true
     file: "/app/backend/server.py"
     stuck_count: 0
     priority: "high"
-    needs_retesting: true
+    needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
         comment: "Endpoint existant pour importer les données d'un module. Supporte CSV et XLSX. Deux modes : 'add' (ajouter) et 'replace' (écraser par ID). Retourne des statistiques détaillées. Admin uniquement."
+      - working: true
+        agent: "testing"
+        comment: "✓ TESTÉ ET FONCTIONNEL - Tous les tests d'import passent avec succès : Mode 'add' fonctionne (3 locations ajoutées), Mode 'replace' fonctionne (1 location mise à jour), Support CSV et XLSX validé, Gestion d'erreurs correcte (module invalide=400, format invalide=400), Contrôle d'accès Admin fonctionnel (403 pour non-admin), Structure de réponse correcte avec statistiques détaillées (total, inserted, updated, skipped, errors)."
 
 frontend:
   - task: "API functions pour import/export"
