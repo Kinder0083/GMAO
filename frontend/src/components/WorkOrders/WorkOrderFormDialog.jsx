@@ -309,12 +309,45 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
               <Paperclip size={16} className="inline mr-1" />
               Joindre des fichiers
             </Label>
-            <input
-              type="file"
-              multiple
-              onChange={handleFileSelect}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
-            />
+            
+            <div className="flex gap-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              <input
+                ref={cameraInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                className="flex-1"
+              >
+                <Paperclip size={16} className="mr-2" />
+                Parcourir
+              </Button>
+              
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCameraCapture}
+                className="flex-1"
+              >
+                <Camera size={16} className="mr-2" />
+                Appareil photo
+              </Button>
+            </div>
+            
             <p className="text-xs text-gray-500">
               Formats acceptés : images, vidéos, documents (max 25MB par fichier)
             </p>
