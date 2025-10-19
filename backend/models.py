@@ -187,13 +187,22 @@ class InviteMemberRequest(BaseModel):
         return v.lower()
 
 class CreateMemberRequest(BaseModel):
-    email: EmailStr
+    email: str
     prenom: str
     nom: str
     role: UserRole
     telephone: Optional[str] = None
     service: Optional[str] = None
     password: str
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, v: str) -> str:
+        # Validation basique d'email qui accepte les domaines locaux
+        email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$|^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.local$'
+        if not re.match(email_pattern, v):
+            raise ValueError('Format d\'email invalide')
+        return v.lower()
 
 # Work Order Models
 class WorkOrderBase(BaseModel):
