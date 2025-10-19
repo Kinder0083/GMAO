@@ -254,7 +254,7 @@ const Dashboard = () => {
               <tbody>
                 {recentWorkOrders.map((wo) => (
                   <tr key={wo.id} className="border-b hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">#{wo.id}</td>
+                    <td className="py-3 px-4 text-sm text-gray-900 font-medium">#{wo.numero}</td>
                     <td className="py-3 px-4 text-sm text-gray-900">{wo.titre}</td>
                     <td className="py-3 px-4">{getStatusBadge(wo.statut)}</td>
                     <td className="py-3 px-4">{getPriorityBadge(wo.priorite)}</td>
