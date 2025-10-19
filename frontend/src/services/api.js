@@ -134,4 +134,21 @@ export const reportsAPI = {
   getAnalytics: () => api.get('/reports/analytics')
 };
 
+// ==================== IMPORT/EXPORT ====================
+export const importExportAPI = {
+  exportData: (module, format = 'xlsx') => 
+    api.get(`/export/${module}`, { 
+      params: { format },
+      responseType: 'blob' 
+    }),
+  importData: (module, file, mode = 'add') => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/import/${module}`, formData, {
+      params: { mode },
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
+};
+
 export default api;
