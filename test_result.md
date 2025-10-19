@@ -103,11 +103,12 @@
 #====================================================================================================
 
 user_problem_statement: |
-  L'utilisateur demande l'implémentation d'un système de gestion des permissions pour les administrateurs :
-  1. Ajouter une icône de suppression (corbeille) pour chaque membre de l'équipe visible uniquement aux administrateurs
-  2. Créer un système de permissions granulaires avec 3 niveaux (Visualisation/Édition/Suppression) pour tous les modules
-  3. Transformer la page "Équipes" pour inclure une fonctionnalité "Inviter des membres"
-  4. Créer une interface de gestion des autorisations pour configurer les permissions de chaque utilisateur
+  L'utilisateur demande l'implémentation d'une fonctionnalité Import/Export (Admin uniquement) :
+  1. Créer une page Import/Export accessible uniquement aux administrateurs
+  2. Permettre l'export des données en CSV ou XLSX pour chaque module ou toutes les données
+  3. Permettre l'import de données avec deux modes : Ajouter ou Écraser
+  4. Afficher un rapport détaillé après l'import (succès, duplicatas, erreurs)
+  5. Interface intuitive et ergonomique pour utilisateurs découvrant le logiciel
 
 backend:
   - task: "Modèle de permissions granulaires"
