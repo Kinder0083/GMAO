@@ -64,14 +64,14 @@ def serialize_doc(doc):
     for key, value in list(doc.items()):
         if isinstance(value, ObjectId):
             doc[key] = str(value)
-        elif isinstance(value, (int, float)) and key in ["telephone", "phone"]:
-            # Convertir les numéros de téléphone en strings
+        elif isinstance(value, (int, float)) and key in ["telephone", "phone", "numero"]:
+            # Convertir les numéros de téléphone et numéros en strings
             doc[key] = str(value)
         elif isinstance(value, list):
             doc[key] = [
                 str(item) if isinstance(item, ObjectId) 
                 else serialize_doc(item) if isinstance(item, dict) 
-                else str(item) if isinstance(item, (int, float)) and key in ["telephone", "phone"]
+                else str(item) if isinstance(item, (int, float)) and key in ["telephone", "phone", "numero"]
                 else item 
                 for item in value
             ]
