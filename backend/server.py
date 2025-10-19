@@ -185,9 +185,24 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 # ==================== WORK ORDERS ROUTES ====================
 @api_router.get("/work-orders", response_model=List[WorkOrder])
-async def get_work_orders(current_user: dict = Depends(get_current_user)):
-    """Liste tous les ordres de travail"""
-    work_orders = await db.work_orders.find().to_list(1000)
+async def get_work_orders(
+    date_debut: str = None,
+    date_fin: str = None,
+    date_type: str = "creation",  # "creation" ou "echeance"
+    current_user: dict = Depends(get_current_user)
+):
+    """Liste tous les ordres de travail avec filtrage par date"""
+    query = {}
+    
+    # Filtrage par date
+    if date_debut and date_fin:
+        date_field = "dateCreation" if date_type == "creation" else "dateEcheance"
+        query[date_field] = {
+            "$gte": datetime.fromisoformat(date_debut),
+            "$lte": datetime.fromisoformat(date_fin)
+        }
+    
+    work_orders = await db.work_orders.find(query).to_list(1000)
     
     # Populate references
     for wo in work_orders:
