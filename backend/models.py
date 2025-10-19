@@ -91,7 +91,7 @@ class User(UserBase):
     dateCreation: datetime
     derniereConnexion: Optional[datetime] = None
     permissions: UserPermissions = Field(default_factory=UserPermissions)
-    firstLogin: bool = True  # True si premier login, nécessite changement de mot de passe
+    firstLogin: Optional[bool] = False  # True si premier login, nécessite changement de mot de passe
 
     class Config:
         from_attributes = True
