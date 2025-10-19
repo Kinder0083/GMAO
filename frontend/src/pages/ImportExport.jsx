@@ -97,7 +97,7 @@ const ImportExport = () => {
       const token = localStorage.getItem('token');
 
       const formData = new FormData();
-      formData.append('file', file);
+      formData.append('file', selectedFile);
 
       const response = await axios.post(
         `${backend_url}/api/import/${selectedModule}`,
@@ -112,6 +112,7 @@ const ImportExport = () => {
       );
 
       setImportResult(response.data);
+      setSelectedFile(null); // Réinitialiser le fichier sélectionné
 
       toast({
         title: 'Import terminé',
@@ -125,7 +126,6 @@ const ImportExport = () => {
       });
     } finally {
       setImporting(false);
-      event.target.value = '';
     }
   };
 
