@@ -195,7 +195,8 @@ metadata:
 
 test_plan:
   current_focus: []
-  stuck_tasks: []
+  stuck_tasks: 
+    - "Navigation Import/Export (Admin uniquement)"
   test_all: false
   test_priority: "high_first"
 
