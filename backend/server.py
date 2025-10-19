@@ -308,6 +308,172 @@ async def delete_work_order(wo_id: str, current_user: dict = Depends(get_current
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# ==================== WORK ORDER ATTACHMENTS ====================
+UPLOAD_DIR = Path("/app/backend/uploads/work-orders")
+UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
+
+@api_router.post("/work-orders/{wo_id}/attachments")
+async def upload_attachment(
+    wo_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Uploader une pièce jointe (max 25MB)"""
+    try:
+        # Vérifier que l'ordre de travail existe
+        wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
+        if not wo:
+            raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        # Vérifier la taille du fichier
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 25MB)")
+        
+        # Générer un nom de fichier unique
+        file_ext = Path(file.filename).suffix
+        unique_filename = f"{uuid.uuid4()}{file_ext}"
+        file_path = UPLOAD_DIR / unique_filename
+        
+        # Sauvegarder le fichier
+        async with aiofiles.open(file_path, 'wb') as f:
+            await f.write(content)
+        
+        # Créer l'entrée attachment
+        attachment = {
+            "_id": ObjectId(),
+            "filename": unique_filename,
+            "original_filename": file.filename,
+            "size": len(content),
+            "mime_type": file.content_type or mimetypes.guess_type(file.filename)[0] or "application/octet-stream",
+            "uploaded_at": datetime.utcnow()
+        }
+        
+        # Ajouter à la base de données
+        await db.work_orders.update_one(
+            {"_id": ObjectId(wo_id)},
+            {"$push": {"attachments": attachment}}
+        )
+        
+        attachment_response = {
+            "id": str(attachment["_id"]),
+            "filename": attachment["filename"],
+            "original_filename": attachment["original_filename"],
+            "size": attachment["size"],
+            "mime_type": attachment["mime_type"],
+            "uploaded_at": attachment["uploaded_at"],
+            "url": f"/api/work-orders/{wo_id}/attachments/{str(attachment['_id'])}"
+        }
+        
+        return attachment_response
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/work-orders/{wo_id}/attachments")
+async def get_attachments(wo_id: str, current_user: dict = Depends(get_current_user)):
+    """Lister les pièces jointes d'un ordre de travail"""
+    try:
+        wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
+        if not wo:
+            raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        attachments = wo.get("attachments", [])
+        result = []
+        for att in attachments:
+            result.append({
+                "id": str(att["_id"]),
+                "filename": att["filename"],
+                "original_filename": att["original_filename"],
+                "size": att["size"],
+                "mime_type": att["mime_type"],
+                "uploaded_at": att["uploaded_at"],
+                "url": f"/api/work-orders/{wo_id}/attachments/{str(att['_id'])}"
+            })
+        
+        return result
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.get("/work-orders/{wo_id}/attachments/{attachment_id}")
+async def download_attachment(
+    wo_id: str,
+    attachment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Télécharger une pièce jointe"""
+    try:
+        wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
+        if not wo:
+            raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        # Trouver l'attachment
+        attachment = None
+        for att in wo.get("attachments", []):
+            if str(att["_id"]) == attachment_id:
+                attachment = att
+                break
+        
+        if not attachment:
+            raise HTTPException(status_code=404, detail="Pièce jointe non trouvée")
+        
+        file_path = UPLOAD_DIR / attachment["filename"]
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Fichier non trouvé sur le serveur")
+        
+        return FileResponse(
+            path=file_path,
+            filename=attachment["original_filename"],
+            media_type=attachment["mime_type"]
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@api_router.delete("/work-orders/{wo_id}/attachments/{attachment_id}")
+async def delete_attachment(
+    wo_id: str,
+    attachment_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Supprimer une pièce jointe"""
+    try:
+        wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
+        if not wo:
+            raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        # Trouver l'attachment
+        attachment = None
+        for att in wo.get("attachments", []):
+            if str(att["_id"]) == attachment_id:
+                attachment = att
+                break
+        
+        if not attachment:
+            raise HTTPException(status_code=404, detail="Pièce jointe non trouvée")
+        
+        # Supprimer le fichier physique
+        file_path = UPLOAD_DIR / attachment["filename"]
+        if file_path.exists():
+            file_path.unlink()
+        
+        # Retirer de la base de données
+        await db.work_orders.update_one(
+            {"_id": ObjectId(wo_id)},
+            {"$pull": {"attachments": {"_id": ObjectId(attachment_id)}}}
+        )
+        
+        return {"message": "Pièce jointe supprimée"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 # ==================== EQUIPMENTS ROUTES ====================
 @api_router.get("/equipments", response_model=List[Equipment])
 async def get_equipments(current_user: dict = Depends(get_current_user)):
