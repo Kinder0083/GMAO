@@ -98,9 +98,11 @@ apt-get update -qq && apt-get install -y -qq mongodb-org
 systemctl start mongod && systemctl enable mongod
 
 # Postfix
+echo "gmao-iris.local" > /etc/mailname
 debconf-set-selections <<< "postfix postfix/mailname string gmao-iris.local"
 debconf-set-selections <<< "postfix postfix/main_mailer_type string \"Internet Site\""
 apt-get install -y -qq postfix
+newaliases
 systemctl restart postfix && systemctl enable postfix
 ' 2>&1 | grep -v "warning" || true
 
@@ -110,18 +112,20 @@ msg_ok "Système configuré"
 msg_info "Installation de l'application..."
 CONTAINER_IP=$(pct exec $CTID -- hostname -I | awk '{print $1}')
 
-pct exec $CTID -- bash -c "
+pct exec $CTID -- bash <<'APPEOF'
 set -e
 cd /opt
+rm -rf gmao-iris 2>/dev/null || true
 git clone https://github.com/Kinder0083/GMAO.git gmao-iris
 
 cd /opt/gmao-iris
 
 # Backend .env
-cat > backend/.env <<'EOF'
+SECRET_KEY=$(openssl rand -hex 32)
+cat > backend/.env <<ENVEOF
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=gmao_iris
-SECRET_KEY=\$(openssl rand -hex 32)
+SECRET_KEY=${SECRET_KEY}
 ALGORITHM=HS256
 ACCESS_TOKEN_EXPIRE_MINUTES=10080
 PORT=8001
@@ -130,14 +134,14 @@ SMTP_HOST=localhost
 SMTP_PORT=25
 SMTP_FROM=noreply@gmao-iris.local
 SMTP_FROM_NAME=GMAO Iris
-APP_URL=http://$CONTAINER_IP
-EOF
+APP_URL=http://CONTAINER_IP_PLACEHOLDER
+ENVEOF
 
 # Frontend .env
-cat > frontend/.env <<'EOF'
-REACT_APP_BACKEND_URL=http://$CONTAINER_IP
+cat > frontend/.env <<ENVEOF
+REACT_APP_BACKEND_URL=http://CONTAINER_IP_PLACEHOLDER
 NODE_ENV=production
-EOF
+ENVEOF
 
 # Backend
 cd backend
@@ -151,7 +155,13 @@ deactivate
 cd ../frontend
 yarn install --silent
 yarn build
-" 2>&1 | grep -v "warning" || true
+APPEOF
+
+# Remplacer l'IP dans les fichiers .env
+pct exec $CTID -- bash -c "
+sed -i 's/CONTAINER_IP_PLACEHOLDER/$CONTAINER_IP/g' /opt/gmao-iris/backend/.env
+sed -i 's/CONTAINER_IP_PLACEHOLDER/$CONTAINER_IP/g' /opt/gmao-iris/frontend/.env
+"
 
 msg_ok "Application installée"
 
