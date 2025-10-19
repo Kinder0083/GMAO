@@ -338,10 +338,15 @@ from passlib.context import CryptContext
 from datetime import datetime
 import sys
 import uuid
+import os
 
 async def create_admin(email, password, prenom, nom):
-    client = AsyncIOMotorClient('mongodb://localhost:27017')
-    db = client.gmao_iris
+    # Charger la configuration depuis .env
+    mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017')
+    db_name = os.environ.get('DB_NAME', 'gmao_iris')
+    
+    client = AsyncIOMotorClient(mongo_url)
+    db = client[db_name]
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
     hashed_password = pwd_context.hash(password)
     
