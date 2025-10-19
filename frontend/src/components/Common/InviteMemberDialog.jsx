@@ -13,18 +13,14 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Mail } from 'lucide-react';
 
 const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    nom: '',
-    prenom: '',
     email: '',
-    telephone: '',
-    role: 'VISUALISEUR',
-    service: ''
+    role: 'TECHNICIEN'
   });
 
   const handleChange = (field, value) => {
@@ -34,10 +30,10 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!formData.nom || !formData.prenom || !formData.email) {
+    if (!formData.email) {
       toast({
         title: 'Erreur',
-        description: 'Veuillez remplir tous les champs obligatoires',
+        description: 'Veuillez entrer un email',
         variant: 'destructive'
       });
       return;
@@ -45,21 +41,17 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
 
     try {
       setLoading(true);
-      await usersAPI.invite(formData);
+      await usersAPI.inviteMember(formData);
       
       toast({
-        title: 'Succès',
-        description: 'Le membre a été invité avec succès. Un email avec les détails de connexion a été envoyé.',
+        title: 'Invitation envoyée !',
+        description: `Un email d'invitation a été envoyé à ${formData.email}`,
       });
 
       // Reset form
       setFormData({
-        nom: '',
-        prenom: '',
         email: '',
-        telephone: '',
-        role: 'VISUALISEUR',
-        service: ''
+        role: 'TECHNICIEN'
       });
 
       onOpenChange(false);
@@ -67,7 +59,7 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'inviter le membre',
+        description: error.response?.data?.detail || 'Impossible d\'envoyer l\'invitation',
         variant: 'destructive'
       });
     } finally {
@@ -77,72 +69,36 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[450px]">
         <DialogHeader>
-          <DialogTitle>Inviter un nouveau membre</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <Mail className="h-5 w-5 text-blue-600" />
+            Inviter un membre
+          </DialogTitle>
           <DialogDescription>
-            Invitez un nouveau membre à rejoindre votre équipe. Un email avec les informations de connexion sera envoyé.
+            Un email sera envoyé avec un lien d'inscription. Le membre pourra compléter son profil lui-même.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="prenom">Prénom *</Label>
-              <Input
-                id="prenom"
-                value={formData.prenom}
-                onChange={(e) => handleChange('prenom', e.target.value)}
-                placeholder="Jean"
-                required
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="nom">Nom *</Label>
-              <Input
-                id="nom"
-                value={formData.nom}
-                onChange={(e) => handleChange('nom', e.target.value)}
-                placeholder="Dupont"
-                required
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">Email du membre *</Label>
               <Input
                 id="email"
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="jean.dupont@example.com"
+                placeholder="exemple@email.com"
                 required
               />
+              <p className="text-xs text-gray-500">
+                Un lien d'invitation valide 7 jours sera envoyé
+              </p>
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="telephone">Téléphone</Label>
-              <Input
-                id="telephone"
-                value={formData.telephone}
-                onChange={(e) => handleChange('telephone', e.target.value)}
-                placeholder="+33 6 12 34 56 78"
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="service">Service</Label>
-              <Input
-                id="service"
-                value={formData.service}
-                onChange={(e) => handleChange('service', e.target.value)}
-                placeholder="Ex: Maintenance, Production, Logistique..."
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="role">Rôle *</Label>
+              <Label htmlFor="role">Rôle attribué *</Label>
               <Select value={formData.role} onValueChange={(value) => handleChange('role', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un rôle" />
@@ -153,6 +109,9 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
                   <SelectItem value="ADMIN">Administrateur - Accès complet</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-gray-500">
+                Le rôle sera défini et ne pourra pas être modifié par le membre lors de l'inscription
+              </p>
             </div>
           </div>
 
@@ -166,8 +125,17 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
               Annuler
             </Button>
             <Button type="submit" disabled={loading} className="bg-blue-600 hover:bg-blue-700">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Inviter
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Envoi en cours...
+                </>
+              ) : (
+                <>
+                  <Mail className="mr-2 h-4 w-4" />
+                  Envoyer l'invitation
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
