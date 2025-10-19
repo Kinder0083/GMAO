@@ -235,11 +235,15 @@ install_system_dependencies() {
     
     pct exec $CTID -- bash -c "
         export DEBIAN_FRONTEND=noninteractive
-        apt update && apt upgrade -y
-        apt install -y curl wget git gnupg ca-certificates apt-transport-https \
+        export LANG=fr_FR.UTF-8
+        export LC_ALL=fr_FR.UTF-8
+        
+        apt-get update -qq
+        apt-get upgrade -y -qq
+        apt-get install -y -qq curl wget git gnupg ca-certificates apt-transport-https \
             software-properties-common build-essential supervisor nginx ufw \
             python3 python3-pip python3-venv mailutils
-    "
+    " 2>&1 | grep -E "(ERROR|FATAL)" || true
     
     msg_ok "Dépendances système installées"
 }
