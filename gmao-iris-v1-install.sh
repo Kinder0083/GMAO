@@ -168,7 +168,7 @@ configure_installation() {
     echo "CPU: ${CORES} cores"
     echo "Disque: ${DISK}Go"
     echo "Réseau: $NETWORK_TYPE"
-    echo "Repository: $REPO_URL"
+    echo "Repository: ${REPO_URL//:*@/:***@}"  # Masquer le token
     echo "Branche: $BRANCH"
     echo "Admin: $ADMIN_FIRSTNAME $ADMIN_LASTNAME ($ADMIN_EMAIL)"
     echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
