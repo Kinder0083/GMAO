@@ -107,28 +107,88 @@ docker-compose up -d
 - **API Backend**: http://localhost:8001
 - **Documentation API**: http://localhost:8001/docs
 
-### Installation sur Proxmox LXC
+### Installation sur Proxmox LXC (Recommandé)
 
-Pour une installation automatique sur Proxmox, consultez [INSTALLATION_PROXMOX.md](INSTALLATION_PROXMOX.md)
+**Installation automatique en une commande:**
 
-Ou exécutez le script d'installation :
 ```bash
-wget -O install-proxmox-lxc.sh https://raw.githubusercontent.com/VOTRE_REPO/gmao-atlas-clone/main/install-proxmox-lxc.sh
-chmod +x install-proxmox-lxc.sh
-./install-proxmox-lxc.sh
+wget -qO - https://raw.githubusercontent.com/votreuser/gmao-iris/main/gmao-iris-proxmox.sh | bash
 ```
 
-## Utilisation
+Pour plus de détails, consultez [INSTALLATION_PROXMOX_COMPLET.md](INSTALLATION_PROXMOX_COMPLET.md)
 
-### Connexion par défaut
+**Caractéristiques:**
+- Installation complète automatisée
+- Container LXC optimisé
+- MongoDB 7.0 préconfiguré
+- Nginx + Supervisor
+- Création automatique de comptes admin
+- Support SSL Let's Encrypt
 
-**Email**: sophie.martin@gmao.fr  
-**Mot de passe**: admin123
+### Installation Docker (Alternative)
 
-⚠️ **Important**: Changez ces identifiants après la première connexion !
+1. Clonez le dépôt :
+```bash
+git clone https://github.com/votreuser/gmao-iris.git
+cd gmao-iris
+```
 
-### Créer un compte administrateur
+2. Créez les fichiers `.env` :
 
+**Backend** (`backend/.env`):
+```bash
+cp backend/.env.example backend/.env
+```
+
+Modifiez avec vos paramètres:
+```env
+MONGO_URL=mongodb://localhost:27017
+DB_NAME=gmao_iris
+SECRET_KEY=$(openssl rand -hex 32)
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=10080
+PORT=8001
+HOST=0.0.0.0
+```
+
+**Frontend** (`frontend/.env`):
+```bash
+cp frontend/.env.example frontend/.env
+```
+
+Modifiez:
+```env
+REACT_APP_BACKEND_URL=http://localhost:8001
+NODE_ENV=production
+```
+
+3. Démarrez l'application :
+```bash
+docker-compose up -d
+```
+
+4. Accédez à l'application :
+- **Frontend**: http://localhost:3000
+- **API Backend**: http://localhost:8001
+- **Documentation API**: http://localhost:8001/docs
+
+## 👤 Gestion des Utilisateurs
+
+### Créer un administrateur
+
+**Méthode 1: Script interactif (Recommandé)**
+```bash
+python3 create_admin.py
+```
+
+**Méthode 2: Depuis le backend**
+```bash
+cd backend
+source venv/bin/activate
+python3 create_admin_manual.py
+```
+
+**Méthode 3: Via API**
 ```bash
 curl -X POST http://localhost:8001/api/auth/register \
   -H "Content-Type: application/json" \
@@ -136,11 +196,23 @@ curl -X POST http://localhost:8001/api/auth/register \
     "nom": "Votre Nom",
     "prenom": "Votre Prénom",
     "email": "votre.email@exemple.com",
-    "password": "votre_mot_de_passe",
+    "password": "VotreMotDePasse123!",
     "role": "ADMIN",
-    "telephone": "06 12 34 56 78"
+    "telephone": "+33612345678"
   }'
 ```
+
+### Comptes de test (environnement Proxmox)
+
+Après installation Proxmox, deux comptes sont créés:
+
+1. **Votre compte personnalisé** (défini pendant l'installation)
+2. **Compte de secours:**
+   - Email: `buenogy@gmail.com`
+   - Mot de passe: `Admin2024!`
+   - Rôle: ADMIN
+
+⚠️ **Important**: Changez ou supprimez le compte de secours en production !
 
 ## Développement
 
