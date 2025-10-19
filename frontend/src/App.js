@@ -20,6 +20,7 @@ import People from "./pages/People";
 import Planning from "./pages/Planning";
 import Vendors from "./pages/Vendors";
 import Settings from "./pages/Settings";
+import ImportExport from "./pages/ImportExport";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
