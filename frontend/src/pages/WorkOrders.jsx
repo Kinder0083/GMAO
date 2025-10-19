@@ -178,19 +178,110 @@ const WorkOrders = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Ordres de travail</h1>
-          <p className="text-gray-600 mt-1">Gérez tous vos ordres de maintenance</p>
+          <p className="text-gray-600 mt-1">Gérez vos interventions et maintenances</p>
         </div>
-        <Button
-          onClick={() => {
-            setSelectedWorkOrder(null);
-            setFormDialogOpen(true);
-          }}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
-        >
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+          setSelectedWorkOrder(null);
+          setFormDialogOpen(true);
+        }}>
           <Plus size={20} className="mr-2" />
           Nouvel ordre
         </Button>
       </div>
+
+      {/* Filtres de date */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Type de tri date */}
+            <div className="flex items-center gap-2">
+              <Button
+                variant={dateType === 'creation' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setDateType(dateType === 'creation' ? 'echeance' : 'creation')}
+                className="gap-2"
+              >
+                <ArrowUpDown size={16} />
+                {dateType === 'creation' ? 'Créé le' : 'Échéance'}
+              </Button>
+            </div>
+
+            <div className="h-6 w-px bg-gray-300"></div>
+
+            {/* Filtres prédéfinis */}
+            <div className="flex gap-2">
+              <Button
+                variant={dateFilter === 'today' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setDateFilter('today');
+                  setShowCustomDatePicker(false);
+                }}
+                className={dateFilter === 'today' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              >
+                Aujourd'hui
+              </Button>
+              <Button
+                variant={dateFilter === 'week' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setDateFilter('week');
+                  setShowCustomDatePicker(false);
+                }}
+                className={dateFilter === 'week' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              >
+                Cette semaine
+              </Button>
+              <Button
+                variant={dateFilter === 'month' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setDateFilter('month');
+                  setShowCustomDatePicker(false);
+                }}
+                className={dateFilter === 'month' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              >
+                Ce mois
+              </Button>
+              <Button
+                variant={dateFilter === 'custom' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => {
+                  setShowCustomDatePicker(!showCustomDatePicker);
+                  if (!showCustomDatePicker) setDateFilter('custom');
+                }}
+                className={dateFilter === 'custom' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+              >
+                <Calendar size={16} className="mr-2" />
+                Personnalisé
+              </Button>
+            </div>
+
+            {/* Sélecteur de dates personnalisé */}
+            {showCustomDatePicker && (
+              <>
+                <div className="h-6 w-px bg-gray-300"></div>
+                <div className="flex gap-2 items-center">
+                  <Label className="text-sm">Du</Label>
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                  <Label className="text-sm">Au</Label>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>
