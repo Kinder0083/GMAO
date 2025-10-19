@@ -74,7 +74,7 @@ const MainLayout = () => {
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">G</span>
             </div>
-            <span className="font-semibold text-gray-800 text-lg">GMAO Atlas</span>
+            <span className="font-semibold text-gray-800 text-lg">GMAO Iris</span>
           </div>
         </div>
 
