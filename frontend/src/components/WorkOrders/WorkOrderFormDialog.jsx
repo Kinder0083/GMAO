@@ -82,6 +82,21 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     }
   };
 
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files || []);
+    const newAttachments = files.map(file => ({
+      file,
+      name: file.name,
+      size: file.size
+    }));
+    setAttachments([...attachments, ...newAttachments]);
+    event.target.value = ''; // Reset input
+  };
+
+  const handleRemoveAttachment = (index) => {
+    setAttachments(attachments.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
