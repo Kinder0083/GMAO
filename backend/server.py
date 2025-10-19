@@ -308,6 +308,311 @@ async def reset_password(request: ResetPasswordRequest):
     except JWTError:
         raise HTTPException(status_code=400, detail="Token invalide ou expiré")
 
+
+# ==================== INVITATION & REGISTRATION ROUTES ====================
+
+def generate_temp_password(length: int = 12) -> str:
+    """Génère un mot de passe temporaire aléatoire"""
+    characters = string.ascii_letters + string.digits + "!@#$%"
+    return ''.join(secrets.choice(characters) for _ in range(length))
+
+@api_router.post("/users/invite-member")
+async def invite_member(request: InviteMemberRequest, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Envoyer une invitation par email (Admin uniquement)
+    L'utilisateur recevra un lien pour compléter son inscription
+    """
+    # Vérifier si l'email existe déjà
+    existing_user = await db.users.find_one({"email": request.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un utilisateur avec cet email existe déjà"
+        )
+    
+    # Créer un token d'invitation (valide 7 jours)
+    invitation_data = {
+        "sub": request.email,
+        "type": "invitation",
+        "role": request.role,
+        "invited_by": current_user.get("_id")
+    }
+    invitation_token = create_access_token(
+        data=invitation_data,
+        expires_delta=timedelta(days=7)
+    )
+    
+    # Envoyer l'email d'invitation
+    email_sent = email_service.send_invitation_email(
+        to_email=request.email,
+        token=invitation_token,
+        role=request.role
+    )
+    
+    if not email_sent:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erreur lors de l'envoi de l'email d'invitation"
+        )
+    
+    # Log l'invitation
+    logger.info(f"Invitation envoyée à {request.email} par {current_user.get('email')}")
+    
+    return {
+        "message": f"Invitation envoyée à {request.email}",
+        "email": request.email,
+        "role": request.role
+    }
+
+@api_router.post("/users/create-member", response_model=User)
+async def create_member(request: CreateMemberRequest, current_user: dict = Depends(get_current_admin_user)):
+    """
+    Créer un membre directement avec mot de passe temporaire (Admin uniquement)
+    L'utilisateur recevra un email avec ses identifiants
+    """
+    # Vérifier si l'email existe déjà
+    existing_user = await db.users.find_one({"email": request.email})
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Un utilisateur avec cet email existe déjà"
+        )
+    
+    # Hasher le mot de passe fourni
+    hashed_password = get_password_hash(request.password)
+    
+    # Définir les permissions par défaut selon le rôle
+    if request.role == UserRole.ADMIN:
+        permissions = {
+            "dashboard": {"view": True, "edit": True, "delete": True},
+            "workOrders": {"view": True, "edit": True, "delete": True},
+            "assets": {"view": True, "edit": True, "delete": True},
+            "preventiveMaintenance": {"view": True, "edit": True, "delete": True},
+            "inventory": {"view": True, "edit": True, "delete": True},
+            "locations": {"view": True, "edit": True, "delete": True},
+            "vendors": {"view": True, "edit": True, "delete": True},
+            "reports": {"view": True, "edit": True, "delete": True}
+        }
+    elif request.role == UserRole.TECHNICIEN:
+        permissions = {
+            "dashboard": {"view": True, "edit": False, "delete": False},
+            "workOrders": {"view": True, "edit": True, "delete": False},
+            "assets": {"view": True, "edit": True, "delete": False},
+            "preventiveMaintenance": {"view": True, "edit": True, "delete": False},
+            "inventory": {"view": True, "edit": True, "delete": False},
+            "locations": {"view": True, "edit": False, "delete": False},
+            "vendors": {"view": True, "edit": False, "delete": False},
+            "reports": {"view": True, "edit": False, "delete": False}
+        }
+    else:  # VISUALISEUR
+        permissions = {
+            "dashboard": {"view": True, "edit": False, "delete": False},
+            "workOrders": {"view": True, "edit": False, "delete": False},
+            "assets": {"view": True, "edit": False, "delete": False},
+            "preventiveMaintenance": {"view": True, "edit": False, "delete": False},
+            "inventory": {"view": True, "edit": False, "delete": False},
+            "locations": {"view": True, "edit": False, "delete": False},
+            "vendors": {"view": True, "edit": False, "delete": False},
+            "reports": {"view": True, "edit": False, "delete": False}
+        }
+    
+    # Créer l'utilisateur
+    user_dict = {
+        "id": str(uuid.uuid4()),
+        "nom": request.nom,
+        "prenom": request.prenom,
+        "email": request.email,
+        "telephone": request.telephone or "",
+        "role": request.role,
+        "service": request.service,
+        "password": hashed_password,
+        "statut": "actif",
+        "dateCreation": datetime.utcnow(),
+        "derniereConnexion": datetime.utcnow(),
+        "permissions": permissions,
+        "firstLogin": True  # Doit changer son mot de passe à la première connexion
+    }
+    
+    await db.users.insert_one(user_dict)
+    
+    # Envoyer l'email avec les identifiants
+    email_sent = email_service.send_account_created_email(
+        to_email=request.email,
+        temp_password=request.password,
+        prenom=request.prenom
+    )
+    
+    if not email_sent:
+        logger.warning(f"Email non envoyé à {request.email}, mais compte créé")
+    
+    logger.info(f"Membre créé: {request.email} par {current_user.get('email')}")
+    
+    return User(**serialize_doc(user_dict))
+
+@api_router.get("/auth/validate-invitation/{token}")
+async def validate_invitation(token: str):
+    """
+    Valider un token d'invitation et retourner les informations
+    """
+    try:
+        payload = decode_access_token(token)
+        if not payload or payload.get("type") != "invitation":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token d'invitation invalide"
+            )
+        
+        # Vérifier que l'utilisateur n'existe pas déjà
+        email = payload.get("sub")
+        existing_user = await db.users.find_one({"email": email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cet utilisateur existe déjà"
+            )
+        
+        return {
+            "valid": True,
+            "email": email,
+            "role": payload.get("role")
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token d'invitation invalide ou expiré"
+        )
+
+@api_router.post("/auth/complete-registration", response_model=User)
+async def complete_registration(request: CompleteRegistrationRequest):
+    """
+    Compléter l'inscription après avoir reçu une invitation
+    """
+    try:
+        # Valider le token
+        payload = decode_access_token(request.token)
+        if not payload or payload.get("type") != "invitation":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Token d'invitation invalide"
+            )
+        
+        email = payload.get("sub")
+        role = payload.get("role")
+        
+        # Vérifier que l'utilisateur n'existe pas déjà
+        existing_user = await db.users.find_one({"email": email})
+        if existing_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cet utilisateur existe déjà"
+            )
+        
+        # Hasher le mot de passe
+        hashed_password = get_password_hash(request.password)
+        
+        # Définir les permissions par défaut selon le rôle
+        if role == UserRole.ADMIN:
+            permissions = {
+                "dashboard": {"view": True, "edit": True, "delete": True},
+                "workOrders": {"view": True, "edit": True, "delete": True},
+                "assets": {"view": True, "edit": True, "delete": True},
+                "preventiveMaintenance": {"view": True, "edit": True, "delete": True},
+                "inventory": {"view": True, "edit": True, "delete": True},
+                "locations": {"view": True, "edit": True, "delete": True},
+                "vendors": {"view": True, "edit": True, "delete": True},
+                "reports": {"view": True, "edit": True, "delete": True}
+            }
+        elif role == UserRole.TECHNICIEN:
+            permissions = {
+                "dashboard": {"view": True, "edit": False, "delete": False},
+                "workOrders": {"view": True, "edit": True, "delete": False},
+                "assets": {"view": True, "edit": True, "delete": False},
+                "preventiveMaintenance": {"view": True, "edit": True, "delete": False},
+                "inventory": {"view": True, "edit": True, "delete": False},
+                "locations": {"view": True, "edit": False, "delete": False},
+                "vendors": {"view": True, "edit": False, "delete": False},
+                "reports": {"view": True, "edit": False, "delete": False}
+            }
+        else:  # VISUALISEUR
+            permissions = {
+                "dashboard": {"view": True, "edit": False, "delete": False},
+                "workOrders": {"view": True, "edit": False, "delete": False},
+                "assets": {"view": True, "edit": False, "delete": False},
+                "preventiveMaintenance": {"view": True, "edit": False, "delete": False},
+                "inventory": {"view": True, "edit": False, "delete": False},
+                "locations": {"view": True, "edit": False, "delete": False},
+                "vendors": {"view": True, "edit": False, "delete": False},
+                "reports": {"view": True, "edit": False, "delete": False}
+            }
+        
+        # Créer l'utilisateur
+        user_dict = {
+            "id": str(uuid.uuid4()),
+            "nom": request.nom,
+            "prenom": request.prenom,
+            "email": email,
+            "telephone": request.telephone or "",
+            "role": role,
+            "service": None,
+            "password": hashed_password,
+            "statut": "actif",
+            "dateCreation": datetime.utcnow(),
+            "derniereConnexion": datetime.utcnow(),
+            "permissions": permissions,
+            "firstLogin": False  # A déjà défini son mot de passe
+        }
+        
+        await db.users.insert_one(user_dict)
+        
+        logger.info(f"Inscription complétée pour {email}")
+        
+        return User(**serialize_doc(user_dict))
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la completion de l'inscription: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Erreur lors de l'inscription"
+        )
+
+@api_router.post("/auth/change-password-first-login")
+async def change_password_first_login(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Changer le mot de passe lors de la première connexion
+    """
+    user_id = current_user.get("_id")
+    
+    # Vérifier l'ancien mot de passe
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    if not verify_password(request.old_password, user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect"
+        )
+    
+    # Hasher le nouveau mot de passe
+    new_hashed_password = get_password_hash(request.new_password)
+    
+    # Mettre à jour le mot de passe et marquer firstLogin comme False
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {
+            "$set": {
+                "password": new_hashed_password,
+                "firstLogin": False
+            }
+        }
+    )
+    
+    logger.info(f"Mot de passe changé pour {user.get('email')}")
+    
+    return {"message": "Mot de passe changé avec succès"}
+
 # ==================== WORK ORDERS ROUTES ====================
 @api_router.get("/work-orders", response_model=List[WorkOrder])
 async def get_work_orders(
