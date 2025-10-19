@@ -107,9 +107,30 @@ configure_installation() {
         NET_CONFIG="ip=dhcp"
     fi
     
+    # Mot de passe root
+    echo ""
+    read -sp "Mot de passe root du container: " ROOT_PASSWORD
+    echo ""
+    while [[ ${#ROOT_PASSWORD} -lt 8 ]]; do
+        msg_error "Le mot de passe doit contenir au moins 8 caractères"
+        read -sp "Mot de passe root du container: " ROOT_PASSWORD
+        echo ""
+    done
+    
     # Repository GitHub
+    read -p "Le dépôt GitHub est-il public? (y/n) [y]: " IS_PUBLIC
+    IS_PUBLIC=${IS_PUBLIC:-y}
+    
     read -p "URL du dépôt GitHub [https://github.com/Kinder0083/GMAO.git]: " REPO_URL
     REPO_URL=${REPO_URL:-https://github.com/Kinder0083/GMAO.git}
+    
+    if [[ ! $IS_PUBLIC =~ ^[Yy]$ ]]; then
+        msg_warn "Pour un dépôt privé, vous aurez besoin d'un Personal Access Token"
+        read -p "GitHub Username: " GIT_USERNAME
+        read -sp "GitHub Personal Access Token: " GIT_TOKEN
+        echo ""
+        REPO_URL="https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/${GIT_USERNAME}/GMAO.git"
+    fi
     
     read -p "Branche [main]: " BRANCH
     BRANCH=${BRANCH:-main}
