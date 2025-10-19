@@ -347,7 +347,14 @@ const WorkOrders = () => {
                 <tbody>
                   {filteredWorkOrders.map((wo) => (
                     <tr key={wo.id} className="border-b hover:bg-gray-50 transition-colors">
-                      <td className="py-3 px-4 text-sm text-gray-900 font-medium">#{wo.numero}</td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-gray-900 font-medium">#{wo.numero}</span>
+                          {wo.attachments && wo.attachments.length > 0 && (
+                            <Paperclip size={14} className="text-gray-500" title={`${wo.attachments.length} pièce(s) jointe(s)`} />
+                          )}
+                        </div>
+                      </td>
                       <td className="py-3 px-4">{getStatusBadge(wo.statut)}</td>
                       <td className="py-3 px-4 text-sm text-gray-900 font-medium">{wo.titre}</td>
                       <td className="py-3 px-4">{getPriorityBadge(wo.priorite)}</td>
