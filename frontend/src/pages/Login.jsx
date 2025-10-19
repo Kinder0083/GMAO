@@ -64,7 +64,7 @@ const Login = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">GMAO Iris</h1>
           <p className="text-gray-600 mb-6">Gestion de Maintenance Assistée par Ordinateur</p>
           <p className="text-sm text-gray-500 mb-1">Concepteur: Grèg</p>
-          <p className="text-sm text-gray-500 mb-6">Version 0.9</p>
+          <p className="text-sm text-gray-500 mb-6">Version 1.0</p>
         </div>
 
         <Card className="shadow-xl border-0">
