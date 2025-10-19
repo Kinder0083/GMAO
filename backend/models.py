@@ -138,12 +138,24 @@ class WorkOrder(WorkOrderBase):
     tempsReel: Optional[float] = None
     dateCreation: datetime
     dateTermine: Optional[datetime] = None
+    dateEcheance: Optional[datetime] = None
     equipement: Optional[dict] = None
     assigneA: Optional[dict] = None
     emplacement: Optional[dict] = None
+    attachments: List[dict] = []
 
     class Config:
         from_attributes = True
+
+# Attachment Model
+class AttachmentResponse(BaseModel):
+    id: str
+    filename: str
+    original_filename: str
+    size: int
+    mime_type: str
+    uploaded_at: datetime
+    url: str
 
 # Equipment Models
 class EquipmentBase(BaseModel):
