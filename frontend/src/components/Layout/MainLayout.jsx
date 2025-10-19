@@ -43,7 +43,7 @@ const MainLayout = () => {
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
     { icon: ClipboardList, label: 'Ordres de travail', path: '/work-orders' },
-    { icon: Calendar, label: 'Maintenance préventive', path: '/preventive-maintenance' },
+    { icon: Calendar, label: 'Maintenance prev.', path: '/preventive-maintenance' },
     { icon: Wrench, label: 'Équipements', path: '/assets' },
     { icon: Package, label: 'Inventaire', path: '/inventory' },
     { icon: MapPin, label: 'Emplacements', path: '/locations' },
