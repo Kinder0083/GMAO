@@ -60,7 +60,9 @@ const Login = () => {
             <Wrench size={32} className="text-white" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">GMAO Iris</h1>
-          <p className="text-gray-600">Système de Gestion de Maintenance</p>
+          <p className="text-gray-600 mb-6">Gestion de Maintenance Assistée par Ordinateur</p>
+          <p className="text-sm text-gray-500 mb-1">Concepteur: Grèg</p>
+          <p className="text-sm text-gray-500 mb-6">Version 0.9</p>
         </div>
 
         <Card className="shadow-xl border-0">
