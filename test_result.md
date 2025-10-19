@@ -136,7 +136,7 @@ backend:
         comment: "Endpoint existant pour importer les données d'un module. Supporte CSV et XLSX. Deux modes : 'add' (ajouter) et 'replace' (écraser par ID). Retourne des statistiques détaillées. Admin uniquement."
 
 frontend:
-  - task: "API functions pour les permissions"
+  - task: "API functions pour import/export"
     implemented: true
     working: "NA"
     file: "/app/frontend/src/services/api.js"
@@ -146,43 +146,31 @@ frontend:
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Ajout des fonctions invite, getPermissions et updatePermissions dans usersAPI"
+        comment: "Ajout de importExportAPI avec fonctions exportData et importData"
 
-  - task: "Composant InviteMemberDialog"
+  - task: "Page ImportExport.jsx"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/components/Common/InviteMemberDialog.jsx"
+    file: "/app/frontend/src/pages/ImportExport.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Création du composant pour inviter un nouveau membre avec formulaire complet (nom, prénom, email, téléphone, rôle)"
+        comment: "Page complète avec interface intuitive et ergonomique : sélection de module, choix de format (CSV/XLSX), mode d'import (Ajouter/Écraser), affichage du rapport d'import avec statistiques (total, ajoutés, mis à jour, ignorés) et guide d'utilisation"
 
-  - task: "Composant PermissionsManagementDialog"
+  - task: "Navigation Import/Export (Admin uniquement)"
     implemented: true
     working: "NA"
-    file: "/app/frontend/src/components/Common/PermissionsManagementDialog.jsx"
+    file: "/app/frontend/src/components/Layout/MainLayout.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
     status_history:
       - working: "NA"
         agent: "main"
-        comment: "Création du composant pour gérer les permissions d'un utilisateur avec checkboxes pour chaque module et niveau (view/edit/delete)"
-
-  - task: "Mise à jour de la page People"
-    implemented: true
-    working: "NA"
-    file: "/app/frontend/src/pages/People.jsx"
-    stuck_count: 0
-    priority: "high"
-    needs_retesting: false
-    status_history:
-      - working: "NA"
-        agent: "main"
-        comment: "Ajout des boutons admin-only : bouton Inviter (fonctionnel), bouton Permissions et bouton Supprimer (corbeille) pour chaque membre"
+        comment: "Ajout du lien 'Import / Export' dans la navigation avec icône Database. Visible uniquement pour les utilisateurs ADMIN. Récupération du rôle depuis localStorage."
 
 metadata:
   created_by: "main_agent"
