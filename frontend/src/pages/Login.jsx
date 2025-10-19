@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../co
 import { useToast } from '../hooks/use-toast';
 import { Wrench } from 'lucide-react';
 import { authAPI } from '../services/api';
+import ForgotPasswordDialog from '../components/Common/ForgotPasswordDialog';
 
 const Login = () => {
   const navigate = useNavigate();
