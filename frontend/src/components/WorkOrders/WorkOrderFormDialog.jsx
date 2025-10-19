@@ -33,6 +33,7 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     dateLimite: '',
     tempsEstime: ''
   });
+  const [attachments, setAttachments] = useState([]);
 
   useEffect(() => {
     if (open) {
