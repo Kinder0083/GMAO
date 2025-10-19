@@ -50,7 +50,8 @@ const MainLayout = () => {
     { icon: BarChart3, label: 'Rapports', path: '/reports' },
     { icon: Users, label: 'Équipes', path: '/people' },
     { icon: Calendar, label: 'Planning', path: '/planning' },
-    { icon: ShoppingCart, label: 'Fournisseurs', path: '/vendors' }
+    { icon: ShoppingCart, label: 'Fournisseurs', path: '/vendors' },
+    { icon: Database, label: 'Import / Export', path: '/import-export', adminOnly: true }
   ];
 
   const handleLogout = () => {
