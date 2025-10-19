@@ -95,6 +95,13 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     event.target.value = ''; // Reset input
   };
 
+  const handleCameraCapture = () => {
+    // Déclencher l'input file avec capture="environment" pour ouvrir la caméra
+    if (cameraInputRef.current) {
+      cameraInputRef.current.click();
+    }
+  };
+
   const handleRemoveAttachment = (index) => {
     setAttachments(attachments.filter((_, i) => i !== index));
   };
