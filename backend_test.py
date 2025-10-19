@@ -935,22 +935,27 @@ Test Location Import 3,789 Import Boulevard,Marseille,13001,Entrepot"""
         """Test 7: Import - Mode Replace"""
         self.log("\n=== Test 7: Import - Mode Replace ===")
         
-        # First, get existing locations to create a CSV with existing IDs
-        response = self.make_request("GET", "/locations")
+        # First, create a location that we can later replace
+        location_data = {
+            "nom": "Location to Replace",
+            "adresse": "Original Address",
+            "ville": "Original City",
+            "codePostal": "00000",
+            "type": "Original Type"
+        }
         
+        response = self.make_request("POST", "/locations", location_data)
         if response.status_code != 200:
-            self.log("✗ Could not fetch existing locations for replace test", "ERROR")
+            self.log("✗ Could not create location for replace test", "ERROR")
             return False
             
-        locations = response.json()
-        if not locations:
-            self.log("⚠ No existing locations found, skipping replace test", "WARN")
-            return True
-            
-        # Create CSV with existing ID
-        existing_location = locations[0]
-        csv_content = f"""id,nom,description,adresse
-{existing_location['id']},Updated Location Name,Updated description,Updated address"""
+        created_location = response.json()
+        location_id = created_location["id"]
+        self.log(f"Created location for replace test: {location_id}")
+        
+        # Create CSV with existing ID for replacement
+        csv_content = f"""id,nom,adresse,ville,codePostal,type
+{location_id},Updated Location Name,Updated Address,Updated City,99999,Updated Type"""
         
         temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
         temp_file.write(csv_content)
@@ -967,6 +972,7 @@ Test Location Import 3,789 Import Boulevard,Marseille,13001,Entrepot"""
                 self.log(f"✓ Replace import successful")
                 self.log(f"  - Total: {data['total']}")
                 self.log(f"  - Updated: {data['updated']}")
+                self.log(f"  - Inserted: {data['inserted']}")
                 
                 # Check that items were updated
                 if data['updated'] > 0:
