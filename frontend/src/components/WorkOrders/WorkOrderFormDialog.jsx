@@ -294,6 +294,51 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
             </div>
           </div>
 
+          {/* Section Fichiers joints */}
+          <div className="space-y-2 pt-4 border-t">
+            <Label>
+              <Paperclip size={16} className="inline mr-1" />
+              Joindre des fichiers
+            </Label>
+            <input
+              type="file"
+              multiple
+              onChange={handleFileSelect}
+              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
+            />
+            <p className="text-xs text-gray-500">
+              Formats acceptés : images, vidéos, documents (max 25MB par fichier)
+            </p>
+            
+            {attachments.length > 0 && (
+              <div className="mt-3 space-y-2">
+                <p className="text-sm font-medium text-gray-700">
+                  {attachments.length} fichier(s) sélectionné(s) :
+                </p>
+                {attachments.map((attachment, index) => (
+                  <div key={index} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                    <div className="flex items-center gap-2">
+                      <Paperclip size={14} className="text-gray-500" />
+                      <span className="text-sm text-gray-700">{attachment.name}</span>
+                      <span className="text-xs text-gray-500">
+                        ({(attachment.size / 1024 / 1024).toFixed(2)} MB)
+                      </span>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleRemoveAttachment(index)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      Supprimer
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
