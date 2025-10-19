@@ -189,69 +189,33 @@ test_plan:
 agent_communication:
   - agent: "main"
     message: |
-      J'ai implémenté le système complet de gestion des permissions :
+      J'ai implémenté la fonctionnalité complète Import/Export (Admin uniquement) :
       
-      BACKEND:
-      - Modèles de permissions avec 8 modules (dashboard, workOrders, assets, preventiveMaintenance, inventory, locations, vendors, reports)
-      - Chaque module a 3 niveaux : view, edit, delete
-      - Endpoint POST /api/users/invite pour inviter des membres (génère un mot de passe temporaire)
-      - Endpoint GET /api/users/{user_id}/permissions pour récupérer les permissions
-      - Endpoint PUT /api/users/{user_id}/permissions pour mettre à jour (admin only)
-      - Endpoint DELETE /api/users/{user_id} amélioré (empêche l'auto-suppression)
-      - Permissions par défaut définies selon le rôle lors de l'enregistrement
+      BACKEND (déjà existant, vérifié) :
+      - Endpoint GET /api/export/{module} : export CSV ou XLSX pour modules spécifiques ou "all"
+      - Endpoint POST /api/import/{module} : import CSV ou XLSX avec mode "add" ou "replace"
+      - Dépendances installées : pandas, openpyxl, xlsxwriter
+      - Protection Admin via get_current_admin_user
       
-      FRONTEND:
-      - Composant InviteMemberDialog pour inviter des membres
-      - Composant PermissionsManagementDialog pour gérer les permissions avec interface intuitive
-      - Page People mise à jour avec boutons admin-only (Permissions et Supprimer)
+      FRONTEND (nouvelles modifications) :
+      - MainLayout.jsx : Ajout du lien "Import / Export" avec icône Database (visible uniquement pour ADMIN)
+      - ImportExport.jsx : Interface intuitive avec 3 sections principales :
+        1. Export : Sélection module + format (CSV/XLSX) + bouton téléchargement
+        2. Import : Sélection module + mode (Ajouter/Écraser) + upload fichier
+        3. Rapport : Statistiques détaillées (total, ajoutés, mis à jour, ignorés) + liste des erreurs
+      - api.js : Ajout de importExportAPI avec fonctions exportData et importData
+      - Guide d'utilisation intégré sur la page
       
-      TESTS À EFFECTUER:
-      1. Créer un compte admin si pas déjà fait
-      2. Tester l'invitation d'un nouveau membre avec différents rôles
-      3. Vérifier que les permissions par défaut sont correctes selon le rôle
-      4. Tester la récupération des permissions d'un utilisateur
-      5. Tester la mise à jour des permissions (admin only)
-      6. Vérifier qu'un admin ne peut pas modifier ses propres permissions
-      7. Tester la suppression d'un utilisateur
-      8. Vérifier qu'un admin ne peut pas se supprimer lui-même
+      TESTS À EFFECTUER :
+      1. Vérifier l'accès Admin uniquement (endpoints et navigation)
+      2. Tester l'export CSV d'un module spécifique
+      3. Tester l'export XLSX d'un module spécifique
+      4. Tester l'export XLSX de toutes les données
+      5. Tester l'import en mode "add" (ajout)
+      6. Tester l'import en mode "replace" (écrasement par ID)
+      7. Vérifier le rapport d'import avec statistiques
+      8. Vérifier la gestion des erreurs (fichier invalide, module invalide, etc.)
       
-      CREDENTIALS DE TEST:
+      CREDENTIALS DE TEST :
       - Email: admin@example.com
       - Password: password123
-  - agent: "testing"
-    message: |
-      🎉 TESTS BACKEND COMPLÉTÉS AVEC SUCCÈS - TOUS LES ENDPOINTS FONCTIONNENT PARFAITEMENT
-      
-      ✅ RÉSULTATS DES TESTS (5/5 RÉUSSIS):
-      
-      1. ✅ POST /api/auth/register avec permissions par défaut
-         - VISUALISEUR: view only sur tous les modules ✓
-         - TECHNICIEN: view+edit sur workOrders/assets/preventiveMaintenance/inventory ✓
-         - ADMIN: view+edit+delete sur tous les modules ✓
-      
-      2. ✅ POST /api/users/invite 
-         - Invitation réussie pour tous les rôles (VISUALISEUR, TECHNICIEN, ADMIN) ✓
-         - Permissions par défaut correctement assignées ✓
-         - Rejet correct des emails dupliqués (400) ✓
-         - Mots de passe temporaires générés et loggés ✓
-      
-      3. ✅ GET /api/users/{user_id}/permissions
-         - Récupération des permissions réussie (200) ✓
-         - Structure complète avec 8 modules et 3 niveaux ✓
-         - Gestion correcte des IDs invalides (400) ✓
-      
-      4. ✅ PUT /api/users/{user_id}/permissions
-         - Mise à jour des permissions réussie (200) ✓
-         - Empêche correctement l'auto-modification (400) ✓
-         - Permissions correctement sauvegardées ✓
-      
-      5. ✅ DELETE /api/users/{user_id}
-         - Suppression d'utilisateur réussie (200) ✓
-         - Empêche correctement l'auto-suppression (400) ✓
-         - Gestion correcte des IDs inexistants (400) ✓
-      
-      🔧 SYSTÈME PRÊT POUR PRODUCTION
-      - Tous les endpoints de permissions fonctionnent correctement
-      - Sécurité admin implémentée (pas d'auto-modification/suppression)
-      - Permissions granulaires opérationnelles
-      - Gestion d'erreurs appropriée
