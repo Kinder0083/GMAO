@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 """
-Backend API Testing for GMAO Atlas Equipment Hierarchy System
-Tests the equipment hierarchy management system endpoints
+Backend API Testing for GMAO Atlas System
+Tests the equipment hierarchy management system endpoints and Import/Export functionality
 """
 
 import requests
 import json
 import sys
+import io
+import csv
+import tempfile
+import os
 from typing import Dict, Any, Optional
 from datetime import datetime
 
