@@ -17,12 +17,14 @@ import {
   Bell,
   Database
 } from 'lucide-react';
+import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [firstLoginDialogOpen, setFirstLoginDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER' });
+  const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER', firstLogin: false });
 
   useEffect(() => {
     // Récupérer les informations de l'utilisateur depuis localStorage
@@ -32,8 +34,14 @@ const MainLayout = () => {
         const parsedUser = JSON.parse(userInfo);
         setUser({
           nom: `${parsedUser.prenom || ''} ${parsedUser.nom || ''}`.trim() || 'Utilisateur',
-          role: parsedUser.role || 'VIEWER'
+          role: parsedUser.role || 'VIEWER',
+          firstLogin: parsedUser.firstLogin || false
         });
+        
+        // Afficher le dialog de changement de mot de passe si c'est la première connexion
+        if (parsedUser.firstLogin === true) {
+          setFirstLoginDialogOpen(true);
+        }
       } catch (error) {
         console.error('Erreur lors du parsing des infos utilisateur:', error);
       }
