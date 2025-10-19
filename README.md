@@ -247,88 +247,222 @@ gmao-atlas-clone/
 │   ├── server.py         # Point d'entrée
 │   ├── models.py         # Modèles Pydantic
 │   ├── auth.py           # Authentification JWT
-│   └── dependencies.py   # Dépendances FastAPI
+│   ├── dependencies.py   # Dépendances FastAPI
+│   └── .env.example      # Template configuration backend
+├── create_admin.py       # Script création admin interactif
+├── gmao-iris-proxmox.sh  # Script installation Proxmox
 ├── docker-compose.yml    # Configuration Docker
 ├── .env.example          # Variables d'environnement
-└── install-proxmox-lxc.sh # Script d'installation Proxmox
+├── CHANGELOG.md          # Notes de version
+└── INSTALLATION_PROXMOX_COMPLET.md  # Guide complet Proxmox
 ```
 
-## API Documentation
+## 📊 Structure de la Base de Données
+
+### Collection `users`
+
+```javascript
+{
+  "_id": ObjectId("..."),           // ID MongoDB
+  "id": "uuid-v4-string",           // UUID unique
+  "email": "user@example.com",      // Email (unique)
+  "password": "bcrypt-hash",        // Hash bcrypt
+  "prenom": "John",                 // Prénom
+  "nom": "Doe",                     // Nom
+  "role": "ADMIN",                  // ADMIN|TECHNICIEN|VISUALISEUR
+  "telephone": "+33612345678",      // Téléphone
+  "service": "IT",                  // Service (nullable)
+  "statut": "actif",                // actif|inactif
+  "dateCreation": ISODate("..."),   // Date de création
+  "derniereConnexion": ISODate("..."), // Dernière connexion
+  "permissions": {                  // Permissions granulaires
+    "dashboard": {"view": true, "edit": true, "delete": true},
+    "workOrders": {"view": true, "edit": true, "delete": true},
+    // ... autres modules
+  }
+}
+```
+
+### Collection `work_orders`
+
+```javascript
+{
+  "_id": ObjectId("..."),
+  "id": "uuid-v4-string",
+  "titre": "Titre de l'ordre",
+  "description": "Description détaillée",
+  "priorite": "HAUTE|MOYENNE|BASSE",
+  "statut": "OUVERT|EN_COURS|EN_ATTENTE|TERMINE",
+  "equipmentId": "uuid-equipment",
+  "assigneA": "uuid-user",
+  "locationId": "uuid-location",
+  "tempsEstime": 120,              // minutes
+  "tempsReel": 90,                 // minutes
+  "dateCreation": ISODate("..."),
+  "dateLimite": ISODate("..."),
+  "attachments": [                 // Pièces jointes
+    {
+      "id": "uuid",
+      "filename": "photo.jpg",
+      "filepath": "/uploads/...",
+      "mimetype": "image/jpeg",
+      "size": 1024000,
+      "uploadedAt": ISODate("...")
+    }
+  ]
+}
+```
+
+## 📚 API Documentation
 
 La documentation interactive de l'API est disponible à :
 - **Swagger UI**: http://localhost:8001/docs
 - **ReDoc**: http://localhost:8001/redoc
 
-## Gestion de l'application
+### Endpoints principaux
 
-### Voir les logs
+- `POST /api/auth/login` - Authentification
+- `POST /api/auth/register` - Inscription
+- `GET /api/auth/me` - Profil utilisateur
+- `GET /api/work-orders` - Liste des ordres de travail
+- `POST /api/work-orders` - Créer un ordre
+- `GET /api/equipments` - Liste des équipements
+- `POST /api/export/{module}` - Export de données (Admin)
+- `POST /api/import/{module}` - Import de données (Admin)
+
+## 🔧 Gestion de l'Application
+
+### Docker
+
 ```bash
+# Voir les logs
 docker-compose logs -f
-```
 
-### Redémarrer l'application
-```bash
+# Redémarrer
 docker-compose restart
-```
 
-### Arrêter l'application
-```bash
+# Arrêter
 docker-compose stop
-```
 
-### Supprimer l'application
-```bash
+# Supprimer (attention: efface les données)
 docker-compose down -v
 ```
 
-## Sauvegarde
+### Proxmox (dans le container)
 
-### Sauvegarder la base de données
 ```bash
-docker exec gmao-mongodb mongodump --out /data/backup
-docker cp gmao-mongodb:/data/backup ./backup-$(date +%Y%m%d)
+# Entrer dans le container
+pct enter CTID
+
+# Statut des services
+systemctl status mongod
+systemctl status nginx
+supervisorctl status
+
+# Logs backend
+tail -f /var/log/gmao-iris-backend.out.log
+tail -f /var/log/gmao-iris-backend.err.log
+
+# Redémarrer backend
+supervisorctl restart gmao-iris-backend
+
+# Redémarrer Nginx
+systemctl restart nginx
 ```
 
-### Restaurer la base de données
+## 💾 Sauvegarde
+
+### Docker
+
 ```bash
+# Sauvegarder MongoDB
+docker exec gmao-mongodb mongodump --out /data/backup
+docker cp gmao-mongodb:/data/backup ./backup-$(date +%Y%m%d)
+
+# Restaurer
 docker cp ./backup-20250118 gmao-mongodb:/data/restore
 docker exec gmao-mongodb mongorestore /data/restore
 ```
 
-## Contribution
+### Proxmox
 
-Les contributions sont les bienvenues ! N'hésitez pas à :
-1. Fork le projet
-2. Créer une branche pour votre fonctionnalité
-3. Commit vos changements
-4. Push vers la branche
-5. Ouvrir une Pull Request
+```bash
+# Dans le container
+mongodump --db gmao_iris --out /backup/gmao-$(date +%Y%m%d)
 
-## Licence
+# Depuis Proxmox host
+pct snapshot CTID backup-$(date +%Y%m%d)
+vzdump CTID --mode snapshot --compress zstd
+```
 
-Ce projet est sous licence GPL-3.0. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
+## 🚨 Dépannage
 
-## Support
+### Backend ne démarre pas
 
-- 📧 Email: support@gmao-atlas.fr
-- 💬 Discord: [Rejoindre le serveur](https://discord.gg/gmao-atlas)
-- 📖 Documentation: [docs.gmao-atlas.fr](https://docs.gmao-atlas.fr)
-- 🐛 Issues: [GitHub Issues](https://github.com/VOTRE_REPO/gmao-atlas-clone/issues)
+```bash
+# Vérifier les logs
+tail -50 /var/log/gmao-iris-backend.err.log
 
-## Crédits
+# Vérifier MongoDB
+systemctl status mongod
 
-Ce projet est inspiré d'[Atlas CMMS](https://github.com/Grashjs/cmms) par Grashjs.
+# Réinstaller dépendances
+cd /opt/gmao-iris/backend
+source venv/bin/activate
+pip install -r requirements.txt
+```
 
-## Captures d'écran
+### Impossible de se connecter
 
-### Tableau de bord
-![Dashboard](screenshots/dashboard.png)
+```bash
+# Lister les utilisateurs
+cd /opt/gmao-iris/backend
+source venv/bin/activate
+python3 -c "
+from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
 
-### Ordres de travail
-![Work Orders](screenshots/work-orders.png)
+load_dotenv()
+client = MongoClient(os.environ['MONGO_URL'])
+db = client[os.environ.get('DB_NAME', 'gmao_iris')]
 
-### Équipements
-![Assets](screenshots/assets.png)
+for user in db.users.find():
+    print(f\"Email: {user['email']}, Role: {user['role']}\")
+"
+
+# Créer un nouvel admin
+python3 /opt/gmao-iris/create_admin.py
+```
+
+### Erreur 502 Bad Gateway
+
+```bash
+# Vérifier backend
+supervisorctl status gmao-iris-backend
+supervisorctl restart gmao-iris-backend
+
+# Vérifier Nginx
+nginx -t
+systemctl restart nginx
+```
+
+## 📄 Licence
+
+Ce projet est sous licence Propriétaire.
+
+## 🙏 Support
+
+- 📖 Documentation: [INSTALLATION_PROXMOX_COMPLET.md](INSTALLATION_PROXMOX_COMPLET.md)
+- 📋 Changelog: [CHANGELOG.md](CHANGELOG.md)
+- 🐛 Issues: Ouvrez une issue sur GitHub
+- 💬 Questions: Consultez la documentation ou contactez le support
+
+## 👨‍💻 Développé par
+
+**Concepteur:** Grèg  
+**Version:** 1.0.0  
+**Date:** Octobre 2025
 
 ---
 
