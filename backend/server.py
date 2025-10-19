@@ -245,8 +245,8 @@ async def get_work_orders(
     
     # Populate references
     for wo in work_orders:
-        wo["id"] = str(wo["_id"])
-        del wo["_id"]
+        # Serialiser le document pour convertir tous les types non JSON
+        wo = serialize_doc(wo)
         
         # S'assurer que attachments existe et convertir les ObjectId
         if "attachments" not in wo:
