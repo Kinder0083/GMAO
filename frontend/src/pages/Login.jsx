@@ -110,6 +110,16 @@ const Login = () => {
                 {loading ? 'Connexion...' : 'Se connecter'}
               </Button>
             </form>
+            
+            <div className="mt-4 text-center">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-blue-600 hover:text-blue-700 underline"
+              >
+                Mot de passe oublié ?
+              </button>
+            </div>
           </CardContent>
         </Card>
 
