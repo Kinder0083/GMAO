@@ -50,10 +50,34 @@ def serialize_doc(doc):
     """Convert MongoDB document to JSON serializable format"""
     if doc is None:
         return None
-    doc["id"] = str(doc["_id"])
-    del doc["_id"]
+    
+    # Convertir le _id principal
+    if "_id" in doc:
+        doc["id"] = str(doc["_id"])
+        del doc["_id"]
+    
+    # Supprimer le password si présent
     if "password" in doc:
         del doc["password"]
+    
+    # Convertir récursivement tous les ObjectId
+    for key, value in list(doc.items()):
+        if isinstance(value, ObjectId):
+            doc[key] = str(value)
+        elif isinstance(value, list):
+            doc[key] = [
+                str(item) if isinstance(item, ObjectId) 
+                else serialize_doc(item) if isinstance(item, dict) 
+                else item 
+                for item in value
+            ]
+        elif isinstance(value, dict):
+            doc[key] = serialize_doc(value)
+    
+    # S'assurer que attachments existe
+    if "attachments" not in doc:
+        doc["attachments"] = []
+    
     return doc
 
 async def get_user_by_id(user_id: str):
