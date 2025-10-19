@@ -34,6 +34,8 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     tempsEstime: ''
   });
   const [attachments, setAttachments] = useState([]);
+  const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
 
   useEffect(() => {
     if (open) {
