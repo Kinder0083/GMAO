@@ -164,7 +164,7 @@ const PurchaseHistory = () => {
   };
 
   // Get unique suppliers for filter
-  const uniqueSuppliers = [...new Set(purchases.map(p => p.fournisseur))].sort();
+  const uniqueSuppliers = [...new Set(groupedPurchases.map(p => p.fournisseur))].sort();
 
   if (loading) {
     return (
