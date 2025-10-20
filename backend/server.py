@@ -613,6 +613,76 @@ async def change_password_first_login(request: ChangePasswordRequest, current_us
     
     return {"message": "Mot de passe changé avec succès"}
 
+
+@api_router.get("/auth/me", response_model=User)
+async def get_current_user_profile(current_user: dict = Depends(get_current_user)):
+    """
+    Récupérer le profil de l'utilisateur connecté
+    """
+    user_id = current_user.get("id")
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    return User(**serialize_doc(user))
+
+
+@api_router.put("/auth/me")
+async def update_current_user_profile(user_update: UserProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """
+    Mettre à jour le profil de l'utilisateur connecté
+    """
+    user_id = current_user.get("id")
+    
+    # Préparer les données à mettre à jour (exclure None)
+    update_data = {k: v for k, v in user_update.model_dump().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="Aucune donnée à mettre à jour")
+    
+    # Mettre à jour l'utilisateur
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    
+    # Récupérer l'utilisateur mis à jour
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    logger.info(f"Profil mis à jour pour {user.get('email')}")
+    
+    return {"message": "Profil mis à jour avec succès", "user": serialize_doc(user)}
+
+
+@api_router.post("/auth/change-password")
+async def change_password(request: ChangePasswordRequest, current_user: dict = Depends(get_current_user)):
+    """
+    Changer le mot de passe de l'utilisateur connecté
+    """
+    user_id = current_user.get("id")
+    
+    # Vérifier l'ancien mot de passe
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
+    
+    if not verify_password(request.old_password, user["password"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Mot de passe actuel incorrect"
+        )
+    
+    # Hasher le nouveau mot de passe
+    new_hashed_password = get_password_hash(request.new_password)
+    
+    # Mettre à jour le mot de passe
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": new_hashed_password}}
+    )
+    
+    logger.info(f"Mot de passe changé pour {user.get('email')}")
+    
+    return {"message": "Mot de passe changé avec succès"}
+
 # ==================== WORK ORDERS ROUTES ====================
 @api_router.get("/work-orders", response_model=List[WorkOrder])
 async def get_work_orders(
