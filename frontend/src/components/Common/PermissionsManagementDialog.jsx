@@ -36,7 +36,7 @@ const PermissionsManagementDialog = ({ open, onOpenChange, user, onSuccess }) =>
     { key: 'assets', label: 'Équipements' },
     { key: 'preventiveMaintenance', label: 'Maintenance préventive' },
     { key: 'inventory', label: 'Inventaire' },
-    { key: 'locations', label: 'Emplacements' },
+    { key: 'locations', label: 'Zones' },
     { key: 'vendors', label: 'Fournisseurs' },
     { key: 'reports', label: 'Rapports' }
   ];
