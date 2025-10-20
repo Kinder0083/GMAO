@@ -136,16 +136,16 @@ const PurchaseHistory = () => {
     return currentUser?.role === 'ADMIN';
   };
 
-  // Filtrer les achats
-  const filteredPurchases = purchases.filter(purchase => {
+  // Filtrer les commandes groupées
+  const filteredGroupedPurchases = groupedPurchases.filter(order => {
+    const searchLower = searchTerm.toLowerCase();
     const matchesSearch = 
-      purchase.article.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      purchase.fournisseur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      purchase.numeroCommande.toLowerCase().includes(searchTerm.toLowerCase());
+      order.fournisseur.toLowerCase().includes(searchLower) ||
+      order.numeroCommande.toLowerCase().includes(searchLower);
     
-    const purchaseMonth = new Date(purchase.dateCreation).toISOString().substring(0, 7);
-    const matchesMonth = !filterMonth || purchaseMonth === filterMonth;
-    const matchesSupplier = !filterSupplier || purchase.fournisseur === filterSupplier;
+    const orderMonth = new Date(order.dateCreation).toISOString().substring(0, 7);
+    const matchesMonth = !filterMonth || orderMonth === filterMonth;
+    const matchesSupplier = !filterSupplier || order.fournisseur === filterSupplier;
     
     return matchesSearch && matchesMonth && matchesSupplier;
   });
