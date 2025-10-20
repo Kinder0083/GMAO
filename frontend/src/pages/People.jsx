@@ -115,6 +115,11 @@ const People = () => {
     setPermissionsDialogOpen(true);
   };
 
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
+
   const roles = [
     { value: 'ALL', label: 'Tous', count: users.length },
     { value: 'ADMIN', label: 'Administrateurs', count: users.filter(u => u.role === 'ADMIN').length },
