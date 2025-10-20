@@ -135,7 +135,7 @@ const PreventiveMaintenance = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Prochainement</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">2</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{upcomingThisWeek}</p>
                 <p className="text-xs text-gray-500 mt-1">Cette semaine</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-xl">
@@ -150,7 +150,7 @@ const PreventiveMaintenance = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Complétées ce mois</p>
-                <p className="text-3xl font-bold text-gray-900 mt-2">8</p>
+                <p className="text-3xl font-bold text-gray-900 mt-2">{completedThisMonth}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-xl">
                 <CheckCircle size={24} className="text-green-600" />
