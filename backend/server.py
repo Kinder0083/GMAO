@@ -1077,6 +1077,7 @@ async def create_equipment(eq_create: EquipmentCreate, current_user: dict = Depe
     
     eq_dict["dateCreation"] = datetime.utcnow()
     eq_dict["derniereMaintenance"] = None
+    eq_dict["createdBy"] = current_user.get("id")  # Ajouter le créateur
     eq_dict["_id"] = ObjectId()
     
     await db.equipments.insert_one(eq_dict)
