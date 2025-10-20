@@ -2178,6 +2178,58 @@ async def export_data(
     except HTTPException:
         raise
     except Exception as e:
+
+
+@api_router.get("/purchase-history/template")
+async def download_purchase_template(format: str = "csv"):
+    """Télécharger un template vide pour l'import des achats"""
+    
+    # Structure du template
+    template_data = {
+        "fournisseur": ["Exemple Fournisseur"],
+        "numeroCommande": ["CMD-001"],
+        "numeroReception": ["REC-001"],
+        "dateCreation": ["2024-01-15"],
+        "article": ["Article exemple"],
+        "description": ["Description de l'article"],
+        "groupeStatistique": ["STK-A"],
+        "quantite": [10.0],
+        "montantLigneHT": [1500.50],
+        "quantiteRetournee": [0.0],
+        "site": ["Site Principal"],
+        "creationUser": ["admin@example.com"]
+    }
+    
+    df = pd.DataFrame(template_data)
+    
+    # Générer le fichier
+    if format == "csv":
+        output = io.StringIO()
+        df.to_csv(output, index=False)
+        content = output.getvalue()
+        
+        return StreamingResponse(
+            io.BytesIO(content.encode('utf-8')),
+            media_type="text/csv",
+            headers={
+                "Content-Disposition": "attachment; filename=template_historique_achat.csv"
+            }
+        )
+    else:  # xlsx
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Achats', index=False)
+        output.seek(0)
+        
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": "attachment; filename=template_historique_achat.xlsx"
+            }
+        )
+
+
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.post("/import/{module}")
