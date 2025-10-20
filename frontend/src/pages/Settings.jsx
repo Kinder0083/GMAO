@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
@@ -6,26 +6,105 @@ import { Label } from '../components/ui/label';
 import { useToast } from '../hooks/use-toast';
 import { User, Mail, Phone, Lock, Bell, Globe } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
+import ChangePasswordDialog from '../components/Common/ChangePasswordDialog';
+import { authAPI } from '../services/api';
 
 const Settings = () => {
   const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] = useState(false);
   const [settings, setSettings] = useState({
-    nom: 'Martin',
-    prenom: 'Sophie',
-    email: 'sophie.martin@example.com',
-    telephone: '06 12 34 56 78',
+    nom: '',
+    prenom: '',
+    email: '',
+    telephone: '',
+    service: '',
     notifications: true,
     emailNotifications: true,
     smsNotifications: false,
     language: 'fr'
   });
 
-  const handleSave = () => {
-    toast({
-      title: 'Paramètres sauvegardés',
-      description: 'Vos modifications ont été enregistrées avec succès'
-    });
+  useEffect(() => {
+    loadUserProfile();
+  }, []);
+
+  const loadUserProfile = async () => {
+    try {
+      setLoading(true);
+      const response = await authAPI.getMe();
+      const user = response.data;
+      
+      setSettings({
+        nom: user.nom || '',
+        prenom: user.prenom || '',
+        email: user.email || '',
+        telephone: user.telephone || '',
+        service: user.service || '',
+        notifications: true,
+        emailNotifications: true,
+        smsNotifications: false,
+        language: 'fr'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger votre profil',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Envoyer uniquement les champs du profil (pas notifications et language)
+      const profileData = {
+        nom: settings.nom,
+        prenom: settings.prenom,
+        email: settings.email,
+        telephone: settings.telephone,
+        service: settings.service
+      };
+
+      await authAPI.updateProfile(profileData);
+      
+      // Mettre à jour le localStorage
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      localStorage.setItem('user', JSON.stringify({
+        ...user,
+        ...profileData
+      }));
+
+      toast({
+        title: 'Succès',
+        description: 'Vos modifications ont été enregistrées avec succès'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Impossible d\'enregistrer les modifications',
+        variant: 'destructive'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -91,6 +170,16 @@ const Settings = () => {
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="service">Service</Label>
+                  <Input
+                    id="service"
+                    value={settings.service}
+                    onChange={(e) => setSettings({ ...settings, service: e.target.value })}
+                    placeholder="Ex: Maintenance, Production..."
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -149,13 +238,17 @@ const Settings = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <Button variant="outline" className="w-full justify-start">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => setChangePasswordDialogOpen(true)}
+                >
                   Changer le mot de passe
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start" disabled>
                   Activer l'authentification à deux facteurs
                 </Button>
-                <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700">
+                <Button variant="outline" className="w-full justify-start text-red-600 hover:text-red-700" disabled>
                   Désactiver le compte
                 </Button>
               </div>
@@ -206,10 +299,20 @@ const Settings = () => {
 
       {/* Save Button */}
       <div className="flex justify-end">
-        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 text-white px-8">
-          Enregistrer les modifications
+        <Button 
+          onClick={handleSave} 
+          className="bg-blue-600 hover:bg-blue-700 text-white px-8"
+          disabled={saving}
+        >
+          {saving ? 'Enregistrement...' : 'Enregistrer les modifications'}
         </Button>
       </div>
+
+      {/* Change Password Dialog */}
+      <ChangePasswordDialog 
+        open={changePasswordDialogOpen}
+        onOpenChange={setChangePasswordDialogOpen}
+      />
     </div>
   );
 };
