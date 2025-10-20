@@ -1447,9 +1447,28 @@ async def create_location(loc_create: LocationCreate, current_user: dict = Depen
 
 @api_router.put("/locations/{loc_id}", response_model=Location)
 async def update_location(loc_id: str, loc_update: LocationUpdate, current_user: dict = Depends(get_current_user)):
-    """Modifier un emplacement"""
+    """Modifier une zone"""
     try:
         update_data = {k: v for k, v in loc_update.model_dump().items() if v is not None}
+        
+        # Si on change le parent_id, vérifier la hiérarchie
+        if 'parent_id' in update_data and update_data['parent_id']:
+            parent_id = update_data['parent_id']
+            level = 0
+            
+            while parent_id and level < 3:
+                parent = await db.locations.find_one({"_id": ObjectId(parent_id)})
+                if parent:
+                    level += 1
+                    parent_id = parent.get('parent_id')
+                else:
+                    break
+            
+            if level >= 3:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Limite de hiérarchie atteinte. Maximum 3 niveaux de sous-zones."
+                )
         
         await db.locations.update_one(
             {"_id": ObjectId(loc_id)},
@@ -1457,18 +1476,59 @@ async def update_location(loc_id: str, loc_update: LocationUpdate, current_user:
         )
         
         loc = await db.locations.find_one({"_id": ObjectId(loc_id)})
-        return Location(**serialize_doc(loc))
+        loc_data = serialize_doc(loc)
+        
+        # Calculer le niveau
+        level = 0
+        parent_id = loc.get('parent_id')
+        while parent_id and level < 3:
+            parent = await db.locations.find_one({"_id": ObjectId(parent_id)})
+            if parent:
+                level += 1
+                parent_id = parent.get('parent_id')
+            else:
+                break
+        loc_data['level'] = level
+        loc_data['hasChildren'] = await db.locations.count_documents({"parent_id": loc_id}) > 0
+        
+        if loc.get('parent_id'):
+            parent = await db.locations.find_one({"_id": ObjectId(loc.get('parent_id'))})
+            if parent:
+                loc_data['parent'] = {
+                    "id": str(parent["_id"]),
+                    "nom": parent.get("nom")
+                }
+        
+        return Location(**loc_data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/locations/{loc_id}")
 async def delete_location(loc_id: str, current_user: dict = Depends(get_current_user)):
-    """Supprimer un emplacement"""
+    """Supprimer une zone et ses sous-zones"""
     try:
+        # Vérifier s'il y a des sous-zones
+        children_count = await db.locations.count_documents({"parent_id": loc_id})
+        if children_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Impossible de supprimer cette zone car elle contient {children_count} sous-zone(s). Supprimez d'abord les sous-zones."
+            )
+        
+        # Vérifier s'il y a des équipements liés
+        equipment_count = await db.equipments.count_documents({"emplacement_id": loc_id})
+        if equipment_count > 0:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Impossible de supprimer cette zone car elle contient {equipment_count} équipement(s)."
+            )
+        
         result = await db.locations.delete_one({"_id": ObjectId(loc_id)})
         if result.deleted_count == 0:
-            raise HTTPException(status_code=404, detail="Emplacement non trouvé")
-        return {"message": "Emplacement supprimé"}
+            raise HTTPException(status_code=404, detail="Zone non trouvée")
+        return {"message": "Zone supprimée"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
