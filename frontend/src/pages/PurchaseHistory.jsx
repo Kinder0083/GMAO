@@ -431,92 +431,94 @@ const PurchaseHistory = () => {
         </CardContent>
       </Card>
 
-      {/* Purchase List Table */}
+      {/* Purchase List Table - Grouped by Order */}
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase w-10"></th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fournisseur</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">N° Commande</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Article</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Quantité</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant HT</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nb Articles</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Montant Total HT</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Site</th>
-                  {(canEdit() || canDelete()) && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
-                  )}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredPurchases.length === 0 ? (
+                {filteredGroupedPurchases.length === 0 ? (
                   <tr>
-                    <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
-                      Aucun achat trouvé
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                      Aucune commande trouvée
                     </td>
                   </tr>
                 ) : (
-                  filteredPurchases.map((purchase) => (
-                    <tr key={purchase.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {formatDate(purchase.dateCreation)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {purchase.fournisseur}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {purchase.numeroCommande}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        <div>
-                          <p className="font-medium">{purchase.article}</p>
-                          {purchase.description && (
-                            <p className="text-xs text-gray-500 truncate max-w-xs">{purchase.description}</p>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {purchase.quantite}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
-                        {formatCurrency(purchase.montantLigneHT)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
-                        {purchase.site || '-'}
-                      </td>
-                      {(canEdit() || canDelete()) && (
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
-                          <div className="flex justify-end gap-2">
-                            {canEdit() && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="hover:bg-green-50 hover:text-green-600"
-                                onClick={() => {
-                                  setSelectedPurchase(purchase);
-                                  setFormDialogOpen(true);
-                                }}
-                              >
-                                <Pencil size={14} />
-                              </Button>
+                  filteredGroupedPurchases.map((order) => {
+                    const isExpanded = expandedOrders.has(order.numeroCommande);
+                    return (
+                      <React.Fragment key={order.numeroCommande}>
+                        {/* Order Row */}
+                        <tr className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => toggleExpand(order.numeroCommande)}>
+                          <td className="px-6 py-4">
+                            {order.itemCount > 1 && (
+                              <button className="text-gray-600 hover:text-blue-600">
+                                {isExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                              </button>
                             )}
-                            {canDelete() && (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="hover:bg-red-50 hover:text-red-600"
-                                onClick={() => handleDelete(purchase.id)}
-                              >
-                                <Trash2 size={14} />
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      )}
-                    </tr>
-                  ))
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {formatDate(order.dateCreation)}
+                          </td>
+                          <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                            {order.fournisseur}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {order.numeroCommande}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
+                              {order.itemCount} article{order.itemCount > 1 ? 's' : ''}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-green-600">
+                            {formatCurrency(order.montantTotal)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {order.site || '-'}
+                          </td>
+                        </tr>
+                        
+                        {/* Expanded Items */}
+                        {isExpanded && order.items.map((item, idx) => (
+                          <tr key={`${order.numeroCommande}-${idx}`} className="bg-blue-50">
+                            <td className="px-6 py-3"></td>
+                            <td className="px-6 py-3 text-sm text-gray-600" colSpan="2">
+                              <div className="ml-6">
+                                <p className="font-medium text-gray-900">{item.article}</p>
+                                {item.description && (
+                                  <p className="text-xs text-gray-500">{item.description}</p>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
+                              {item.numeroReception || '-'}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
+                              Qté: {item.quantite}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
+                              {formatCurrency(item.montantLigneHT)}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
+                              {item.groupeStatistique || '-'}
+                            </td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    );
+                  })
                 )}
               </tbody>
             </table>
