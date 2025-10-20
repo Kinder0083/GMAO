@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Plus, Search, Building, Mail, Phone, MapPin, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Search, Building, Mail, Phone, MapPin, Pencil, Trash2, LayoutGrid, List } from 'lucide-react';
 import VendorFormDialog from '../components/Vendors/VendorFormDialog';
 import { vendorsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
