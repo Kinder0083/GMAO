@@ -54,7 +54,7 @@ const MainLayout = () => {
     { icon: Calendar, label: 'Maintenance prev.', path: '/preventive-maintenance' },
     { icon: Wrench, label: 'Équipements', path: '/assets' },
     { icon: Package, label: 'Inventaire', path: '/inventory' },
-    { icon: MapPin, label: 'Emplacements', path: '/locations' },
+    { icon: MapPin, label: 'Zones', path: '/locations' },
     { icon: BarChart3, label: 'Rapports', path: '/reports' },
     { icon: Users, label: 'Équipes', path: '/people' },
     { icon: Calendar, label: 'Planning', path: '/planning' },
