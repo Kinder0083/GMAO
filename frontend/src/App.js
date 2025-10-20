@@ -64,6 +64,7 @@ function App() {
             <Route path="purchase-history" element={<PurchaseHistory />} />
             <Route path="import-export" element={<ImportExport />} />
             <Route path="settings" element={<Settings />} />
+            <Route path="updates" element={<Updates />} />
           </Route>
         </Routes>
       </BrowserRouter>
