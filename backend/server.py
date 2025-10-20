@@ -2197,12 +2197,48 @@ async def import_data(
         # Lire le fichier
         content = await file.read()
         
-        if file.filename.endswith('.csv'):
-            df = pd.read_csv(io.BytesIO(content))
-        elif file.filename.endswith(('.xlsx', '.xls')):
-            df = pd.read_excel(io.BytesIO(content))
-        else:
-            raise HTTPException(status_code=400, detail="Format de fichier non supporté (CSV ou XLSX uniquement)")
+        # Mapping des colonnes pour purchase-history (basé sur Requêteur.xlsx)
+        purchase_column_mapping = {
+            "Fournisseur": "fournisseur",
+            "N° Commande": "numeroCommande",
+            "N° reception": "numeroReception",
+            "Date de création": "dateCreation",
+            "Article": "article",
+            "Description": "description",
+            "Groupe statistique STK": "groupeStatistique",
+            "quantité": "quantite",
+            "Quantité": "quantite",
+            "Montant ligne HT": "montantLigneHT",
+            "Quantité retournée": "quantiteRetournee",
+            "Site": "site",
+            "Creation user": "creationUser"
+        }
+        
+        try:
+            if file.filename.endswith('.csv'):
+                df = pd.read_csv(io.BytesIO(content))
+            elif file.filename.endswith(('.xlsx', '.xls')):
+                # Options plus robustes pour lire les fichiers Excel
+                try:
+                    df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
+                except Exception as e1:
+                    # Essayer avec un autre engine
+                    try:
+                        df = pd.read_excel(io.BytesIO(content), engine='xlrd')
+                    except Exception as e2:
+                        # Dernière tentative sans spécifier l'engine
+                        df = pd.read_excel(io.BytesIO(content))
+            else:
+                raise HTTPException(status_code=400, detail="Format de fichier non supporté (CSV ou XLSX uniquement)")
+        except Exception as e:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Impossible de lire le fichier : {str(e)}. Vérifiez que le fichier n'est pas corrompu."
+            )
+        
+        # Appliquer le mapping des colonnes pour purchase-history
+        if module == "purchase-history":
+            df = df.rename(columns=purchase_column_mapping)
         
         # Convertir en dictionnaires
         items_to_import = df.to_dict('records')
@@ -2215,10 +2251,37 @@ async def import_data(
             "errors": []
         }
         
-        for item in items_to_import:
+        for idx, item in enumerate(items_to_import):
             try:
                 # Nettoyer les NaN
                 cleaned_item = {k: v for k, v in item.items() if pd.notna(v)}
+                
+                # Traitement spécifique pour purchase-history
+                if module == "purchase-history":
+                    # Convertir les dates
+                    if "dateCreation" in cleaned_item:
+                        try:
+                            date_val = cleaned_item["dateCreation"]
+                            if isinstance(date_val, str):
+                                cleaned_item["dateCreation"] = datetime.fromisoformat(date_val.replace('Z', '+00:00'))
+                            elif hasattr(date_val, 'to_pydatetime'):
+                                cleaned_item["dateCreation"] = date_val.to_pydatetime()
+                        except:
+                            pass
+                    
+                    # Ajouter dateEnregistrement et creationUser
+                    cleaned_item["dateEnregistrement"] = datetime.utcnow()
+                    if "creationUser" not in cleaned_item or not cleaned_item["creationUser"]:
+                        cleaned_item["creationUser"] = current_user.get("email", "import")
+                    
+                    # S'assurer que les champs numériques sont corrects
+                    for num_field in ["quantite", "montantLigneHT", "quantiteRetournee"]:
+                        if num_field in cleaned_item:
+                            try:
+                                cleaned_item[num_field] = float(cleaned_item[num_field])
+                            except:
+                                if num_field == "quantiteRetournee":
+                                    cleaned_item[num_field] = 0.0
                 
                 # Gérer l'ID
                 item_id = cleaned_item.get('id')
