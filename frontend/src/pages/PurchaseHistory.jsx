@@ -64,6 +64,42 @@ const PurchaseHistory = () => {
     }
   };
 
+  const handleDownloadTemplate = async () => {
+    try {
+      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const token = localStorage.getItem('token');
+      
+      const response = await fetch(`${backend_url}/api/purchase-history/template?format=csv`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) throw new Error('Erreur de téléchargement');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'template_historique_achat.csv';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: 'Succès',
+        description: 'Template téléchargé'
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de télécharger le template',
+        variant: 'destructive'
+      });
+    }
+  };
+
   const canEdit = () => {
     return currentUser?.role === 'ADMIN' || currentUser?.role === 'TECHNICIEN';
   };
