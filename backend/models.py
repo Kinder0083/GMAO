@@ -485,3 +485,43 @@ class Vendor(VendorBase):
 
     class Config:
         from_attributes = True
+
+
+# Purchase History Models (Historique Achat)
+class PurchaseHistoryBase(BaseModel):
+    fournisseur: str
+    numeroCommande: str
+    numeroReception: Optional[str] = None
+    dateCreation: datetime
+    article: str
+    description: Optional[str] = None
+    groupeStatistique: Optional[str] = None
+    quantite: float
+    montantLigneHT: float
+    quantiteRetournee: Optional[float] = 0.0
+    site: Optional[str] = None
+    creationUser: Optional[str] = None
+
+class PurchaseHistoryCreate(PurchaseHistoryBase):
+    pass
+
+class PurchaseHistoryUpdate(BaseModel):
+    fournisseur: Optional[str] = None
+    numeroCommande: Optional[str] = None
+    numeroReception: Optional[str] = None
+    dateCreation: Optional[datetime] = None
+    article: Optional[str] = None
+    description: Optional[str] = None
+    groupeStatistique: Optional[str] = None
+    quantite: Optional[float] = None
+    montantLigneHT: Optional[float] = None
+    quantiteRetournee: Optional[float] = None
+    site: Optional[str] = None
+    creationUser: Optional[str] = None
+
+class PurchaseHistory(PurchaseHistoryBase):
+    id: str
+    dateEnregistrement: datetime  # Date d'enregistrement dans la BD
+
+    class Config:
+        from_attributes = True
