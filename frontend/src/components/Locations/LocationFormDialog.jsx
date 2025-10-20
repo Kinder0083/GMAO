@@ -13,7 +13,7 @@ import { Label } from '../ui/label';
 import { useToast } from '../../hooks/use-toast';
 import { locationsAPI } from '../../services/api';
 
-const LocationFormDialog = ({ open, onOpenChange, location, onSuccess }) => {
+const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSuccess, allLocations = [] }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -21,7 +21,8 @@ const LocationFormDialog = ({ open, onOpenChange, location, onSuccess }) => {
     adresse: '',
     ville: '',
     codePostal: '',
-    type: ''
+    type: '',
+    parent_id: null
   });
 
   useEffect(() => {
@@ -32,7 +33,18 @@ const LocationFormDialog = ({ open, onOpenChange, location, onSuccess }) => {
           adresse: location.adresse || '',
           ville: location.ville || '',
           codePostal: location.codePostal || '',
-          type: location.type || ''
+          type: location.type || '',
+          parent_id: location.parent_id || null
+        });
+      } else if (parentLocation) {
+        // Création d'une sous-zone
+        setFormData({
+          nom: '',
+          adresse: '',
+          ville: '',
+          codePostal: '',
+          type: '',
+          parent_id: parentLocation.id
         });
       } else {
         setFormData({
@@ -40,28 +52,35 @@ const LocationFormDialog = ({ open, onOpenChange, location, onSuccess }) => {
           adresse: '',
           ville: '',
           codePostal: '',
-          type: ''
+          type: '',
+          parent_id: null
         });
       }
     }
-  }, [open, location]);
+  }, [open, location, parentLocation]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // Nettoyer les données avant envoi
+      const dataToSend = {
+        ...formData,
+        parent_id: formData.parent_id || null
+      };
+
       if (location) {
-        await locationsAPI.update(location.id, formData);
+        await locationsAPI.update(location.id, dataToSend);
         toast({
           title: 'Succès',
-          description: 'Emplacement modifié avec succès'
+          description: 'Zone modifiée avec succès'
         });
       } else {
-        await locationsAPI.create(formData);
+        await locationsAPI.create(dataToSend);
         toast({
           title: 'Succès',
-          description: 'Emplacement créé avec succès'
+          description: parentLocation ? 'Sous-zone créée avec succès' : 'Zone créée avec succès'
         });
       }
 
