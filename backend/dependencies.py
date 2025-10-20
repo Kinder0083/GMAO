@@ -42,7 +42,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     user["id"] = str(user["_id"])
     del user["_id"]
-    del user["password"]  # Don't return password
+    # Remove password field if it exists (support both 'password' and 'hashed_password')
+    user.pop("password", None)
+    user.pop("hashed_password", None)
     
     return user
 
