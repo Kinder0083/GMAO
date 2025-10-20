@@ -139,18 +139,19 @@ const Vendors = () => {
         </CardContent>
       </Card>
 
-      {/* Vendors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {loading ? (
-          <div className="col-span-full text-center py-8">
-            <p className="text-gray-500">Chargement...</p>
-          </div>
-        ) : filteredVendors.length === 0 ? (
-          <div className="col-span-full text-center py-8">
-            <p className="text-gray-500">Aucun fournisseur trouvé</p>
-          </div>
-        ) : (
-          filteredVendors.map((vendor) => (
+      {/* Vendors Display */}
+      {loading ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Chargement...</p>
+        </div>
+      ) : filteredVendors.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-gray-500">Aucun fournisseur trouvé</p>
+        </div>
+      ) : viewMode === 'grid' ? (
+        /* Vue Grille */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredVendors.map((vendor) => (
             <Card key={vendor.id} className="hover:shadow-xl transition-all duration-300">
               <CardHeader>
                 <div className="flex items-start gap-3">
@@ -219,9 +220,97 @@ const Vendors = () => {
                 </div>
               </CardContent>
             </Card>
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      ) : (
+        /* Vue Liste */
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Fournisseur
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Contact
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Téléphone
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Spécialité
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredVendors.map((vendor) => (
+                    <tr key={vendor.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center mr-3">
+                            <Building size={20} className="text-white" />
+                          </div>
+                          <div className="font-medium text-gray-900">{vendor.nom}</div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        {vendor.contact}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <a href={`mailto:${vendor.email}`} className="hover:text-blue-600">
+                          {vendor.email}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                        <a href={`tel:${vendor.telephone}`} className="hover:text-blue-600">
+                          {vendor.telephone}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+                          {vendor.specialite}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-green-50 hover:text-green-600"
+                            onClick={() => {
+                              setSelectedVendor(vendor);
+                              setFormDialogOpen(true);
+                            }}
+                          >
+                            <Pencil size={16} className="mr-1" />
+                            Modifier
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="hover:bg-red-50 hover:text-red-600"
+                            onClick={() => handleDelete(vendor.id)}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <VendorFormDialog
         open={formDialogOpen}
