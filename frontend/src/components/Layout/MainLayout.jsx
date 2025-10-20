@@ -69,10 +69,13 @@ const MainLayout = () => {
       if (response.ok) {
         const data = await response.json();
         // Compter les ordres de travail assignés à l'utilisateur
-        const assignedOrders = data.filter(order => 
-          order.assignedTo === userId && 
-          order.status !== 'TERMINE'
-        );
+        // Vérifier à la fois assigne_a_id (string) et assigneA.id (objet)
+        const assignedOrders = data.filter(order => {
+          const isAssigned = order.assigne_a_id === userId || 
+                           (order.assigneA && order.assigneA.id === userId);
+          const isNotCompleted = order.statut !== 'TERMINE';
+          return isAssigned && isNotCompleted;
+        });
         setWorkOrdersCount(assignedOrders.length);
       }
     } catch (error) {
