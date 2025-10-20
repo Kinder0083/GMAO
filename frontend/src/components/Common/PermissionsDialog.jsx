@@ -107,7 +107,7 @@ const PermissionsDialog = ({ open, onOpenChange, user, onSave }) => {
     { key: 'workOrders', label: 'Ordres de travail', actions: ['view', 'create', 'edit', 'delete'] },
     { key: 'equipment', label: 'Équipements', actions: ['view', 'create', 'edit', 'delete'] },
     { key: 'inventory', label: 'Inventaire', actions: ['view', 'create', 'edit', 'delete'] },
-    { key: 'locations', label: 'Emplacements', actions: ['view', 'create', 'edit', 'delete'] },
+    { key: 'locations', label: 'Zones', actions: ['view', 'create', 'edit', 'delete'] },
     { key: 'preventiveMaintenance', label: 'Maintenance préventive', actions: ['view', 'create', 'edit', 'delete'] },
     { key: 'reports', label: 'Rapports', actions: ['view', 'export'] },
     { key: 'people', label: 'Équipes', actions: ['view', 'create', 'edit', 'delete'] },
