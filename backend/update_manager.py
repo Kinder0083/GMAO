@@ -1,0 +1,306 @@
+"""
+Gestionnaire de mise à jour GMAO Iris
+"""
+import os
+import subprocess
+import asyncio
+import json
+from datetime import datetime
+from typing import Optional, Dict, List
+import aiohttp
+from pathlib import Path
+
+class UpdateManager:
+    def __init__(self, db):
+        self.db = db
+        self.current_version = "1.1.0"
+        self.github_user = "Kinder0083"
+        self.github_repo = "GMAO"
+        self.github_branch = "main"
+        
+    async def get_current_version(self) -> str:
+        """Récupère la version actuelle"""
+        return self.current_version
+    
+    async def check_github_version(self) -> Optional[Dict]:
+        """Vérifie la dernière version disponible sur GitHub"""
+        try:
+            # Récupérer les tags depuis GitHub API
+            url = f"https://api.github.com/repos/{self.github_user}/{self.github_repo}/tags"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        tags = await response.json()
+                        if tags:
+                            latest_tag = tags[0]
+                            return {
+                                "version": latest_tag["name"].replace("v", ""),
+                                "commit": latest_tag["commit"]["sha"][:7],
+                                "available": True
+                            }
+            
+            # Si pas de tags, vérifier le dernier commit
+            url = f"https://api.github.com/repos/{self.github_user}/{self.github_repo}/commits/{self.github_branch}"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        commit_data = await response.json()
+                        return {
+                            "version": "latest",
+                            "commit": commit_data["sha"][:7],
+                            "date": commit_data["commit"]["author"]["date"],
+                            "message": commit_data["commit"]["message"],
+                            "available": True
+                        }
+                        
+        except Exception as e:
+            print(f"Erreur vérification version GitHub: {e}")
+            return None
+    
+    async def get_changelog(self, from_version: str = None) -> List[Dict]:
+        """Récupère le changelog depuis GitHub"""
+        try:
+            # Chercher le fichier CHANGELOG.md
+            url = f"https://raw.githubusercontent.com/{self.github_user}/{self.github_repo}/{self.github_branch}/CHANGELOG.md"
+            
+            async with aiohttp.ClientSession() as session:
+                async with session.get(url) as response:
+                    if response.status == 200:
+                        changelog_text = await response.text()
+                        return self._parse_changelog(changelog_text, from_version)
+            
+            # Si pas de CHANGELOG, créer un changelog par défaut
+            return [{
+                "version": "latest",
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "changes": [
+                    "✅ Corrections de bugs",
+                    "✅ Améliorations de performance",
+                    "✅ Mises à jour de sécurité"
+                ]
+            }]
+                    
+        except Exception as e:
+            print(f"Erreur récupération changelog: {e}")
+            return []
+    
+    def _parse_changelog(self, changelog_text: str, from_version: str = None) -> List[Dict]:
+        """Parse le fichier CHANGELOG.md"""
+        changelogs = []
+        current_version = None
+        current_changes = []
+        
+        for line in changelog_text.split('\n'):
+            line = line.strip()
+            
+            # Détecter une nouvelle version (## [1.2.0] - 2024-10-20)
+            if line.startswith('## '):
+                if current_version and current_changes:
+                    changelogs.append({
+                        "version": current_version,
+                        "changes": current_changes
+                    })
+                    if from_version and current_version == from_version:
+                        break
+                
+                # Extraire version
+                parts = line.split('[')
+                if len(parts) > 1:
+                    current_version = parts[1].split(']')[0]
+                    current_changes = []
+            
+            # Détecter les changements (lignes commençant par - ou *)
+            elif line.startswith(('-', '*', '•')) and current_version:
+                change = line[1:].strip()
+                if change:
+                    current_changes.append(change)
+        
+        # Ajouter le dernier changelog
+        if current_version and current_changes:
+            changelogs.append({
+                "version": current_version,
+                "changes": current_changes
+            })
+        
+        return changelogs
+    
+    async def get_update_history(self) -> List[Dict]:
+        """Récupère l'historique des mises à jour depuis la DB"""
+        try:
+            history = await self.db.update_history.find().sort("date", -1).to_list(20)
+            
+            result = []
+            for item in history:
+                result.append({
+                    "id": str(item["_id"]),
+                    "version": item.get("version"),
+                    "date": item.get("date"),
+                    "status": item.get("status"),
+                    "message": item.get("message", "")
+                })
+            
+            return result
+        except Exception as e:
+            print(f"Erreur récupération historique: {e}")
+            return []
+    
+    async def save_update_record(self, version: str, status: str, message: str = ""):
+        """Enregistre une mise à jour dans l'historique"""
+        try:
+            await self.db.update_history.insert_one({
+                "version": version,
+                "date": datetime.now(),
+                "status": status,
+                "message": message
+            })
+        except Exception as e:
+            print(f"Erreur sauvegarde historique: {e}")
+    
+    async def create_backup(self) -> Dict:
+        """Crée un backup de la base de données"""
+        try:
+            backup_dir = Path("/opt/gmao-iris/backups")
+            backup_dir.mkdir(exist_ok=True)
+            
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            backup_path = backup_dir / f"backup_{timestamp}"
+            
+            # Exécuter mongodump
+            cmd = [
+                "mongodump",
+                "--uri", os.environ.get('MONGO_URL', 'mongodb://localhost:27017'),
+                "--db", os.environ.get('DB_NAME', 'gmao_iris'),
+                "--out", str(backup_path)
+            ]
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                return {
+                    "success": True,
+                    "path": str(backup_path),
+                    "timestamp": timestamp
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": stderr.decode()
+                }
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
+    
+    async def apply_update(self, github_token: Optional[str] = None) -> Dict:
+        """Lance le script de mise à jour"""
+        try:
+            # Créer un backup avant la mise à jour
+            backup_result = await self.create_backup()
+            if not backup_result["success"]:
+                return {
+                    "success": False,
+                    "message": "Échec création backup",
+                    "error": backup_result.get("error")
+                }
+            
+            # Lancer le script de mise à jour
+            script_path = "/opt/gmao-iris/scripts/update.sh"
+            
+            env = os.environ.copy()
+            if github_token:
+                env["GITHUB_TOKEN"] = github_token
+            
+            process = await asyncio.create_subprocess_exec(
+                "bash", script_path,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env=env
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                await self.save_update_record(
+                    version="latest",
+                    status="success",
+                    message="Mise à jour appliquée avec succès"
+                )
+                
+                return {
+                    "success": True,
+                    "message": "Mise à jour appliquée avec succès",
+                    "output": stdout.decode(),
+                    "backup_path": backup_result["path"]
+                }
+            else:
+                await self.save_update_record(
+                    version="latest",
+                    status="failed",
+                    message=f"Échec: {stderr.decode()[:200]}"
+                )
+                
+                return {
+                    "success": False,
+                    "message": "Échec de la mise à jour",
+                    "error": stderr.decode()
+                }
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "message": "Erreur lors de la mise à jour",
+                "error": str(e)
+            }
+    
+    async def rollback_to_version(self, backup_path: str) -> Dict:
+        """Restaure une version précédente depuis un backup"""
+        try:
+            # Vérifier que le backup existe
+            if not Path(backup_path).exists():
+                return {
+                    "success": False,
+                    "message": "Backup introuvable"
+                }
+            
+            # Exécuter mongorestore
+            cmd = [
+                "mongorestore",
+                "--uri", os.environ.get('MONGO_URL', 'mongodb://localhost:27017'),
+                "--db", os.environ.get('DB_NAME', 'gmao_iris'),
+                "--drop",
+                str(Path(backup_path) / os.environ.get('DB_NAME', 'gmao_iris'))
+            ]
+            
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            
+            stdout, stderr = await process.communicate()
+            
+            if process.returncode == 0:
+                return {
+                    "success": True,
+                    "message": "Rollback effectué avec succès"
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": stderr.decode()
+                }
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e)
+            }
