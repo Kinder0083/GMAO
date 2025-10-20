@@ -23,7 +23,7 @@ const ImportExport = () => {
     { value: 'equipments', label: 'Équipements' },
     { value: 'users', label: 'Utilisateurs (Équipes)' },
     { value: 'inventory', label: 'Inventaire' },
-    { value: 'locations', label: 'Emplacements' },
+    { value: 'locations', label: 'Zones' },
     { value: 'vendors', label: 'Fournisseurs' }
   ];
 
