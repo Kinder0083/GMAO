@@ -157,19 +157,52 @@ const PurchaseHistory = () => {
           <h1 className="text-3xl font-bold text-gray-900">Historique Achat</h1>
           <p className="text-gray-600 mt-1">Gérez et analysez vos achats</p>
         </div>
-        {canEdit() && (
+        <div className="flex gap-2">
           <Button
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={() => {
-              setSelectedPurchase(null);
-              setFormDialogOpen(true);
-            }}
+            variant="outline"
+            className="bg-white"
+            onClick={handleDownloadTemplate}
           >
-            <Plus size={20} className="mr-2" />
-            Nouvel achat
+            <Download size={20} className="mr-2" />
+            Template CSV
           </Button>
-        )}
+          {canEdit() && (
+            <Button
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => {
+                setSelectedPurchase(null);
+                setFormDialogOpen(true);
+              }}
+            >
+              <Plus size={20} className="mr-2" />
+              Nouvel achat
+            </Button>
+          )}
+        </div>
       </div>
+
+      {/* Info Import */}
+      <Card className="bg-blue-50 border-blue-200">
+        <CardContent className="pt-4">
+          <div className="flex items-start gap-3">
+            <div className="bg-blue-100 p-2 rounded-lg">
+              <Upload size={20} className="text-blue-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-900 mb-1">💡 Import de fichier Excel</h3>
+              <p className="text-sm text-blue-700">
+                <strong>Problème avec votre fichier Excel ?</strong> Si vous rencontrez une erreur "stylesheet", 
+                voici les solutions :
+              </p>
+              <ol className="text-sm text-blue-700 mt-2 space-y-1 ml-4 list-decimal">
+                <li>Ouvrez votre fichier Excel et <strong>Enregistrer sous → CSV</strong></li>
+                <li>Ou téléchargez notre <strong>Template CSV</strong> ci-dessus et copiez vos données</li>
+                <li>Utilisez la page <strong>Import/Export</strong> avec le fichier CSV</li>
+              </ol>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
