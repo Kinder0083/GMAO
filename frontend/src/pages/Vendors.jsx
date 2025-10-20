@@ -12,6 +12,7 @@ const Vendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' ou 'list'
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState(null);
 
