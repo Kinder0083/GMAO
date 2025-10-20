@@ -169,6 +169,15 @@ const MainLayout = () => {
               <Settings size={20} />
               <span className="text-sm font-medium">Paramètres</span>
             </button>
+            {user.role === 'ADMIN' && (
+              <button
+                onClick={() => navigate('/updates')}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+              >
+                <RefreshCw size={20} />
+                <span className="text-sm font-medium">Mise à jour</span>
+              </button>
+            )}
             <button
               onClick={handleLogout}
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 text-gray-300 transition-all"
