@@ -1862,7 +1862,22 @@ async def delete_vendor(vendor_id: str, current_user: dict = Depends(get_current
 async def get_purchase_history(current_user: dict = Depends(get_current_user)):
     """Liste tous les achats"""
     purchases = await db.purchase_history.find().sort("dateCreation", -1).to_list(5000)
-    return [PurchaseHistory(**serialize_doc(p)) for p in purchases]
+    
+    # Filtrer pour ne garder que les champs du modèle PurchaseHistory
+    allowed_fields = {
+        '_id', 'id', 'fournisseur', 'numeroCommande', 'numeroReception', 
+        'dateCreation', 'article', 'description', 'groupeStatistique',
+        'quantite', 'montantLigneHT', 'quantiteRetournee', 'site', 
+        'creationUser', 'dateEnregistrement'
+    }
+    
+    result = []
+    for p in purchases:
+        # Ne garder que les champs autorisés
+        filtered_doc = {k: v for k, v in p.items() if k in allowed_fields}
+        result.append(PurchaseHistory(**serialize_doc(filtered_doc)))
+    
+    return result
 
 @api_router.get("/purchase-history/stats")
 async def get_purchase_stats(current_user: dict = Depends(get_current_user)):
