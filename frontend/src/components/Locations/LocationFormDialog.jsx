@@ -101,13 +101,25 @@ const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSu
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>{location ? 'Modifier' : 'Nouvel'} emplacement</DialogTitle>
+          <DialogTitle>
+            {location ? 'Modifier la zone' : parentLocation ? `Nouvelle sous-zone de "${parentLocation.nom}"` : 'Nouvelle zone'}
+          </DialogTitle>
           <DialogDescription>
-            Remplissez les informations de l'emplacement
+            {parentLocation && `Cette sous-zone sera créée sous la zone "${parentLocation.nom}"`}
+            {!parentLocation && 'Remplissez les informations de la zone'}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {parentLocation && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                <strong>Zone parente:</strong> {parentLocation.nom}
+                {parentLocation.level !== undefined && ` (Niveau ${parentLocation.level})`}
+              </p>
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="nom">Nom *</Label>
             <Input
