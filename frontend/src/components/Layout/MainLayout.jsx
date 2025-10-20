@@ -26,7 +26,8 @@ const MainLayout = () => {
   const [firstLoginDialogOpen, setFirstLoginDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER', firstLogin: false });
+  const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER', firstLogin: false, id: '' });
+  const [workOrdersCount, setWorkOrdersCount] = useState(0);
 
   useEffect(() => {
     // Récupérer les informations de l'utilisateur depuis localStorage
@@ -37,18 +38,47 @@ const MainLayout = () => {
         setUser({
           nom: `${parsedUser.prenom || ''} ${parsedUser.nom || ''}`.trim() || 'Utilisateur',
           role: parsedUser.role || 'VIEWER',
-          firstLogin: parsedUser.firstLogin || false
+          firstLogin: parsedUser.firstLogin || false,
+          id: parsedUser.id
         });
         
         // Afficher le dialog de changement de mot de passe si c'est la première connexion
         if (parsedUser.firstLogin === true) {
           setFirstLoginDialogOpen(true);
         }
+
+        // Charger le nombre d'ordres de travail assignés
+        loadWorkOrdersCount(parsedUser.id);
       } catch (error) {
         console.error('Erreur lors du parsing des infos utilisateur:', error);
       }
     }
   }, []);
+
+  const loadWorkOrdersCount = async (userId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      
+      const response = await fetch(`${backend_url}/api/work-orders`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Compter les ordres de travail assignés à l'utilisateur
+        const assignedOrders = data.filter(order => 
+          order.assignedTo === userId && 
+          order.status !== 'TERMINE'
+        );
+        setWorkOrdersCount(assignedOrders.length);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement des ordres de travail:', error);
+    }
+  };
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard' },
