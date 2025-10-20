@@ -1360,20 +1360,90 @@ async def delete_availability(
 # ==================== LOCATIONS ROUTES ====================
 @api_router.get("/locations", response_model=List[Location])
 async def get_locations(current_user: dict = Depends(get_current_user)):
-    """Liste tous les emplacements"""
+    """Liste toutes les zones avec hiérarchie"""
     locations = await db.locations.find().to_list(1000)
-    return [Location(**serialize_doc(loc)) for loc in locations]
+    
+    # Enrichir avec les informations de hiérarchie
+    result = []
+    for loc in locations:
+        loc_data = serialize_doc(loc)
+        
+        # Calculer le niveau dans la hiérarchie
+        level = 0
+        parent_id = loc.get('parent_id')
+        while parent_id and level < 3:
+            parent = await db.locations.find_one({"_id": ObjectId(parent_id)})
+            if parent:
+                level += 1
+                parent_id = parent.get('parent_id')
+            else:
+                break
+        loc_data['level'] = level
+        
+        # Vérifier si cette zone a des enfants
+        has_children = await db.locations.count_documents({"parent_id": loc_data['id']}) > 0
+        loc_data['hasChildren'] = has_children
+        
+        # Ajouter les infos du parent si présent
+        if loc.get('parent_id'):
+            parent = await db.locations.find_one({"_id": ObjectId(loc.get('parent_id'))})
+            if parent:
+                loc_data['parent'] = {
+                    "id": str(parent["_id"]),
+                    "nom": parent.get("nom")
+                }
+        
+        result.append(Location(**loc_data))
+    
+    return result
+
+@api_router.get("/locations/{loc_id}/children", response_model=List[Location])
+async def get_location_children(loc_id: str, current_user: dict = Depends(get_current_user)):
+    """Récupérer les sous-zones d'une zone"""
+    children = await db.locations.find({"parent_id": loc_id}).to_list(100)
+    result = []
+    for child in children:
+        child_data = serialize_doc(child)
+        child_data['level'] = 1  # Simplifié pour l'instant
+        child_data['hasChildren'] = await db.locations.count_documents({"parent_id": child_data['id']}) > 0
+        result.append(Location(**child_data))
+    return result
 
 @api_router.post("/locations", response_model=Location)
 async def create_location(loc_create: LocationCreate, current_user: dict = Depends(get_current_user)):
-    """Créer un nouvel emplacement"""
+    """Créer une nouvelle zone"""
     loc_dict = loc_create.model_dump()
     loc_dict["dateCreation"] = datetime.utcnow()
     loc_dict["_id"] = ObjectId()
     
+    # Vérifier le niveau de hiérarchie si parent_id est fourni
+    if loc_dict.get('parent_id'):
+        parent_id = loc_dict['parent_id']
+        level = 0
+        
+        # Remonter la hiérarchie pour calculer le niveau
+        while parent_id and level < 3:
+            parent = await db.locations.find_one({"_id": ObjectId(parent_id)})
+            if parent:
+                level += 1
+                parent_id = parent.get('parent_id')
+            else:
+                break
+        
+        # Limiter à 3 niveaux (0, 1, 2)
+        if level >= 3:
+            raise HTTPException(
+                status_code=400, 
+                detail="Limite de hiérarchie atteinte. Maximum 3 niveaux de sous-zones."
+            )
+    
     await db.locations.insert_one(loc_dict)
     
-    return Location(**serialize_doc(loc_dict))
+    loc_data = serialize_doc(loc_dict)
+    loc_data['level'] = 0
+    loc_data['hasChildren'] = False
+    
+    return Location(**loc_data)
 
 @api_router.put("/locations/{loc_id}", response_model=Location)
 async def update_location(loc_id: str, loc_update: LocationUpdate, current_user: dict = Depends(get_current_user)):
