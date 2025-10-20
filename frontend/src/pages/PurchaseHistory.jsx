@@ -454,7 +454,7 @@ const PurchaseHistory = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredGroupedPurchases.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">
+                    <td colSpan="8" className="px-6 py-8 text-center text-gray-500">
                       Aucune commande trouvée
                     </td>
                   </tr>
@@ -480,6 +480,9 @@ const PurchaseHistory = () => {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             {order.numeroCommande}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                            {order.numeroReception || '-'}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                             <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs">
@@ -515,7 +518,7 @@ const PurchaseHistory = () => {
                             <td className="px-6 py-3 text-sm text-gray-600">
                               {formatCurrency(item.montantLigneHT)}
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-600">
+                            <td className="px-6 py-3 text-sm text-gray-600" colSpan="2">
                               {item.groupeStatistique || '-'}
                             </td>
                           </tr>
