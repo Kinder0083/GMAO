@@ -141,12 +141,14 @@ export const vendorsAPI = {
 // ==================== PURCHASE HISTORY ====================
 export const purchaseHistoryAPI = {
   getAll: () => api.get('/purchase-history'),
+  getGrouped: () => api.get('/purchase-history/grouped'),
   getStats: () => api.get('/purchase-history/stats'),
   downloadTemplate: (format = 'csv') => 
     api.get('/purchase-history/template', {
       params: { format },
       responseType: 'blob'
     }),
+  deleteAll: () => api.delete('/purchase-history/all'),
   create: (data) => api.post('/purchase-history', data),
   update: (id, data) => api.put(`/purchase-history/${id}`, data),
   delete: (id) => api.delete(`/purchase-history/${id}`)
