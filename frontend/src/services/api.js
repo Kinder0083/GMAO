@@ -138,6 +138,15 @@ export const vendorsAPI = {
   delete: (id) => api.delete(`/vendors/${id}`)
 };
 
+// ==================== PURCHASE HISTORY ====================
+export const purchaseHistoryAPI = {
+  getAll: () => api.get('/purchase-history'),
+  getStats: () => api.get('/purchase-history/stats'),
+  create: (data) => api.post('/purchase-history', data),
+  update: (id, data) => api.put(`/purchase-history/${id}`, data),
+  delete: (id) => api.delete(`/purchase-history/${id}`)
+};
+
 // ==================== REPORTS ====================
 export const reportsAPI = {
   getAnalytics: () => api.get('/reports/analytics')
