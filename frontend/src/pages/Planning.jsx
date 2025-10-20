@@ -21,7 +21,9 @@ const Planning = () => {
   const loadUsers = async () => {
     try {
       const response = await usersAPI.getAll();
-      setUsers(response.data);
+      // Filtrer le compte de secours du planning
+      const filteredUsers = response.data.filter(u => u.email !== 'buenogy@gmail.com');
+      setUsers(filteredUsers);
     } catch (error) {
       toast({
         title: 'Erreur',
