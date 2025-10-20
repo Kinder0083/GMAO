@@ -26,6 +26,7 @@ const EquipmentFormDialog = ({ open, onOpenChange, equipment, onSuccess, parentI
     dateAchat: '',
     coutAchat: '',
     numeroSerie: '',
+    anneeFabrication: '',
     garantie: '',
     parent_id: null
   });
