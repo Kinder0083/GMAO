@@ -2232,8 +2232,6 @@ async def download_purchase_template(format: str = "csv", current_user: dict = D
     )
 
 
-        raise HTTPException(status_code=500, detail=str(e))
-
 @api_router.post("/import/{module}")
 async def import_data(
     module: str,
