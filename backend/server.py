@@ -1968,7 +1968,15 @@ async def get_purchase_stats(current_user: dict = Depends(get_current_user)):
     
     total_achats = len(all_purchases)
     montant_total = sum(p.get("montantLigneHT", 0) for p in all_purchases)
-    quantite_totale = sum(p.get("quantite", 0) for p in all_purchases)
+    
+    # Compter les commandes uniques (pas les lignes)
+    commandes_uniques = set()
+    for p in all_purchases:
+        num_cmd = p.get("numeroCommande")
+        if num_cmd:
+            commandes_uniques.add(num_cmd)
+    
+    commandes_totales = len(commandes_uniques)
     
     # Par fournisseur
     fournisseurs = {}
