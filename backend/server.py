@@ -212,7 +212,7 @@ async def login(login_request: LoginRequest):
         )
     
     # Verify password
-    password_valid = verify_password(login_request.password, user["password"])
+    password_valid = verify_password(login_request.password, user["hashed_password"])
     logger.info(f"🔍 Password valid: {password_valid}")
     
     if not password_valid:
