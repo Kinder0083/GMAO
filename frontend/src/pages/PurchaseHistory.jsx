@@ -268,10 +268,11 @@ const PurchaseHistory = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Quantité Totale</p>
+                <p className="text-sm font-medium text-gray-600">Commandes Totales</p>
                 <p className="text-3xl font-bold text-orange-600 mt-2">
-                  {Math.round(stats?.quantiteTotale || 0)}
+                  {stats?.commandesTotales || 0}
                 </p>
+                <p className="text-xs text-gray-500 mt-1">N° uniques</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-xl">
                 <Calendar size={24} className="text-orange-600" />
