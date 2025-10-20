@@ -66,22 +66,9 @@ const PurchaseHistory = () => {
 
   const handleDownloadTemplate = async () => {
     try {
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
-      const token = localStorage.getItem('token');
+      const response = await purchaseHistoryAPI.downloadTemplate('csv');
       
-      const response = await fetch(`${backend_url}/api/purchase-history/template?format=csv`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Erreur de téléchargement');
-      }
-      
-      const blob = await response.blob();
+      const blob = new Blob([response.data], { type: 'text/csv' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.style.display = 'none';
@@ -104,7 +91,7 @@ const PurchaseHistory = () => {
       console.error('Erreur téléchargement template:', error);
       toast({
         title: 'Erreur',
-        description: error.message || 'Impossible de télécharger le template',
+        description: error.response?.data?.detail || 'Impossible de télécharger le template',
         variant: 'destructive'
       });
     }
