@@ -763,6 +763,7 @@ async def create_work_order(wo_create: WorkOrderCreate, current_user: dict = Dep
     wo_dict["tempsReel"] = None
     wo_dict["dateTermine"] = None
     wo_dict["attachments"] = []
+    wo_dict["createdBy"] = current_user.get("id")  # Ajouter le créateur
     wo_dict["_id"] = ObjectId()
     
     await db.work_orders.insert_one(wo_dict)
