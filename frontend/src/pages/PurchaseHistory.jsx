@@ -501,7 +501,10 @@ const PurchaseHistory = () => {
                         {isExpanded && order.items.map((item, idx) => (
                           <tr key={`${order.numeroCommande}-${idx}`} className="bg-blue-50">
                             <td className="px-6 py-3"></td>
-                            <td className="px-6 py-3 text-sm text-gray-600" colSpan="2">
+                            <td className="px-6 py-3 text-sm text-gray-600">
+                              {/* Vide - pas de date pour les lignes détails */}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
                               <div className="ml-6">
                                 <p className="font-medium text-gray-900">{item.article}</p>
                                 {item.description && (
@@ -510,15 +513,18 @@ const PurchaseHistory = () => {
                               </div>
                             </td>
                             <td className="px-6 py-3 text-sm text-gray-600">
+                              {/* Vide - N° Commande déjà affiché dans ligne principale */}
+                            </td>
+                            <td className="px-6 py-3 text-sm text-gray-600">
                               {item.numeroReception || '-'}
                             </td>
                             <td className="px-6 py-3 text-sm text-gray-600">
-                              Qté: {item.quantite}
+                              <span className="text-xs">Qté: {item.quantite}</span>
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-600">
+                            <td className="px-6 py-3 text-sm font-medium text-gray-700">
                               {formatCurrency(item.montantLigneHT)}
                             </td>
-                            <td className="px-6 py-3 text-sm text-gray-600" colSpan="2">
+                            <td className="px-6 py-3 text-sm text-gray-500">
                               {item.groupeStatistique || '-'}
                             </td>
                           </tr>
