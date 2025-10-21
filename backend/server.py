@@ -2020,22 +2020,38 @@ async def get_purchase_history(current_user: dict = Depends(get_current_user)):
     return result
 
 @api_router.get("/purchase-history/stats")
-async def get_purchase_stats(current_user: dict = Depends(get_current_user)):
-    """Statistiques détaillées des achats"""
+async def get_purchase_stats(
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Statistiques complètes des achats"""
+    
+    # Filtres de date
+    match_filter = {}
+    if start_date:
+        match_filter["dateCreation"] = {"$gte": datetime.fromisoformat(start_date)}
+    if end_date:
+        if "dateCreation" in match_filter:
+            match_filter["dateCreation"]["$lte"] = datetime.fromisoformat(end_date)
+        else:
+            match_filter["dateCreation"] = {"$lte": datetime.fromisoformat(end_date)}
     
     # Total des achats
-    all_purchases = await db.purchase_history.find().to_list(10000)
+    all_purchases = await db.purchase_history.find(match_filter).to_list(10000)
     
     if not all_purchases:
         return {
             "totalAchats": 0,
             "montantTotal": 0,
-            "quantiteTotale": 0,
+            "commandesTotales": 0,
             "parFournisseur": [],
             "parMois": [],
             "parSite": [],
             "parGroupeStatistique": [],
-            "articlesTop": []
+            "articlesTop": [],
+            "par_utilisateur": [],
+            "par_mois": []
         }
     
     total_achats = len(all_purchases)
@@ -2050,7 +2066,78 @@ async def get_purchase_stats(current_user: dict = Depends(get_current_user)):
     
     commandes_totales = len(commandes_uniques)
     
-    # Par fournisseur (utiliser Fournisseur2 si disponible)
+    # NOUVELLES STATS - Par utilisateur (créateur colonne L)
+    user_stats = {}
+    for purchase in all_purchases:
+        user = purchase.get('creationUser', 'Inconnu')
+        num_commande = purchase.get('numeroCommande')
+        montant = purchase.get('montantLigneHT', 0)
+        
+        if user not in user_stats:
+            user_stats[user] = {
+                'utilisateur': user,
+                'commandes': set(),
+                'montant_total': 0,
+                'nb_lignes': 0
+            }
+        
+        if num_commande:
+            user_stats[user]['commandes'].add(num_commande)
+        user_stats[user]['montant_total'] += montant
+        user_stats[user]['nb_lignes'] += 1
+    
+    # Convertir en liste
+    users_list = []
+    for user, data in user_stats.items():
+        nb_commandes = len(data['commandes'])
+        montant = data['montant_total']
+        pourcentage = (montant / montant_total * 100) if montant_total > 0 else 0
+        
+        users_list.append({
+            'utilisateur': user,
+            'nb_commandes': nb_commandes,
+            'nb_lignes': data['nb_lignes'],
+            'montant_total': round(montant, 2),
+            'pourcentage': round(pourcentage, 2)
+        })
+    
+    users_list.sort(key=lambda x: x['montant_total'], reverse=True)
+    
+    # NOUVELLES STATS - Par mois (format liste)
+    monthly_stats = {}
+    for purchase in all_purchases:
+        date = purchase.get('dateCreation')
+        if date:
+            if isinstance(date, str):
+                date = datetime.fromisoformat(date.replace('Z', '+00:00'))
+            month_key = date.strftime('%Y-%m')
+            num_commande = purchase.get('numeroCommande')
+            montant = purchase.get('montantLigneHT', 0)
+            
+            if month_key not in monthly_stats:
+                monthly_stats[month_key] = {
+                    'mois': month_key,
+                    'commandes': set(),
+                    'montant': 0,
+                    'nb_lignes': 0
+                }
+            
+            if num_commande:
+                monthly_stats[month_key]['commandes'].add(num_commande)
+            monthly_stats[month_key]['montant'] += montant
+            monthly_stats[month_key]['nb_lignes'] += 1
+    
+    monthly_list = []
+    for month, data in monthly_stats.items():
+        monthly_list.append({
+            'mois': month,
+            'nb_commandes': len(data['commandes']),
+            'nb_lignes': data['nb_lignes'],
+            'montant_total': round(data['montant'], 2)
+        })
+    monthly_list.sort(key=lambda x: x['mois'])
+    
+    # Par fournisseur (ancienne stat - gardée)
     fournisseurs = {}
     for p in all_purchases:
         fournisseur = p.get("Fournisseur2") or p.get("fournisseur", "Inconnu")
@@ -2071,7 +2158,7 @@ async def get_purchase_stats(current_user: dict = Depends(get_current_user)):
         for k, v in sorted(fournisseurs.items(), key=lambda x: x[1]["montant"], reverse=True)
     ]
     
-    # Par mois
+    # Par mois (ancien format - gardé pour compatibilité)
     mois_dict = {}
     for p in all_purchases:
         date_creation = p.get("dateCreation")
