@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { workOrdersAPI, equipmentsAPI, reportsAPI } from '../services/api';
 import {
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   Activity
 } from 'lucide-react';
+import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
