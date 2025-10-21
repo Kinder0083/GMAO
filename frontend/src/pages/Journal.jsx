@@ -14,8 +14,8 @@ const Journal = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    action: '',
-    entity_type: '',
+    action: 'all',
+    entity_type: 'all',
     user_id: '',
     search: ''
   });
