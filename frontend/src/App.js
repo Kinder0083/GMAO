@@ -66,6 +66,7 @@ function App() {
             <Route path="import-export" element={<ImportExport />} />
             <Route path="settings" element={<Settings />} />
             <Route path="updates" element={<Updates />} />
+            <Route path="journal" element={<Journal />} />
           </Route>
         </Routes>
       </BrowserRouter>
