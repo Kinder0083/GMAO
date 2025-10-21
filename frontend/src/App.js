@@ -24,6 +24,7 @@ import Settings from "./pages/Settings";
 import ImportExport from "./pages/ImportExport";
 import PurchaseHistory from "./pages/PurchaseHistory";
 import Updates from "./pages/Updates";
+import Journal from "./pages/Journal";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
