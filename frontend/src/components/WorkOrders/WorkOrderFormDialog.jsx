@@ -138,6 +138,9 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
           title: 'Succès',
           description: 'Ordre de travail modifié avec succès'
         });
+        
+        // Émettre un événement pour rafraîchir les notifications instantanément
+        window.dispatchEvent(new Event('workOrderUpdated'));
       } else {
         const response = await workOrdersAPI.create(submitData);
         const newWorkOrderId = response.data.id;
