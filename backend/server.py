@@ -23,6 +23,7 @@ from auth import get_password_hash, verify_password, create_access_token, decode
 import dependencies
 from dependencies import get_current_user, get_current_admin_user
 import email_service
+from audit_service import AuditService
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -34,6 +35,9 @@ db = client[os.environ.get('DB_NAME', 'gmao_iris')]
 
 # Initialize dependencies with database
 dependencies.set_database(db)
+
+# Initialize audit service
+audit_service = AuditService(db)
 
 # Create the main app
 app = FastAPI(title="GMAO Atlas API", version="1.0.0")
