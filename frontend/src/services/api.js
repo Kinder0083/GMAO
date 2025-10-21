@@ -173,9 +173,11 @@ export const importExportAPI = {
       params: { mode },
       headers: { 'Content-Type': 'multipart/form-data' }
     });
-  },
-  
-  // ==================== AUDIT LOGS (JOURNAL) ====================
+  }
+};
+
+// ==================== AUDIT LOGS (JOURNAL) ====================
+export const auditAPI = {
   getAuditLogs: async (params) => {
     const response = await api.get('/audit-logs', { params });
     return response.data;
@@ -200,9 +202,11 @@ export const importExportAPI = {
     link.remove();
     
     return response;
-  },
-  
-  // ==================== WORK ORDER COMMENTS ====================
+  }
+};
+
+// ==================== WORK ORDER COMMENTS ====================
+export const commentsAPI = {
   addWorkOrderComment: async (workOrderId, text) => {
     const response = await api.post(`/work-orders/${workOrderId}/comments`, { text });
     return response.data;
