@@ -756,8 +756,9 @@ async def get_work_orders(
                     creator = await db.users.find_one({"id": wo["createdBy"]})
                     if creator:
                         wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
-            except:
+            except Exception as e:
                 # Si ça échoue, laisser vide
+                logger.error(f"Erreur lors de la recherche du créateur {wo.get('createdBy')}: {e}")
                 pass
     
     return [WorkOrder(**wo) for wo in work_orders]
@@ -790,8 +791,9 @@ async def get_work_order(wo_id: str, current_user: dict = Depends(get_current_us
                     creator = await db.users.find_one({"id": wo["createdBy"]})
                     if creator:
                         wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
-            except:
+            except Exception as e:
                 # Si ça échoue, laisser vide
+                logger.error(f"Erreur lors de la recherche du créateur {wo.get('createdBy')}: {e}")
                 pass
         
         return WorkOrder(**wo)
