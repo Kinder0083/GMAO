@@ -14,13 +14,17 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
   const [workOrders, setWorkOrders] = useState([]);
   const [equipments, setEquipments] = useState([]);
   const [analytics, setAnalytics] = useState(null);
 
   const loadData = async () => {
     try {
-      setLoading(true);
+      // Ne montrer le loading que lors du premier chargement
+      if (initialLoad) {
+        setLoading(true);
+      }
       const [woRes, eqRes, analyticsRes] = await Promise.all([
         workOrdersAPI.getAll(),
         equipmentsAPI.getAll(),
@@ -32,7 +36,10 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Erreur de chargement:', error);
     } finally {
-      setLoading(false);
+      if (initialLoad) {
+        setLoading(false);
+        setInitialLoad(false);
+      }
     }
   };
 
