@@ -75,11 +75,11 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="w-full max-w-md p-6">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center mb-4">
+          <div className="inline-flex items-center justify-center mb-6">
             <img 
               src="/logo-iris.png" 
               alt="GMAO Iris" 
-              className="w-20 h-20 object-contain"
+              className="w-60 h-60 object-contain"
             />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">GMAO Iris</h1>
