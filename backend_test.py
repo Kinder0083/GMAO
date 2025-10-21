@@ -1594,8 +1594,8 @@ class MemberRegistrationTester:
         self.log("✓ Invitation created successfully")
         
         # Step 2: Create a valid invitation token for testing
-        # We'll use a simple approach - create the token manually
-        import jwt
+        # We'll use the same method as the backend
+        from jose import jwt
         import os
         from datetime import datetime, timedelta
         
