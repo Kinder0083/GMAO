@@ -122,9 +122,15 @@ class AuditService:
         cursor = self.db.audit_logs.find(query).sort("timestamp", -1)
         logs = await cursor.to_list(length=None)
         
-        # Convertir les ObjectId en string pour la sérialisation JSON
+        # Convertir les ObjectId et timestamps pour la sérialisation JSON
         for log in logs:
             if "_id" in log:
                 log["_id"] = str(log["_id"])
+            # S'assurer que le timestamp est au format ISO avec timezone
+            if "timestamp" in log and log["timestamp"]:
+                if hasattr(log["timestamp"], 'isoformat'):
+                    log["timestamp"] = log["timestamp"].isoformat()
+                elif isinstance(log["timestamp"], str) and not log["timestamp"].endswith('Z'):
+                    log["timestamp"] = log["timestamp"] + 'Z' if not log["timestamp"].endswith('Z') else log["timestamp"]
         
         return logs
