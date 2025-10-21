@@ -1546,9 +1546,10 @@ class MemberRegistrationTester:
         """Login as admin user"""
         self.log("Setting up admin user...")
         
+        # Try to login with the existing admin credentials from Phase1 test
         login_data = {
-            "email": "admin@gmao-iris.local",
-            "password": "Admin123!"
+            "email": "admin@example.com",
+            "password": "newpassword456"  # Password was changed in Phase1 test
         }
         
         response = self.make_request("POST", "/auth/login", login_data, token=None)
@@ -1560,8 +1561,19 @@ class MemberRegistrationTester:
             self.log(f"Admin login successful. User ID: {self.admin_user_id}")
             return True
         else:
-            self.log(f"Admin login failed: {response.status_code} - {response.text}", "ERROR")
-            return False
+            # Try original password
+            login_data["password"] = "password123"
+            response = self.make_request("POST", "/auth/login", login_data, token=None)
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.admin_token = data["access_token"]
+                self.admin_user_id = data["user"]["id"]
+                self.log(f"Admin login successful with original password. User ID: {self.admin_user_id}")
+                return True
+            else:
+                self.log(f"Admin login failed with both passwords: {response.status_code} - {response.text}", "ERROR")
+                return False
             
     def test_complete_registration_flow(self) -> bool:
         """Test 1: Complete Registration Flow via Invitation"""
