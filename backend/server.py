@@ -903,10 +903,28 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
 async def delete_work_order(wo_id: str, current_user: dict = Depends(get_current_user)):
     """Supprimer un ordre de travail"""
     try:
-        result = await db.work_orders.delete_one({"_id": ObjectId(wo_id)})
-        if result.deleted_count == 0:
+        # Récupérer l'ordre de travail avant suppression pour le log
+        wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
+        if not wo:
             raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        result = await db.work_orders.delete_one({"_id": ObjectId(wo_id)})
+        
+        # Log dans l'audit
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            user_name=f"{current_user['prenom']} {current_user['nom']}",
+            user_email=current_user["email"],
+            action=ActionType.DELETE,
+            entity_type=EntityType.WORK_ORDER,
+            entity_id=wo.get("id"),
+            entity_name=wo.get("titre", ""),
+            details=f"Ordre de travail #{wo.get('numero')} supprimé"
+        )
+        
         return {"message": "Ordre de travail supprimé"}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
