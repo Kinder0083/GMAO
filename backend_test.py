@@ -1496,6 +1496,364 @@ class Phase1Tester:
         
         return results
 
+class MemberRegistrationTester:
+    """Tests for Member Registration and Login Flow - hashed_password field fix"""
+    
+    def __init__(self):
+        self.base_url = BASE_URL
+        self.admin_token = None
+        self.admin_user_id = None
+        self.session = requests.Session()
+        self.test_users = []  # Track created users for cleanup
+        
+    def log(self, message: str, level: str = "INFO"):
+        """Log test messages"""
+        print(f"[{level}] {message}")
+        
+    def make_request(self, method: str, endpoint: str, data: Dict = None, headers: Dict = None, token: str = None) -> requests.Response:
+        """Make HTTP request with proper headers"""
+        url = f"{self.base_url}{endpoint}"
+        
+        request_headers = {"Content-Type": "application/json"}
+        if headers:
+            request_headers.update(headers)
+            
+        if token:
+            request_headers["Authorization"] = f"Bearer {token}"
+        elif self.admin_token:
+            request_headers["Authorization"] = f"Bearer {self.admin_token}"
+            
+        try:
+            if method.upper() == "GET":
+                response = self.session.get(url, headers=request_headers)
+            elif method.upper() == "POST":
+                response = self.session.post(url, json=data, headers=request_headers)
+            elif method.upper() == "PUT":
+                response = self.session.put(url, json=data, headers=request_headers)
+            elif method.upper() == "DELETE":
+                response = self.session.delete(url, headers=request_headers)
+            else:
+                raise ValueError(f"Unsupported method: {method}")
+                
+            self.log(f"{method} {endpoint} -> {response.status_code}")
+            return response
+        except Exception as e:
+            self.log(f"Request failed: {e}", "ERROR")
+            raise
+            
+    def setup_admin_user(self) -> bool:
+        """Login as admin user"""
+        self.log("Setting up admin user...")
+        
+        login_data = {
+            "email": "admin@gmao-iris.local",
+            "password": "Admin123!"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            self.admin_token = data["access_token"]
+            self.admin_user_id = data["user"]["id"]
+            self.log(f"Admin login successful. User ID: {self.admin_user_id}")
+            return True
+        else:
+            self.log(f"Admin login failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_complete_registration_flow(self) -> bool:
+        """Test 1: Complete Registration Flow via Invitation"""
+        self.log("\n=== Test 1: Complete Registration Flow via Invitation ===")
+        
+        # Step 1: Create invitation as admin
+        invite_data = {
+            "email": "member.test@gmao-iris.local",
+            "role": "TECHNICIEN"
+        }
+        
+        response = self.make_request("POST", "/users/invite-member", invite_data)
+        
+        if response.status_code != 200:
+            self.log(f"✗ Failed to create invitation: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+        self.log("✓ Invitation created successfully")
+        
+        # Step 2: Create a valid invitation token for testing
+        # We'll use a simple approach - create the token manually
+        import jwt
+        import os
+        from datetime import datetime, timedelta
+        
+        SECRET_KEY = os.environ.get('SECRET_KEY', 'cde07833b439f01271581902a8e2207bfba9c8c838307dd17496405120de16d3')
+        ALGORITHM = "HS256"
+        
+        invitation_data = {
+            "sub": invite_data["email"],
+            "type": "invitation",
+            "role": invite_data["role"],
+            "invited_by": self.admin_user_id,
+            "exp": datetime.utcnow() + timedelta(days=7)
+        }
+        invitation_token = jwt.encode(invitation_data, SECRET_KEY, algorithm=ALGORITHM)
+        
+        # Step 3: Complete registration using the token
+        registration_data = {
+            "token": invitation_token,
+            "nom": "Testeur",
+            "prenom": "Membre",
+            "telephone": "+33123456789",
+            "password": "MemberPass123!"
+        }
+        
+        response = self.make_request("POST", "/auth/complete-registration", registration_data, token=None)
+        
+        if response.status_code == 200:
+            user_data = response.json()
+            self.test_users.append(user_data["email"])
+            
+            # Verify user was created with correct fields
+            if user_data["email"] != invite_data["email"]:
+                self.log(f"✗ Email mismatch: expected {invite_data['email']}, got {user_data['email']}", "ERROR")
+                return False
+                
+            if user_data["role"] != invite_data["role"]:
+                self.log(f"✗ Role mismatch: expected {invite_data['role']}, got {user_data['role']}", "ERROR")
+                return False
+                
+            self.log("✓ Registration completed successfully")
+            self.log(f"  - Email: {user_data['email']}")
+            self.log(f"  - Name: {user_data['prenom']} {user_data['nom']}")
+            self.log(f"  - Role: {user_data['role']}")
+            return True
+        else:
+            self.log(f"✗ Registration failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_login_after_registration(self) -> bool:
+        """Test 2: Login After Registration - Critical Test"""
+        self.log("\n=== Test 2: Login After Registration - Critical Test ===")
+        
+        # Try to login with the newly created member credentials
+        login_data = {
+            "email": "member.test@gmao-iris.local",
+            "password": "MemberPass123!"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code == 200:
+            data = response.json()
+            
+            # Verify login response structure
+            required_fields = ["access_token", "token_type", "user"]
+            for field in required_fields:
+                if field not in data:
+                    self.log(f"✗ Missing field in login response: {field}", "ERROR")
+                    return False
+                    
+            # Verify user data
+            user = data["user"]
+            if user["email"] != login_data["email"]:
+                self.log(f"✗ Wrong user returned: {user['email']}", "ERROR")
+                return False
+                
+            # Verify JWT token is valid
+            if not data["access_token"] or len(data["access_token"]) < 10:
+                self.log("✗ Invalid JWT token received", "ERROR")
+                return False
+                
+            self.log("✓ Login successful after registration - hashed_password field working correctly")
+            self.log(f"  - Email: {user['email']}")
+            self.log(f"  - Role: {user['role']}")
+            self.log(f"  - Token: {data['access_token'][:20]}...")
+            return True
+        else:
+            self.log(f"✗ Login failed after registration: {response.status_code} - {response.text}", "ERROR")
+            self.log("  This indicates the hashed_password field issue is NOT fixed!", "ERROR")
+            return False
+            
+    def test_direct_registration(self) -> bool:
+        """Test 3: Direct Registration via /auth/register"""
+        self.log("\n=== Test 3: Direct Registration via /auth/register ===")
+        
+        # Create user directly via register endpoint
+        register_data = {
+            "nom": "Direct",
+            "prenom": "User",
+            "email": "direct.user@gmao-iris.local",
+            "telephone": "+33987654321",
+            "password": "DirectPass123!",
+            "role": "VISUALISEUR"
+        }
+        
+        response = self.make_request("POST", "/auth/register", register_data, token=None)
+        
+        if response.status_code == 200:
+            user_data = response.json()
+            self.test_users.append(user_data["email"])
+            
+            self.log("✓ Direct registration successful")
+            self.log(f"  - Email: {user_data['email']}")
+            self.log(f"  - Role: {user_data['role']}")
+            
+            # Now test login with this user
+            login_data = {
+                "email": register_data["email"],
+                "password": register_data["password"]
+            }
+            
+            login_response = self.make_request("POST", "/auth/login", login_data, token=None)
+            
+            if login_response.status_code == 200:
+                self.log("✓ Login successful after direct registration")
+                return True
+            else:
+                self.log(f"✗ Login failed after direct registration: {login_response.status_code}", "ERROR")
+                return False
+        else:
+            self.log(f"✗ Direct registration failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def test_password_change_flow(self) -> bool:
+        """Test 4: Password Change Flow"""
+        self.log("\n=== Test 4: Password Change Flow ===")
+        
+        # First login with the member user
+        login_data = {
+            "email": "member.test@gmao-iris.local",
+            "password": "MemberPass123!"
+        }
+        
+        response = self.make_request("POST", "/auth/login", login_data, token=None)
+        
+        if response.status_code != 200:
+            self.log("✗ Could not login to test password change", "ERROR")
+            return False
+            
+        member_token = response.json()["access_token"]
+        
+        # Change password
+        change_data = {
+            "old_password": "MemberPass123!",
+            "new_password": "NewMemberPass456!"
+        }
+        
+        response = self.make_request("POST", "/auth/change-password", change_data, token=member_token)
+        
+        if response.status_code == 200:
+            self.log("✓ Password change successful")
+            
+            # Test login with new password
+            new_login_data = {
+                "email": "member.test@gmao-iris.local",
+                "password": "NewMemberPass456!"
+            }
+            
+            login_response = self.make_request("POST", "/auth/login", new_login_data, token=None)
+            
+            if login_response.status_code == 200:
+                self.log("✓ Login successful with new password - password change verified")
+                return True
+            else:
+                self.log(f"✗ Could not login with new password: {login_response.status_code}", "ERROR")
+                return False
+        else:
+            self.log(f"✗ Password change failed: {response.status_code} - {response.text}", "ERROR")
+            return False
+            
+    def verify_database_hashed_password_field(self) -> bool:
+        """Test 5: Verify hashed_password field exists in database"""
+        self.log("\n=== Test 5: Verify hashed_password field in database ===")
+        
+        # This test would require database access, which we don't have in API testing
+        # Instead, we'll verify through successful login operations
+        # If login works, it means the hashed_password field is correctly stored and retrieved
+        
+        test_cases = [
+            ("member.test@gmao-iris.local", "NewMemberPass456!"),
+            ("direct.user@gmao-iris.local", "DirectPass123!")
+        ]
+        
+        all_success = True
+        
+        for email, password in test_cases:
+            login_data = {"email": email, "password": password}
+            response = self.make_request("POST", "/auth/login", login_data, token=None)
+            
+            if response.status_code == 200:
+                self.log(f"✓ Database verification successful for {email}")
+            else:
+                self.log(f"✗ Database verification failed for {email}: {response.status_code}", "ERROR")
+                all_success = False
+                
+        if all_success:
+            self.log("✓ All users can login - hashed_password field is correctly stored in database")
+            return True
+        else:
+            self.log("✗ Some users cannot login - hashed_password field issue may persist", "ERROR")
+            return False
+            
+    def run_all_tests(self) -> Dict[str, bool]:
+        """Run all member registration and login tests"""
+        self.log("Starting Member Registration and Login Flow Tests...")
+        self.log("Testing the hashed_password field fix")
+        self.log(f"Backend URL: {self.base_url}")
+        
+        results = {}
+        
+        # Setup admin user
+        if not self.setup_admin_user():
+            self.log("Failed to setup admin user. Aborting tests.", "ERROR")
+            return {"setup": False}
+            
+        # Run tests in sequence
+        self.log("\n" + "="*60)
+        self.log("MEMBER REGISTRATION & LOGIN TESTS")
+        self.log("="*60)
+        
+        # Test 1: Complete Registration Flow
+        results["complete_registration_flow"] = self.test_complete_registration_flow()
+        
+        # Test 2: Login After Registration (Critical Test)
+        results["login_after_registration"] = self.test_login_after_registration()
+        
+        # Test 3: Direct Registration
+        results["direct_registration"] = self.test_direct_registration()
+        
+        # Test 4: Password Change Flow
+        results["password_change_flow"] = self.test_password_change_flow()
+        
+        # Test 5: Database Verification
+        results["database_verification"] = self.verify_database_hashed_password_field()
+        
+        # Summary
+        self.log("\n" + "="*60)
+        self.log("MEMBER REGISTRATION TEST RESULTS SUMMARY")
+        self.log("="*60)
+        
+        passed = 0
+        total = len(results)
+        
+        for test_name, result in results.items():
+            status = "✓ PASS" if result else "✗ FAIL"
+            self.log(f"{test_name}: {status}")
+            if result:
+                passed += 1
+                
+        self.log(f"\nMember Registration Tests: {passed}/{total} tests passed")
+        
+        # Critical assessment
+        if results.get("login_after_registration", False):
+            self.log("\n🎉 CRITICAL TEST PASSED: Login after registration works!")
+            self.log("   The hashed_password field fix is working correctly.")
+        else:
+            self.log("\n❌ CRITICAL TEST FAILED: Login after registration failed!")
+            self.log("   The hashed_password field issue is NOT resolved.")
+        
+        return results
+
 def main():
     """Main test execution"""
     # Run Phase 1 Tests (Priority)
