@@ -12,9 +12,9 @@ pwd_context = CryptContext(
     bcrypt__rounds=10  # Réduction des rounds pour environnements limités
 )
 
-SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "your_jwt_secret_key_change_in_production")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days
+SECRET_KEY = os.environ.get("SECRET_KEY", "your_jwt_secret_key_change_in_production")
+ALGORITHM = os.environ.get("ALGORITHM", "HS256")
+ACCESS_TOKEN_EXPIRE_MINUTES = int(os.environ.get("ACCESS_TOKEN_EXPIRE_MINUTES", "10080"))  # 7 days par défaut
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """
