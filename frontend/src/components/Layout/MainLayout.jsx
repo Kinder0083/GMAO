@@ -17,7 +17,8 @@ import {
   LogOut,
   Bell,
   Database,
-  RefreshCw
+  RefreshCw,
+  FileText
 } from 'lucide-react';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 
