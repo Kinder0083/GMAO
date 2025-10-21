@@ -315,6 +315,7 @@ class WorkOrder(WorkOrderBase):
     emplacement: Optional[dict] = None
     attachments: List[dict] = []
     comments: List[Comment] = []
+    createdByName: Optional[str] = None
 
     class Config:
         from_attributes = True
