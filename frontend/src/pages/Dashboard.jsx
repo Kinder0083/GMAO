@@ -18,16 +18,8 @@ const Dashboard = () => {
   const [equipments, setEquipments] = useState([]);
   const [analytics, setAnalytics] = useState(null);
 
-  useEffect(() => {
-    loadData();
-    
-    // Rafraîchissement automatique toutes les 5 secondes
-    const interval = setInterval(() => {
-      loadData();
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, []);
+  // Rafraîchissement automatique toutes les 5 secondes
+  useAutoRefresh(loadData, []);
 
   const loadData = async () => {
     try {
