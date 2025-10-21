@@ -209,6 +209,58 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder }) => {
             )}
           </div>
 
+          {/* Rapport Détaillé */}
+          <Separator className="my-6" />
+          <div>
+            <div className="flex items-center gap-2 mb-4">
+              <MessageSquare size={20} className="text-gray-600" />
+              <h3 className="text-lg font-semibold text-gray-900">Rapport Détaillé</h3>
+            </div>
+            
+            {/* Liste des commentaires */}
+            <div className="bg-gray-50 rounded-lg p-4 mb-4 max-h-64 overflow-y-auto space-y-3">
+              {loadingComments ? (
+                <p className="text-center text-gray-500">Chargement...</p>
+              ) : comments.length === 0 ? (
+                <p className="text-center text-gray-500 py-4">Aucun commentaire pour le moment</p>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="bg-white rounded-lg p-3 shadow-sm">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-semibold text-sm text-gray-900">{comment.user_name}</span>
+                      <span className="text-xs text-gray-500">{formatDate(comment.timestamp)}</span>
+                    </div>
+                    <p className="text-gray-700 text-sm whitespace-pre-wrap">{comment.text}</p>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Zone de saisie */}
+            <div className="flex gap-2">
+              <Textarea
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="Ajouter un commentaire..."
+                className="flex-1 resize-none"
+                rows={2}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && e.ctrlKey) {
+                    handleSendComment();
+                  }
+                }}
+              />
+              <Button 
+                onClick={handleSendComment}
+                disabled={!newComment.trim() || sendingComment}
+                className="self-end"
+              >
+                <Send size={16} />
+              </Button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Ctrl+Entrée pour envoyer</p>
+          </div>
+
           {/* Pièces jointes */}
           <Separator className="my-6" />
           <div>
