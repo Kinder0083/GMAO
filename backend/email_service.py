@@ -94,9 +94,13 @@ def send_email(to_email: str, subject: str, html_content: str, text_content: Opt
             server.quit()
         else:
             # SMTP externe avec SSL (port 465)
+            logger.info("🔐 Mode SSL activé")
             server = smtplib.SMTP_SSL(SMTP_SERVER, SMTP_PORT, timeout=10)
             if needs_auth:
+                logger.info(f"🔐 Authentification avec {SMTP_USERNAME}...")
                 server.login(SMTP_USERNAME, SMTP_PASSWORD)
+                logger.info("✅ Authentification réussie")
+            logger.info(f"📤 Envoi email à {to_email}...")
             server.send_message(msg)
             server.quit()
         
