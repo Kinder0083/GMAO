@@ -59,7 +59,7 @@ const Journal = () => {
         ...(filters.user_id && { user_id: filters.user_id })
       };
 
-      const response = await api.getAuditLogs(params);
+      const response = await auditAPI.getAuditLogs(params);
       setLogs(response.logs);
       setPagination(prev => ({ ...prev, total: response.total }));
     } catch (error) {
