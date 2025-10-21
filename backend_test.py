@@ -11,6 +11,7 @@ import io
 import csv
 import tempfile
 import os
+import jwt
 from typing import Dict, Any, Optional
 from datetime import datetime
 
