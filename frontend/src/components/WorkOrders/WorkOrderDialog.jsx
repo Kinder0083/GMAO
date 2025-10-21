@@ -17,11 +17,70 @@ import { commentsAPI } from '../../services/api';
 
 const WorkOrderDialog = ({ open, onOpenChange, workOrder }) => {
   const [refreshAttachments, setRefreshAttachments] = useState(0);
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [loadingComments, setLoadingComments] = useState(false);
+  const [sendingComment, setSendingComment] = useState(false);
   
   if (!workOrder) return null;
 
+  useEffect(() => {
+    if (open && workOrder) {
+      loadComments();
+    }
+  }, [open, workOrder]);
+
+  const loadComments = async () => {
+    try {
+      setLoadingComments(true);
+      const response = await commentsAPI.getWorkOrderComments(workOrder.id);
+      setComments(response.comments || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des commentaires:', error);
+    } finally {
+      setLoadingComments(false);
+    }
+  };
+
+  const handleSendComment = async () => {
+    if (!newComment.trim()) return;
+    
+    try {
+      setSendingComment(true);
+      await commentsAPI.addWorkOrderComment(workOrder.id, newComment);
+      setNewComment('');
+      await loadComments();
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error);
+    } finally {
+      setSendingComment(false);
+    }
+  };
+
   const handleUploadComplete = () => {
     setRefreshAttachments(prev => prev + 1);
+  };
+
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const formatter = new Intl.DateTimeFormat('fr-FR', {
+      timeZone: 'Europe/Paris',
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return formatter.format(date);
+  };
+
+  const formatCreationDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}/${month}/${year}`;
   };
 
   const getStatusBadge = (statut) => {
