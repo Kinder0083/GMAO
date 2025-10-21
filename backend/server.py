@@ -554,7 +554,7 @@ async def complete_registration(request: CompleteRegistrationRequest):
             "telephone": request.telephone or "",
             "role": role,
             "service": None,
-            "password": hashed_password,
+            "hashed_password": hashed_password,
             "statut": "actif",
             "dateCreation": datetime.utcnow(),
             "derniereConnexion": datetime.utcnow(),
