@@ -603,7 +603,7 @@ async def change_password_first_login(request: ChangePasswordRequest, current_us
         {"_id": ObjectId(user_id)},
         {
             "$set": {
-                "password": new_hashed_password,
+                "hashed_password": new_hashed_password,
                 "firstLogin": False
             }
         }
