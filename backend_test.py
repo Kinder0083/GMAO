@@ -1724,6 +1724,10 @@ class MemberRegistrationTester:
             self.log(f"  - Email: {user_data['email']}")
             self.log(f"  - Role: {user_data['role']}")
             
+            # Store for database verification
+            self.direct_email = user_data["email"]
+            self.direct_password = register_data["password"]
+            
             # Now test login with this user
             login_data = {
                 "email": register_data["email"],
