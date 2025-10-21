@@ -99,15 +99,20 @@ const Journal = () => {
   };
 
   const formatDate = (dateString) => {
+    // Créer un objet Date à partir de la chaîne UTC
     const date = new Date(dateString);
-    return date.toLocaleString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      timeZone: 'Europe/Paris'
-    });
+    
+    // Convertir en heure de Paris (Europe/Paris)
+    const parisDate = new Date(date.toLocaleString('en-US', { timeZone: 'Europe/Paris' }));
+    
+    // Formater la date
+    const day = String(parisDate.getDate()).padStart(2, '0');
+    const month = String(parisDate.getMonth() + 1).padStart(2, '0');
+    const year = parisDate.getFullYear();
+    const hours = String(parisDate.getHours()).padStart(2, '0');
+    const minutes = String(parisDate.getMinutes()).padStart(2, '0');
+    
+    return `${day}/${month}/${year} ${hours}:${minutes}`;
   };
 
   const handleNextPage = () => {
