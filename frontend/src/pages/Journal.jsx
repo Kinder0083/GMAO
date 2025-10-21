@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Download, Filter, Search, User, FileText } from 'lucide-react';
-import api from '../services/api';
+import { auditAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 
 const Journal = () => {
