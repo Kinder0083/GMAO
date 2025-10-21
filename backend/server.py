@@ -2953,10 +2953,17 @@ async def export_audit_logs(
         )
         
         # Préparer les données pour l'export
+        paris_tz = pytz.timezone('Europe/Paris')
         export_data = []
         for log in logs:
+            # Convertir UTC vers Europe/Paris
+            timestamp_utc = log["timestamp"]
+            if timestamp_utc.tzinfo is None:
+                timestamp_utc = pytz.utc.localize(timestamp_utc)
+            timestamp_paris = timestamp_utc.astimezone(paris_tz)
+            
             export_data.append({
-                "Date/Heure": log["timestamp"].strftime("%d/%m/%Y %H:%M:%S"),
+                "Date/Heure": timestamp_paris.strftime("%d/%m/%Y %H:%M:%S"),
                 "Utilisateur": log["user_name"],
                 "Email": log["user_email"],
                 "Action": log["action"],
