@@ -132,12 +132,14 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder }) => {
 
           {/* Details Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Date de création */}
-            <div className="flex items-start gap-3">
+            {/* Créé le */}
+            <div className="flex items-start gap-3 md:col-span-2">
               <Calendar size={18} className="text-blue-600 mt-1" />
               <div>
-                <p className="text-sm text-gray-600">Date de création</p>
-                <p className="font-medium text-gray-900">{workOrder.dateCreation}</p>
+                <p className="text-sm text-gray-600">Créé le</p>
+                <p className="font-medium text-gray-900">
+                  {formatCreationDate(workOrder.dateCreation)} par {workOrder.createdByName || 'Utilisateur inconnu'}
+                </p>
               </div>
             </div>
 
