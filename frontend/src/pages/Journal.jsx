@@ -10,6 +10,7 @@ import api from '../services/api';
 import { useToast } from '../hooks/use-toast';
 
 const Journal = () => {
+  const { toast } = useToast();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
