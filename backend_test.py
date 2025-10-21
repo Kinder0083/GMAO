@@ -1856,8 +1856,16 @@ class MemberRegistrationTester:
 
 def main():
     """Main test execution"""
-    # Run Phase 1 Tests (Priority)
+    # Run Member Registration Tests (HIGHEST PRIORITY)
     print("="*80)
+    print("RUNNING MEMBER REGISTRATION & LOGIN TESTS - HASHED_PASSWORD FIX")
+    print("="*80)
+    
+    member_tester = MemberRegistrationTester()
+    member_results = member_tester.run_all_tests()
+    
+    # Run Phase 1 Tests (Priority)
+    print("\n" + "="*80)
     print("RUNNING PHASE 1 TESTS - SMTP, USER PROFILE, PASSWORD CHANGE")
     print("="*80)
     
