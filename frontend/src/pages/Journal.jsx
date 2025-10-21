@@ -64,7 +64,11 @@ const Journal = () => {
       setPagination(prev => ({ ...prev, total: response.total }));
     } catch (error) {
       console.error('Erreur lors du chargement des logs:', error);
-      toast.error('Erreur lors du chargement du journal');
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors du chargement du journal',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
