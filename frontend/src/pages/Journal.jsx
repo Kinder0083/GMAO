@@ -194,7 +194,7 @@ const Journal = () => {
             </Button>
 
             <Button 
-              onClick={() => setFilters({ action: '', entity_type: '', user_id: '', search: '' })}
+              onClick={() => setFilters({ action: 'all', entity_type: 'all', user_id: '', search: '' })}
               variant="outline"
               className="w-full"
             >
