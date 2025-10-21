@@ -103,13 +103,27 @@
 #====================================================================================================
 
 user_problem_statement: |
-  PHASE 1: Corrections Critiques - SMTP, Paramètres, Maintenance Programmée
+  PHASE 1: Corrections Critiques - SMTP, Paramètres, Maintenance Programmée [TERMINÉE]
   
   Le client a reporté plusieurs problèmes critiques :
   1. Erreur lors de l'envoi d'email d'activation aux nouveaux membres
   2. La page Paramètres n'enregistre aucune information
   3. Le bouton "Changer son mot de passe" dans Paramètres ne fait rien
   4. Les compteurs de la page Maintenance Programmée ne se mettent pas à jour correctement
+  
+  PHASE 2: Nouvelles Fonctionnalités [EN COURS]
+  
+  Demandes d'évolution :
+  1. Rafraîchissement automatique de toutes les pages (5 secondes)
+  2. Nouvelle section "Journal" (audit log) accessible uniquement aux admins
+     - Enregistrer toutes les actions (créations, modifications, suppressions, connexions)
+     - Filtrable par utilisateur, type d'action, date
+     - Exportable en CSV/Excel
+  3. Modifications de l'affichage des Ordres de Travail :
+     - Afficher uniquement le titre (pas l'ID complet)
+     - Changer "Date de création" en "Créé le DD/MM/YY par [Nom Créateur]"
+     - Ajouter section "Rapport Détaillé" avec système de commentaires horodatés (comme un chat)
+  4. Permissions : Les techniciens ne peuvent supprimer que ce qu'ils ont créé
 
 backend:
   - task: "Configuration SMTP/Postfix pour envoi d'emails"
