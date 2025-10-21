@@ -1701,11 +1701,14 @@ class MemberRegistrationTester:
         """Test 3: Direct Registration via /auth/register"""
         self.log("\n=== Test 3: Direct Registration via /auth/register ===")
         
-        # Create user directly via register endpoint
+        # Create user directly via register endpoint with unique email
+        import time
+        unique_email = f"direct.user.{int(time.time())}@gmao-iris.local"
+        
         register_data = {
             "nom": "Direct",
             "prenom": "User",
-            "email": "direct.user@gmao-iris.local",
+            "email": unique_email,
             "telephone": "+33987654321",
             "password": "DirectPass123!",
             "role": "VISUALISEUR"
