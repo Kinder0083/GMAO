@@ -1775,7 +1775,7 @@ class MemberRegistrationTester:
             
             # Test login with new password
             new_login_data = {
-                "email": "member.test@gmao-iris.local",
+                "email": self.member_email,
                 "password": "NewMemberPass456!"
             }
             
