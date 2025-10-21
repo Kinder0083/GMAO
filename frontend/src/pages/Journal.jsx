@@ -78,8 +78,8 @@ const Journal = () => {
     try {
       const params = {
         format,
-        ...(filters.action && { action: filters.action }),
-        ...(filters.entity_type && { entity_type: filters.entity_type }),
+        ...(filters.action && filters.action !== 'all' && { action: filters.action }),
+        ...(filters.entity_type && filters.entity_type !== 'all' && { entity_type: filters.entity_type }),
         ...(filters.user_id && { user_id: filters.user_id })
       };
 
