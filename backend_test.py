@@ -1743,9 +1743,14 @@ class MemberRegistrationTester:
         """Test 4: Password Change Flow"""
         self.log("\n=== Test 4: Password Change Flow ===")
         
+        # Check if we have a member email from the registration test
+        if not hasattr(self, 'member_email'):
+            self.log("✗ No member email available from registration test", "ERROR")
+            return False
+        
         # First login with the member user
         login_data = {
-            "email": "member.test@gmao-iris.local",
+            "email": self.member_email,
             "password": "MemberPass123!"
         }
         
