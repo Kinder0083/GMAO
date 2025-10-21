@@ -84,10 +84,17 @@ const Journal = () => {
       };
 
       await api.exportAuditLogs(params);
-      toast.success(`Export ${format.toUpperCase()} réussi`);
+      toast({
+        title: 'Succès',
+        description: `Export ${format.toUpperCase()} réussi`
+      });
     } catch (error) {
       console.error('Erreur lors de l\'export:', error);
-      toast.error('Erreur lors de l\'export');
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'export',
+        variant: 'destructive'
+      });
     }
   };
 
