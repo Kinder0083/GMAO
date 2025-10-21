@@ -425,7 +425,7 @@ async def create_member(request: CreateMemberRequest, current_user: dict = Depen
         "telephone": request.telephone or "",
         "role": request.role,
         "service": request.service,
-        "password": hashed_password,
+        "hashed_password": hashed_password,  # CORRECTION: hashed_password au lieu de password
         "statut": "actif",
         "dateCreation": datetime.utcnow(),
         "derniereConnexion": datetime.utcnow(),
