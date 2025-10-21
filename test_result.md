@@ -323,7 +323,8 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Correction champ hashed_password - Problème de connexion après inscription"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
