@@ -746,9 +746,19 @@ async def get_work_orders(
         
         # Ajouter le nom du créateur
         if wo.get("createdBy"):
-            creator = await get_user_by_id(wo["createdBy"])
-            if creator:
-                wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+            try:
+                # Essayer de chercher par ObjectId
+                creator = await db.users.find_one({"_id": ObjectId(wo["createdBy"])})
+                if creator:
+                    wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+                else:
+                    # Sinon essayer par le champ id (UUID)
+                    creator = await db.users.find_one({"id": wo["createdBy"]})
+                    if creator:
+                        wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+            except:
+                # Si ça échoue, laisser vide
+                pass
     
     return [WorkOrder(**wo) for wo in work_orders]
 
@@ -770,9 +780,19 @@ async def get_work_order(wo_id: str, current_user: dict = Depends(get_current_us
         
         # Ajouter le nom du créateur
         if wo.get("createdBy"):
-            creator = await get_user_by_id(wo["createdBy"])
-            if creator:
-                wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+            try:
+                # Essayer de chercher par ObjectId
+                creator = await db.users.find_one({"_id": ObjectId(wo["createdBy"])})
+                if creator:
+                    wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+                else:
+                    # Sinon essayer par le champ id (UUID)
+                    creator = await db.users.find_one({"id": wo["createdBy"]})
+                    if creator:
+                        wo["createdByName"] = f"{creator.get('prenom', '')} {creator.get('nom', '')}".strip()
+            except:
+                # Si ça échoue, laisser vide
+                pass
         
         return WorkOrder(**wo)
     except Exception as e:
