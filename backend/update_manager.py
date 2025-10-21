@@ -13,10 +13,32 @@ from pathlib import Path
 class UpdateManager:
     def __init__(self, db):
         self.db = db
-        self.current_version = "1.1.0"
+        self.current_version = "1.2.0"  # Mise à jour de la version
         self.github_user = "Kinder0083"
         self.github_repo = "GMAO"
         self.github_branch = "main"
+        self.current_commit = None  # Sera chargé depuis git
+        
+    async def get_current_version(self) -> str:
+        """Récupère la version actuelle"""
+        return self.current_version
+    
+    async def get_current_commit(self) -> Optional[str]:
+        """Récupère le commit actuel depuis git"""
+        try:
+            import subprocess
+            result = subprocess.run(
+                ['git', 'rev-parse', 'HEAD'],
+                cwd='/opt/gmao-iris',
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            if result.returncode == 0:
+                return result.stdout.strip()[:7]
+        except:
+            pass
+        return None
         
     async def get_current_version(self) -> str:
         """Récupère la version actuelle"""
