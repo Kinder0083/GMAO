@@ -73,7 +73,9 @@ def send_email(to_email: str, subject: str, html_content: str, text_content: Opt
         # Connexion SMTP
         if is_local:
             # Postfix local : connexion simple sans TLS ni authentification
+            logger.info("📧 Mode local activé (pas d'authentification)")
             server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT, timeout=10)
+            logger.info(f"📤 Envoi email à {to_email}...")
             server.send_message(msg)
             server.quit()
         elif SMTP_USE_TLS:
