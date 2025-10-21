@@ -17,14 +17,12 @@ const Planning = () => {
   useEffect(() => {
     loadUsers();
     loadAvailabilities();
-    
-    // Rafraîchissement automatique toutes les 5 secondes
-    const interval = setInterval(() => {
-      loadUsers();
-      loadAvailabilities();
-    }, 5000);
-    
-    return () => clearInterval(interval);
+  }, [currentDate]);
+  
+  // Rafraîchissement automatique toutes les 5 secondes
+  useAutoRefresh(() => {
+    loadUsers();
+    loadAvailabilities();
   }, [currentDate]);
 
   const loadUsers = async () => {
