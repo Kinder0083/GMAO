@@ -10,13 +10,31 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# 1. Créer le fichier .env backend s'il n'existe pas
-echo -e "\n${YELLOW}[1/6] Vérification du fichier .env backend...${NC}"
-if [ ! -f /app/backend/.env ]; then
+# Détecter le répertoire du script
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+APP_DIR="${SCRIPT_DIR}"
+
+echo -e "${YELLOW}Répertoire détecté: ${APP_DIR}${NC}"
+echo ""
+
+# Vérifier que les dossiers existent
+if [ ! -d "${APP_DIR}/backend" ]; then
+    echo -e "${RED}✗ ERREUR: Le dossier backend n'existe pas dans ${APP_DIR}${NC}"
+    echo -e "${YELLOW}Êtes-vous dans le bon répertoire ?${NC}"
+    exit 1
+fi
+
+# 1. Créer le fichier .env backend
+echo -e "\n${YELLOW}[1/6] Configuration du fichier .env backend...${NC}"
+
+# Créer le dossier si nécessaire
+mkdir -p "${APP_DIR}/backend"
+
+if [ ! -f "${APP_DIR}/backend/.env" ]; then
     echo -e "${RED}✗ Fichier .env manquant !${NC}"
     echo -e "${GREEN}→ Création du fichier .env...${NC}"
     
-    cat > /app/backend/.env << 'EOF'
+    cat > "${APP_DIR}/backend/.env" << 'EOF'
 # Connexion MongoDB
 MONGO_URL=mongodb://localhost:27017
 DB_NAME=gmao_iris
