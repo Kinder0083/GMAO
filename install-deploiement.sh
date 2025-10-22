@@ -54,7 +54,7 @@ if [ -n "$APP_URL" ]; then
 fi
 
 # ============================================
-# 3. INSTALLER LES DEPENDANCES PYTHON D'ABORD
+# 3. INSTALLER TOUTES LES DEPENDANCES PYTHON
 # ============================================
 echo ""
 echo "[3/7] Installation des dépendances Python..."
@@ -63,11 +63,11 @@ if [ ! -d "/root/.venv" ]; then
     python3 -m venv /root/.venv
 fi
 source /root/.venv/bin/activate
-pip install -q motor passlib pymongo python-dotenv bcrypt
+pip install -q -r requirements.txt
 echo "✓ Dépendances Python installées"
 
 # ============================================
-# 4. CORRIGER LES UTILISATEURS MONGODB
+# 4. CONFIGURER LES UTILISATEURS MONGODB
 # ============================================
 echo ""
 echo "[4/7] Configuration des utilisateurs..."
@@ -76,43 +76,77 @@ python3 << 'PYEOF'
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
-from bson import ObjectId
 from datetime import datetime
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-async def fix():
+async def setup_users():
     client = AsyncIOMotorClient('mongodb://localhost:27017')
     db = client['gmao_iris']
     
-    for email, pwd in [("admin@gmao.com", "Admin123!"), ("buenogy@gmail.com", "nmrojvbvgb")]:
-        user = await db.users.find_one({"email": email})
-        hashed = pwd_context.hash(pwd)
+    # Configuration des utilisateurs
+    users_config = [
+        {
+            "email": "admin@gmao.com",
+            "password": "Admin123!",
+            "nom": "Admin",
+            "prenom": "Système"
+        },
+        {
+            "email": "buenogy@gmail.com",
+            "password": "nmrojvbvgb",
+            "nom": "Utilisateur",
+            "prenom": "Principal"
+        }
+    ]
+    
+    for user_data in users_config:
+        email = user_data["email"]
+        plain_password = user_data["password"]
         
-        if user:
+        # Vérifier si l'utilisateur existe
+        existing_user = await db.users.find_one({"email": email})
+        
+        # Hasher le mot de passe
+        hashed_password = pwd_context.hash(plain_password)
+        
+        user_document = {
+            "email": email,
+            "hashed_password": hashed_password,
+            "nom": user_data["nom"],
+            "prenom": user_data["prenom"],
+            "role": "ADMIN",
+            "telephone": "",
+            "dateCreation": datetime.utcnow(),
+            "derniereConnexion": None,
+            "statut": "actif",
+            "permissions": {
+                "dashboard": {"view": True, "edit": True, "delete": True},
+                "workOrders": {"view": True, "edit": True, "delete": True},
+                "assets": {"view": True, "edit": True, "delete": True},
+                "preventiveMaintenance": {"view": True, "edit": True, "delete": True},
+                "inventory": {"view": True, "edit": True, "delete": True},
+                "locations": {"view": True, "edit": True, "delete": True},
+                "vendors": {"view": True, "edit": True, "delete": True},
+                "reports": {"view": True, "edit": True, "delete": True}
+            }
+        }
+        
+        if existing_user:
+            # Mettre à jour l'utilisateur existant
             await db.users.update_one(
                 {"email": email},
-                {"$set": {"hashed_password": hashed}, "$unset": {"password": ""}}
+                {"$set": {"hashed_password": hashed_password}, "$unset": {"password": ""}}
             )
+            print(f"✓ Utilisateur mis à jour: {email}")
         else:
-            await db.users.insert_one({
-                "email": email,
-                "hashed_password": hashed,
-                "nom": "Admin" if email == "admin@gmao.com" else "Utilisateur",
-                "prenom": "Système" if email == "admin@gmao.com" else "Principal",
-                "role": "ADMIN",
-                "telephone": "",
-                "dateCreation": datetime.utcnow(),
-                "derniereConnexion": None,
-                "statut": "actif",
-                "permissions": {k: {"view": True, "edit": True, "delete": True} 
-                    for k in ["dashboard","workOrders","assets","preventiveMaintenance",
-                             "inventory","locations","vendors","reports"]},
-                "_id": ObjectId()
-            })
-        print(f"✓ {email}")
+            # Créer un nouvel utilisateur
+            await db.users.insert_one(user_document)
+            print(f"✓ Utilisateur créé: {email}")
+    
+    client.close()
 
-asyncio.run(fix())
+asyncio.run(setup_users())
 PYEOF
 echo "✓ Utilisateurs configurés"
 
