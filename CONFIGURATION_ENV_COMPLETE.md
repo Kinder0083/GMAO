@@ -39,7 +39,7 @@ APP_URL=https://votre-domaine.com
    - OU l'URL fournie par votre hébergeur
 
 2. **Preview Emergent** : 
-   - Utilisez l'URL complète : `https://maintenance-hub-62.preview.emergentagent.com`
+   - Utilisez l'URL complète : `https://maintenance-tracker-31.preview.emergentagent.com`
 
 3. **Serveur local** : 
    - Utilisez `http://votre-ip:3000` ou `http://localhost:3000`
