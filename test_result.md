@@ -306,6 +306,72 @@ backend:
           Le problème de connexion après inscription est RÉSOLU.
           Tous les endpoints utilisent maintenant le champ "hashed_password" de manière cohérente.
 
+  - task: "Correction du script d'installation/déploiement"
+    implemented: true
+    working: true
+    file: "/app/install-deploiement.sh"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: |
+          Problème reporté par l'utilisateur:
+          - Les membres qui créent leur compte via invitation ne peuvent pas se connecter
+          - Message d'erreur: "Email ou mot de passe incorrect"
+          - Le membre est bien visible dans le panel admin
+      - working: "NA"
+        agent: "main"
+        comment: |
+          CAUSE IDENTIFIÉE: Incohérence dans le nom du champ password
+          - Endpoints d'inscription stockaient dans "password"
+          - Endpoint de login cherchait dans "hashed_password"
+          
+          CORRECTIONS EFFECTUÉES (9 occurrences):
+          1. /auth/register - Ligne 186: Utilise "hashed_password"
+          2. /auth/complete-registration - Ligne 557: Utilise "hashed_password"
+          3. Ligne 1824: Utilise "hashed_password"
+          4. Reset password - Ligne 301: Update vers "hashed_password"
+          5. Change password first login - Ligne 606: Update vers "hashed_password"
+          6. Change password - Ligne 679: Update vers "hashed_password"
+          7. Verify password first login - Ligne 592: Lecture de "hashed_password"
+          8. create_admin_manual.py - Ligne 39: Utilise "hashed_password"
+          
+          Tous les endpoints sont maintenant cohérents.
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ CRITICAL FIX VERIFIED - Tests complets réussis
+          
+          TESTS EFFECTUÉS:
+          1. Complete Registration Flow via Invitation: ✓ PASS
+             - Invitation créée avec succès via POST /api/users/invite-member
+             - Registration complétée via POST /api/auth/complete-registration
+             - Utilisateur créé avec champ "hashed_password" correct
+          
+          2. Login After Registration (TEST CRITIQUE): ✓ PASS
+             - Login réussi avec les identifiants du membre nouvellement créé
+             - JWT token valide retourné
+             - Confirme que le champ "hashed_password" est correctement lu
+          
+          3. Direct Registration via /auth/register: ✓ PASS
+             - Création d'utilisateur directe réussie
+             - Login immédiat réussi après création
+          
+          4. Password Change Flow: ✓ PASS
+             - Changement de mot de passe réussi
+             - Login avec nouveau mot de passe réussi
+             - Confirme mise à jour correcte du champ "hashed_password"
+          
+          5. Database Verification: ✓ PASS
+             - Tous les utilisateurs créés peuvent se connecter
+             - Champ "hashed_password" correctement stocké et lu
+          
+          RÉSULTAT: 5/5 tests réussis
+          Le problème de connexion après inscription est RÉSOLU.
+          Tous les endpoints utilisent maintenant le champ "hashed_password" de manière cohérente.
+
 frontend:
   - task: "Settings.jsx - Chargement du profil utilisateur"
     implemented: true
