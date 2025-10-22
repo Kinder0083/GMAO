@@ -54,10 +54,24 @@ if [ -n "$APP_URL" ]; then
 fi
 
 # ============================================
-# 3. CORRIGER LES UTILISATEURS MONGODB
+# 3. INSTALLER LES DEPENDANCES PYTHON D'ABORD
 # ============================================
 echo ""
-echo "[3/7] Configuration des utilisateurs..."
+echo "[3/7] Installation des dépendances Python..."
+cd /app/backend
+if [ ! -d "/root/.venv" ]; then
+    python3 -m venv /root/.venv
+fi
+source /root/.venv/bin/activate
+pip install -q motor passlib pymongo python-dotenv bcrypt
+echo "✓ Dépendances Python installées"
+
+# ============================================
+# 4. CORRIGER LES UTILISATEURS MONGODB
+# ============================================
+echo ""
+echo "[4/7] Configuration des utilisateurs..."
+source /root/.venv/bin/activate
 python3 << 'PYEOF'
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
