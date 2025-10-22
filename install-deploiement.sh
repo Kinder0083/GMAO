@@ -164,7 +164,7 @@ yarn install --silent 2>/dev/null || npm install --silent
 echo "✓ Dépendances Node installées"
 
 # ============================================
-# 6. DEMARRER LES SERVICES
+# 7. DEMARRER LES SERVICES
 # ============================================
 echo ""
 echo "[7/7] Démarrage des services..."
