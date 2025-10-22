@@ -148,17 +148,17 @@ supervisorctl update
 echo "✓ Supervisor configuré"
 
 # ============================================
-# 5. INSTALLER LES DEPENDANCES
+# 6. INSTALLER TOUTES LES DEPENDANCES
 # ============================================
 echo ""
-echo "[5/7] Installation des dépendances Python..."
+echo "[6/7] Installation complète des dépendances Python..."
 cd /app/backend
-source /root/.venv/bin/activate 2>/dev/null || python3 -m venv /root/.venv && source /root/.venv/bin/activate
+source /root/.venv/bin/activate
 pip install -q -r requirements.txt
-echo "✓ Dépendances Python installées"
+echo "✓ Toutes les dépendances Python installées"
 
 echo ""
-echo "[6/7] Installation des dépendances Node..."
+echo "Installation des dépendances Node..."
 cd /app/frontend
 yarn install --silent 2>/dev/null || npm install --silent
 echo "✓ Dépendances Node installées"
