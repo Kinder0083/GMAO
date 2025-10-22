@@ -124,6 +124,13 @@ user_problem_statement: |
      - Changer "Date de création" en "Créé le DD/MM/YY par [Nom Créateur]"
      - Ajouter section "Rapport Détaillé" avec système de commentaires horodatés (comme un chat)
   4. Permissions : Les techniciens ne peuvent supprimer que ce qu'ils ont créé
+  
+  PHASE 3: Correction du Script de Déploiement [TERMINÉE]
+  
+  Problème critique :
+  - Le script d'installation échouait avec erreur bcrypt: "password cannot be longer than 72 bytes"
+  - Email et login ne fonctionnaient pas sur le serveur déployé (fonctionnaient en preview)
+  - Nécessité d'un script d'installation unique et fiable
 
 backend:
   - task: "Configuration SMTP/Postfix pour envoi d'emails"
