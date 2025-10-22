@@ -60,3 +60,7 @@ test_result.md
 # Yarn
 .yarn/cache
 .yarn/unplugged
+-e 
+# Environment files
+*.env
+*.env.*
