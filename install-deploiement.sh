@@ -117,10 +117,10 @@ PYEOF
 echo "✓ Utilisateurs configurés"
 
 # ============================================
-# 4. CONFIGURER SUPERVISOR
+# 5. CONFIGURER SUPERVISOR
 # ============================================
 echo ""
-echo "[4/7] Configuration de Supervisor..."
+echo "[5/7] Configuration de Supervisor..."
 cat > /etc/supervisor/conf.d/gmao-backend.conf << 'EOF'
 [program:backend]
 directory=/app/backend
