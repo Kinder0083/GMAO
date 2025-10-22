@@ -69,8 +69,7 @@ echo "✓ Dépendances Python installées"
 # ============================================
 echo ""
 echo "[4/7] Configuration des utilisateurs..."
-source /root/.venv/bin/activate
-python3 << 'PYEOF'
+/root/.venv/bin/python3 << 'PYEOF'
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
 from passlib.context import CryptContext
