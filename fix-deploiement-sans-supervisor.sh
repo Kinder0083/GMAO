@@ -28,6 +28,10 @@ SMTP_PASSWORD=dvyqotsnqayayobo
 SMTP_SENDER_EMAIL=buenogy@gmail.com
 SMTP_FROM_NAME=GMAO Iris
 SMTP_USE_TLS=true
+
+# URL de l'application (IMPORTANT pour les liens d'invitation)
+# Remplacez par votre URL réelle de déploiement
+APP_URL=https://votre-domaine.com
 EOF
 echo -e "${GREEN}✓ Fichier .env créé${NC}"
 
