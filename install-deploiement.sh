@@ -58,12 +58,10 @@ fi
 # ============================================
 echo ""
 echo "[3/7] Installation des dépendances Python..."
-cd /app/backend
 if [ ! -d "/root/.venv" ]; then
     python3 -m venv /root/.venv
 fi
-source /root/.venv/bin/activate
-pip install -q -r requirements.txt
+/root/.venv/bin/pip install -q -r /app/backend/requirements.txt
 echo "✓ Dépendances Python installées"
 
 # ============================================
