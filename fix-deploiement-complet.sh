@@ -51,19 +51,19 @@ SMTP_SENDER_EMAIL=buenogy@gmail.com
 SMTP_FROM_NAME=GMAO Iris
 SMTP_USE_TLS=true
 EOF
-    echo -e "${GREEN}✓ Fichier .env créé${NC}"
+    echo -e "${GREEN}✓ Fichier .env créé dans ${APP_DIR}/backend/.env${NC}"
 else
     echo -e "${GREEN}✓ Fichier .env existe${NC}"
     
     # Vérifier la présence des clés importantes
-    if ! grep -q "SECRET_KEY" /app/backend/.env; then
+    if ! grep -q "SECRET_KEY" "${APP_DIR}/backend/.env"; then
         echo -e "${YELLOW}→ Ajout de SECRET_KEY...${NC}"
-        echo 'SECRET_KEY="cde07833b439f01271581902a8e2207bfba9c8c838307dd17496405120de16d3"' >> /app/backend/.env
+        echo 'SECRET_KEY="cde07833b439f01271581902a8e2207bfba9c8c838307dd17496405120de16d3"' >> "${APP_DIR}/backend/.env"
     fi
     
-    if ! grep -q "SMTP_SERVER" /app/backend/.env; then
+    if ! grep -q "SMTP_SERVER" "${APP_DIR}/backend/.env"; then
         echo -e "${YELLOW}→ Ajout de la configuration SMTP...${NC}"
-        cat >> /app/backend/.env << 'EOF'
+        cat >> "${APP_DIR}/backend/.env" << 'EOF'
 
 # Configuration SMTP - Gmail
 SMTP_SERVER=smtp.gmail.com
