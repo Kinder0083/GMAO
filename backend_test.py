@@ -13,8 +13,8 @@ from datetime import datetime
 BACKEND_URL = "http://localhost:8001/api"
 
 # Test credentials
-TEST_EMAIL = "admin@example.com"
-TEST_PASSWORD = "password123"
+TEST_EMAIL = "admin@gmao-iris.local"
+TEST_PASSWORD = "Admin123!"
 
 class BackendTester:
     def __init__(self):
