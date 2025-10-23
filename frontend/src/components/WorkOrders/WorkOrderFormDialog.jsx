@@ -151,6 +151,10 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
         
         // Émettre un événement pour rafraîchir les notifications instantanément
         window.dispatchEvent(new Event('workOrderUpdated'));
+        
+        // Mettre à jour le statut pour le dialog de changement
+        setSavedWorkOrderId(workOrder.id);
+        setSavedWorkOrderStatus(submitData.statut);
       } else {
         const response = await workOrdersAPI.create(submitData);
         const newWorkOrderId = response.data.id;
@@ -173,10 +177,15 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
         
         // Émettre un événement pour rafraîchir les notifications instantanément
         window.dispatchEvent(new Event('workOrderCreated'));
+        
+        // Mettre à jour le statut pour le dialog de changement
+        setSavedWorkOrderId(newWorkOrderId);
+        setSavedWorkOrderStatus(submitData.statut);
       }
 
       onSuccess();
-      onOpenChange(false);
+      // Ne pas fermer directement, afficher le dialog de changement de statut
+      setShowStatusDialog(true);
     } catch (error) {
       toast({
         title: 'Erreur',
