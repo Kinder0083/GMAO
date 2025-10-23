@@ -84,8 +84,41 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   useEffect(() => {
     if (open && workOrder) {
       loadComments();
+      setIsClosing(false);
     }
   }, [open, workOrder]);
+
+  const handleDialogClose = (isOpen) => {
+    if (!isOpen && !isClosing) {
+      // L'utilisateur veut fermer le dialog, montrer le dialog de changement de statut
+      setShowStatusDialog(true);
+      setIsClosing(true);
+    }
+  };
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      await workOrdersAPI.update(workOrder.id, { statut: newStatus });
+      toast({
+        title: 'Succès',
+        description: 'Le statut a été mis à jour'
+      });
+      setShowStatusDialog(false);
+      if (onSuccess) onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de mettre à jour le statut',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleSkipStatusChange = () => {
+    setShowStatusDialog(false);
+    onOpenChange(false);
+  };
 
   if (!workOrder) return null;
 
@@ -112,7 +145,8 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
