@@ -45,6 +45,7 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   useEffect(() => {
     if (open) {
       loadData();
+      setIsClosing(false);
       if (workOrder) {
         setFormData({
           titre: workOrder.titre || '',
@@ -57,6 +58,8 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
           dateLimite: workOrder.dateLimite?.split('T')[0] || '',
           tempsEstime: workOrder.tempsEstime || ''
         });
+        setSavedWorkOrderId(workOrder.id);
+        setSavedWorkOrderStatus(workOrder.statut);
       } else {
         setFormData({
           titre: '',
@@ -70,6 +73,8 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
           tempsEstime: ''
         });
         setAttachments([]);
+        setSavedWorkOrderId(null);
+        setSavedWorkOrderStatus(null);
       }
     }
   }, [open, workOrder]);
