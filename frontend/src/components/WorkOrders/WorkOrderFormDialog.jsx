@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Paperclip, Camera } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { workOrdersAPI, equipmentsAPI, locationsAPI, usersAPI } from '../../services/api';
+import StatusChangeDialog from './StatusChangeDialog';
 
 const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const { toast } = useToast();
@@ -36,6 +37,10 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const [attachments, setAttachments] = useState([]);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [savedWorkOrderId, setSavedWorkOrderId] = useState(null);
+  const [savedWorkOrderStatus, setSavedWorkOrderStatus] = useState(null);
 
   useEffect(() => {
     if (open) {
