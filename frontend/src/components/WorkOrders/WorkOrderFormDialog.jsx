@@ -236,7 +236,8 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{workOrder ? 'Modifier' : 'Nouvel'} ordre de travail</DialogTitle>
