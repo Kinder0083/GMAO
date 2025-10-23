@@ -30,9 +30,22 @@ const Dashboard = () => {
         equipmentsAPI.getAll(),
         reportsAPI.getAnalytics()
       ]);
-      setWorkOrders(woRes.data);
-      setEquipments(eqRes.data);
-      setAnalytics(analyticsRes.data);
+      
+      // Mise à jour silencieuse : comparer avant de mettre à jour
+      const newWorkOrders = woRes.data;
+      const newEquipments = eqRes.data;
+      const newAnalytics = analyticsRes.data;
+      
+      // Ne mettre à jour que si les données ont changé
+      if (JSON.stringify(newWorkOrders) !== JSON.stringify(workOrders)) {
+        setWorkOrders(newWorkOrders);
+      }
+      if (JSON.stringify(newEquipments) !== JSON.stringify(equipments)) {
+        setEquipments(newEquipments);
+      }
+      if (JSON.stringify(newAnalytics) !== JSON.stringify(analytics)) {
+        setAnalytics(newAnalytics);
+      }
     } catch (error) {
       console.error('Erreur de chargement:', error);
     } finally {
@@ -43,7 +56,7 @@ const Dashboard = () => {
     }
   };
 
-  // Rafraîchissement automatique toutes les 5 secondes
+  // Rafraîchissement automatique toutes les 5 secondes (invisible)
   useAutoRefresh(loadData, []);
 
   if (loading || !analytics) {
