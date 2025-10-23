@@ -321,6 +321,15 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
         </div>
       </DialogContent>
     </Dialog>
+
+    <StatusChangeDialog
+      open={showStatusDialog}
+      onOpenChange={setShowStatusDialog}
+      currentStatus={workOrder.statut}
+      onStatusChange={handleStatusChange}
+      onSkip={handleSkipStatusChange}
+    />
+    </>
   );
 };
 
