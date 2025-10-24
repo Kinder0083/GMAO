@@ -343,6 +343,15 @@ class BackendTester:
         if readings:
             results["cost_calculation"] = self.verify_cost_calculation(readings, 0.15)
         
+        # Test 10: Delete a reading
+        if readings and len(readings) > 0:
+            reading_to_delete = readings[0]["id"]
+            results["delete_reading"] = self.test_delete_reading(reading_to_delete)
+        
+        # Test 11: Soft delete the meter
+        if meter:
+            results["soft_delete_meter"] = self.test_meter_soft_delete(meter_id)
+        
         # Summary
         self.log("=" * 60)
         self.log("TEST RESULTS SUMMARY")
