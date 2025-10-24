@@ -299,6 +299,176 @@ backend:
           Le problème de connexion après inscription est RÉSOLU.
           Tous les endpoints utilisent maintenant le champ "hashed_password" de manière cohérente.
 
+  - task: "API POST /api/meters - Créer un compteur"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Nouvel endpoint pour créer des compteurs avec support de différents types (EAU, GAZ, ELECTRICITE, etc.)
+          Modèles MeterType, Meter, MeterCreate ajoutés dans models.py
+          Audit logging intégré pour traçabilité
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ POST /api/meters WORKING - Tests complets réussis
+          - Création de compteur électrique avec succès (201 Created)
+          - Données correctement stockées: nom, type, numéro série, unité, prix unitaire
+          - Audit logging fonctionnel
+          - ID UUID généré automatiquement
+
+  - task: "API GET /api/meters - Récupérer tous les compteurs"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint pour lister tous les compteurs actifs avec tri par date de création"
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ GET /api/meters WORKING - Tests complets réussis
+          - Récupération de la liste des compteurs (200 OK)
+          - Filtrage des compteurs actifs uniquement
+          - Tri par date de création (plus récent en premier)
+
+  - task: "API POST /api/meters/{meter_id}/readings - Créer un relevé"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Endpoint pour créer des relevés avec calcul automatique de consommation et coût
+          Modèles MeterReading, MeterReadingCreate ajoutés
+          Calcul basé sur la différence avec le relevé précédent
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ POST /api/meters/{meter_id}/readings WORKING - Tests complets réussis
+          - Création de relevés avec succès (201 Created)
+          - Calcul automatique de consommation: 150.0 kWh (1150.0 - 1000.0)
+          - Calcul automatique du coût: 22.5€ (150.0 × 0.15€/kWh)
+          - Premier relevé: consommation = 0 (pas de référence précédente)
+
+  - task: "API GET /api/meters/{meter_id}/readings - Récupérer les relevés"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint pour récupérer tous les relevés d'un compteur avec filtrage par date optionnel"
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ GET /api/meters/{meter_id}/readings WORKING - Tests complets réussis
+          - Récupération des relevés avec succès (200 OK)
+          - Tri par date de relevé (plus récent en premier)
+          - Données complètes: valeur, consommation, coût, notes
+
+  - task: "API GET /api/meters/{meter_id}/statistics - Statistiques compteur"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Endpoint pour calculer les statistiques d'un compteur par période
+          Support des périodes: week, month, quarter, year
+          Calculs: consommation totale, coût total, moyenne journalière, évolution
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ GET /api/meters/{meter_id}/statistics WORKING - Tests complets réussis
+          - Calcul des statistiques avec succès (200 OK)
+          - Consommation totale: 150.0 kWh
+          - Coût total: 22.5€
+          - Évolution temporelle correcte
+          - Sérialisation JSON sans erreurs ObjectId
+
+  - task: "API DELETE /api/readings/{reading_id} - Supprimer un relevé"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint pour supprimer définitivement un relevé"
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ DELETE /api/readings/{reading_id} WORKING - Tests complets réussis
+          - Suppression de relevé avec succès (200 OK)
+          - Message de confirmation retourné
+          - Relevé effectivement supprimé de la base
+
+  - task: "API DELETE /api/meters/{meter_id} - Soft delete compteur"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: "Endpoint pour soft delete d'un compteur (actif: false)"
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ DELETE /api/meters/{meter_id} WORKING - Tests complets réussis
+          - Soft delete du compteur avec succès (200 OK)
+          - Compteur marqué comme inactif (actif: false)
+          - Audit logging de la suppression
+          - Message de confirmation retourné
+
+  - task: "Calculs automatiques consommation et coût"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Logique de calcul automatique implémentée dans l'endpoint de création de relevés
+          Consommation = valeur_actuelle - valeur_précédente
+          Coût = consommation × prix_unitaire
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ CALCULS AUTOMATIQUES WORKING - Tests de vérification réussis
+          - Calcul de consommation vérifié: 150.0 kWh (1150.0 - 1000.0)
+          - Calcul de coût vérifié: 22.5€ (150.0 × 0.15€/kWh)
+          - Premier relevé: consommation = 0 (comportement correct)
+          - Précision des calculs: ±0.01 (acceptable pour les flottants)
+
 frontend:
   - task: "Settings.jsx - Chargement du profil utilisateur"
     implemented: true
