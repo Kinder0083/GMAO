@@ -19,8 +19,10 @@ const ImportExport = () => {
 
   const modules = [
     { value: 'all', label: 'Toutes les données' },
+    { value: 'intervention-requests', label: 'Demandes d\'intervention' },
     { value: 'work-orders', label: 'Ordres de travail' },
     { value: 'equipments', label: 'Équipements' },
+    { value: 'meters', label: 'Compteurs' },
     { value: 'users', label: 'Utilisateurs (Équipes)' },
     { value: 'inventory', label: 'Inventaire' },
     { value: 'locations', label: 'Zones' },
