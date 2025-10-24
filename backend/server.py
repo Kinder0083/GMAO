@@ -3140,14 +3140,14 @@ async def create_meter(meter: MeterCreate, current_user: dict = Depends(get_curr
         await db.meters.insert_one(meter_data)
         
         # Audit log
-        await log_action(
-            current_user["id"],
-            current_user.get("nom", "") + " " + current_user.get("prenom", ""),
-            current_user["email"],
-            ActionType.CREATE,
-            EntityType.WORK_ORDER,  # Utilisons WORK_ORDER comme proxy
-            meter_id,
-            meter.nom
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            user_name=current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+            user_email=current_user["email"],
+            action=ActionType.CREATE,
+            entity_type=EntityType.WORK_ORDER,  # Utilisons WORK_ORDER comme proxy
+            entity_id=meter_id,
+            entity_name=meter.nom
         )
         
         return Meter(**meter_data)
