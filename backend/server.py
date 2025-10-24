@@ -3542,7 +3542,8 @@ async def update_intervention_request(
         action=ActionType.UPDATE,
         entity_type=EntityType.WORK_ORDER,
         entity_id=request_id,
-        description=f"Modification demande d'intervention: {updated_req['titre']}"
+        entity_name=updated_req['titre'],
+        details=f"Modification demande d'intervention"
     )
     
     return InterventionRequest(**updated_req)
