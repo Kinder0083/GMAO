@@ -68,6 +68,7 @@ function App() {
             <Route path="settings" element={<Settings />} />
             <Route path="updates" element={<Updates />} />
             <Route path="journal" element={<Journal />} />
+            <Route path="meters" element={<Meters />} />
           </Route>
         </Routes>
       </BrowserRouter>
