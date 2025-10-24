@@ -284,7 +284,7 @@ const Reports = () => {
                   <div key={mois}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium text-gray-700 capitalize">{mois}</span>
-                      <span className="text-gray-900 font-bold">{cout.toLocaleString('fr-FR')} €</span>
+                      <span className="text-gray-900 font-bold">{(cout || 0).toLocaleString('fr-FR')} €</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-3">
                       <div
