@@ -250,8 +250,8 @@ const InterventionRequests = () => {
                         </div>
                       </td>
                       <td className="py-3 px-4 text-sm">
-                        {req.work_order_id ? (
-                          <span className="text-blue-600 font-medium">{req.work_order_id}</span>
+                        {req.work_order_numero ? (
+                          <span className="text-blue-600 font-medium">#{req.work_order_numero}#</span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
