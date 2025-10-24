@@ -694,7 +694,7 @@ class InterventionRequestCreate(BaseModel):
 class InterventionRequestUpdate(BaseModel):
     titre: Optional[str] = None
     description: Optional[str] = None
-    priorite: Optional[PriorityLevel] = None
+    priorite: Optional[Priority] = None
     equipement_id: Optional[str] = None
     emplacement_id: Optional[str] = None
     date_limite_desiree: Optional[datetime] = None
