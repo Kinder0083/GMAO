@@ -1,0 +1,116 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Label } from '../ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { useToast } from '../../hooks/use-toast';
+import { interventionRequestsAPI, usersAPI } from '../../services/api';
+
+const ConvertToWorkOrderDialog = ({ open, onOpenChange, request, onSuccess }) => {
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [assigneeId, setAssigneeId] = useState('');
+
+  useEffect(() => {
+    if (open) {
+      loadUsers();
+      setAssigneeId('');
+    }
+  }, [open]);
+
+  const loadUsers = async () => {
+    try {
+      const response = await usersAPI.getAll();
+      setUsers(response.data.filter(u => u.role === 'TECHNICIEN' || u.role === 'ADMIN'));
+    } catch (error) {
+      console.error('Erreur chargement utilisateurs:', error);
+    }
+  };
+
+  const handleConvert = async () => {
+    if (!request) return;
+    
+    setLoading(true);
+    try {
+      await interventionRequestsAPI.convertToWorkOrder(request.id, assigneeId || null);
+      toast({
+        title: 'Succès',
+        description: 'Demande convertie en ordre de travail'
+      });
+      onSuccess();
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Impossible de convertir la demande',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!request) return null;
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Convertir en ordre de travail</DialogTitle>
+          <DialogDescription>
+            Créer un ordre de travail à partir de cette demande d'intervention
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <p className="text-sm text-gray-600">
+              <strong>Demande :</strong> {request.titre}
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="assignee">Assigner à (optionnel)</Label>
+            <Select value={assigneeId || "none"} onValueChange={(value) => setAssigneeId(value === "none" ? "" : value)}>
+              <SelectTrigger id="assignee">
+                <SelectValue placeholder="Sélectionner un utilisateur" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Non assigné</SelectItem>
+                {users.map(user => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.prenom} {user.nom} ({user.role})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            Annuler
+          </Button>
+          <Button
+            type="button"
+            onClick={handleConvert}
+            disabled={loading}
+            className="bg-purple-600 hover:bg-purple-700"
+          >
+            {loading ? 'Conversion...' : 'Convertir'}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default ConvertToWorkOrderDialog;
