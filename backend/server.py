@@ -3425,6 +3425,228 @@ async def delete_reading(reading_id: str, current_user: dict = Depends(get_curre
     await db.meter_readings.delete_one({"id": reading_id})
     return {"message": "Relevé supprimé"}
 
+
+
+# ==================== INTERVENTION REQUESTS (DEMANDES D'INTERVENTION) ENDPOINTS ====================
+
+@api_router.post("/intervention-requests", response_model=InterventionRequest, status_code=201)
+async def create_intervention_request(
+    request: InterventionRequestCreate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Créer une nouvelle demande d'intervention"""
+    try:
+        request_id = str(uuid.uuid4())
+        request_data = request.model_dump()
+        request_data["id"] = request_id
+        request_data["date_creation"] = datetime.utcnow()
+        request_data["created_by"] = current_user["id"]
+        request_data["created_by_name"] = f"{current_user.get('prenom', '')} {current_user.get('nom', '')}"
+        request_data["work_order_id"] = None
+        request_data["work_order_date_limite"] = None
+        request_data["converted_at"] = None
+        request_data["converted_by"] = None
+        
+        # Récupérer les informations de l'équipement si fourni
+        if request_data.get("equipement_id"):
+            equipment = await db.equipments.find_one({"id": request_data["equipement_id"]})
+            if equipment:
+                request_data["equipement"] = {"id": equipment["id"], "nom": equipment["nom"]}
+        
+        # Récupérer les informations de l'emplacement si fourni
+        if request_data.get("emplacement_id"):
+            location = await db.locations.find_one({"id": request_data["emplacement_id"]})
+            if location:
+                request_data["emplacement"] = {"id": location["id"], "nom": location["nom"]}
+        
+        await db.intervention_requests.insert_one(request_data)
+        
+        # Audit log
+        await log_action(
+            current_user["id"],
+            current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+            current_user["email"],
+            ActionType.CREATE,
+            EntityType.WORK_ORDER,
+            request_id,
+            request.titre
+        )
+        
+        return InterventionRequest(**request_data)
+    except Exception as e:
+        logger.error(f"Erreur création demande d'intervention: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/intervention-requests", response_model=List[InterventionRequest])
+async def get_all_intervention_requests(current_user: dict = Depends(get_current_user)):
+    """Récupérer toutes les demandes d'intervention"""
+    try:
+        requests = []
+        async for req in db.intervention_requests.find().sort("date_creation", -1):
+            requests.append(InterventionRequest(**req))
+        return requests
+    except Exception as e:
+        logger.error(f"Erreur récupération demandes: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@api_router.get("/intervention-requests/{request_id}", response_model=InterventionRequest)
+async def get_intervention_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Récupérer une demande d'intervention spécifique"""
+    req = await db.intervention_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    return InterventionRequest(**req)
+
+@api_router.put("/intervention-requests/{request_id}", response_model=InterventionRequest)
+async def update_intervention_request(
+    request_id: str,
+    request_update: InterventionRequestUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mettre à jour une demande d'intervention"""
+    req = await db.intervention_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    update_data = {k: v for k, v in request_update.model_dump().items() if v is not None}
+    
+    # Mettre à jour l'équipement si nécessaire
+    if "equipement_id" in update_data:
+        if update_data["equipement_id"]:
+            equipment = await db.equipments.find_one({"id": update_data["equipement_id"]})
+            if equipment:
+                update_data["equipement"] = {"id": equipment["id"], "nom": equipment["nom"]}
+        else:
+            update_data["equipement"] = None
+    
+    # Mettre à jour l'emplacement si nécessaire
+    if "emplacement_id" in update_data:
+        if update_data["emplacement_id"]:
+            location = await db.locations.find_one({"id": update_data["emplacement_id"]})
+            if location:
+                update_data["emplacement"] = {"id": location["id"], "nom": location["nom"]}
+        else:
+            update_data["emplacement"] = None
+    
+    await db.intervention_requests.update_one({"id": request_id}, {"$set": update_data})
+    
+    # Récupérer la demande mise à jour
+    updated_req = await db.intervention_requests.find_one({"id": request_id})
+    
+    # Audit log
+    await log_action(
+        current_user["id"],
+        current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+        current_user["email"],
+        ActionType.UPDATE,
+        EntityType.WORK_ORDER,
+        request_id,
+        updated_req["titre"]
+    )
+    
+    return InterventionRequest(**updated_req)
+
+@api_router.delete("/intervention-requests/{request_id}")
+async def delete_intervention_request(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Supprimer une demande d'intervention"""
+    req = await db.intervention_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    await db.intervention_requests.delete_one({"id": request_id})
+    
+    # Audit log
+    await log_action(
+        current_user["id"],
+        current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+        current_user["email"],
+        ActionType.DELETE,
+        EntityType.WORK_ORDER,
+        request_id,
+        req["titre"]
+    )
+    
+    return {"message": "Demande supprimée"}
+
+@api_router.post("/intervention-requests/{request_id}/convert-to-work-order", response_model=dict)
+async def convert_to_work_order(
+    request_id: str,
+    assignee_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Convertir une demande d'intervention en ordre de travail (Admin/Technicien uniquement)"""
+    # Vérifier que l'utilisateur est admin ou technicien
+    if current_user.get("role") not in ["ADMIN", "TECHNICIEN"]:
+        raise HTTPException(status_code=403, detail="Accès refusé : Seuls les administrateurs et techniciens peuvent convertir des demandes")
+    
+    try:
+        # Récupérer la demande
+        req = await db.intervention_requests.find_one({"id": request_id})
+        if not req:
+            raise HTTPException(status_code=404, detail="Demande non trouvée")
+        
+        # Vérifier si déjà convertie
+        if req.get("work_order_id"):
+            raise HTTPException(status_code=400, detail="Cette demande a déjà été convertie en ordre de travail")
+        
+        # Créer l'ordre de travail
+        work_order_id = str(uuid.uuid4())
+        work_order_data = {
+            "id": work_order_id,
+            "titre": req["titre"],
+            "description": req["description"],
+            "statut": "OUVERT",
+            "priorite": req["priorite"],
+            "equipement_id": req.get("equipement_id"),
+            "equipement": req.get("equipement"),
+            "emplacement_id": req.get("emplacement_id"),
+            "emplacement": req.get("emplacement"),
+            "assigne_a_id": assignee_id,
+            "assigneA": None,
+            "dateLimite": req.get("date_limite_desiree"),
+            "tempsEstime": None,
+            "date_creation": datetime.utcnow(),
+            "created_by": req["created_by"],
+            "created_by_name": req.get("created_by_name")
+        }
+        
+        # Récupérer les informations de l'assigné si fourni
+        if assignee_id:
+            assignee = await db.users.find_one({"id": assignee_id})
+            if assignee:
+                work_order_data["assigneA"] = {
+                    "id": assignee["id"],
+                    "nom": assignee["nom"],
+                    "prenom": assignee["prenom"]
+                }
+        
+        await db.work_orders.insert_one(work_order_data)
+        
+        # Mettre à jour la demande avec les informations de l'ordre créé
+        await db.intervention_requests.update_one(
+            {"id": request_id},
+            {"$set": {
+                "work_order_id": work_order_id,
+                "work_order_date_limite": req.get("date_limite_desiree"),
+                "converted_at": datetime.utcnow(),
+                "converted_by": current_user["id"]
+            }}
+        )
+        
+        # Émettre un événement pour rafraîchir les notifications
+        # Note: Dans une vraie application, on utiliserait des WebSockets
+        
+        return {
+            "message": "Demande convertie en ordre de travail avec succès",
+            "work_order_id": work_order_id,
+            "request_id": request_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur conversion demande: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 # Include the router in the main app
 app.include_router(api_router)
 
