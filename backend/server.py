@@ -3469,7 +3469,8 @@ async def create_intervention_request(
             action=ActionType.CREATE,
             entity_type=EntityType.WORK_ORDER,
             entity_id=request_id,
-            description=f"Création demande d'intervention: {request.titre}"
+            entity_name=request.titre,
+            details=f"Création demande d'intervention"
         )
         
         return InterventionRequest(**request_data)
