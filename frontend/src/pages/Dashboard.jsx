@@ -36,14 +36,14 @@ const Dashboard = () => {
       const newEquipments = eqRes.data;
       const newAnalytics = analyticsRes.data;
       
-      // Ne mettre à jour que si les données ont changé
-      if (JSON.stringify(newWorkOrders) !== JSON.stringify(workOrders)) {
+      // Pour le premier chargement ou si les données ont changé
+      if (initialLoad || JSON.stringify(newWorkOrders) !== JSON.stringify(workOrders)) {
         setWorkOrders(newWorkOrders);
       }
-      if (JSON.stringify(newEquipments) !== JSON.stringify(equipments)) {
+      if (initialLoad || JSON.stringify(newEquipments) !== JSON.stringify(equipments)) {
         setEquipments(newEquipments);
       }
-      if (JSON.stringify(newAnalytics) !== JSON.stringify(analytics)) {
+      if (initialLoad || JSON.stringify(newAnalytics) !== JSON.stringify(analytics)) {
         setAnalytics(newAnalytics);
       }
     } catch (error) {
