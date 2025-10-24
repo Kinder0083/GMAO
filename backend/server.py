@@ -3226,14 +3226,14 @@ async def delete_meter(meter_id: str, current_user: dict = Depends(get_current_u
     await db.meters.update_one({"id": meter_id}, {"$set": {"actif": False}})
     
     # Audit log
-    await log_action(
-        current_user["id"],
-        current_user.get("nom", "") + " " + current_user.get("prenom", ""),
-        current_user["email"],
-        ActionType.DELETE,
-        EntityType.WORK_ORDER,
-        meter_id,
-        meter["nom"]
+    await audit_service.log_action(
+        user_id=current_user["id"],
+        user_name=current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+        user_email=current_user["email"],
+        action=ActionType.DELETE,
+        entity_type=EntityType.WORK_ORDER,
+        entity_id=meter_id,
+        entity_name=meter["nom"]
     )
     
     return {"message": "Compteur supprimé"}
