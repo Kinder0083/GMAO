@@ -148,19 +148,41 @@ const Meters = () => {
         </Button>
       </div>
 
-      {/* Filters */}
+      {/* Filters and View Mode */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                <Input
-                  placeholder="Rechercher par nom ou numéro de série..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Input
+                    placeholder="Rechercher par nom ou numéro de série..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={viewMode === 'grid' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('grid')}
+                  className={viewMode === 'grid' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                >
+                  <Grid size={16} className="mr-2" />
+                  Grille
+                </Button>
+                <Button
+                  variant={viewMode === 'tree' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setViewMode('tree')}
+                  className={viewMode === 'tree' ? 'bg-blue-600 hover:bg-blue-700' : ''}
+                >
+                  <List size={16} className="mr-2" />
+                  Arborescence
+                </Button>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
