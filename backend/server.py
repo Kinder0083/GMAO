@@ -3203,14 +3203,14 @@ async def update_meter(
     updated_meter = await db.meters.find_one({"id": meter_id})
     
     # Audit log
-    await log_action(
-        current_user["id"],
-        current_user.get("nom", "") + " " + current_user.get("prenom", ""),
-        current_user["email"],
-        ActionType.UPDATE,
-        EntityType.WORK_ORDER,
-        meter_id,
-        updated_meter["nom"]
+    await audit_service.log_action(
+        user_id=current_user["id"],
+        user_name=current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+        user_email=current_user["email"],
+        action=ActionType.UPDATE,
+        entity_type=EntityType.WORK_ORDER,
+        entity_id=meter_id,
+        entity_name=updated_meter["nom"]
     )
     
     return Meter(**updated_meter)
