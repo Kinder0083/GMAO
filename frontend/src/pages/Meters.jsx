@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { Plus, Search, Eye, Pencil, Trash2, TrendingUp, Activity } from 'lucide-react';
+import { Plus, Search, Eye, Pencil, Trash2, TrendingUp, Activity, Grid, List, ChevronDown, ChevronRight } from 'lucide-react';
 import MeterDialog from '../components/Meters/MeterDialog';
 import MeterFormDialog from '../components/Meters/MeterFormDialog';
 import DeleteConfirmDialog from '../components/Common/DeleteConfirmDialog';
@@ -15,6 +15,8 @@ const Meters = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('ALL');
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'tree'
+  const [expandedTypes, setExpandedTypes] = useState(new Set());
   const [dialogOpen, setDialogOpen] = useState(false);
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
