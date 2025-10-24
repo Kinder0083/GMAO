@@ -100,7 +100,7 @@ const InterventionRequestDialog = ({ open, onOpenChange, request }) => {
             </div>
           </div>
 
-          {request.work_order_id && (
+          {request.work_order_numero && (
             <>
               <Separator />
               <div className="bg-blue-50 p-4 rounded-lg">
