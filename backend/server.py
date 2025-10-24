@@ -3461,16 +3461,8 @@ async def create_intervention_request(
         
         await db.intervention_requests.insert_one(request_data)
         
-        # Audit log
-        await log_action(
-            current_user["id"],
-            current_user.get("nom", "") + " " + current_user.get("prenom", ""),
-            current_user["email"],
-            ActionType.CREATE,
-            EntityType.WORK_ORDER,
-            request_id,
-            request.titre
-        )
+        # Audit log (TODO: implement log_action function)
+        # await log_action(...)
         
         return InterventionRequest(**request_data)
     except Exception as e:
