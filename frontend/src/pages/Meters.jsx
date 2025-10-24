@@ -70,6 +70,19 @@ const Meters = () => {
     }
   };
 
+  // Définir les types en premier
+  const types = [
+    { value: 'ALL', label: 'Tous' },
+    { value: 'EAU', label: 'Eau' },
+    { value: 'GAZ', label: 'Gaz' },
+    { value: 'ELECTRICITE', label: 'Électricité' },
+    { value: 'AIR_COMPRIME', label: 'Air comprimé' },
+    { value: 'VAPEUR', label: 'Vapeur' },
+    { value: 'FUEL', label: 'Fuel' },
+    { value: 'SOLAIRE', label: 'Solaire' },
+    { value: 'AUTRE', label: 'Autre' }
+  ];
+
   const filteredMeters = meters.filter(meter => {
     const matchesSearch = meter.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (meter.numero_serie && meter.numero_serie.includes(searchTerm));
@@ -119,18 +132,6 @@ const Meters = () => {
       </span>
     );
   };
-
-  const types = [
-    { value: 'ALL', label: 'Tous' },
-    { value: 'EAU', label: 'Eau' },
-    { value: 'GAZ', label: 'Gaz' },
-    { value: 'ELECTRICITE', label: 'Électricité' },
-    { value: 'AIR_COMPRIME', label: 'Air comprimé' },
-    { value: 'VAPEUR', label: 'Vapeur' },
-    { value: 'FUEL', label: 'Fuel' },
-    { value: 'SOLAIRE', label: 'Solaire' },
-    { value: 'AUTRE', label: 'Autre' }
-  ];
 
   return (
     <div className="space-y-6">
