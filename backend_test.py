@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests the existing endpoints to verify they still work after recent changes
+Tests the new Meters (Compteurs) functionality
 """
 
 import requests
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
-# Use internal backend URL for testing
-BACKEND_URL = "http://localhost:8001/api"
+# Use the correct backend URL from frontend .env
+BACKEND_URL = "https://main-reset-copy.preview.emergentagent.com/api"
 
-# Test credentials
-TEST_EMAIL = "admin@gmao-iris.local"
-TEST_PASSWORD = "Admin123!"
+# Test credentials from review request
+TEST_EMAIL = "admin@example.com"
+TEST_PASSWORD = "password123"
 
 class BackendTester:
     def __init__(self):
