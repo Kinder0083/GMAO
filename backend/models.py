@@ -686,7 +686,7 @@ class InterventionRequest(BaseModel):
 class InterventionRequestCreate(BaseModel):
     titre: str
     description: str
-    priorite: PriorityLevel = PriorityLevel.AUCUNE
+    priorite: Priority = Priority.AUCUNE
     equipement_id: Optional[str] = None
     emplacement_id: Optional[str] = None
     date_limite_desiree: Optional[datetime] = None
