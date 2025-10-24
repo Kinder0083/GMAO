@@ -3391,6 +3391,15 @@ async def get_meter_statistics(
             for r in readings
         ]
         
+        # Serialize the last reading to avoid ObjectId issues
+        dernier_releve = None
+        if readings:
+            last_reading = readings[-1].copy()
+            # Remove any ObjectId fields that might cause serialization issues
+            if "_id" in last_reading:
+                del last_reading["_id"]
+            dernier_releve = last_reading
+        
         return {
             "meter_id": meter_id,
             "meter_nom": meter["nom"],
@@ -3398,7 +3407,7 @@ async def get_meter_statistics(
             "total_consommation": round(total_consommation, 2),
             "total_cout": round(total_cout, 2),
             "moyenne_journaliere": round(moyenne_journaliere, 2),
-            "dernier_releve": readings[-1] if readings else None,
+            "dernier_releve": dernier_releve,
             "evolution": evolution,
             "nombre_releves": len(readings)
         }
