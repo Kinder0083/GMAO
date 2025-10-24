@@ -3262,6 +3262,7 @@ async def create_reading(
         reading_id = str(uuid.uuid4())
         reading_data = reading.model_dump()
         reading_data["id"] = reading_id
+        reading_data["meter_id"] = meter_id
         reading_data["created_by"] = current_user["id"]
         reading_data["created_by_name"] = f"{current_user.get('prenom', '')} {current_user.get('nom', '')}"
         reading_data["meter_nom"] = meter["nom"]
