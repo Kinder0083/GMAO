@@ -59,38 +59,35 @@ const Dashboard = () => {
   // Rafraîchissement automatique toutes les 5 secondes (invisible)
   useAutoRefresh(loadData, []);
 
-  if (loading || !analytics) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <p className="text-gray-500">Chargement...</p>
-      </div>
-    );
-  }
-  const stats = [
-    {
-      title: 'Ordres de travail actifs',
-      value: workOrders.filter(wo => wo.statut !== 'TERMINE').length,
-      icon: ClipboardList,
-      color: 'bg-blue-500',
-      change: '+12%'
-    },
-    {
-      title: 'Équipements en maintenance',
-      value: equipments.filter(e => e.statut === 'EN_MAINTENANCE').length,
-      icon: Wrench,
-      color: 'bg-orange-500',
-      change: '+5%'
-    },
-    {
-      title: 'Taux de réalisation',
-      value: `${analytics.tauxRealisation}%`,
-      icon: TrendingUp,
-      color: 'bg-green-500',
-      change: '+8%'
-    },
-    {
-      title: 'Temps de réponse moyen',
-      value: `${analytics.tempsReponse.moyen}h`,
+  // Calculer les stats dynamiquement
+  const stats = React.useMemo(() => {
+    if (!analytics || !workOrders || !equipments) return [];
+    
+    return [
+      {
+        title: 'Ordres de travail actifs',
+        value: workOrders.filter(wo => wo.statut !== 'TERMINE').length,
+        icon: ClipboardList,
+        color: 'bg-blue-500',
+        change: '+12%'
+      },
+      {
+        title: 'Équipements en maintenance',
+        value: equipments.filter(e => e.statut === 'EN_MAINTENANCE').length,
+        icon: Wrench,
+        color: 'bg-orange-500',
+        change: '+5%'
+      },
+      {
+        title: 'Taux de réalisation',
+        value: `${analytics.tauxRealisation}%`,
+        icon: TrendingUp,
+        color: 'bg-green-500',
+        change: '+8%'
+      },
+      {
+        title: 'Temps de réponse moyen',
+        value: `${analytics.tempsReponse.moyen}h`,
       icon: Clock,
       color: 'bg-purple-500',
       change: '-15%'
