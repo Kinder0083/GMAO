@@ -403,8 +403,8 @@ const Reports = () => {
                            equipment.statut === 'EN_MAINTENANCE' ? 'En maintenance' : 'Hors service'}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{equipment.derniereMaintenance}</td>
-                      <td className="py-3 px-4 text-sm text-gray-700">{equipment.coutAchat.toLocaleString('fr-FR')} €</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">{equipment.derniereMaintenance || '-'}</td>
+                      <td className="py-3 px-4 text-sm text-gray-700">{(equipment.coutAchat || 0).toLocaleString('fr-FR')} €</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <div className="flex-1 bg-gray-200 rounded-full h-2 max-w-[100px]">
