@@ -3533,8 +3533,16 @@ async def update_intervention_request(
     # Récupérer la demande mise à jour
     updated_req = await db.intervention_requests.find_one({"id": request_id})
     
-    # Audit log (TODO: implement log_action function)
-    # await log_action(...)
+    # Audit log
+    await audit_service.log_action(
+        user_id=current_user["id"],
+        user_name=current_user.get("nom", "") + " " + current_user.get("prenom", ""),
+        user_email=current_user["email"],
+        action=ActionType.UPDATE,
+        entity_type=EntityType.WORK_ORDER,
+        entity_id=request_id,
+        description=f"Modification demande d'intervention: {updated_req['titre']}"
+    )
     
     return InterventionRequest(**updated_req)
 
