@@ -26,6 +26,7 @@ import PurchaseHistory from "./pages/PurchaseHistory";
 import Updates from "./pages/Updates";
 import Journal from "./pages/Journal";
 import Meters from "./pages/Meters";
+import InterventionRequests from "./pages/InterventionRequests";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
