@@ -108,7 +108,7 @@ const InterventionRequestDialog = ({ open, onOpenChange, request }) => {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <p className="text-xs text-blue-700">Numéro d'ordre</p>
-                    <p className="text-sm font-medium text-blue-900">{request.work_order_id}</p>
+                    <p className="text-sm font-medium text-blue-900">#{request.work_order_numero}#</p>
                   </div>
                   {request.work_order_date_limite && (
                     <div>
