@@ -9,12 +9,11 @@ import ConvertToWorkOrderDialog from '../components/InterventionRequests/Convert
 import DeleteConfirmDialog from '../components/Common/DeleteConfirmDialog';
 import { interventionRequestsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
-import { useAuth } from '../contexts/AuthContext';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 
 const InterventionRequests = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
