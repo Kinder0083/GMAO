@@ -18,7 +18,8 @@ import {
   Bell,
   Database,
   RefreshCw,
-  FileText
+  FileText,
+  Gauge
 } from 'lucide-react';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 
