@@ -251,7 +251,7 @@ const InterventionRequests = () => {
                       </td>
                       <td className="py-3 px-4 text-sm">
                         {req.work_order_id ? (
-                          <span className="text-blue-600 font-medium">{req.work_order_id.slice(0, 8)}</span>
+                          <span className="text-blue-600 font-medium">{req.work_order_id}</span>
                         ) : (
                           <span className="text-gray-400">-</span>
                         )}
