@@ -13,7 +13,7 @@ import { useToast } from '../../hooks/use-toast';
 import { Loader2, Shield } from 'lucide-react';
 import PermissionsGrid from './PermissionsGrid';
 
-const EditPermissionsDialog = ({ open, onOpenChange, user, onSuccess }) => {
+const PermissionsManagementDialog = ({ open, onOpenChange, user, onSuccess }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [permissions, setPermissions] = useState({});
