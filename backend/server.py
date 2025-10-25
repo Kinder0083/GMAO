@@ -2444,6 +2444,8 @@ async def get_analytics(current_user: dict = Depends(get_current_user)):
 EXPORT_MODULES = {
     "intervention-requests": "intervention_requests",
     "work-orders": "work_orders",
+    "improvement-requests": "improvement_requests",
+    "improvements": "improvements",
     "equipments": "equipments",
     "meters": "meters",
     "meter-readings": "meter_readings",
