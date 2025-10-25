@@ -3684,9 +3684,6 @@ async def convert_to_work_order(
         logger.error(f"Erreur conversion demande: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# Include the router in the main app
-app.include_router(api_router)
-
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
