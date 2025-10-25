@@ -73,6 +73,8 @@ function App() {
             <Route path="journal" element={<Journal />} />
             <Route path="meters" element={<Meters />} />
             <Route path="intervention-requests" element={<InterventionRequests />} />
+            <Route path="improvement-requests" element={<ImprovementRequests />} />
+            <Route path="improvements" element={<Improvements />} />
           </Route>
         </Routes>
       </BrowserRouter>
