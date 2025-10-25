@@ -179,7 +179,7 @@ const EquipmentDetail = () => {
               <DollarSign className="text-blue-600 mt-1" size={20} />
               <div>
                 <p className="text-sm text-gray-600">Coût d'achat</p>
-                <p className="font-semibold">{equipment.coutAchat.toLocaleString('fr-FR')} €</p>
+                <p className="font-semibold">{equipment.coutAchat ? equipment.coutAchat.toLocaleString('fr-FR') + ' €' : 'N/A'}</p>
               </div>
             </div>
 
