@@ -762,36 +762,59 @@ class PermissionsTester:
             self.log(f"❌ Conversion update verification failed - Error: {str(e)}", "ERROR")
             return False
     
-    def run_all_tests(self):
-        """Run all backend tests for improvement requests and improvements functionality"""
+    def run_permissions_tests(self):
+        """Run all permissions tests for the GMAO application"""
         self.log("=" * 70)
-        self.log("STARTING IMPROVEMENT REQUESTS & IMPROVEMENTS API TESTS")
+        self.log("STARTING PERMISSIONS SYSTEM TESTS")
         self.log("=" * 70)
         
         results = {
-            "login": False,
-            "create_improvement_request": False,
-            "get_improvement_requests": False,
-            "get_improvement_request_details": False,
-            "update_improvement_request": False,
-            "add_improvement_request_comment": False,
-            "convert_to_improvement": False,
-            "verify_conversion_update": False,
-            "create_improvement": False,
-            "get_improvements": False,
-            "get_improvement_details": False,
-            "update_improvement": False,
-            "add_improvement_comment": False,
-            "delete_improvement_request": False,
-            "delete_improvement": False
+            "admin_login": False,
+            "create_viewer_user": False,
+            "viewer_login": False,
+            "admin_get_work_orders": False,
+            "admin_post_work_orders": False,
+            "admin_delete_work_orders": False,
+            "viewer_get_work_orders": False,
+            "viewer_post_work_orders_forbidden": False,
+            "viewer_delete_work_orders_forbidden": False,
+            "viewer_get_intervention_requests": False,
+            "viewer_post_intervention_requests_forbidden": False
         }
         
-        # Test 1: Login
-        results["login"] = self.test_login()
+        # Test 1: Admin Login
+        results["admin_login"] = self.test_admin_login()
         
-        if not results["login"]:
-            self.log("❌ Cannot proceed with other tests - Login failed", "ERROR")
+        if not results["admin_login"]:
+            self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
+        
+        # Test 2: Create viewer user
+        viewer_user = self.create_viewer_user()
+        results["create_viewer_user"] = viewer_user is not None
+        
+        if not viewer_user:
+            self.log("❌ Cannot proceed with viewer tests - User creation failed", "ERROR")
+        else:
+            # Test 3: Viewer Login
+            results["viewer_login"] = self.test_viewer_login()
+            
+            if results["viewer_login"]:
+                # Test admin permissions on work orders
+                results["admin_get_work_orders"] = self.test_admin_get_work_orders()
+                results["admin_post_work_orders"] = self.test_admin_post_work_orders()
+                results["admin_delete_work_orders"] = self.test_admin_delete_work_orders()
+                
+                # Test viewer permissions on work orders
+                results["viewer_get_work_orders"] = self.test_viewer_get_work_orders()
+                results["viewer_post_work_orders_forbidden"] = self.test_viewer_post_work_orders_forbidden()
+                results["viewer_delete_work_orders_forbidden"] = self.test_viewer_delete_work_orders_forbidden()
+                
+                # Test viewer permissions on intervention requests
+                results["viewer_get_intervention_requests"] = self.test_viewer_get_intervention_requests()
+                results["viewer_post_intervention_requests_forbidden"] = self.test_viewer_post_intervention_requests_forbidden()
+            else:
+                self.log("❌ Cannot proceed with viewer permission tests - Viewer login failed", "ERROR")
         
         # Test 2: Create improvement request
         improvement_request = self.test_create_improvement_request()
