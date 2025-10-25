@@ -103,6 +103,277 @@ class PermissionsTester:
             self.log(f"❌ Viewer login request failed - Error: {str(e)}", "ERROR")
             return False
     
+    def create_viewer_user(self):
+        """Create a viewer user with limited permissions"""
+        self.log("Creating viewer user with VISUALISEUR role...")
+        
+        user_data = {
+            "nom": "Viewer",
+            "prenom": "Test",
+            "email": VIEWER_EMAIL,
+            "password": VIEWER_PASSWORD,
+            "role": "VISUALISEUR",
+            "service": "Test"
+        }
+        
+        try:
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/users/create-member",
+                json=user_data,
+                timeout=10
+            )
+            
+            if response.status_code in [200, 201]:
+                user = response.json()
+                self.log(f"✅ Viewer user created successfully - ID: {user.get('id')}, Role: {user.get('role')}")
+                return user
+            else:
+                self.log(f"❌ Failed to create viewer user - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Create viewer user request failed - Error: {str(e)}", "ERROR")
+            return None
+    
+    # ==================== WORK ORDERS PERMISSIONS TESTS ====================
+    
+    def test_admin_get_work_orders(self):
+        """Test admin can GET /api/work-orders"""
+        self.log("Testing admin GET /api/work-orders...")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/work-orders",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                work_orders = response.json()
+                self.log(f"✅ Admin GET work-orders successful - Found {len(work_orders)} work orders")
+                return True
+            else:
+                self.log(f"❌ Admin GET work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Admin GET work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_admin_post_work_orders(self):
+        """Test admin can POST /api/work-orders"""
+        self.log("Testing admin POST /api/work-orders...")
+        
+        work_order_data = {
+            "titre": "Test Work Order - Admin Permission Test",
+            "description": "Test work order created by admin to test permissions",
+            "priorite": "MOYENNE",
+            "statut": "OUVERT",
+            "type": "CORRECTIVE",
+            "dateLimite": (datetime.now() + timedelta(days=7)).isoformat()
+        }
+        
+        try:
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=work_order_data,
+                timeout=10
+            )
+            
+            if response.status_code in [200, 201]:
+                work_order = response.json()
+                self.created_work_order_id = work_order.get('id')
+                self.log(f"✅ Admin POST work-orders successful - Created work order ID: {self.created_work_order_id}")
+                return True
+            else:
+                self.log(f"❌ Admin POST work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Admin POST work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_admin_delete_work_orders(self):
+        """Test admin can DELETE /api/work-orders/{id}"""
+        if not self.created_work_order_id:
+            self.log("❌ No work order ID available for delete test", "ERROR")
+            return False
+            
+        self.log(f"Testing admin DELETE /api/work-orders/{self.created_work_order_id}...")
+        
+        try:
+            response = self.admin_session.delete(
+                f"{BACKEND_URL}/work-orders/{self.created_work_order_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log(f"✅ Admin DELETE work-orders successful - {result.get('message')}")
+                return True
+            else:
+                self.log(f"❌ Admin DELETE work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Admin DELETE work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_viewer_get_work_orders(self):
+        """Test viewer can GET /api/work-orders (should work - has view permission)"""
+        self.log("Testing viewer GET /api/work-orders...")
+        
+        try:
+            response = self.viewer_session.get(
+                f"{BACKEND_URL}/work-orders",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                work_orders = response.json()
+                self.log(f"✅ Viewer GET work-orders successful - Found {len(work_orders)} work orders")
+                return True
+            else:
+                self.log(f"❌ Viewer GET work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Viewer GET work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_viewer_post_work_orders_forbidden(self):
+        """Test viewer CANNOT POST /api/work-orders (should return 403)"""
+        self.log("Testing viewer POST /api/work-orders (should be forbidden)...")
+        
+        work_order_data = {
+            "titre": "Test Work Order - Viewer Permission Test",
+            "description": "This should fail - viewer has no edit permission",
+            "priorite": "MOYENNE",
+            "statut": "OUVERT",
+            "type": "CORRECTIVE",
+            "dateLimite": (datetime.now() + timedelta(days=7)).isoformat()
+        }
+        
+        try:
+            response = self.viewer_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=work_order_data,
+                timeout=10
+            )
+            
+            if response.status_code == 403:
+                self.log("✅ Viewer POST work-orders correctly forbidden (403)")
+                return True
+            else:
+                self.log(f"❌ Viewer POST work-orders should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Viewer POST work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_viewer_delete_work_orders_forbidden(self):
+        """Test viewer CANNOT DELETE /api/work-orders/{id} (should return 403)"""
+        # First create a work order as admin to try to delete as viewer
+        work_order_data = {
+            "titre": "Test Work Order for Delete Test",
+            "description": "Work order to test viewer delete permissions",
+            "priorite": "BASSE",
+            "statut": "OUVERT",
+            "type": "CORRECTIVE",
+            "dateLimite": (datetime.now() + timedelta(days=5)).isoformat()
+        }
+        
+        try:
+            # Create work order as admin
+            create_response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=work_order_data,
+                timeout=10
+            )
+            
+            if create_response.status_code not in [200, 201]:
+                self.log("❌ Failed to create work order for delete test", "ERROR")
+                return False
+            
+            work_order = create_response.json()
+            work_order_id = work_order.get('id')
+            
+            self.log(f"Testing viewer DELETE /api/work-orders/{work_order_id} (should be forbidden)...")
+            
+            # Try to delete as viewer
+            response = self.viewer_session.delete(
+                f"{BACKEND_URL}/work-orders/{work_order_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 403:
+                self.log("✅ Viewer DELETE work-orders correctly forbidden (403)")
+                # Clean up - delete as admin
+                self.admin_session.delete(f"{BACKEND_URL}/work-orders/{work_order_id}")
+                return True
+            else:
+                self.log(f"❌ Viewer DELETE work-orders should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                # Clean up - delete as admin
+                self.admin_session.delete(f"{BACKEND_URL}/work-orders/{work_order_id}")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Viewer DELETE work-orders request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    # ==================== INTERVENTION REQUESTS PERMISSIONS TESTS ====================
+    
+    def test_viewer_get_intervention_requests(self):
+        """Test viewer can GET /api/intervention-requests (should work according to permissions)"""
+        self.log("Testing viewer GET /api/intervention-requests...")
+        
+        try:
+            response = self.viewer_session.get(
+                f"{BACKEND_URL}/intervention-requests",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                requests_list = response.json()
+                self.log(f"✅ Viewer GET intervention-requests successful - Found {len(requests_list)} requests")
+                return True
+            else:
+                self.log(f"❌ Viewer GET intervention-requests failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Viewer GET intervention-requests request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_viewer_post_intervention_requests_forbidden(self):
+        """Test viewer CANNOT POST /api/intervention-requests (should return 403)"""
+        self.log("Testing viewer POST /api/intervention-requests (should be forbidden)...")
+        
+        request_data = {
+            "titre": "Test Intervention Request - Viewer Permission Test",
+            "description": "This should fail - viewer has no edit permission on intervention requests",
+            "priorite": "MOYENNE",
+            "type_intervention": "MAINTENANCE_CORRECTIVE"
+        }
+        
+        try:
+            response = self.viewer_session.post(
+                f"{BACKEND_URL}/intervention-requests",
+                json=request_data,
+                timeout=10
+            )
+            
+            if response.status_code == 403:
+                self.log("✅ Viewer POST intervention-requests correctly forbidden (403)")
+                return True
+            else:
+                self.log(f"❌ Viewer POST intervention-requests should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Viewer POST intervention-requests request failed - Error: {str(e)}", "ERROR")
+            return False
+
     # ==================== IMPROVEMENT REQUESTS TESTS ====================
     
     def test_create_improvement_request(self):
