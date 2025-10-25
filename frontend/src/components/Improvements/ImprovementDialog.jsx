@@ -31,8 +31,8 @@ const ImprovementDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     if (!workOrder) return;
     try {
       setLoadingComments(true);
-      const response = await commentsAPI.getImprovementComments(workOrder.id);
-      setComments(response.comments || []);
+      const comments = await improvementsAPI.getComments(workOrder.id);
+      setComments(comments || []);
     } catch (error) {
       console.error('Erreur lors du chargement des commentaires:', error);
     } finally {
@@ -45,7 +45,7 @@ const ImprovementDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     
     try {
       setSendingComment(true);
-      await commentsAPI.addImprovementComment(workOrder.id, newComment);
+      await improvementsAPI.addComment(workOrder.id, newComment);
       setNewComment('');
       await loadComments();
     } catch (error) {
