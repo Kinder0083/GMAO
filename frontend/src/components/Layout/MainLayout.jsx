@@ -34,6 +34,7 @@ const MainLayout = () => {
   const location = useLocation();
   const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER', firstLogin: false, id: '' });
   const [workOrdersCount, setWorkOrdersCount] = useState(0);
+  const { canView, isAdmin } = usePermissions();
 
   useEffect(() => {
     // Récupérer les informations de l'utilisateur depuis localStorage
