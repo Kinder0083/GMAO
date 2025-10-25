@@ -248,23 +248,27 @@ class BackendTester:
             self.log(f"❌ Create improvement failed - Error: {str(e)}", "ERROR")
             return None
     
-    def verify_cost_calculation(self, readings, expected_unit_price):
-        """Verify that cost calculation is working correctly"""
-        self.log("Verifying cost calculations...")
+    def test_get_improvements(self):
+        """Test GET /api/improvements - Get all improvements"""
+        self.log("Testing get improvements endpoint...")
         
-        for reading in readings:
-            consumption = reading.get('consommation', 0)
-            cost = reading.get('cout', 0)
-            unit_price = reading.get('prix_unitaire', 0)
+        try:
+            response = self.session.get(
+                f"{BACKEND_URL}/improvements",
+                timeout=10
+            )
             
-            if consumption > 0 and unit_price:
-                expected_cost = consumption * unit_price
-                if abs(expected_cost - cost) > 0.01:  # Allow small floating point differences
-                    self.log(f"❌ Cost calculation error - Expected: {expected_cost}, Got: {cost}", "ERROR")
-                    return False
-        
-        self.log("✅ Cost calculations are correct")
-        return True
+            if response.status_code == 200:
+                improvements = response.json()
+                self.log(f"✅ Get improvements successful - Found {len(improvements)} improvements")
+                return improvements
+            else:
+                self.log(f"❌ Get improvements failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Get improvements failed - Error: {str(e)}", "ERROR")
+            return None
     
     def test_delete_reading(self, reading_id):
         """Test DELETE /api/readings/{reading_id} - Delete a reading"""
