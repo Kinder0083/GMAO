@@ -919,6 +919,64 @@ frontend:
           - Différenciation des permissions par rôle fonctionnelle
           - Structure de permissions cohérente (view, edit, delete)
 
+  - task: "Test système de permissions - Vérification fonctionnement permissions"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/dependencies.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: |
+          TESTS PERMISSIONS SYSTÈME COMPLETS - Vérification que les permissions fonctionnent correctement
+          
+          CONTEXTE: Système de permissions implémenté avec rôles ADMIN et VISUALISEUR
+          
+          TESTS EFFECTUÉS:
+          1. Création utilisateur VISUALISEUR (test_viewer@test.com / Test123!)
+          2. Tests permissions ADMIN sur work-orders (GET/POST/DELETE) - TOUS RÉUSSIS
+          3. Tests permissions VISUALISEUR sur work-orders:
+             - GET /api/work-orders: ✅ AUTORISÉ (200 OK)
+             - POST /api/work-orders: ✅ INTERDIT (403 Forbidden)
+             - DELETE /api/work-orders: ✅ INTERDIT (403 Forbidden)
+          4. Tests permissions VISUALISEUR sur intervention-requests:
+             - GET /api/intervention-requests: ✅ AUTORISÉ (200 OK)
+             - POST /api/intervention-requests: ✅ INTERDIT (403 Forbidden)
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ SYSTÈME DE PERMISSIONS ENTIÈREMENT FONCTIONNEL
+          
+          📊 RÉSULTATS: 11/11 tests réussis
+          
+          🔐 AUTHENTIFICATION:
+          - Login admin (admin@gmao-iris.local): ✅ RÉUSSI
+          - Création utilisateur VISUALISEUR: ✅ RÉUSSI
+          - Login viewer (test_viewer@test.com): ✅ RÉUSSI
+          
+          👑 PERMISSIONS ADMIN (toutes autorisées):
+          - GET /api/work-orders: ✅ RÉUSSI (200 OK)
+          - POST /api/work-orders: ✅ RÉUSSI (201 Created)
+          - DELETE /api/work-orders: ✅ RÉUSSI (200 OK)
+          
+          👁️ PERMISSIONS VISUALISEUR (view seulement):
+          - GET /api/work-orders: ✅ RÉUSSI (200 OK)
+          - POST /api/work-orders: ✅ CORRECTEMENT INTERDIT (403)
+          - DELETE /api/work-orders: ✅ CORRECTEMENT INTERDIT (403)
+          - GET /api/intervention-requests: ✅ RÉUSSI (200 OK)
+          - POST /api/intervention-requests: ✅ CORRECTEMENT INTERDIT (403)
+          
+          🛠️ CORRECTION EFFECTUÉE:
+          - Endpoint POST /api/intervention-requests corrigé pour utiliser require_permission("interventionRequests", "edit")
+          - Permissions maintenant correctement appliquées sur tous les endpoints testés
+          
+          ✅ CONCLUSION: Le système de permissions fonctionne parfaitement
+          - Les admins peuvent effectuer toutes les opérations
+          - Les visualiseurs sont correctement limités aux opérations de lecture
+          - Les opérations interdites retournent bien 403 Forbidden
+
 metadata:
   created_by: "main_agent"
   version: "4.0"
