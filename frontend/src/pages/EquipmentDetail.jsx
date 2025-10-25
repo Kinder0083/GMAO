@@ -171,7 +171,7 @@ const EquipmentDetail = () => {
               <Calendar className="text-blue-600 mt-1" size={20} />
               <div>
                 <p className="text-sm text-gray-600">Date d'achat</p>
-                <p className="font-semibold">{new Date(equipment.dateAchat).toLocaleDateString('fr-FR')}</p>
+                <p className="font-semibold">{equipment.dateAchat ? new Date(equipment.dateAchat).toLocaleDateString('fr-FR') : 'N/A'}</p>
               </div>
             </div>
 
