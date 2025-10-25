@@ -3402,7 +3402,7 @@ async def delete_reading(reading_id: str, current_user: dict = Depends(get_curre
 @api_router.post("/intervention-requests", response_model=InterventionRequest, status_code=201)
 async def create_intervention_request(
     request: InterventionRequestCreate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("interventionRequests", "edit"))
 ):
     """Créer une nouvelle demande d'intervention"""
     try:
