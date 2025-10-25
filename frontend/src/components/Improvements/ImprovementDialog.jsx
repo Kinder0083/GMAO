@@ -14,7 +14,7 @@ import { Calendar, Clock, User, MapPin, Wrench, FileText, MessageSquare, Send } 
 import AttachmentsList from './AttachmentsList';
 import AttachmentUploader from './AttachmentUploader';
 import StatusChangeDialog from './StatusChangeDialog';
-import { commentsAPI, improvementsAPI } from '../../services/api';
+import { improvementsAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 
 const ImprovementDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
