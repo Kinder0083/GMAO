@@ -887,7 +887,7 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/work-orders/{wo_id}")
-async def delete_work_order(wo_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_work_order(wo_id: str, current_user: dict = Depends(require_permission("workOrders", "delete"))):
     """Supprimer un ordre de travail"""
     try:
         # Récupérer l'ordre de travail avant suppression pour le log
