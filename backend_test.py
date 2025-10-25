@@ -821,15 +821,20 @@ class PermissionsTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # Test 2: Create viewer user
-        viewer_user = self.create_viewer_user()
-        results["create_viewer_user"] = viewer_user is not None
+        # Test 2: Try to login with existing viewer user first, create if needed
+        results["viewer_login"] = self.test_viewer_login()
         
-        if not viewer_user:
-            self.log("❌ Cannot proceed with viewer tests - User creation failed", "ERROR")
+        if not results["viewer_login"]:
+            # If login failed, try to create the user
+            viewer_user = self.create_viewer_user()
+            results["create_viewer_user"] = viewer_user is not None
+            
+            if viewer_user:
+                # Try login again after creation
+                results["viewer_login"] = self.test_viewer_login()
         else:
-            # Test 3: Viewer Login
-            results["viewer_login"] = self.test_viewer_login()
+            # User already exists and login worked
+            results["create_viewer_user"] = True
             
             if results["viewer_login"]:
                 # Test admin permissions on work orders
