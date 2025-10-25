@@ -3897,7 +3897,91 @@ async def convert_to_improvement(
         
         await db.improvement_requests.update_one(
             {"id": request_id},
+            {"$set": {
+                "improvement_id": improvement_id,
+                "improvement_numero": numero,
+                "improvement_date_limite": date_limite_imp,
+                "converted_at": datetime.utcnow(),
+                "converted_by": current_user["id"]
+            }}
+        )
+        
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            user_name=f"{current_user.get('prenom', '')} {current_user.get('nom', '')}",
+            user_email=current_user.get("email", ""),
+            action=ActionType.CREATE,
+            entity_type=EntityType.WORK_ORDER,
+            entity_id=improvement_id,
+            entity_name=f"Amélioration #{numero}",
+            details=f"Converti depuis demande: {req['titre']}"
+        )
+        
+        return {
+            "message": "Demande convertie en amélioration avec succès",
+            "improvement_id": improvement_id,
+            "improvement_numero": numero,
+            "request_id": request_id
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur conversion demande: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
+# Attachments et Comments pour Improvement Requests
+@api_router.post("/improvement-requests/{request_id}/attachments")
+async def upload_improvement_request_attachment(
+    request_id: str,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user)
+):
+    """Upload fichier pour une demande d'amélioration"""
+    req = await db.improvement_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    return await upload_attachment_generic(request_id, file, "improvement_requests", current_user)
+
+@api_router.get("/improvement-requests/{request_id}/attachments/{filename}")
+async def download_improvement_request_attachment(request_id: str, filename: str, current_user: dict = Depends(get_current_user)):
+    """Télécharger un fichier d'une demande d'amélioration"""
+    return await download_attachment_generic(request_id, filename, "improvement_requests")
+
+@api_router.post("/improvement-requests/{request_id}/comments")
+async def add_improvement_request_comment(
+    request_id: str,
+    comment_data: dict,
+    current_user: dict = Depends(get_current_user)
+):
+    """Ajouter un commentaire à une demande d'amélioration"""
+    req = await db.improvement_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    comment = {
+        "id": str(uuid.uuid4()),
+        "text": comment_data.get("text", ""),
+        "user_id": current_user["id"],
+        "user_name": f"{current_user.get('prenom', '')} {current_user.get('nom', '')}",
+        "timestamp": datetime.utcnow().isoformat()
+    }
+    
+    await db.improvement_requests.update_one(
+        {"id": request_id},
+        {"$push": {"comments": comment}}
+    )
+    
+    return comment
+
+@api_router.get("/improvement-requests/{request_id}/comments")
+async def get_improvement_request_comments(request_id: str, current_user: dict = Depends(get_current_user)):
+    """Récupérer les commentaires d'une demande d'amélioration"""
+    req = await db.improvement_requests.find_one({"id": request_id})
+    if not req:
+        raise HTTPException(status_code=404, detail="Demande non trouvée")
+    
+    return req.get("comments", [])
 
 # Attachments pour Improvements
 @api_router.post("/improvements/{imp_id}/attachments")
@@ -3953,26 +4037,6 @@ async def get_improvement_comments(imp_id: str, current_user: dict = Depends(get
         raise HTTPException(status_code=404, detail="Amélioration non trouvée")
     
     return imp.get("comments", [])
-
-            {"$set": {
-                "improvement_id": improvement_id,
-                "improvement_numero": numero,
-                "improvement_date_limite": date_limite_imp,
-                "converted_at": datetime.utcnow(),
-                "converted_by": current_user["id"]
-            }}
-        )
-        
-        return {
-            "message": "Demande convertie en amélioration avec succès",
-            "improvement_id": improvement_id,
-            "request_id": request_id
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Erreur conversion demande: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== IMPROVEMENTS (AMÉLIORATIONS) ENDPOINTS ====================
 
