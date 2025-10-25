@@ -816,91 +816,53 @@ class PermissionsTester:
             else:
                 self.log("❌ Cannot proceed with viewer permission tests - Viewer login failed", "ERROR")
         
-        # Test 2: Create improvement request
-        improvement_request = self.test_create_improvement_request()
-        results["create_improvement_request"] = improvement_request is not None
-        
-        if not improvement_request:
-            self.log("❌ Cannot proceed with improvement request tests - Creation failed", "ERROR")
-        else:
-            request_id = improvement_request["id"]
-            
-            # Test 3: Get improvement requests
-            requests_list = self.test_get_improvement_requests()
-            results["get_improvement_requests"] = requests_list is not None and len(requests_list) > 0
-            
-            # Test 4: Get improvement request details
-            request_details = self.test_get_improvement_request_details(request_id)
-            results["get_improvement_request_details"] = request_details is not None
-            
-            # Test 5: Update improvement request
-            updated_request = self.test_update_improvement_request(request_id)
-            results["update_improvement_request"] = updated_request is not None
-            
-            # Test 6: Add comment to improvement request
-            request_comment = self.test_add_improvement_request_comment(request_id)
-            results["add_improvement_request_comment"] = request_comment is not None
-            
-            # Test 7: Convert improvement request to improvement
-            conversion_result = self.test_convert_to_improvement(request_id)
-            results["convert_to_improvement"] = conversion_result is not None
-            
-            if conversion_result:
-                improvement_id = conversion_result.get("improvement_id")
-                improvement_numero = conversion_result.get("improvement_numero")
-                
-                # Test 8: Verify conversion update
-                results["verify_conversion_update"] = self.test_verify_conversion_update(
-                    request_id, improvement_id, improvement_numero
-                )
-                
-                # Test improvement endpoints with converted improvement
-                if improvement_id:
-                    # Test 11: Get improvement details
-                    improvement_details = self.test_get_improvement_details(improvement_id)
-                    results["get_improvement_details"] = improvement_details is not None
-                    
-                    # Test 12: Update improvement
-                    updated_improvement = self.test_update_improvement(improvement_id)
-                    results["update_improvement"] = updated_improvement is not None
-                    
-                    # Test 13: Add comment to improvement
-                    improvement_comment = self.test_add_improvement_comment(improvement_id)
-                    results["add_improvement_comment"] = improvement_comment is not None
-                    
-                    # Test 15: Delete improvement (test with converted improvement)
-                    results["delete_improvement"] = self.test_delete_improvement(improvement_id)
-        
-        # Test 9: Create improvement directly
-        direct_improvement = self.test_create_improvement()
-        results["create_improvement"] = direct_improvement is not None
-        
-        # Test 10: Get improvements
-        improvements = self.test_get_improvements()
-        results["get_improvements"] = improvements is not None
-        
-        # Test 14: Delete improvement request (test with original request)
-        if improvement_request:
-            results["delete_improvement_request"] = self.test_delete_improvement_request(request_id)
-        
         # Summary
         self.log("=" * 60)
-        self.log("TEST RESULTS SUMMARY")
+        self.log("PERMISSIONS TEST RESULTS SUMMARY")
         self.log("=" * 60)
         
         passed = sum(results.values())
         total = len(results)
         
-        for test_name, result in results.items():
-            status = "✅ PASS" if result else "❌ FAIL"
-            self.log(f"{test_name}: {status}")
+        # Group results by category for better readability
+        self.log("\n🔐 AUTHENTICATION TESTS:")
+        auth_tests = ["admin_login", "create_viewer_user", "viewer_login"]
+        for test in auth_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
         
-        self.log(f"\nOverall: {passed}/{total} tests passed")
+        self.log("\n👑 ADMIN PERMISSIONS (should all work):")
+        admin_tests = ["admin_get_work_orders", "admin_post_work_orders", "admin_delete_work_orders"]
+        for test in admin_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
+        
+        self.log("\n👁️ VIEWER PERMISSIONS (view should work, edit/delete should be forbidden):")
+        viewer_tests = [
+            "viewer_get_work_orders", 
+            "viewer_post_work_orders_forbidden", 
+            "viewer_delete_work_orders_forbidden",
+            "viewer_get_intervention_requests",
+            "viewer_post_intervention_requests_forbidden"
+        ]
+        for test in viewer_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
+        
+        self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         if passed == total:
-            self.log("🎉 ALL IMPROVEMENT TESTS PASSED - New improvement requests & improvements functionality is working correctly!")
+            self.log("🎉 ALL PERMISSIONS TESTS PASSED - Permission system is working correctly!")
+            self.log("✅ Admin users can perform all operations")
+            self.log("✅ Viewer users are correctly restricted to view-only operations")
+            self.log("✅ Forbidden operations return 403 status codes as expected")
         else:
-            self.log("⚠️ Some tests failed - Check the logs above for details")
+            self.log("⚠️ Some permissions tests failed - Check the logs above for details")
+            failed_tests = [test for test, result in results.items() if not result]
+            self.log(f"❌ Failed tests: {', '.join(failed_tests)}")
         
         return results
 
