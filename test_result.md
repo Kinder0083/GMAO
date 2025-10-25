@@ -1056,8 +1056,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "Test modification des permissions d'un membre existant"
+  current_focus: []
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
