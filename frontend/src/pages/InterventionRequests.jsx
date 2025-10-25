@@ -212,52 +212,76 @@ const InterventionRequests = () => {
                         {formatDate(req.date_creation)}
                       </td>
                       <td className="py-3 px-4">
-                        <div className="flex gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRequest(req);
-                              setDialogOpen(true);
-                            }}
-                            className="hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Eye size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedRequest(req);
-                              setFormDialogOpen(true);
-                            }}
-                            className="hover:bg-green-50 hover:text-green-600"
-                          >
-                            <Pencil size={16} />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(req.id)}
-                            className="hover:bg-red-50 hover:text-red-600"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                          {canConvert && !req.work_order_id && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRequest(req);
-                                setConvertDialogOpen(true);
-                              }}
-                              className="hover:bg-purple-50 hover:text-purple-600"
-                              title="Convertir en ordre de travail"
-                            >
-                              <Wrench size={16} />
-                            </Button>
-                          )}
-                        </div>
+                        <TooltipProvider>
+                          <div className="flex gap-1">
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedRequest(req);
+                                    setDialogOpen(true);
+                                  }}
+                                  className="hover:bg-blue-50 hover:text-blue-600"
+                                >
+                                  <Eye size={16} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Voir les détails</TooltipContent>
+                            </Tooltip>
+                            
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedRequest(req);
+                                    setFormDialogOpen(true);
+                                  }}
+                                  className="hover:bg-green-50 hover:text-green-600"
+                                >
+                                  <Pencil size={16} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Modifier la demande</TooltipContent>
+                            </Tooltip>
+                            
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(req.id)}
+                                  className="hover:bg-red-50 hover:text-red-600"
+                                >
+                                  <Trash2 size={16} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>Supprimer la demande</TooltipContent>
+                            </Tooltip>
+                            
+                            {canConvert && !req.work_order_id && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedRequest(req);
+                                      setConvertDialogOpen(true);
+                                    }}
+                                    className="hover:bg-purple-50 hover:text-purple-600"
+                                  >
+                                    <Wrench size={16} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Convertir en ordre de travail</TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </TooltipProvider>
                       </td>
                       <td className="py-3 px-4 text-sm">
                         {req.work_order_numero ? (
