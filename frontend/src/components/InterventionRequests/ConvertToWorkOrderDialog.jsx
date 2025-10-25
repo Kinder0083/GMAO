@@ -105,6 +105,16 @@ const ConvertToWorkOrderDialog = ({ open, onOpenChange, request, onSuccess }) =>
               </SelectContent>
             </Select>
           </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="dateLimite">Date limite</Label>
+            <Input
+              id="dateLimite"
+              type="date"
+              value={dateLimite}
+              onChange={(e) => setDateLimite(e.target.value)}
+            />
+          </div>
         </div>
 
         <DialogFooter>
