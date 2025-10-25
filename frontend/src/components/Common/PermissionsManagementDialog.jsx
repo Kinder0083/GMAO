@@ -32,7 +32,7 @@ const PermissionsManagementDialog = ({ open, onOpenChange, user, onSuccess }) =>
 
     setLoading(true);
     try {
-      await usersAPI.updatePermissions(user.id, permissions);
+      await usersAPI.updatePermissions(user.id, { permissions });
       
       toast({
         title: 'Succès',
