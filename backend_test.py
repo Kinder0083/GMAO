@@ -10,7 +10,7 @@ import os
 from datetime import datetime, timedelta
 
 # Use the correct backend URL from frontend .env
-BACKEND_URL = "https://main-reset-copy.preview.emergentagent.com/api"
+BACKEND_URL = "https://gmao-improve.preview.emergentagent.com/api"
 
 # Test credentials - using existing admin user
 TEST_EMAIL = "admin@gmao-iris.local"
