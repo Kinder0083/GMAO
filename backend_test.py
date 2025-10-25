@@ -867,8 +867,8 @@ class PermissionsTester:
         return results
 
 if __name__ == "__main__":
-    tester = BackendTester()
-    results = tester.run_all_tests()
+    tester = PermissionsTester()
+    results = tester.run_permissions_tests()
     
     # Exit with appropriate code
     if all(results.values()):
