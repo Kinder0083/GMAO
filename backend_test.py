@@ -178,26 +178,32 @@ class BackendTester:
             self.log(f"❌ Get improvement request details failed - Error: {str(e)}", "ERROR")
             return None
     
-    def test_get_statistics(self, meter_id, period="month"):
-        """Test GET /api/meters/{meter_id}/statistics - Get meter statistics"""
-        self.log(f"Testing get statistics for meter {meter_id}...")
+    def test_add_improvement_request_comment(self, request_id):
+        """Test POST /api/improvement-requests/{id}/comments - Add comment to improvement request"""
+        self.log(f"Testing add comment to improvement request {request_id}...")
+        
+        comment_data = {
+            "contenu": "Commentaire de test pour la demande d'amélioration",
+            "type": "COMMENTAIRE"
+        }
         
         try:
-            response = self.session.get(
-                f"{BACKEND_URL}/meters/{meter_id}/statistics?period={period}",
+            response = self.session.post(
+                f"{BACKEND_URL}/improvement-requests/{request_id}/comments",
+                json=comment_data,
                 timeout=10
             )
             
-            if response.status_code == 200:
-                stats = response.json()
-                self.log(f"✅ Get statistics successful - Total consumption: {stats.get('total_consommation')}, Total cost: {stats.get('total_cout')}")
-                return stats
+            if response.status_code == 201:
+                comment = response.json()
+                self.log(f"✅ Add improvement request comment successful - Comment ID: {comment.get('id')}")
+                return comment
             else:
-                self.log(f"❌ Get statistics failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ Add improvement request comment failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return None
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Get statistics request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Add improvement request comment failed - Error: {str(e)}", "ERROR")
             return None
     
     def verify_consumption_calculation(self, readings):
