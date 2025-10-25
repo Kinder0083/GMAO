@@ -206,30 +206,47 @@ class BackendTester:
             self.log(f"❌ Add improvement request comment failed - Error: {str(e)}", "ERROR")
             return None
     
-    def verify_consumption_calculation(self, readings):
-        """Verify that consumption calculation is working correctly"""
-        self.log("Verifying consumption calculations...")
+    # ==================== IMPROVEMENTS TESTS ====================
+    
+    def test_create_improvement(self):
+        """Test POST /api/improvements - Create a new improvement"""
+        self.log("Testing create improvement endpoint...")
         
-        if len(readings) < 2:
-            self.log("⚠️ Need at least 2 readings to verify consumption calculation", "WARNING")
-            return True
+        improvement_data = {
+            "titre": "Amélioration directe système ventilation",
+            "description": "Amélioration directe du système de ventilation pour optimiser la qualité de l'air",
+            "priorite": "HAUTE",
+            "type_demande": "AMELIORATION_EQUIPEMENT",
+            "demandeur": "Marie Martin",
+            "service_demandeur": "Technique"
+        }
         
-        # Sort readings by date
-        sorted_readings = sorted(readings, key=lambda x: x['date_releve'])
-        
-        for i in range(1, len(sorted_readings)):
-            current = sorted_readings[i]
-            previous = sorted_readings[i-1]
+        try:
+            response = self.session.post(
+                f"{BACKEND_URL}/improvements",
+                json=improvement_data,
+                timeout=10
+            )
             
-            expected_consumption = current['valeur'] - previous['valeur']
-            actual_consumption = current.get('consommation', 0)
-            
-            if abs(expected_consumption - actual_consumption) > 0.01:  # Allow small floating point differences
-                self.log(f"❌ Consumption calculation error - Expected: {expected_consumption}, Got: {actual_consumption}", "ERROR")
-                return False
-        
-        self.log("✅ Consumption calculations are correct")
-        return True
+            if response.status_code == 201:
+                improvement = response.json()
+                numero = improvement.get('numero')
+                self.log(f"✅ Create improvement successful - ID: {improvement.get('id')}, Number: {numero}")
+                
+                # Verify improvement number is >= 7000
+                if numero and int(numero) >= 7000:
+                    self.log(f"✅ Improvement number validation passed - Number {numero} >= 7000")
+                else:
+                    self.log(f"❌ Improvement number validation failed - Number {numero} < 7000", "ERROR")
+                
+                return improvement
+            else:
+                self.log(f"❌ Create improvement failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Create improvement failed - Error: {str(e)}", "ERROR")
+            return None
     
     def verify_cost_calculation(self, readings, expected_unit_price):
         """Verify that cost calculation is working correctly"""
