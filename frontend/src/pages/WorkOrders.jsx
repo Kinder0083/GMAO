@@ -37,6 +37,21 @@ const WorkOrders = () => {
     loadWorkOrders();
   }, [dateFilter, dateType, customStartDate, customEndDate]);
 
+  // Gérer l'ouverture automatique d'un ordre via l'URL ?open=id
+  useEffect(() => {
+    const openWorkOrderId = searchParams.get('open');
+    if (openWorkOrderId && workOrders.length > 0) {
+      const workOrderToOpen = workOrders.find(wo => wo.id === openWorkOrderId);
+      if (workOrderToOpen) {
+        setSelectedWorkOrder(workOrderToOpen);
+        setFormDialogOpen(true);
+        // Retirer le paramètre de l'URL après ouverture
+        searchParams.delete('open');
+        setSearchParams(searchParams);
+      }
+    }
+  }, [searchParams, workOrders]);
+
   const getDateRange = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
