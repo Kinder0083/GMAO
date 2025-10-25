@@ -463,11 +463,14 @@ class BackendTester:
             "update_improvement_request": False,
             "add_improvement_request_comment": False,
             "convert_to_improvement": False,
+            "verify_conversion_update": False,
             "create_improvement": False,
             "get_improvements": False,
             "get_improvement_details": False,
             "update_improvement": False,
-            "add_improvement_comment": False
+            "add_improvement_comment": False,
+            "delete_improvement_request": False,
+            "delete_improvement": False
         }
         
         # Test 1: Login
