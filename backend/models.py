@@ -9,6 +9,14 @@ class UserRole(str, Enum):
     ADMIN = "ADMIN"
     TECHNICIEN = "TECHNICIEN"
     VISUALISEUR = "VISUALISEUR"
+    DIRECTEUR = "DIRECTEUR"
+    QHSE = "QHSE"
+    RSP_PROD = "RSP_PROD"
+    PROD = "PROD"
+    INDUS = "INDUS"
+    LOGISTIQUE = "LOGISTIQUE"
+    LABO = "LABO"
+    ADV = "ADV"
 
 # Permission Models
 class ModulePermission(BaseModel):
