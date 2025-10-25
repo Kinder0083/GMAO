@@ -239,7 +239,12 @@ export const interventionRequestsAPI = {
   create: (data) => api.post('/intervention-requests', data),
   update: (id, data) => api.put(`/intervention-requests/${id}`, data),
   delete: (id) => api.delete(`/intervention-requests/${id}`),
-  convertToWorkOrder: (id, assigneeId) => api.post(`/intervention-requests/${id}/convert-to-work-order`, null, { params: { assignee_id: assigneeId } })
+  convertToWorkOrder: (id, assigneeId, dateLimite) => api.post(`/intervention-requests/${id}/convert-to-work-order`, null, { 
+    params: { 
+      assignee_id: assigneeId,
+      date_limite: dateLimite
+    } 
+  })
 };
 
 export default api;
