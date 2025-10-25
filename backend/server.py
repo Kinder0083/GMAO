@@ -794,7 +794,7 @@ async def create_work_order(wo_create: WorkOrderCreate, current_user: dict = Dep
     return WorkOrder(**wo)
 
 @api_router.put("/work-orders/{wo_id}", response_model=WorkOrder)
-async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user: dict = Depends(get_current_user)):
+async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user: dict = Depends(require_permission("workOrders", "edit"))):
     """Modifier un ordre de travail"""
     from dependencies import can_edit_work_order_status
     
