@@ -4235,7 +4235,7 @@ async def update_improvement(
         user_name=f"{current_user.get('nom', '')} {current_user.get('prenom', '')}",
         user_email=current_user["email"],
         action=ActionType.UPDATE,
-        entity_type=EntityType.WORK_ORDER,
+        entity_type=EntityType.IMPROVEMENT,
         entity_id=imp_id,
         entity_name=updated_imp["titre"],
         details="Modification amélioration"
@@ -4257,7 +4257,7 @@ async def delete_improvement(imp_id: str, current_user: dict = Depends(get_curre
         user_name=f"{current_user.get('nom', '')} {current_user.get('prenom', '')}",
         user_email=current_user["email"],
         action=ActionType.DELETE,
-        entity_type=EntityType.WORK_ORDER,
+        entity_type=EntityType.IMPROVEMENT,
         entity_id=imp_id,
         entity_name=imp["titre"],
         details="Suppression amélioration"
