@@ -292,27 +292,89 @@ class BackendTester:
             self.log(f"❌ Get improvement details failed - Error: {str(e)}", "ERROR")
             return None
     
-    def test_meter_soft_delete(self, meter_id):
-        """Test DELETE /api/meters/{meter_id} - Soft delete a meter"""
-        self.log(f"Testing soft delete meter {meter_id}...")
+    def test_add_improvement_comment(self, improvement_id):
+        """Test POST /api/improvements/{id}/comments - Add comment to improvement"""
+        self.log(f"Testing add comment to improvement {improvement_id}...")
+        
+        comment_data = {
+            "contenu": "Commentaire de test pour l'amélioration",
+            "type": "COMMENTAIRE"
+        }
         
         try:
-            response = self.session.delete(
-                f"{BACKEND_URL}/meters/{meter_id}",
+            response = self.session.post(
+                f"{BACKEND_URL}/improvements/{improvement_id}/comments",
+                json=comment_data,
+                timeout=10
+            )
+            
+            if response.status_code == 201:
+                comment = response.json()
+                self.log(f"✅ Add improvement comment successful - Comment ID: {comment.get('id')}")
+                return comment
+            else:
+                self.log(f"❌ Add improvement comment failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Add improvement comment failed - Error: {str(e)}", "ERROR")
+            return None
+    
+    def test_update_improvement_request(self, request_id):
+        """Test PUT /api/improvement-requests/{id} - Update improvement request"""
+        self.log(f"Testing update improvement request {request_id}...")
+        
+        update_data = {
+            "priorite": "HAUTE",
+            "justification": "Justification mise à jour pour test"
+        }
+        
+        try:
+            response = self.session.put(
+                f"{BACKEND_URL}/improvement-requests/{request_id}",
+                json=update_data,
                 timeout=10
             )
             
             if response.status_code == 200:
-                result = response.json()
-                self.log(f"✅ Soft delete meter successful - {result.get('message')}")
-                return True
+                request = response.json()
+                self.log(f"✅ Update improvement request successful - Priority: {request.get('priorite')}")
+                return request
             else:
-                self.log(f"❌ Soft delete meter failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
-                return False
+                self.log(f"❌ Update improvement request failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Soft delete meter request failed - Error: {str(e)}", "ERROR")
-            return False
+            self.log(f"❌ Update improvement request failed - Error: {str(e)}", "ERROR")
+            return None
+    
+    def test_update_improvement(self, improvement_id):
+        """Test PUT /api/improvements/{id} - Update improvement"""
+        self.log(f"Testing update improvement {improvement_id}...")
+        
+        update_data = {
+            "statut": "EN_COURS",
+            "priorite": "CRITIQUE"
+        }
+        
+        try:
+            response = self.session.put(
+                f"{BACKEND_URL}/improvements/{improvement_id}",
+                json=update_data,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                improvement = response.json()
+                self.log(f"✅ Update improvement successful - Status: {improvement.get('statut')}")
+                return improvement
+            else:
+                self.log(f"❌ Update improvement failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return None
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Update improvement failed - Error: {str(e)}", "ERROR")
+            return None
     
     def run_all_tests(self):
         """Run all backend tests for meters functionality"""
