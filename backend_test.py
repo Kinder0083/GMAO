@@ -12,9 +12,11 @@ from datetime import datetime, timedelta
 # Use the correct backend URL from frontend .env
 BACKEND_URL = "https://gmao-improve.preview.emergentagent.com/api"
 
-# Test credentials
-ADMIN_EMAIL = "admin@example.com"
-ADMIN_PASSWORD = "password123"
+# Test credentials - try both admin accounts
+ADMIN_EMAIL_1 = "admin@example.com"
+ADMIN_PASSWORD_1 = "password123"
+ADMIN_EMAIL_2 = "admin@gmao-iris.local"
+ADMIN_PASSWORD_2 = "Admin123!"
 
 # Test viewer credentials (to be created)
 VIEWER_EMAIL = "test_viewer@test.com"
