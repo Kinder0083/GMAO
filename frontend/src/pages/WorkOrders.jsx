@@ -40,17 +40,31 @@ const WorkOrders = () => {
   // Gérer l'ouverture automatique d'un ordre via l'URL ?open=id
   useEffect(() => {
     const openWorkOrderId = searchParams.get('open');
-    if (openWorkOrderId && workOrders.length > 0) {
-      const workOrderToOpen = workOrders.find(wo => wo.id === openWorkOrderId);
-      if (workOrderToOpen) {
-        setSelectedWorkOrder(workOrderToOpen);
-        setFormDialogOpen(true);
-        // Retirer le paramètre de l'URL après ouverture
-        searchParams.delete('open');
-        setSearchParams(searchParams);
-      }
+    if (openWorkOrderId) {
+      // Charger l'ordre directement par son ID
+      const loadAndOpenWorkOrder = async () => {
+        try {
+          const response = await workOrdersAPI.getById(openWorkOrderId);
+          setSelectedWorkOrder(response.data);
+          setFormDialogOpen(true);
+          // Retirer le paramètre de l'URL après ouverture
+          searchParams.delete('open');
+          setSearchParams(searchParams);
+        } catch (error) {
+          console.error('Erreur lors du chargement de l\'ordre:', error);
+          toast({
+            title: 'Erreur',
+            description: 'Impossible d\'ouvrir l\'ordre de travail',
+            variant: 'destructive'
+          });
+          // Retirer le paramètre même en cas d'erreur
+          searchParams.delete('open');
+          setSearchParams(searchParams);
+        }
+      };
+      loadAndOpenWorkOrder();
     }
-  }, [searchParams, workOrders]);
+  }, [searchParams]);
 
   const getDateRange = () => {
     const today = new Date();
