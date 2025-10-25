@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, UserPlus } from 'lucide-react';
+import PermissionsGrid from './PermissionsGrid';
 
 const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
@@ -25,7 +26,8 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     telephone: '',
     service: '',
     role: 'TECHNICIEN',
-    password: ''
+    password: '',
+    permissions: {}
   });
 
   const handleChange = (field, value) => {
