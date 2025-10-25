@@ -164,9 +164,17 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
                   <SelectValue placeholder="Sélectionner un rôle" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="VISUALISEUR">Visualiseur - Accès en lecture seule</SelectItem>
-                  <SelectItem value="TECHNICIEN">Technicien - Peut modifier et créer</SelectItem>
                   <SelectItem value="ADMIN">Administrateur - Accès complet</SelectItem>
+                  <SelectItem value="DIRECTEUR">Directeur</SelectItem>
+                  <SelectItem value="QHSE">QHSE</SelectItem>
+                  <SelectItem value="RSP_PROD">Responsable Production</SelectItem>
+                  <SelectItem value="PROD">Production</SelectItem>
+                  <SelectItem value="INDUS">Industrialisation</SelectItem>
+                  <SelectItem value="LOGISTIQUE">Logistique</SelectItem>
+                  <SelectItem value="LABO">Laboratoire</SelectItem>
+                  <SelectItem value="ADV">ADV</SelectItem>
+                  <SelectItem value="TECHNICIEN">Technicien</SelectItem>
+                  <SelectItem value="VISUALISEUR">Visualiseur - Accès en lecture seule</SelectItem>
                 </SelectContent>
               </Select>
             </div>
