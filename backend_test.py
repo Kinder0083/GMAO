@@ -118,33 +118,42 @@ class BackendTester:
             self.log(f"❌ Get improvement requests failed - Error: {str(e)}", "ERROR")
             return None
     
-    def test_create_reading(self, meter_id, value, notes="Premier relevé"):
-        """Test POST /api/meters/{meter_id}/readings - Create a reading"""
-        self.log(f"Testing create reading for meter {meter_id}...")
+    def test_convert_to_improvement(self, request_id, assignee_id=None, date_limite=None):
+        """Test POST /api/improvement-requests/{id}/convert-to-improvement - Convert request to improvement"""
+        self.log(f"Testing convert improvement request {request_id} to improvement...")
         
-        reading_data = {
-            "date_releve": datetime.utcnow().isoformat() + "Z",
-            "valeur": value,
-            "notes": notes
-        }
+        convert_data = {}
+        if assignee_id:
+            convert_data["assignee_id"] = assignee_id
+        if date_limite:
+            convert_data["date_limite"] = date_limite
         
         try:
             response = self.session.post(
-                f"{BACKEND_URL}/meters/{meter_id}/readings",
-                json=reading_data,
+                f"{BACKEND_URL}/improvement-requests/{request_id}/convert-to-improvement",
+                json=convert_data,
                 timeout=10
             )
             
-            if response.status_code == 201:
-                reading = response.json()
-                self.log(f"✅ Create reading successful - Value: {reading.get('valeur')}, Consumption: {reading.get('consommation')}")
-                return reading
+            if response.status_code == 200:
+                result = response.json()
+                improvement_id = result.get('improvement_id')
+                improvement_numero = result.get('improvement_numero')
+                self.log(f"✅ Convert to improvement successful - Improvement ID: {improvement_id}, Number: {improvement_numero}")
+                
+                # Verify improvement number is >= 7000
+                if improvement_numero and int(improvement_numero) >= 7000:
+                    self.log(f"✅ Improvement number validation passed - Number {improvement_numero} >= 7000")
+                else:
+                    self.log(f"❌ Improvement number validation failed - Number {improvement_numero} < 7000", "ERROR")
+                
+                return result
             else:
-                self.log(f"❌ Create reading failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ Convert to improvement failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return None
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Create reading request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Convert to improvement failed - Error: {str(e)}", "ERROR")
             return None
     
     def test_get_readings(self, meter_id):
