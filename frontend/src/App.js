@@ -27,6 +27,8 @@ import Updates from "./pages/Updates";
 import Journal from "./pages/Journal";
 import Meters from "./pages/Meters";
 import InterventionRequests from "./pages/InterventionRequests";
+import ImprovementRequests from "./pages/ImprovementRequests";
+import Improvements from "./pages/Improvements";
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
