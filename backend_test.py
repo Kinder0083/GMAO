@@ -376,6 +376,79 @@ class BackendTester:
             self.log(f"❌ Update improvement failed - Error: {str(e)}", "ERROR")
             return None
     
+    def test_delete_improvement_request(self, request_id):
+        """Test DELETE /api/improvement-requests/{id} - Delete improvement request"""
+        self.log(f"Testing delete improvement request {request_id}...")
+        
+        try:
+            response = self.session.delete(
+                f"{BACKEND_URL}/improvement-requests/{request_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log(f"✅ Delete improvement request successful - {result.get('message')}")
+                return True
+            else:
+                self.log(f"❌ Delete improvement request failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Delete improvement request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_delete_improvement(self, improvement_id):
+        """Test DELETE /api/improvements/{id} - Delete improvement"""
+        self.log(f"Testing delete improvement {improvement_id}...")
+        
+        try:
+            response = self.session.delete(
+                f"{BACKEND_URL}/improvements/{improvement_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                result = response.json()
+                self.log(f"✅ Delete improvement successful - {result.get('message')}")
+                return True
+            else:
+                self.log(f"❌ Delete improvement failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Delete improvement failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_verify_conversion_update(self, request_id, expected_improvement_id, expected_improvement_numero):
+        """Verify that the improvement request was properly updated after conversion"""
+        self.log(f"Verifying conversion update for request {request_id}...")
+        
+        try:
+            response = self.session.get(
+                f"{BACKEND_URL}/improvement-requests/{request_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                request = response.json()
+                improvement_id = request.get('improvement_id')
+                improvement_numero = request.get('improvement_numero')
+                
+                if improvement_id == expected_improvement_id and improvement_numero == expected_improvement_numero:
+                    self.log(f"✅ Conversion update verification successful - Request updated with improvement ID: {improvement_id}, Number: {improvement_numero}")
+                    return True
+                else:
+                    self.log(f"❌ Conversion update verification failed - Expected ID: {expected_improvement_id}, Got: {improvement_id}, Expected Number: {expected_improvement_numero}, Got: {improvement_numero}", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Conversion update verification failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Conversion update verification failed - Error: {str(e)}", "ERROR")
+            return False
+    
     def run_all_tests(self):
         """Run all backend tests for improvement requests and improvements functionality"""
         self.log("=" * 70)
