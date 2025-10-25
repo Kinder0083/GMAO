@@ -647,7 +647,7 @@ async def get_work_orders(
     date_debut: str = None,
     date_fin: str = None,
     date_type: str = "creation",  # "creation" ou "echeance"
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("workOrders", "view"))
 ):
     """Liste tous les ordres de travail avec filtrage par date"""
     query = {}
