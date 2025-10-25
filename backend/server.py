@@ -397,40 +397,13 @@ async def create_member(request: CreateMemberRequest, current_user: dict = Depen
     # Hasher le mot de passe fourni
     hashed_password = get_password_hash(request.password)
     
-    # Définir les permissions par défaut selon le rôle
-    if request.role == UserRole.ADMIN:
-        permissions = {
-            "dashboard": {"view": True, "edit": True, "delete": True},
-            "workOrders": {"view": True, "edit": True, "delete": True},
-            "assets": {"view": True, "edit": True, "delete": True},
-            "preventiveMaintenance": {"view": True, "edit": True, "delete": True},
-            "inventory": {"view": True, "edit": True, "delete": True},
-            "locations": {"view": True, "edit": True, "delete": True},
-            "vendors": {"view": True, "edit": True, "delete": True},
-            "reports": {"view": True, "edit": True, "delete": True}
-        }
-    elif request.role == UserRole.TECHNICIEN:
-        permissions = {
-            "dashboard": {"view": True, "edit": False, "delete": False},
-            "workOrders": {"view": True, "edit": True, "delete": False},
-            "assets": {"view": True, "edit": True, "delete": False},
-            "preventiveMaintenance": {"view": True, "edit": True, "delete": False},
-            "inventory": {"view": True, "edit": True, "delete": False},
-            "locations": {"view": True, "edit": False, "delete": False},
-            "vendors": {"view": True, "edit": False, "delete": False},
-            "reports": {"view": True, "edit": False, "delete": False}
-        }
-    else:  # VISUALISEUR
-        permissions = {
-            "dashboard": {"view": True, "edit": False, "delete": False},
-            "workOrders": {"view": True, "edit": False, "delete": False},
-            "assets": {"view": True, "edit": False, "delete": False},
-            "preventiveMaintenance": {"view": True, "edit": False, "delete": False},
-            "inventory": {"view": True, "edit": False, "delete": False},
-            "locations": {"view": True, "edit": False, "delete": False},
-            "vendors": {"view": True, "edit": False, "delete": False},
-            "reports": {"view": True, "edit": False, "delete": False}
-        }
+    # Obtenir les permissions par défaut selon le rôle
+    default_permissions = get_default_permissions_by_role(request.role)
+    permissions = default_permissions.model_dump()
+    
+    # Si des permissions personnalisées sont fournies, les utiliser
+    if hasattr(request, 'permissions') and request.permissions:
+        permissions = request.permissions
     
     # Créer l'utilisateur
     user_dict = {
@@ -441,7 +414,7 @@ async def create_member(request: CreateMemberRequest, current_user: dict = Depen
         "telephone": request.telephone or "",
         "role": request.role,
         "service": request.service,
-        "hashed_password": hashed_password,  # CORRECTION: hashed_password au lieu de password
+        "hashed_password": hashed_password,
         "statut": "actif",
         "dateCreation": datetime.utcnow(),
         "derniereConnexion": datetime.utcnow(),
