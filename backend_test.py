@@ -377,23 +377,24 @@ class BackendTester:
             return None
     
     def run_all_tests(self):
-        """Run all backend tests for meters functionality"""
-        self.log("=" * 60)
-        self.log("STARTING METERS (COMPTEURS) API TESTS")
-        self.log("=" * 60)
+        """Run all backend tests for improvement requests and improvements functionality"""
+        self.log("=" * 70)
+        self.log("STARTING IMPROVEMENT REQUESTS & IMPROVEMENTS API TESTS")
+        self.log("=" * 70)
         
         results = {
             "login": False,
-            "create_meter": False,
-            "get_meters": False,
-            "create_first_reading": False,
-            "create_second_reading": False,
-            "get_readings": False,
-            "get_statistics": False,
-            "consumption_calculation": False,
-            "cost_calculation": False,
-            "delete_reading": False,
-            "soft_delete_meter": False
+            "create_improvement_request": False,
+            "get_improvement_requests": False,
+            "get_improvement_request_details": False,
+            "update_improvement_request": False,
+            "add_improvement_request_comment": False,
+            "convert_to_improvement": False,
+            "create_improvement": False,
+            "get_improvements": False,
+            "get_improvement_details": False,
+            "update_improvement": False,
+            "add_improvement_comment": False
         }
         
         # Test 1: Login
