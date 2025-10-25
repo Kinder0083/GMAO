@@ -977,6 +977,32 @@ frontend:
           - Les visualiseurs sont correctement limités aux opérations de lecture
           - Les opérations interdites retournent bien 403 Forbidden
 
+  - task: "Test modification des permissions d'un membre existant"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/components/Common/PermissionsManagementDialog.jsx, /app/frontend/src/pages/People.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "testing"
+        comment: |
+          NOUVEAU TEST DEMANDÉ - Modification des permissions d'un membre existant
+          
+          CONTEXTE: Test du dialog de gestion des permissions pour modifier les permissions d'un membre existant
+          
+          TESTS À EFFECTUER:
+          1. Se connecter en tant qu'admin
+          2. Naviguer vers la page Équipes (/people)
+          3. Cliquer sur le bouton "Permissions" d'un membre existant
+          4. Vérifier que le dialog s'ouvre avec le titre "Modifier les permissions"
+          5. Vérifier que les informations du membre sont affichées (nom, email, rôle)
+          6. Vérifier que la grille affiche 17 modules avec 3 colonnes (Visualisation, Édition, Suppression)
+          7. Vérifier que les permissions actuelles du membre sont cochées
+          8. Modifier quelques permissions et sauvegarder
+          9. Vérifier la persistance des modifications
+
 metadata:
   created_by: "main_agent"
   version: "4.1"
