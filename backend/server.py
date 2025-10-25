@@ -1083,7 +1083,7 @@ async def delete_attachment(
 
 # ==================== EQUIPMENTS ROUTES ====================
 @api_router.get("/equipments", response_model=List[Equipment])
-async def get_equipments(current_user: dict = Depends(get_current_user)):
+async def get_equipments(current_user: dict = Depends(require_permission("assets", "view"))):
     """Liste tous les équipements"""
     equipments = await db.equipments.find().to_list(1000)
     
@@ -1104,7 +1104,7 @@ async def get_equipments(current_user: dict = Depends(get_current_user)):
     return [Equipment(**eq) for eq in equipments]
 
 @api_router.post("/equipments", response_model=Equipment)
-async def create_equipment(eq_create: EquipmentCreate, current_user: dict = Depends(get_current_user)):
+async def create_equipment(eq_create: EquipmentCreate, current_user: dict = Depends(require_permission("assets", "edit"))):
     """Créer un nouvel équipement"""
     eq_dict = eq_create.model_dump()
     
@@ -1238,7 +1238,7 @@ async def get_equipment_hierarchy(eq_id: str, current_user: dict = Depends(get_c
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.put("/equipments/{eq_id}", response_model=Equipment)
-async def update_equipment(eq_id: str, eq_update: EquipmentUpdate, current_user: dict = Depends(get_current_user)):
+async def update_equipment(eq_id: str, eq_update: EquipmentUpdate, current_user: dict = Depends(require_permission("assets", "edit"))):
     """Modifier un équipement"""
     from dependencies import can_edit_resource
     
@@ -1377,7 +1377,7 @@ async def update_equipment_status(eq_id: str, statut: EquipmentStatus, current_u
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/equipments/{eq_id}")
-async def delete_equipment(eq_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_equipment(eq_id: str, current_user: dict = Depends(require_permission("assets", "delete"))):
     """Supprimer un équipement"""
     try:
         result = await db.equipments.delete_one({"_id": ObjectId(eq_id)})
@@ -1652,13 +1652,13 @@ async def delete_location(loc_id: str, current_user: dict = Depends(get_current_
 
 # ==================== INVENTORY ROUTES ====================
 @api_router.get("/inventory", response_model=List[Inventory])
-async def get_inventory(current_user: dict = Depends(get_current_user)):
+async def get_inventory(current_user: dict = Depends(require_permission("inventory", "view"))):
     """Liste tous les articles de l'inventaire"""
     inventory = await db.inventory.find().to_list(1000)
     return [Inventory(**serialize_doc(item)) for item in inventory]
 
 @api_router.post("/inventory", response_model=Inventory)
-async def create_inventory_item(inv_create: InventoryCreate, current_user: dict = Depends(get_current_user)):
+async def create_inventory_item(inv_create: InventoryCreate, current_user: dict = Depends(require_permission("inventory", "edit"))):
     """Créer un nouvel article dans l'inventaire"""
     inv_dict = inv_create.model_dump()
     inv_dict["dateCreation"] = datetime.utcnow()
@@ -3461,7 +3461,7 @@ async def get_all_intervention_requests(current_user: dict = Depends(require_per
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/intervention-requests/{request_id}", response_model=InterventionRequest)
-async def get_intervention_request(request_id: str, current_user: dict = Depends(get_current_user)):
+async def get_intervention_request(request_id: str, current_user: dict = Depends(require_permission("interventionRequests", "view"))):
     """Récupérer une demande d'intervention spécifique"""
     req = await db.intervention_requests.find_one({"id": request_id})
     if not req:
@@ -3519,7 +3519,7 @@ async def update_intervention_request(
     return InterventionRequest(**updated_req)
 
 @api_router.delete("/intervention-requests/{request_id}")
-async def delete_intervention_request(request_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_intervention_request(request_id: str, current_user: dict = Depends(require_permission("interventionRequests", "delete"))):
     """Supprimer une demande d'intervention"""
     req = await db.intervention_requests.find_one({"id": request_id})
     if not req:
