@@ -131,6 +131,14 @@ const People = () => {
   const roles = [
     { value: 'ALL', label: 'Tous', count: activeUsersCount },
     { value: 'ADMIN', label: 'Administrateurs', count: users.filter(u => u.role === 'ADMIN' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'DIRECTEUR', label: 'Directeurs', count: users.filter(u => u.role === 'DIRECTEUR' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'QHSE', label: 'QHSE', count: users.filter(u => u.role === 'QHSE' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'RSP_PROD', label: 'RSP Prod.', count: users.filter(u => u.role === 'RSP_PROD' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'PROD', label: 'Prod.', count: users.filter(u => u.role === 'PROD' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'INDUS', label: 'Indus.', count: users.filter(u => u.role === 'INDUS' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'LOGISTIQUE', label: 'Logistique', count: users.filter(u => u.role === 'LOGISTIQUE' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'LABO', label: 'Labo.', count: users.filter(u => u.role === 'LABO' && u.email !== 'buenogy@gmail.com').length },
+    { value: 'ADV', label: 'ADV', count: users.filter(u => u.role === 'ADV' && u.email !== 'buenogy@gmail.com').length },
     { value: 'TECHNICIEN', label: 'Techniciens', count: users.filter(u => u.role === 'TECHNICIEN' && u.email !== 'buenogy@gmail.com').length },
     { value: 'VISUALISEUR', label: 'Visualiseurs', count: users.filter(u => u.role === 'VISUALISEUR' && u.email !== 'buenogy@gmail.com').length }
   ];
