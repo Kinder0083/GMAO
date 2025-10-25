@@ -196,6 +196,15 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
                 Le membre devra changer ce mot de passe lors de sa première connexion
               </p>
             </div>
+
+            {/* Grille de permissions */}
+            <div className="col-span-2 mt-4">
+              <PermissionsGrid
+                role={formData.role}
+                permissions={formData.permissions}
+                onChange={(permissions) => handleChange('permissions', permissions)}
+              />
+            </div>
           </div>
 
           <DialogFooter>
