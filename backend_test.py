@@ -473,7 +473,7 @@ class BackendTester:
         self.log(f"\nOverall: {passed}/{total} tests passed")
         
         if passed == total:
-            self.log("🎉 ALL METERS TESTS PASSED - New compteurs functionality is working correctly!")
+            self.log("🎉 ALL IMPROVEMENT TESTS PASSED - New improvement requests & improvements functionality is working correctly!")
         else:
             self.log("⚠️ Some tests failed - Check the logs above for details")
         
