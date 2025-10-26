@@ -1166,10 +1166,11 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test corrections - Histogramme multi-couleurs et Menu Journal unique"
-  stuck_tasks: []
+    - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
+  stuck_tasks: 
+    - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
   test_all: false
-  test_priority: "high_first"
+  test_priority: "critical_first"
 
   - task: "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
     implemented: true
