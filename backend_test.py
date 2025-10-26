@@ -421,40 +421,110 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE DELETE work-orders request failed - Error: {str(e)}", "ERROR")
             return False
 
-    # ==================== IMPROVEMENT REQUESTS TESTS ====================
-    
-    def test_create_improvement_request(self):
-        """Test POST /api/improvement-requests - Create a new improvement request"""
-        self.log("Testing create improvement request endpoint...")
+    def run_qhse_permissions_tests(self):
+        """Run all QHSE permissions tests for the GMAO application"""
+        self.log("=" * 70)
+        self.log("STARTING QHSE PERMISSIONS SYSTEM TESTS")
+        self.log("=" * 70)
         
-        request_data = {
-            "titre": "Amélioration système éclairage",
-            "description": "Demande d'amélioration pour moderniser le système d'éclairage du bâtiment principal",
-            "priorite": "MOYENNE",
-            "type_demande": "AMELIORATION_INFRASTRUCTURE",
-            "demandeur": "Jean Dupont",
-            "service_demandeur": "Maintenance",
-            "justification": "Réduction de la consommation énergétique et amélioration de l'éclairage"
+        results = {
+            "admin_login": False,
+            "create_qhse_user": False,
+            "qhse_login": False,
+            "qhse_reports_analytics": False,
+            "qhse_vendors_forbidden": False,
+            "qhse_meters_view_allowed": False,
+            "qhse_meters_edit_forbidden": False,
+            "qhse_improvements_view_allowed": False,
+            "qhse_improvements_edit_forbidden": False,
+            "qhse_work_orders_post_forbidden": False,
+            "qhse_work_orders_delete_forbidden": False
         }
         
-        try:
-            response = self.session.post(
-                f"{BACKEND_URL}/improvement-requests",
-                json=request_data,
-                timeout=10
-            )
+        # Test 1: Admin Login
+        results["admin_login"] = self.test_admin_login()
+        
+        if not results["admin_login"]:
+            self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
+            return results
+        
+        # Test 2: Try to login with existing QHSE user first, create if needed
+        results["qhse_login"] = self.test_qhse_login()
+        
+        if not results["qhse_login"]:
+            # If login failed, try to create the user
+            qhse_user = self.create_qhse_user()
+            results["create_qhse_user"] = qhse_user is not None
             
-            if response.status_code == 201:
-                request = response.json()
-                self.log(f"✅ Create improvement request successful - ID: {request.get('id')}, Title: {request.get('titre')}")
-                return request
-            else:
-                self.log(f"❌ Create improvement request failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
-                return None
-                
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Create improvement request failed - Error: {str(e)}", "ERROR")
-            return None
+            if qhse_user:
+                # Try login again after creation
+                results["qhse_login"] = self.test_qhse_login()
+        else:
+            # User already exists and login worked
+            results["create_qhse_user"] = True
+        
+        if results["qhse_login"]:
+            # Test QHSE permissions
+            results["qhse_reports_analytics"] = self.test_qhse_reports_analytics()
+            results["qhse_vendors_forbidden"] = self.test_qhse_vendors_forbidden()
+            results["qhse_meters_view_allowed"] = self.test_qhse_meters_view_allowed()
+            results["qhse_meters_edit_forbidden"] = self.test_qhse_meters_edit_forbidden()
+            results["qhse_improvements_view_allowed"] = self.test_qhse_improvements_view_allowed()
+            results["qhse_improvements_edit_forbidden"] = self.test_qhse_improvements_edit_forbidden()
+            results["qhse_work_orders_post_forbidden"] = self.test_qhse_work_orders_post_forbidden()
+            results["qhse_work_orders_delete_forbidden"] = self.test_qhse_work_orders_delete_forbidden()
+        else:
+            self.log("❌ Cannot proceed with QHSE permission tests - QHSE login failed", "ERROR")
+        
+        # Summary
+        self.log("=" * 60)
+        self.log("QHSE PERMISSIONS TEST RESULTS SUMMARY")
+        self.log("=" * 60)
+        
+        passed = sum(results.values())
+        total = len(results)
+        
+        # Group results by category for better readability
+        self.log("\n🔐 AUTHENTICATION TESTS:")
+        auth_tests = ["admin_login", "create_qhse_user", "qhse_login"]
+        for test in auth_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
+        
+        self.log("\n✅ QHSE ALLOWED PERMISSIONS (should work):")
+        allowed_tests = ["qhse_reports_analytics", "qhse_meters_view_allowed", "qhse_improvements_view_allowed"]
+        for test in allowed_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
+        
+        self.log("\n🚫 QHSE FORBIDDEN PERMISSIONS (should be blocked):")
+        forbidden_tests = [
+            "qhse_vendors_forbidden",
+            "qhse_meters_edit_forbidden", 
+            "qhse_improvements_edit_forbidden",
+            "qhse_work_orders_post_forbidden",
+            "qhse_work_orders_delete_forbidden"
+        ]
+        for test in forbidden_tests:
+            if test in results:
+                status = "✅ PASS" if results[test] else "❌ FAIL"
+                self.log(f"  {test}: {status}")
+        
+        self.log(f"\n📊 Overall: {passed}/{total} tests passed")
+        
+        if passed == total:
+            self.log("🎉 ALL QHSE PERMISSIONS TESTS PASSED - Permission system is working correctly!")
+            self.log("✅ QHSE users can access authorized modules (reports, meters view, improvements view)")
+            self.log("✅ QHSE users are correctly blocked from unauthorized modules (vendors, edit operations)")
+            self.log("✅ Forbidden operations return 403 status codes as expected")
+        else:
+            self.log("⚠️ Some QHSE permissions tests failed - Check the logs above for details")
+            failed_tests = [test for test, result in results.items() if not result]
+            self.log(f"❌ Failed tests: {', '.join(failed_tests)}")
+        
+        return results
     
     def test_get_improvement_requests(self):
         """Test GET /api/improvement-requests - Get all improvement requests"""
