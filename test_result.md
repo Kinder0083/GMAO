@@ -1166,7 +1166,7 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Test de l'histogramme à colonnes - Historique Achat Évolution Mensuelle"
+    - "Test corrections - Histogramme multi-couleurs et Menu Journal unique"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
