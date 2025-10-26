@@ -1174,6 +1174,37 @@ test_plan:
 agent_communication:
   - agent: "testing"
     message: |
+      🎉 PROBLÈME CRITIQUE RÉSOLU - TABLEAU DE BORD QHSE FONCTIONNEL
+      
+      ✅ TEST CRITIQUE RÉUSSI:
+      
+      **PROBLÈME IDENTIFIÉ ET CORRIGÉ:**
+      - Dashboard bloqué en "Chargement..." infini pour utilisateurs QHSE
+      - Cause: Dashboard attendait les données analytics (403 Forbidden pour QHSE)
+      - Condition `if (loading || !analytics)` empêchait l'affichage du dashboard
+      
+      **CORRECTIONS APPLIQUÉES:**
+      1. ✅ Supprimé condition `!analytics` du loading check
+      2. ✅ Modifié calcul des stats pour fonctionner sans analytics
+      3. ✅ Ajouté condition pour masquer graphiques analytics si non disponibles
+      4. ✅ Dashboard affiche maintenant données selon permissions utilisateur
+      
+      **RÉSULTATS TESTS:**
+      - ✅ Connexion QHSE: RÉUSSIE (test_qhse@test.com)
+      - ✅ Temps de chargement: 0.02 secondes (vs infini avant)
+      - ✅ Titre "Tableau de bord": AFFICHÉ
+      - ✅ Cartes statistiques: FONCTIONNELLES
+      - ✅ Section ordres de travail récents: FONCTIONNELLE
+      - ✅ Graphiques analytics: CORRECTEMENT MASQUÉS
+      - ✅ Permissions QHSE: RESPECTÉES
+      
+      **FICHIER MODIFIÉ:**
+      - `/app/frontend/src/pages/Dashboard.jsx` (lignes 117-235)
+      
+      ✅ CONCLUSION: Problème critique entièrement résolu
+      Les utilisateurs QHSE peuvent maintenant accéder au tableau de bord sans blocage.
+  - agent: "testing"
+    message: |
       🎉 TESTS CORRECTIONS CRITIQUES TERMINÉS - TABLEAU DE BORD ET MODIFICATION D'UTILISATEUR
       
       ✅ TESTS RÉUSSIS - CORRECTIONS CRITIQUES VALIDÉES:
