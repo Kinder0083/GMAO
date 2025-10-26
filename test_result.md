@@ -1171,11 +1171,11 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
-  - task: "Test corrections - Histogramme multi-couleurs et Menu Journal unique"
+  - task: "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
     implemented: true
     working: false
-    file: "/app/frontend/src/pages/PurchaseHistory.jsx, /app/frontend/src/components/Layout/MainLayout.jsx"
-    stuck_count: 1
+    file: "/app/frontend/src/pages/PurchaseHistory.jsx"
+    stuck_count: 2
     priority: "critical"
     needs_retesting: false
     status_history:
@@ -1269,6 +1269,45 @@ test_plan:
           📊 RÉSULTAT: HISTOGRAMME RESTE INVISIBLE
           Les barres n'apparaissent que lors du survol (tooltip visible)
           mais aucune colonne verticale colorée n'est visible à l'écran.
+      - working: false
+        agent: "testing"
+        comment: |
+          ❌ ÉCHEC CRITIQUE - DOWNGRADE RECHARTS 2.12.7 N'A PAS RÉSOLU LE PROBLÈME
+          
+          🎯 TEST FINAL EFFECTUÉ APRÈS DOWNGRADE:
+          - Recharts version: 2.12.7 (downgrade de 3.3.0 confirmé dans package.json)
+          - node_modules nettoyés et réinstallés ✓
+          - Frontend redémarré avec succès ✓
+          
+          📊 RÉSULTATS DU TEST CRITIQUE:
+          1. ✅ Connexion admin réussie
+          2. ✅ Navigation vers /purchase-history réussie
+          3. ✅ Section "📈 Évolution Mensuelle des Achats" présente
+          4. ✅ ResponsiveContainer recharts détecté
+          5. ✅ Données chargées ("12 mois affichés" confirmé)
+          6. ❌ AUCUN SVG recharts surface trouvé
+          7. ❌ AUCUN rectangle de barre dans le DOM (0 trouvés)
+          8. ❌ Zone histogramme COMPLÈTEMENT BLANCHE/VIDE
+          
+          🔍 DIAGNOSTIC TECHNIQUE COMPLET:
+          - ResponsiveContainer: ✅ PRÉSENT (1 élément trouvé)
+          - SVG recharts: ❌ AUCUN TROUVÉ (sur 331 SVG totaux)
+          - Bar rectangles: ❌ 0 TROUVÉS (vs 12 attendus)
+          - Gradients définis: ❌ 0 TROUVÉS (vs 6 attendus)
+          - Console errors: ❌ AUCUNE ERREUR RECHARTS
+          
+          🎯 CONCLUSION CRITIQUE:
+          Le downgrade de recharts de 3.3.0 vers 2.12.7 N'A PAS résolu le problème.
+          L'histogramme reste COMPLÈTEMENT INVISIBLE avec une zone blanche vide.
+          Le problème semble plus profond qu'une simple incompatibilité de version.
+          
+          📋 RECOMMANDATIONS URGENTES:
+          1. **WEBSEARCH REQUIS**: Rechercher "recharts 2.12.7 React 19 invisible bars fix"
+          2. Considérer alternative: Chart.js, Victory, ou D3.js
+          3. Vérifier configuration Webpack/Craco pour recharts
+          4. Tester avec React 18 pour isoler le problème React 19
+          
+          ⚠️ STATUT: PROBLÈME NON RÉSOLU - NÉCESSITE INVESTIGATION APPROFONDIE
 
 agent_communication:
   - agent: "testing"
