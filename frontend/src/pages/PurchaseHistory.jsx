@@ -402,13 +402,12 @@ const PurchaseHistory = () => {
                       }}
                     />
                     <Legend />
-                    {/* Barres avec couleur unique pour test */}
+                    {/* Barres avec couleur unique - TEST BASIQUE */}
                     <Bar 
                       dataKey="montant_total"
                       name="Montant Total"
-                      radius={[8, 8, 0, 0]}
-                      isAnimationActive={false}
                       fill="#3b82f6"
+                      radius={[8, 8, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
