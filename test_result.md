@@ -1171,10 +1171,10 @@ test_plan:
   test_all: false
   test_priority: "high_first"
 
-  - task: "Test de l'histogramme à colonnes - Historique Achat Évolution Mensuelle"
+  - task: "Test corrections - Histogramme multi-couleurs et Menu Journal unique"
     implemented: true
     working: true
-    file: "/app/frontend/src/pages/PurchaseHistory.jsx"
+    file: "/app/frontend/src/pages/PurchaseHistory.jsx, /app/frontend/src/components/Layout/MainLayout.jsx"
     stuck_count: 0
     priority: "high"
     needs_retesting: false
@@ -1182,48 +1182,59 @@ test_plan:
       - working: true
         agent: "testing"
         comment: |
-          ✅ HISTOGRAMME À COLONNES VERTICALES IMPLÉMENTÉ AVEC SUCCÈS
+          ✅ CORRECTIONS CRITIQUES VALIDÉES - TESTS COMPLETS RÉUSSIS
           
-          🎯 TESTS COMPLETS RÉALISÉS:
-          1. ✅ Navigation vers /purchase-history: SUCCESS
-          2. ✅ Page "Historique Achat" chargée correctement
-          3. ✅ Section "📈 Évolution Mensuelle des Achats" présente
-          4. ✅ Histogramme à colonnes VERTICALES confirmé (BarChart recharts)
-          5. ✅ 9 colonnes verticales détectées dans l'histogramme
-          6. ✅ 99 composants recharts détectés (ResponsiveContainer, BarChart, etc.)
-          7. ✅ Axe X avec étiquettes des mois (17 étiquettes détectées)
-          8. ✅ Axe Y présent pour les montants
-          9. ✅ 8 colonnes avec coins arrondis détectées
-          10. ✅ Tooltip interactif fonctionnel au survol des colonnes
-          11. ✅ Légende présente et visible
-          12. ✅ Tableau récapitulatif des 3 derniers mois présent (3 cartes)
-          13. ✅ Anciennes sections supprimées: "Top Fournisseurs", "Achats par Site", "Top Articles"
+          🎯 TEST 1: HISTOGRAMME MULTI-COULEURS - ✅ SUCCESS
           
-          📊 DÉTAILS TECHNIQUES VÉRIFIÉS:
-          - ResponsiveContainer recharts: ✓ PRÉSENT
-          - BarChart (colonnes verticales): ✓ CONFIRMÉ
-          - CartesianGrid: ✓ PRÉSENT
-          - XAxis avec rotation -45°: ✓ PRÉSENT
-          - YAxis avec format k€: ✓ PRÉSENT
-          - Tooltip avec montant exact: ✓ FONCTIONNEL
-          - Legend: ✓ PRÉSENTE
-          - Bar avec fill="#3b82f6": ✓ IMPLÉMENTÉ
-          - Radius [8,8,0,0] pour coins arrondis: ✓ DÉTECTÉ
+          📊 VÉRIFICATIONS TECHNIQUES:
+          - Section "📈 Évolution Mensuelle des Achats": ✓ PRÉSENTE
+          - 6 gradients colorBar définis: ✓ CONFIRMÉ (colorBar0 à colorBar5)
+          - Couleurs attendues: ✓ TOUTES PRÉSENTES (6/6)
+            • Bleu (#3b82f6): ✓ PRÉSENT
+            • Vert (#10b981): ✓ PRÉSENT  
+            • Orange (#f59e0b): ✓ PRÉSENT
+            • Rouge (#ef4444): ✓ PRÉSENT
+            • Violet (#8b5cf6): ✓ PRÉSENT
+            • Rose (#ec4899): ✓ PRÉSENT
+          - Dégradés avec opacité (0.9 → 0.7): ✓ IMPLÉMENTÉS
+          - 12 colonnes d'histogramme détectées: ✓ CONFIRMÉ
+          - Cell components avec couleurs alternées: ✓ FONCTIONNEL
           
-          📋 TABLEAU RÉCAPITULATIF VÉRIFIÉ:
+          🎯 TEST 2: MENU JOURNAL UNIQUE - ✅ SUCCESS
+          
+          📋 VÉRIFICATIONS MENU:
+          - Journal dans menu principal: ❌ ABSENT (correct)
+          - "Import / Export" dans menu principal: ✓ PRÉSENT
+          - Journal en bas de sidebar: ✓ PRÉSENT (1 seul bouton)
+          - Navigation vers /journal: ✓ FONCTIONNELLE
+          - Total boutons Journal: 1 (correct)
+          
+          🎯 TEST 3: TABLEAU RÉCAPITULATIF - ✅ SUCCESS
+          
+          📋 VÉRIFICATIONS CARTES:
           - 3 cartes des derniers mois: ✓ PRÉSENTES
-          - Première carte: 2025-09 - 117 985,67 €
-          - Détails: 99 commandes • 168 lignes
-          - Format correct avec mois, montant, nb commandes et lignes
+          - Format correct (mois - montant): ✓ VÉRIFIÉ
+          - Données: 2025-09, 2025-08, 2025-07: ✓ CONFIRMÉ
           
-          🔍 SUPPRESSION ANCIENNES SECTIONS CONFIRMÉE:
-          - "Top Fournisseurs": ✓ SUPPRIMÉ
-          - "Achats par Site": ✓ SUPPRIMÉ  
-          - "Top Articles": ✓ SUPPRIMÉ
-          - Seule la section "Évolution Mensuelle des Achats" est affichée
+          🎉 RÉSULTATS FINAUX:
+          1. ✅ Histogramme multi-couleurs: PARFAITEMENT IMPLÉMENTÉ
+             - 6 couleurs différentes alternent correctement
+             - Dégradés appliqués sur chaque colonne
+             - Plus de colonnes bleues uniformes
           
-          ✅ CONCLUSION: L'histogramme à colonnes verticales est parfaitement implémenté
-          selon les spécifications. Tous les critères de test sont remplis.
+          2. ✅ Menu Journal unique: PARFAITEMENT CORRIGÉ
+             - Journal supprimé du menu principal
+             - Seul accès via bouton en bas de sidebar
+             - Import/Export reste dans menu principal
+          
+          3. ✅ Interface utilisateur: ENTIÈREMENT FONCTIONNELLE
+             - Navigation fluide
+             - Données correctement affichées
+             - Aucun problème critique détecté
+          
+          ✅ CONCLUSION: Les deux corrections demandées sont ENTIÈREMENT RÉUSSIES
+          L'histogramme affiche maintenant 6 couleurs alternées avec dégradés,
+          et le menu Journal n'apparaît qu'une seule fois en bas de la sidebar.
 
 agent_communication:
   - agent: "testing"
