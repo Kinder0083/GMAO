@@ -22,14 +22,14 @@ ADMIN_PASSWORD_2 = "Admin123!"
 QHSE_EMAIL = "test_qhse@test.com"
 QHSE_PASSWORD = "Test123!"
 
-class PermissionsTester:
+class QHSEPermissionsTester:
     def __init__(self):
         self.admin_session = requests.Session()
-        self.viewer_session = requests.Session()
+        self.qhse_session = requests.Session()
         self.admin_token = None
-        self.viewer_token = None
+        self.qhse_token = None
         self.admin_data = None
-        self.viewer_data = None
+        self.qhse_data = None
         self.created_work_order_id = None
         
     def log(self, message, level="INFO"):
