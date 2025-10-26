@@ -190,28 +190,28 @@ class QHSEPermissionsTester:
             self.log(f"❌ Create QHSE user request failed - Error: {str(e)}", "ERROR")
             return None
     
-    # ==================== WORK ORDERS PERMISSIONS TESTS ====================
+    # ==================== QHSE PERMISSIONS TESTS ====================
     
-    def test_admin_get_work_orders(self):
-        """Test admin can GET /api/work-orders"""
-        self.log("Testing admin GET /api/work-orders...")
+    def test_qhse_reports_analytics(self):
+        """Test QHSE can GET /api/reports/analytics (should work - view authorized)"""
+        self.log("Testing QHSE GET /api/reports/analytics...")
         
         try:
-            response = self.admin_session.get(
-                f"{BACKEND_URL}/work-orders",
+            response = self.qhse_session.get(
+                f"{BACKEND_URL}/reports/analytics",
                 timeout=10
             )
             
             if response.status_code == 200:
-                work_orders = response.json()
-                self.log(f"✅ Admin GET work-orders successful - Found {len(work_orders)} work orders")
+                analytics = response.json()
+                self.log(f"✅ QHSE GET reports/analytics successful - Reports access authorized")
                 return True
             else:
-                self.log(f"❌ Admin GET work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE GET reports/analytics failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Admin GET work-orders request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE GET reports/analytics request failed - Error: {str(e)}", "ERROR")
             return False
     
     def test_admin_post_work_orders(self):
