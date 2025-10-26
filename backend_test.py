@@ -287,35 +287,26 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE POST meters request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_viewer_post_work_orders_forbidden(self):
-        """Test viewer CANNOT POST /api/work-orders (should return 403)"""
-        self.log("Testing viewer POST /api/work-orders (should be forbidden)...")
-        
-        work_order_data = {
-            "titre": "Test Work Order - Viewer Permission Test",
-            "description": "This should fail - viewer has no edit permission",
-            "priorite": "MOYENNE",
-            "statut": "OUVERT",
-            "type": "CORRECTIVE",
-            "dateLimite": (datetime.now() + timedelta(days=7)).isoformat()
-        }
+    def test_qhse_improvements_view_allowed(self):
+        """Test QHSE can GET /api/improvements (should succeed 200 - view authorized)"""
+        self.log("Testing QHSE GET /api/improvements...")
         
         try:
-            response = self.viewer_session.post(
-                f"{BACKEND_URL}/work-orders",
-                json=work_order_data,
+            response = self.qhse_session.get(
+                f"{BACKEND_URL}/improvements",
                 timeout=10
             )
             
-            if response.status_code == 403:
-                self.log("✅ Viewer POST work-orders correctly forbidden (403)")
+            if response.status_code == 200:
+                improvements = response.json()
+                self.log(f"✅ QHSE GET improvements successful - Found {len(improvements)} improvements")
                 return True
             else:
-                self.log(f"❌ Viewer POST work-orders should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE GET improvements failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Viewer POST work-orders request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE GET improvements request failed - Error: {str(e)}", "ERROR")
             return False
     
     def test_viewer_delete_work_orders_forbidden(self):
