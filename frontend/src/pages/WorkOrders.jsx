@@ -237,13 +237,15 @@ const WorkOrders = () => {
           <h1 className="text-3xl font-bold text-gray-900">Ordres de travail</h1>
           <p className="text-gray-600 mt-1">Gérez vos interventions et maintenances</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
-          setSelectedWorkOrder(null);
-          setFormDialogOpen(true);
-        }}>
-          <Plus size={20} className="mr-2" />
-          Nouvel ordre
-        </Button>
+        {canEdit('workOrders') && (
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => {
+            setSelectedWorkOrder(null);
+            setFormDialogOpen(true);
+          }}>
+            <Plus size={20} className="mr-2" />
+            Nouvel ordre
+          </Button>
+        )}
       </div>
 
       {/* Filtres de date */}
