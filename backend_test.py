@@ -371,33 +371,54 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE POST work-orders request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_viewer_post_intervention_requests_forbidden(self):
-        """Test viewer CANNOT POST /api/intervention-requests (should return 403)"""
-        self.log("Testing viewer POST /api/intervention-requests (should be forbidden)...")
-        
-        request_data = {
-            "titre": "Test Intervention Request - Viewer Permission Test",
-            "description": "This should fail - viewer has no edit permission on intervention requests",
-            "priorite": "MOYENNE",
-            "type_intervention": "MAINTENANCE_CORRECTIVE"
+    def test_qhse_work_orders_delete_forbidden(self):
+        """Test QHSE CANNOT DELETE /api/work-orders/{id} (should fail 403 - no delete permission)"""
+        # First create a work order as admin to try to delete as QHSE
+        work_order_data = {
+            "titre": "Test Work Order for QHSE Delete Test",
+            "description": "Work order to test QHSE delete permissions",
+            "priorite": "BASSE",
+            "statut": "OUVERT",
+            "type": "CORRECTIVE",
+            "dateLimite": (datetime.now() + timedelta(days=5)).isoformat()
         }
         
         try:
-            response = self.viewer_session.post(
-                f"{BACKEND_URL}/intervention-requests",
-                json=request_data,
+            # Create work order as admin
+            create_response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=work_order_data,
+                timeout=10
+            )
+            
+            if create_response.status_code not in [200, 201]:
+                self.log("❌ Failed to create work order for delete test", "ERROR")
+                return False
+            
+            work_order = create_response.json()
+            work_order_id = work_order.get('id')
+            
+            self.log(f"Testing QHSE DELETE /api/work-orders/{work_order_id} (should be forbidden)...")
+            
+            # Try to delete as QHSE
+            response = self.qhse_session.delete(
+                f"{BACKEND_URL}/work-orders/{work_order_id}",
                 timeout=10
             )
             
             if response.status_code == 403:
-                self.log("✅ Viewer POST intervention-requests correctly forbidden (403)")
+                self.log("✅ QHSE DELETE work-orders correctly forbidden (403)")
+                # Clean up - delete as admin
+                self.admin_session.delete(f"{BACKEND_URL}/work-orders/{work_order_id}")
                 return True
             else:
-                self.log(f"❌ Viewer POST intervention-requests should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE DELETE work-orders should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                # Clean up - delete as admin
+                self.admin_session.delete(f"{BACKEND_URL}/work-orders/{work_order_id}")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Viewer POST intervention-requests request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE DELETE work-orders request failed - Error: {str(e)}", "ERROR")
             return False
 
     # ==================== IMPROVEMENT REQUESTS TESTS ====================
