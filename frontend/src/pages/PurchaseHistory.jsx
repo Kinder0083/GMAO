@@ -382,6 +382,7 @@ const PurchaseHistory = () => {
                       name="Montant Total"
                       radius={[8, 8, 0, 0]}
                       isAnimationActive={false}
+                      fill="#3b82f6"
                     >
                       {stats.par_mois.slice(-12).map((entry, index) => {
                         const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
@@ -391,7 +392,7 @@ const PurchaseHistory = () => {
                             key={`cell-${index}`} 
                             fill={color}
                             stroke={color}
-                            strokeWidth={0}
+                            strokeWidth={1}
                           />
                         );
                       })}
