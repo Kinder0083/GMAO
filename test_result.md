@@ -1353,6 +1353,39 @@ agent_communication:
       Les problèmes signalés dans la demande sont ENTIÈREMENT RÉSOLUS.
   - agent: "testing"
     message: |
+      🚨 ÉCHEC CRITIQUE - DOWNGRADE RECHARTS N'A PAS RÉSOLU LE PROBLÈME D'HISTOGRAMME
+      
+      ❌ **RÉSULTAT DU TEST FINAL**:
+      Le downgrade de recharts de 3.3.0 vers 2.12.7 N'A PAS résolu le problème d'histogramme invisible.
+      
+      📊 **ÉTAT ACTUEL APRÈS DOWNGRADE**:
+      - ✅ Section histogramme présente avec titre "📈 Évolution Mensuelle des Achats"
+      - ✅ Données chargées correctement ("12 mois affichés")
+      - ✅ ResponsiveContainer recharts détecté
+      - ❌ **AUCUN SVG recharts surface trouvé**
+      - ❌ **AUCUN rectangle de barre dans le DOM (0/12)**
+      - ❌ **Zone histogramme COMPLÈTEMENT BLANCHE/VIDE**
+      
+      🔍 **DIAGNOSTIC TECHNIQUE**:
+      - Package.json confirmé: recharts 2.12.7 ✓
+      - node_modules nettoyés et réinstallés ✓
+      - Frontend redémarré avec succès ✓
+      - Aucune erreur console recharts détectée
+      - ResponsiveContainer présent mais ne génère aucun contenu SVG
+      
+      🎯 **CAUSE PROBABLE**:
+      Le problème semble plus profond qu'une simple incompatibilité de version.
+      Possible conflit avec React 19.0.0 ou configuration Webpack/Craco.
+      
+      📋 **RECOMMANDATIONS URGENTES**:
+      1. **WEBSEARCH REQUIS**: "recharts 2.12.7 React 19 invisible bars empty SVG fix"
+      2. Considérer alternative: Chart.js, Victory, ou D3.js
+      3. Tester avec React 18 pour isoler le problème React 19
+      4. Vérifier configuration Craco pour recharts
+      
+      ⚠️ **PRIORITÉ CRITIQUE**: L'histogramme reste inutilisable - nécessite investigation approfondie
+  - agent: "testing"
+    message: |
       🎉 TESTS CORRECTIONS CRITIQUES TERMINÉS - TABLEAU DE BORD ET MODIFICATION D'UTILISATEUR
       
       ✅ TESTS RÉUSSIS - CORRECTIONS CRITIQUES VALIDÉES:
