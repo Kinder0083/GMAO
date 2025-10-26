@@ -408,6 +408,7 @@ const PurchaseHistory = () => {
                       name="Montant Total"
                       radius={[8, 8, 0, 0]}
                       isAnimationActive={false}
+                      fill="url(#colorBar0)"
                     >
                       {stats.par_mois.slice(-12).map((entry, index) => {
                         const gradientId = `colorBar${index % 6}`;
