@@ -402,24 +402,14 @@ const PurchaseHistory = () => {
                       }}
                     />
                     <Legend />
-                    {/* Barres avec couleurs alternées */}
+                    {/* Barres avec couleur unique pour test */}
                     <Bar 
                       dataKey="montant_total"
                       name="Montant Total"
                       radius={[8, 8, 0, 0]}
                       isAnimationActive={false}
-                      fill="url(#colorBar0)"
-                    >
-                      {stats.par_mois.slice(-12).map((entry, index) => {
-                        const gradientId = `colorBar${index % 6}`;
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={`url(#${gradientId})`}
-                          />
-                        );
-                      })}
-                    </Bar>
+                      fill="#3b82f6"
+                    />
                   </BarChart>
                 </ResponsiveContainer>
                 
