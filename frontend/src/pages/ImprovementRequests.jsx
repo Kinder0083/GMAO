@@ -277,7 +277,7 @@ const ImprovementRequests = () => {
                                     <Wrench size={16} />
                                   </Button>
                                 </TooltipTrigger>
-                                <TooltipContent>Convertir en ordre de travail</TooltipContent>
+                                <TooltipContent>Convertir en amélioration</TooltipContent>
                               </Tooltip>
                             )}
                           </div>
