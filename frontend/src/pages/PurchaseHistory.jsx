@@ -338,8 +338,8 @@ const PurchaseHistory = () => {
           </CardContent>
         </Card>
 
-        {/* Évolution Mensuelle - NOUVELLE SECTION */}
-        <Card className="lg:col-span-2">
+        {/* Évolution Mensuelle des Achats - GRAPHIQUE */}
+        <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>📈 Évolution Mensuelle des Achats</CardTitle>
           </CardHeader>
@@ -361,101 +361,6 @@ const PurchaseHistory = () => {
                       className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all" 
                       style={{width: `${Math.min((month.montant_total / (stats?.montant_total || 1)) * 100, 100)}%`}}
                     ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Fournisseurs */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Fournisseurs</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {stats?.parFournisseur?.slice(0, 5).map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.fournisseur}</p>
-                    <p className="text-sm text-gray-600">{item.count} achats</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-blue-600">{formatCurrency(item.montant)}</p>
-                    <p className="text-xs text-gray-500">{item.pourcentage}%</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Par Mois */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Achats par Mois</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {stats?.parMois?.slice(-6).reverse().map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.mois}</p>
-                    <p className="text-sm text-gray-600">{item.count} achats</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-green-600">{formatCurrency(item.montant)}</p>
-                    <p className="text-xs text-gray-500">{Math.round(item.quantite)} unités</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Par Site */}
-        {stats?.parSite && stats.parSite.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Achats par Site</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {stats.parSite.slice(0, 5).map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{item.site}</p>
-                      <p className="text-sm text-gray-600">{item.count} achats</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-purple-600">{formatCurrency(item.montant)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Top Articles */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Top Articles</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3 max-h-80 overflow-y-auto">
-              {stats?.articlesTop?.slice(0, 10).map((item, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">{item.article}</p>
-                    {item.description && (
-                      <p className="text-xs text-gray-600 truncate">{item.description}</p>
-                    )}
-                  </div>
-                  <div className="text-right ml-2">
-                    <p className="font-bold text-indigo-600">{formatCurrency(item.montant)}</p>
-                    <p className="text-xs text-gray-500">{Math.round(item.quantite)} unités</p>
                   </div>
                 </div>
               ))}
