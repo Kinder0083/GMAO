@@ -101,38 +101,38 @@ class QHSEPermissionsTester:
             self.log(f"❌ Both admin login requests failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_viewer_login(self):
-        """Test viewer login"""
-        self.log("Testing viewer login...")
+    def test_qhse_login(self):
+        """Test QHSE login"""
+        self.log("Testing QHSE login...")
         
         try:
-            response = self.viewer_session.post(
+            response = self.qhse_session.post(
                 f"{BACKEND_URL}/auth/login",
                 json={
-                    "email": VIEWER_EMAIL,
-                    "password": VIEWER_PASSWORD
+                    "email": QHSE_EMAIL,
+                    "password": QHSE_PASSWORD
                 },
                 timeout=10
             )
             
             if response.status_code == 200:
                 data = response.json()
-                self.viewer_token = data.get("access_token")
-                self.viewer_data = data.get("user")
+                self.qhse_token = data.get("access_token")
+                self.qhse_data = data.get("user")
                 
                 # Set authorization header for future requests
-                self.viewer_session.headers.update({
-                    "Authorization": f"Bearer {self.viewer_token}"
+                self.qhse_session.headers.update({
+                    "Authorization": f"Bearer {self.qhse_token}"
                 })
                 
-                self.log(f"✅ Viewer login successful - User: {self.viewer_data.get('prenom')} {self.viewer_data.get('nom')} (Role: {self.viewer_data.get('role')})")
+                self.log(f"✅ QHSE login successful - User: {self.qhse_data.get('prenom')} {self.qhse_data.get('nom')} (Role: {self.qhse_data.get('role')})")
                 return True
             else:
-                self.log(f"❌ Viewer login failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE login failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Viewer login request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE login request failed - Error: {str(e)}", "ERROR")
             return False
     
     def create_viewer_user(self):
