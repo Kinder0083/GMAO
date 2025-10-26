@@ -257,26 +257,34 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE GET meters request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_viewer_get_work_orders(self):
-        """Test viewer can GET /api/work-orders (should work - has view permission)"""
-        self.log("Testing viewer GET /api/work-orders...")
+    def test_qhse_meters_edit_forbidden(self):
+        """Test QHSE CANNOT POST /api/meters (should fail 403 - no edit permission)"""
+        self.log("Testing QHSE POST /api/meters (should be forbidden)...")
+        
+        meter_data = {
+            "nom": "Test Meter QHSE",
+            "type": "ELECTRICITE",
+            "numero_serie": "TEST-QHSE-001",
+            "unite": "kWh",
+            "prix_unitaire": 0.15
+        }
         
         try:
-            response = self.viewer_session.get(
-                f"{BACKEND_URL}/work-orders",
+            response = self.qhse_session.post(
+                f"{BACKEND_URL}/meters",
+                json=meter_data,
                 timeout=10
             )
             
-            if response.status_code == 200:
-                work_orders = response.json()
-                self.log(f"✅ Viewer GET work-orders successful - Found {len(work_orders)} work orders")
+            if response.status_code == 403:
+                self.log("✅ QHSE POST meters correctly forbidden (403)")
                 return True
             else:
-                self.log(f"❌ Viewer GET work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE POST meters should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Viewer GET work-orders request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE POST meters request failed - Error: {str(e)}", "ERROR")
             return False
     
     def test_viewer_post_work_orders_forbidden(self):
