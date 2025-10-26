@@ -1477,7 +1477,7 @@ async def delete_availability(
 
 # ==================== LOCATIONS ROUTES ====================
 @api_router.get("/locations", response_model=List[Location])
-async def get_locations(current_user: dict = Depends(get_current_user)):
+async def get_locations(current_user: dict = Depends(require_permission("locations", "view"))):
     """Liste toutes les zones avec hiérarchie"""
     locations = await db.locations.find().to_list(1000)
     
@@ -1528,7 +1528,7 @@ async def get_location_children(loc_id: str, current_user: dict = Depends(get_cu
     return result
 
 @api_router.post("/locations", response_model=Location)
-async def create_location(loc_create: LocationCreate, current_user: dict = Depends(get_current_user)):
+async def create_location(loc_create: LocationCreate, current_user: dict = Depends(require_permission("locations", "edit"))):
     """Créer une nouvelle zone"""
     loc_dict = loc_create.model_dump()
     loc_dict["dateCreation"] = datetime.utcnow()
@@ -1564,7 +1564,7 @@ async def create_location(loc_create: LocationCreate, current_user: dict = Depen
     return Location(**loc_data)
 
 @api_router.put("/locations/{loc_id}", response_model=Location)
-async def update_location(loc_id: str, loc_update: LocationUpdate, current_user: dict = Depends(get_current_user)):
+async def update_location(loc_id: str, loc_update: LocationUpdate, current_user: dict = Depends(require_permission("locations", "edit"))):
     """Modifier une zone"""
     try:
         update_data = {k: v for k, v in loc_update.model_dump().items() if v is not None}
@@ -1622,7 +1622,7 @@ async def update_location(loc_id: str, loc_update: LocationUpdate, current_user:
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/locations/{loc_id}")
-async def delete_location(loc_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_location(loc_id: str, current_user: dict = Depends(require_permission("locations", "delete"))):
     """Supprimer une zone et ses sous-zones"""
     try:
         # Vérifier s'il y a des sous-zones
@@ -1699,7 +1699,7 @@ async def delete_inventory_item(inv_id: str, current_user: dict = Depends(get_cu
 
 # ==================== PREVENTIVE MAINTENANCE ROUTES ====================
 @api_router.get("/preventive-maintenance", response_model=List[PreventiveMaintenance])
-async def get_preventive_maintenance(current_user: dict = Depends(get_current_user)):
+async def get_preventive_maintenance(current_user: dict = Depends(require_permission("preventiveMaintenance", "view"))):
     """Liste toutes les maintenances préventives"""
     pm_list = await db.preventive_maintenance.find().to_list(1000)
     
@@ -1715,7 +1715,7 @@ async def get_preventive_maintenance(current_user: dict = Depends(get_current_us
     return [PreventiveMaintenance(**pm) for pm in pm_list]
 
 @api_router.post("/preventive-maintenance", response_model=PreventiveMaintenance)
-async def create_preventive_maintenance(pm_create: PreventiveMaintenanceCreate, current_user: dict = Depends(get_current_user)):
+async def create_preventive_maintenance(pm_create: PreventiveMaintenanceCreate, current_user: dict = Depends(require_permission("preventiveMaintenance", "edit"))):
     """Créer une nouvelle maintenance préventive"""
     pm_dict = pm_create.model_dump()
     pm_dict["dateCreation"] = datetime.utcnow()
@@ -1733,7 +1733,7 @@ async def create_preventive_maintenance(pm_create: PreventiveMaintenanceCreate, 
     return PreventiveMaintenance(**pm)
 
 @api_router.put("/preventive-maintenance/{pm_id}", response_model=PreventiveMaintenance)
-async def update_preventive_maintenance(pm_id: str, pm_update: PreventiveMaintenanceUpdate, current_user: dict = Depends(get_current_user)):
+async def update_preventive_maintenance(pm_id: str, pm_update: PreventiveMaintenanceUpdate, current_user: dict = Depends(require_permission("preventiveMaintenance", "edit"))):
     """Modifier une maintenance préventive"""
     try:
         update_data = {k: v for k, v in pm_update.model_dump().items() if v is not None}
@@ -1756,7 +1756,7 @@ async def update_preventive_maintenance(pm_id: str, pm_update: PreventiveMainten
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/preventive-maintenance/{pm_id}")
-async def delete_preventive_maintenance(pm_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_preventive_maintenance(pm_id: str, current_user: dict = Depends(require_permission("preventiveMaintenance", "delete"))):
     """Supprimer une maintenance préventive"""
     try:
         result = await db.preventive_maintenance.delete_one({"_id": ObjectId(pm_id)})
@@ -1944,13 +1944,13 @@ async def update_user_permissions(
 
 # ==================== VENDORS ROUTES ====================
 @api_router.get("/vendors", response_model=List[Vendor])
-async def get_vendors(current_user: dict = Depends(get_current_user)):
+async def get_vendors(current_user: dict = Depends(require_permission("vendors", "view"))):
     """Liste tous les fournisseurs"""
     vendors = await db.vendors.find().to_list(1000)
     return [Vendor(**serialize_doc(vendor)) for vendor in vendors]
 
 @api_router.post("/vendors", response_model=Vendor)
-async def create_vendor(vendor_create: VendorCreate, current_user: dict = Depends(get_current_user)):
+async def create_vendor(vendor_create: VendorCreate, current_user: dict = Depends(require_permission("vendors", "edit"))):
     """Créer un nouveau fournisseur"""
     vendor_dict = vendor_create.model_dump()
     vendor_dict["dateCreation"] = datetime.utcnow()
@@ -1961,7 +1961,7 @@ async def create_vendor(vendor_create: VendorCreate, current_user: dict = Depend
     return Vendor(**serialize_doc(vendor_dict))
 
 @api_router.put("/vendors/{vendor_id}", response_model=Vendor)
-async def update_vendor(vendor_id: str, vendor_update: VendorUpdate, current_user: dict = Depends(get_current_user)):
+async def update_vendor(vendor_id: str, vendor_update: VendorUpdate, current_user: dict = Depends(require_permission("vendors", "edit"))):
     """Modifier un fournisseur"""
     try:
         update_data = {k: v for k, v in vendor_update.model_dump().items() if v is not None}
@@ -1977,7 +1977,7 @@ async def update_vendor(vendor_id: str, vendor_update: VendorUpdate, current_use
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/vendors/{vendor_id}")
-async def delete_vendor(vendor_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_vendor(vendor_id: str, current_user: dict = Depends(require_permission("vendors", "delete"))):
     """Supprimer un fournisseur"""
     try:
         result = await db.vendors.delete_one({"_id": ObjectId(vendor_id)})
@@ -2046,7 +2046,7 @@ async def delete_all_purchase_history(current_user: dict = Depends(get_current_a
 
 
 @api_router.get("/purchase-history", response_model=List[PurchaseHistory])
-async def get_purchase_history(current_user: dict = Depends(get_current_user)):
+async def get_purchase_history(current_user: dict = Depends(require_permission("purchaseHistory", "view"))):
     """Liste tous les achats"""
     purchases = await db.purchase_history.find().sort("dateCreation", -1).to_list(5000)
     
@@ -2336,7 +2336,7 @@ async def update_purchase(purchase_id: str, purchase_update: PurchaseHistoryUpda
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/purchase-history/{purchase_id}")
-async def delete_purchase(purchase_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_purchase(purchase_id: str, current_user: dict = Depends(require_permission("purchaseHistory", "delete"))):
     """Supprimer un achat"""
     try:
         result = await db.purchase_history.delete_one({"_id": ObjectId(purchase_id)})
@@ -2349,7 +2349,7 @@ async def delete_purchase(purchase_id: str, current_user: dict = Depends(get_cur
 
 # ==================== REPORTS/ANALYTICS ROUTES ====================
 @api_router.get("/reports/analytics")
-async def get_analytics(current_user: dict = Depends(get_current_user)):
+async def get_analytics(current_user: dict = Depends(require_permission("reports", "view"))):
     """Obtenir les données analytiques générales"""
     # Work orders stats
     total_wo = await db.work_orders.count_documents({})
@@ -3092,7 +3092,7 @@ async def get_work_order_comments(
 # ==================== METERS (COMPTEURS) ENDPOINTS ====================
 
 @api_router.post("/meters", response_model=Meter, status_code=201)
-async def create_meter(meter: MeterCreate, current_user: dict = Depends(get_current_user)):
+async def create_meter(meter: MeterCreate, current_user: dict = Depends(require_permission("meters", "edit"))):
     """Créer un nouveau compteur"""
     try:
         meter_id = str(uuid.uuid4())
@@ -3186,7 +3186,7 @@ async def update_meter(
     return Meter(**updated_meter)
 
 @api_router.delete("/meters/{meter_id}")
-async def delete_meter(meter_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_meter(meter_id: str, current_user: dict = Depends(require_permission("meters", "delete"))):
     """Supprimer un compteur (soft delete)"""
     meter = await db.meters.find_one({"id": meter_id})
     if not meter:
@@ -3699,7 +3699,7 @@ async def create_improvement_request(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/improvement-requests", response_model=List[ImprovementRequest])
-async def get_all_improvement_requests(current_user: dict = Depends(get_current_user)):
+async def get_all_improvement_requests(current_user: dict = Depends(require_permission("improvementRequests", "view"))):
     """Récupérer toutes les demandes d'amélioration"""
     try:
         requests = []
@@ -3711,7 +3711,7 @@ async def get_all_improvement_requests(current_user: dict = Depends(get_current_
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/improvement-requests/{request_id}", response_model=ImprovementRequest)
-async def get_improvement_request(request_id: str, current_user: dict = Depends(get_current_user)):
+async def get_improvement_request(request_id: str, current_user: dict = Depends(require_permission("improvementRequests", "view"))):
     """Récupérer une demande d'amélioration spécifique"""
     req = await db.improvement_requests.find_one({"id": request_id})
     if not req:
@@ -3764,7 +3764,7 @@ async def update_improvement_request(
     return ImprovementRequest(**updated_req)
 
 @api_router.delete("/improvement-requests/{request_id}")
-async def delete_improvement_request(request_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_improvement_request(request_id: str, current_user: dict = Depends(require_permission("improvementRequests", "delete"))):
     """Supprimer une demande d'amélioration"""
     req = await db.improvement_requests.find_one({"id": request_id})
     if not req:
@@ -4046,7 +4046,7 @@ async def get_improvements(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/improvements/{imp_id}", response_model=Improvement)
-async def get_improvement(imp_id: str, current_user: dict = Depends(get_current_user)):
+async def get_improvement(imp_id: str, current_user: dict = Depends(require_permission("improvements", "view"))):
     """Détails d'une amélioration"""
     try:
         imp = await db.improvements.find_one({"id": imp_id})
@@ -4077,7 +4077,7 @@ async def get_improvement(imp_id: str, current_user: dict = Depends(get_current_
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.post("/improvements", response_model=Improvement)
-async def create_improvement(imp_create: ImprovementCreate, current_user: dict = Depends(get_current_user)):
+async def create_improvement(imp_create: ImprovementCreate, current_user: dict = Depends(require_permission("improvements", "edit"))):
     """Créer une nouvelle amélioration"""
     count = await db.improvements.count_documents({})
     numero = str(7000 + count + 1)
@@ -4198,7 +4198,7 @@ async def update_improvement(
     return Improvement(**updated_imp)
 
 @api_router.delete("/improvements/{imp_id}")
-async def delete_improvement(imp_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_improvement(imp_id: str, current_user: dict = Depends(require_permission("improvements", "delete"))):
     """Supprimer une amélioration"""
     imp = await db.improvements.find_one({"id": imp_id})
     if not imp:
