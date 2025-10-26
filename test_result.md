@@ -600,6 +600,59 @@ backend:
           - Tests complets: 15/15 RÉUSSIS
 
 frontend:
+  - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
+    implemented: true
+    working: true
+    file: "/app/frontend/src/pages/Dashboard.jsx"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: |
+          PROBLÈME CRITIQUE REPORTÉ:
+          - L'utilisateur QHSE ne peut pas accéder au tableau de bord
+          - Le dashboard reste bloqué en "Chargement..." infini
+          - Une correction a été appliquée pour charger uniquement les données auxquelles l'utilisateur a accès selon ses permissions
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ PROBLÈME CRITIQUE RÉSOLU - Tests complets réussis
+          
+          🔧 CAUSE RACINE IDENTIFIÉE:
+          - Dashboard.jsx ligne 152: condition `if (loading || !analytics)` bloquait le chargement
+          - Utilisateurs QHSE n'ont pas accès aux analytics (403 Forbidden sur /api/reports/analytics)
+          - Le dashboard attendait indéfiniment les données analytics qui ne pouvaient jamais arriver
+          
+          🛠️ CORRECTIONS APPLIQUÉES:
+          1. Supprimé la condition `!analytics` du loading check (ligne 152)
+          2. Modifié le calcul des stats pour fonctionner sans analytics (lignes 117-150)
+          3. Ajouté condition pour masquer les graphiques analytics si non disponibles (ligne 235)
+          4. Dashboard affiche maintenant les données disponibles selon les permissions
+          
+          📊 RÉSULTATS DES TESTS:
+          - ✅ Connexion QHSE réussie (test_qhse@test.com / Test123!)
+          - ✅ Dashboard se charge en 0.02 secondes (vs infini avant)
+          - ✅ Titre "Tableau de bord" affiché correctement
+          - ✅ Cartes statistiques affichées: "Ordres de travail actifs", "Équipements en maintenance"
+          - ✅ Section "Ordres de travail récents" fonctionnelle
+          - ✅ Graphiques analytics correctement masqués pour utilisateur QHSE
+          - ✅ Aucun blocage en "Chargement..." infini
+          
+          🔐 PERMISSIONS QHSE VÉRIFIÉES:
+          - Dashboard: view ✓ (fonctionne)
+          - WorkOrders: view ✓ (données affichées)
+          - Assets: view ✓ (données affichées)
+          - Reports: view ✓ mais pas d'accès analytics (403) - comportement correct
+          - Menus interdits correctement masqués: Fournisseurs, Équipes, Planning, etc.
+          
+          ✅ CONCLUSION: Le problème critique est entièrement résolu
+          - Les utilisateurs QHSE peuvent maintenant accéder au tableau de bord
+          - Le dashboard se charge rapidement et affiche les données selon les permissions
+          - Aucun blocage en chargement infini
+          - La correction respecte le système de permissions
+
   - task: "Settings.jsx - Chargement du profil utilisateur"
     implemented: true
     working: "NA"
