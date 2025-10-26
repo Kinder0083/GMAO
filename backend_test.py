@@ -235,30 +235,26 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE GET vendors request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_admin_delete_work_orders(self):
-        """Test admin can DELETE /api/work-orders/{id}"""
-        if not self.created_work_order_id:
-            self.log("❌ No work order ID available for delete test", "ERROR")
-            return False
-            
-        self.log(f"Testing admin DELETE /api/work-orders/{self.created_work_order_id}...")
+    def test_qhse_meters_view_allowed(self):
+        """Test QHSE can GET /api/meters (should succeed 200 - view authorized)"""
+        self.log("Testing QHSE GET /api/meters...")
         
         try:
-            response = self.admin_session.delete(
-                f"{BACKEND_URL}/work-orders/{self.created_work_order_id}",
+            response = self.qhse_session.get(
+                f"{BACKEND_URL}/meters",
                 timeout=10
             )
             
             if response.status_code == 200:
-                result = response.json()
-                self.log(f"✅ Admin DELETE work-orders successful - {result.get('message')}")
+                meters = response.json()
+                self.log(f"✅ QHSE GET meters successful - Found {len(meters)} meters")
                 return True
             else:
-                self.log(f"❌ Admin DELETE work-orders failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE GET meters failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Admin DELETE work-orders request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE GET meters request failed - Error: {str(e)}", "ERROR")
             return False
     
     def test_viewer_get_work_orders(self):
