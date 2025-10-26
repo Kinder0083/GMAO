@@ -339,30 +339,53 @@ const PurchaseHistory = () => {
           </CardContent>
         </Card>
 
-        {/* Évolution Mensuelle des Achats - GRAPHIQUE */}
+        {/* Évolution Mensuelle des Achats - HISTOGRAMME À COLONNES */}
         <Card className="lg:col-span-3">
           <CardHeader>
             <CardTitle>📈 Évolution Mensuelle des Achats</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {stats?.par_mois?.slice(-12).reverse().map((month, index) => (
-                <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                  <div className="flex items-center justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-gray-900 text-lg">{month.mois}</p>
-                      <p className="text-sm text-gray-600">
-                        {month.nb_commandes} commande{month.nb_commandes > 1 ? 's' : ''} • {month.nb_lignes} ligne{month.nb_lignes > 1 ? 's' : ''}
-                      </p>
-                    </div>
-                    <p className="text-2xl font-bold text-green-600">{formatCurrency(month.montant_total)}</p>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-3">
-                    <div 
-                      className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all" 
-                      style={{width: `${Math.min((month.montant_total / (stats?.montant_total || 1)) * 100, 100)}%`}}
-                    ></div>
-                  </div>
+            <ResponsiveContainer width="100%" height={400}>
+              <BarChart
+                data={stats?.par_mois?.slice(-12) || []}
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="mois" 
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                  style={{ fontSize: '12px' }}
+                />
+                <YAxis 
+                  tickFormatter={(value) => `${(value / 1000).toFixed(0)}k €`}
+                  style={{ fontSize: '12px' }}
+                />
+                <Tooltip 
+                  formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
+                  labelStyle={{ fontWeight: 'bold' }}
+                  contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc' }}
+                />
+                <Legend />
+                <Bar 
+                  dataKey="montant_total" 
+                  fill="#3b82f6" 
+                  name="Montant Total"
+                  radius={[8, 8, 0, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+            
+            {/* Tableau récapitulatif sous le graphique */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {stats?.par_mois?.slice(-3).reverse().map((month, index) => (
+                <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                  <p className="text-sm font-semibold text-gray-700">{month.mois}</p>
+                  <p className="text-2xl font-bold text-blue-600 mt-2">{formatCurrency(month.montant_total)}</p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {month.nb_commandes} commande{month.nb_commandes > 1 ? 's' : ''} • {month.nb_lignes} ligne{month.nb_lignes > 1 ? 's' : ''}
+                  </p>
                 </div>
               ))}
             </div>
