@@ -57,10 +57,13 @@ const MainLayout = () => {
 
         // Charger le nombre d'ordres de travail assignés
         loadWorkOrdersCount(parsedUser.id);
+        // Charger le nombre d'échéances dépassées
+        loadOverdueCount();
         
         // Rafraîchir les notifications toutes les 60 secondes
         const intervalId = setInterval(() => {
           loadWorkOrdersCount(parsedUser.id);
+          loadOverdueCount();
         }, 60000); // 60 secondes
         
         // Écouter les événements de création/modification d'ordres de travail
