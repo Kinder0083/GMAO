@@ -153,9 +153,17 @@ const EditUserDialog = ({ open, onOpenChange, user, onSuccess }) => {
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               >
-                <option value="ADMIN">Administrateur</option>
+                <option value="ADMIN">Administrateur - Accès complet</option>
+                <option value="DIRECTEUR">Directeur</option>
+                <option value="QHSE">QHSE</option>
+                <option value="RSP_PROD">Responsable Production</option>
+                <option value="PROD">Production</option>
+                <option value="INDUS">Industrialisation</option>
+                <option value="LOGISTIQUE">Logistique</option>
+                <option value="LABO">Laboratoire</option>
+                <option value="ADV">ADV</option>
                 <option value="TECHNICIEN">Technicien</option>
-                <option value="VISUALISEUR">Visualiseur</option>
+                <option value="VISUALISEUR">Visualiseur - Accès en lecture seule</option>
               </select>
             </div>
           </div>
