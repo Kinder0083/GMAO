@@ -338,28 +338,37 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE POST improvements request failed - Error: {str(e)}", "ERROR")
             return False
     
-    # ==================== INTERVENTION REQUESTS PERMISSIONS TESTS ====================
+    # ==================== WORK ORDERS PERMISSIONS TESTS ====================
     
-    def test_viewer_get_intervention_requests(self):
-        """Test viewer can GET /api/intervention-requests (should work according to permissions)"""
-        self.log("Testing viewer GET /api/intervention-requests...")
+    def test_qhse_work_orders_post_forbidden(self):
+        """Test QHSE CANNOT POST /api/work-orders (should fail 403 - no edit permission)"""
+        self.log("Testing QHSE POST /api/work-orders (should be forbidden)...")
+        
+        work_order_data = {
+            "titre": "Test Work Order QHSE",
+            "description": "This should fail - QHSE has no edit permission on work orders",
+            "priorite": "MOYENNE",
+            "statut": "OUVERT",
+            "type": "CORRECTIVE",
+            "dateLimite": (datetime.now() + timedelta(days=7)).isoformat()
+        }
         
         try:
-            response = self.viewer_session.get(
-                f"{BACKEND_URL}/intervention-requests",
+            response = self.qhse_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=work_order_data,
                 timeout=10
             )
             
-            if response.status_code == 200:
-                requests_list = response.json()
-                self.log(f"✅ Viewer GET intervention-requests successful - Found {len(requests_list)} requests")
+            if response.status_code == 403:
+                self.log("✅ QHSE POST work-orders correctly forbidden (403)")
                 return True
             else:
-                self.log(f"❌ Viewer GET intervention-requests failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ QHSE POST work-orders should be forbidden but got - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Viewer GET intervention-requests request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ QHSE POST work-orders request failed - Error: {str(e)}", "ERROR")
             return False
     
     def test_viewer_post_intervention_requests_forbidden(self):
