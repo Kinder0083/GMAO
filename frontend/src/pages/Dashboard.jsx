@@ -11,6 +11,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { usePermissions } from '../hooks/usePermissions';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -18,6 +19,7 @@ const Dashboard = () => {
   const [workOrders, setWorkOrders] = useState([]);
   const [equipments, setEquipments] = useState([]);
   const [analytics, setAnalytics] = useState(null);
+  const { canView } = usePermissions();
 
   const loadData = async () => {
     try {
@@ -26,42 +28,80 @@ const Dashboard = () => {
         setLoading(true);
       }
       
-      // Charger les données de manière conditionnelle selon les permissions
+      // Charger uniquement les données auxquelles l'utilisateur a accès
       const promises = [];
-      const dataKeys = [];
       
-      // Toujours essayer de charger les work orders
-      promises.push(workOrdersAPI.getAll().catch(() => ({ data: [] })));
-      dataKeys.push('workOrders');
+      // Work Orders - si permission view
+      if (canView('workOrders')) {
+        promises.push(
+          workOrdersAPI.getAll()
+            .then(res => ({ type: 'workOrders', data: res.data }))
+            .catch(err => {
+              console.error('Erreur work orders:', err);
+              return { type: 'workOrders', data: [] };
+            })
+        );
+      }
       
-      // Essayer de charger les équipements
-      promises.push(equipmentsAPI.getAll().catch(() => ({ data: [] })));
-      dataKeys.push('equipments');
+      // Equipments - si permission view
+      if (canView('assets')) {
+        promises.push(
+          equipmentsAPI.getAll()
+            .then(res => ({ type: 'equipments', data: res.data }))
+            .catch(err => {
+              console.error('Erreur equipments:', err);
+              return { type: 'equipments', data: [] };
+            })
+        );
+      }
       
-      // Essayer de charger les analytics
-      promises.push(reportsAPI.getAnalytics().catch(() => ({ data: null })));
-      dataKeys.push('analytics');
+      // Analytics/Reports - si permission view
+      if (canView('reports')) {
+        promises.push(
+          reportsAPI.getAnalytics()
+            .then(res => ({ type: 'analytics', data: res.data }))
+            .catch(err => {
+              console.error('Erreur analytics:', err);
+              return { type: 'analytics', data: null };
+            })
+        );
+      }
+      
+      // Si aucune permission, afficher un dashboard vide
+      if (promises.length === 0) {
+        setWorkOrders([]);
+        setEquipments([]);
+        setAnalytics(null);
+        setLoading(false);
+        setInitialLoad(false);
+        return;
+      }
       
       const results = await Promise.all(promises);
       
-      // Mise à jour silencieuse : comparer avant de mettre à jour
-      const newWorkOrders = results[0].data || [];
-      const newEquipments = results[1].data || [];
-      const newAnalytics = results[2].data;
+      // Mettre à jour les données selon les résultats
+      results.forEach(result => {
+        if (result.type === 'workOrders') {
+          if (initialLoad || JSON.stringify(result.data) !== JSON.stringify(workOrders)) {
+            setWorkOrders(result.data);
+          }
+        } else if (result.type === 'equipments') {
+          if (initialLoad || JSON.stringify(result.data) !== JSON.stringify(equipments)) {
+            setEquipments(result.data);
+          }
+        } else if (result.type === 'analytics') {
+          if (initialLoad || JSON.stringify(result.data) !== JSON.stringify(analytics)) {
+            setAnalytics(result.data);
+          }
+        }
+      });
       
-      // Pour le premier chargement ou si les données ont changé
-      if (initialLoad || JSON.stringify(newWorkOrders) !== JSON.stringify(workOrders)) {
-        setWorkOrders(newWorkOrders);
-      }
-      if (initialLoad || JSON.stringify(newEquipments) !== JSON.stringify(equipments)) {
-        setEquipments(newEquipments);
-      }
-      if (initialLoad || JSON.stringify(newAnalytics) !== JSON.stringify(analytics)) {
-        setAnalytics(newAnalytics);
-      }
     } catch (error) {
-      console.error('Erreur de chargement:', error);
-      // Même en cas d'erreur, on affiche le dashboard avec les données disponibles
+      console.error('Erreur générale de chargement:', error);
+      // En cas d'erreur, initialiser avec des données vides
+      setWorkOrders([]);
+      setEquipments([]);
+      setAnalytics(null);
     } finally {
       if (initialLoad) {
         setLoading(false);
