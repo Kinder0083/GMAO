@@ -348,10 +348,7 @@ const PurchaseHistory = () => {
             {stats?.par_mois && stats.par_mois.length > 0 ? (
               <ResponsiveContainer width="100%" height={400}>
                 <BarChart
-                  data={stats.par_mois.slice(-12).map((item, index) => ({
-                    ...item,
-                    color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]
-                  }))}
+                  data={stats.par_mois.slice(-12)}
                   margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -372,22 +369,22 @@ const PurchaseHistory = () => {
                     contentStyle={{ backgroundColor: 'rgba(255, 255, 255, 0.95)', border: '1px solid #ccc', borderRadius: '8px' }}
                   />
                   <Legend />
-                  {/* Créer une barre pour chaque mois avec sa propre couleur */}
-                  {stats.par_mois.slice(-12).map((item, index) => {
-                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                    const color = colors[index % 6];
-                    return (
-                      <Bar 
-                        key={`bar-${index}`}
-                        dataKey={index === 0 ? 'montant_total' : null}
-                        data={[item]}
-                        fill={color}
-                        radius={[8, 8, 0, 0]}
-                        name={index === 0 ? 'Montant Total' : ''}
-                        legendType={index === 0 ? 'rect' : 'none'}
-                      />
-                    );
-                  })}
+                  <Bar 
+                    dataKey="montant_total" 
+                    fill="#3b82f6"
+                    radius={[8, 8, 0, 0]}
+                    name="Montant Total"
+                  >
+                    {stats.par_mois.slice(-12).map((entry, index) => {
+                      const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                      return (
+                        <Cell 
+                          key={`cell-${index}`} 
+                          fill={colors[index % 6]}
+                        />
+                      );
+                    })}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             ) : (
