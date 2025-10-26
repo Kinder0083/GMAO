@@ -135,17 +135,40 @@ class QHSEPermissionsTester:
             self.log(f"❌ QHSE login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def create_viewer_user(self):
-        """Create a viewer user with limited permissions"""
-        self.log("Creating viewer user with VISUALISEUR role...")
+    def create_qhse_user(self):
+        """Create a QHSE user with specific permissions"""
+        self.log("Creating QHSE user with QHSE role and specific permissions...")
+        
+        # QHSE permissions according to specifications
+        qhse_permissions = {
+            "dashboard": {"view": True, "edit": False, "delete": False},
+            "interventionRequests": {"view": True, "edit": True, "delete": False},
+            "workOrders": {"view": True, "edit": False, "delete": False},
+            "improvementRequests": {"view": True, "edit": True, "delete": False},
+            "improvements": {"view": True, "edit": False, "delete": False},
+            "preventiveMaintenance": {"view": True, "edit": False, "delete": False},
+            "assets": {"view": True, "edit": False, "delete": False},
+            "inventory": {"view": True, "edit": False, "delete": False},
+            "locations": {"view": True, "edit": False, "delete": False},
+            "meters": {"view": True, "edit": False, "delete": False},
+            "reports": {"view": True, "edit": False, "delete": False},
+            # NO ACCESS TO these modules
+            "vendors": {"view": False, "edit": False, "delete": False},
+            "people": {"view": False, "edit": False, "delete": False},
+            "planning": {"view": False, "edit": False, "delete": False},
+            "purchaseHistory": {"view": False, "edit": False, "delete": False},
+            "importExport": {"view": False, "edit": False, "delete": False},
+            "journal": {"view": False, "edit": False, "delete": False}
+        }
         
         user_data = {
-            "nom": "Viewer",
+            "nom": "QHSE",
             "prenom": "Test",
-            "email": VIEWER_EMAIL,
-            "password": VIEWER_PASSWORD,
-            "role": "VISUALISEUR",
-            "service": "Test"
+            "email": QHSE_EMAIL,
+            "password": QHSE_PASSWORD,
+            "role": "QHSE",
+            "service": "Qualité",
+            "permissions": qhse_permissions
         }
         
         try:
@@ -157,14 +180,14 @@ class QHSEPermissionsTester:
             
             if response.status_code in [200, 201]:
                 user = response.json()
-                self.log(f"✅ Viewer user created successfully - ID: {user.get('id')}, Role: {user.get('role')}")
+                self.log(f"✅ QHSE user created successfully - ID: {user.get('id')}, Role: {user.get('role')}")
                 return user
             else:
-                self.log(f"❌ Failed to create viewer user - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ Failed to create QHSE user - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return None
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Create viewer user request failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Create QHSE user request failed - Error: {str(e)}", "ERROR")
             return None
     
     # ==================== WORK ORDERS PERMISSIONS TESTS ====================
