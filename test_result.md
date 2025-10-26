@@ -1173,10 +1173,10 @@ test_plan:
 
   - task: "Test corrections - Histogramme multi-couleurs et Menu Journal unique"
     implemented: true
-    working: true
+    working: false
     file: "/app/frontend/src/pages/PurchaseHistory.jsx, /app/frontend/src/components/Layout/MainLayout.jsx"
-    stuck_count: 0
-    priority: "high"
+    stuck_count: 1
+    priority: "critical"
     needs_retesting: false
     status_history:
       - working: true
