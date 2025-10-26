@@ -259,6 +259,20 @@ const MainLayout = () => {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Icône rappel échéances */}
+          <button 
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+            title="Échéances dépassées"
+          >
+            <img src="/rappel-calendrier.jpg" alt="Rappel" className="w-6 h-6 object-contain" />
+            {overdueCount > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                {overdueCount > 9 ? '9+' : overdueCount}
+              </span>
+            )}
+          </button>
+          
+          {/* Cloche notifications */}
           <button 
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
             onClick={() => navigate('/work-orders')}
