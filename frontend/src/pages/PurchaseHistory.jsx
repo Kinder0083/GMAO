@@ -348,26 +348,80 @@ const PurchaseHistory = () => {
             {stats?.par_mois && stats.par_mois.length > 0 ? (
               <>
                 {/* Debug: afficher les données */}
-                <div className="mb-4 p-4 bg-gray-100 rounded text-xs">
-                  <strong>DEBUG - Données disponibles :</strong>
-                  <pre>{JSON.stringify(stats.par_mois.slice(-12), null, 2)}</pre>
+                <div className="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 rounded text-sm">
+                  <strong>🔍 DEBUG - Données reçues :</strong>
+                  <div>Nombre de mois: {stats.par_mois.length}</div>
+                  <div>Premier mois: {stats.par_mois[0]?.mois} - Montant: {stats.par_mois[0]?.montant_total}</div>
                 </div>
                 
-                {/* Histogramme avec Nivo - Compatible React 19 */}
-                <div className="w-full bg-white border border-gray-300 rounded" style={{ height: '450px' }}>
-                  <ResponsiveBar
-                    data={stats.par_mois.slice(-12).map((item) => ({
-                      mois: item.mois,
-                      montant: item.montant_total
-                    }))}
-                    keys={['montant']}
-                    indexBy="mois"
-                    margin={{ top: 20, right: 30, bottom: 80, left: 70 }}
-                    padding={0.3}
-                    valueScale={{ type: 'linear' }}
-                    indexScale={{ type: 'band', round: true }}
-                    colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']}
-                    borderRadius={8}
+                {/* Test simple avec données hardcodées */}
+                <div className="mb-4 p-4 bg-blue-50 border-2 border-blue-500 rounded">
+                  <strong>📊 Test avec données hardcodées :</strong>
+                  <div style={{ height: '300px', background: '#f0f0f0' }}>
+                    <ResponsiveBar
+                      data={[
+                        { mois: 'Jan', montant: 10000 },
+                        { mois: 'Fev', montant: 20000 },
+                        { mois: 'Mar', montant: 15000 }
+                      ]}
+                      keys={['montant']}
+                      indexBy="mois"
+                      margin={{ top: 20, right: 20, bottom: 40, left: 60 }}
+                      padding={0.3}
+                      colors={['#3b82f6']}
+                      axisBottom={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: 0
+                      }}
+                      axisLeft={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: 0
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Histogramme avec vraies données */}
+                <div className="w-full bg-green-50 border-2 border-green-500 rounded p-4" style={{ height: '450px' }}>
+                  <strong>📈 Graphique avec vos données :</strong>
+                  <div style={{ height: '400px' }}>
+                    <ResponsiveBar
+                      data={stats.par_mois.slice(-12).map((item) => ({
+                        mois: item.mois,
+                        montant: item.montant_total
+                      }))}
+                      keys={['montant']}
+                      indexBy="mois"
+                      margin={{ top: 20, right: 30, bottom: 80, left: 70 }}
+                      padding={0.3}
+                      colors={['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']}
+                      axisBottom={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: -45
+                      }}
+                      axisLeft={{
+                        tickSize: 5,
+                        tickPadding: 5,
+                        tickRotation: 0,
+                        format: value => `${(value / 1000).toFixed(0)}k`
+                      }}
+                      tooltip={({ indexValue, value }) => (
+                        <div style={{
+                          padding: '12px',
+                          background: 'white',
+                          border: '1px solid #ccc',
+                          borderRadius: '4px'
+                        }}>
+                          <strong>{indexValue}</strong><br />
+                          {value.toLocaleString('fr-FR')} €
+                        </div>
+                      )}
+                    />
+                  </div>
+                </div>
                     borderColor={{
                       from: 'color',
                       modifiers: [['darker', 0.3]]
