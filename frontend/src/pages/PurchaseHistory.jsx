@@ -392,33 +392,7 @@ const PurchaseHistory = () => {
                       from: 'color',
                       modifiers: [['darker', 1.6]]
                     }}
-                    legends={[
-                      {
-                        dataFrom: 'keys',
-                        anchor: 'top-right',
-                        direction: 'column',
-                        justify: false,
-                        translateX: 0,
-                        translateY: -20,
-                        itemsSpacing: 2,
-                        itemWidth: 100,
-                        itemHeight: 20,
-                        itemDirection: 'left-to-right',
-                        itemOpacity: 0.85,
-                        symbolSize: 20,
-                        effects: [
-                          {
-                            on: 'hover',
-                            style: {
-                              itemOpacity: 1
-                            }
-                          }
-                        ]
-                      }
-                    ]}
-                    role="application"
-                    ariaLabel="Graphique de l'évolution mensuelle des achats"
-                    tooltip={({ indexValue, value, data }) => (
+                    tooltip={({ indexValue, value }) => (
                       <div
                         style={{
                           padding: '12px',
@@ -429,7 +403,7 @@ const PurchaseHistory = () => {
                       >
                         <strong style={{ color: '#000' }}>{indexValue}</strong>
                         <br />
-                        <span style={{ color: data.color }}>
+                        <span>
                           Montant: {value.toLocaleString('fr-FR')} €
                         </span>
                       </div>
