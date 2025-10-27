@@ -358,10 +358,9 @@ const PurchaseHistory = () => {
                       <div className="space-y-4">
                         {/* Graphique en barres */}
                         <div className="bg-white rounded-lg border border-gray-200 p-6">
-                          {/* Axe Y avec échelle */}
                           <div className="flex gap-4">
                             {/* Labels Y */}
-                            <div className="flex flex-col justify-between text-xs text-gray-500 py-2" style={{ minWidth: '60px' }}>
+                            <div className="flex flex-col justify-between text-xs text-gray-500" style={{ height: '320px', minWidth: '70px' }}>
                               <div className="text-right">{(maxValue).toLocaleString('fr-FR')} €</div>
                               <div className="text-right">{(maxValue * 0.75).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €</div>
                               <div className="text-right">{(maxValue * 0.5).toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €</div>
@@ -370,64 +369,79 @@ const PurchaseHistory = () => {
                             </div>
                             
                             {/* Zone du graphique */}
-                            <div className="flex-1">
+                            <div className="flex-1 relative" style={{ height: '320px' }}>
                               {/* Lignes de grille horizontales */}
-                              <div className="relative" style={{ height: '320px' }}>
-                                {[0, 25, 50, 75, 100].map((percent) => (
-                                  <div 
-                                    key={percent}
-                                    className="absolute w-full border-t border-gray-200"
-                                    style={{ bottom: `${percent}%` }}
-                                  ></div>
-                                ))}
-                                
-                                {/* Barres */}
-                                <div className="absolute inset-0 flex items-end justify-between gap-1">
-                                  {data.map((item, index) => {
-                                    const heightPercent = ((item.montant_total / maxValue) * 100) || 0;
-                                    const color = colors[index % colors.length];
-                                    
-                                    return (
-                                      <div key={index} className="flex-1 flex flex-col items-center justify-end group relative">
-                                        {/* Valeur au-dessus de la barre */}
-                                        <div className="absolute bottom-full mb-1 text-xs font-semibold opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: color }}>
-                                          {(item.montant_total / 1000).toFixed(0)}k
-                                        </div>
-                                        
-                                        {/* Barre */}
-                                        <div 
-                                          className="w-full rounded-t-lg transition-all duration-300 hover:opacity-80 relative cursor-pointer shadow-sm hover:shadow-md"
-                                          style={{ 
-                                            height: `${heightPercent}%`,
-                                            backgroundColor: color,
-                                            minHeight: heightPercent > 0 ? '8px' : '0px'
-                                          }}
-                                        >
-                                          {/* Tooltip au survol */}
-                                          <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10 shadow-xl">
-                                            <div className="font-bold text-center">{item.mois}</div>
-                                            <div className="text-center mt-1">{item.montant_total.toLocaleString('fr-FR')} €</div>
-                                            <div className="text-gray-300 text-xs text-center mt-1">{item.nb_commandes} commande{item.nb_commandes > 1 ? 's' : ''}</div>
-                                            <div className="text-gray-400 text-xs text-center">{item.nb_lignes} ligne{item.nb_lignes > 1 ? 's' : ''}</div>
+                              {[0, 25, 50, 75, 100].map((percent) => (
+                                <div 
+                                  key={percent}
+                                  className="absolute w-full border-t border-gray-200"
+                                  style={{ bottom: `${percent}%` }}
+                                ></div>
+                              ))}
+                              
+                              {/* Conteneur des barres */}
+                              <div className="absolute inset-0 flex items-end gap-1 px-2">
+                                {data.map((item, index) => {
+                                  const heightPercent = Math.max(((item.montant_total / maxValue) * 100), 2);
+                                  const color = colors[index % colors.length];
+                                  
+                                  return (
+                                    <div 
+                                      key={index} 
+                                      className="flex-1 flex items-end justify-center group relative"
+                                    >
+                                      {/* Barre */}
+                                      <div 
+                                        className="w-full rounded-t-lg transition-all duration-300 hover:brightness-110 cursor-pointer shadow-sm hover:shadow-md relative"
+                                        style={{ 
+                                          height: `${heightPercent}%`,
+                                          backgroundColor: color,
+                                          maxWidth: '100%'
+                                        }}
+                                      >
+                                        {/* Tooltip au survol */}
+                                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20 shadow-xl">
+                                          <div className="font-bold text-center">{item.mois}</div>
+                                          <div className="text-center mt-1">{item.montant_total.toLocaleString('fr-FR')} €</div>
+                                          <div className="text-gray-300 text-xs text-center mt-1">{item.nb_commandes} commande{item.nb_commandes > 1 ? 's' : ''}</div>
+                                          <div className="text-gray-400 text-xs text-center">{item.nb_lignes} ligne{item.nb_lignes > 1 ? 's' : ''}</div>
+                                          {/* Flèche du tooltip */}
+                                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                                            <div className="border-4 border-transparent border-t-gray-900"></div>
                                           </div>
                                         </div>
+                                        
+                                        {/* Valeur au-dessus de la barre au hover */}
+                                        <div 
+                                          className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap"
+                                          style={{ color: color }}
+                                        >
+                                          {(item.montant_total / 1000).toFixed(0)}k €
+                                        </div>
                                       </div>
-                                    );
-                                  })}
-                                </div>
-                              </div>
-                              
-                              {/* Labels X (mois) */}
-                              <div className="flex justify-between gap-1 mt-3 pt-2 border-t border-gray-300">
-                                {data.map((item, index) => (
-                                  <div key={index} className="flex-1 text-center">
-                                    <div className="text-xs text-gray-600 font-medium transform -rotate-45 origin-center whitespace-nowrap">
-                                      {item.mois}
                                     </div>
-                                  </div>
-                                ))}
+                                  );
+                                })}
                               </div>
                             </div>
+                          </div>
+                          
+                          {/* Labels X (mois) */}
+                          <div className="flex gap-1 mt-4 ml-[70px] pl-2 pr-2">
+                            {data.map((item, index) => (
+                              <div key={index} className="flex-1 flex justify-center">
+                                <div 
+                                  className="text-xs text-gray-600 font-medium whitespace-nowrap"
+                                  style={{ 
+                                    transform: 'rotate(-45deg)',
+                                    transformOrigin: 'center',
+                                    marginTop: '20px'
+                                  }}
+                                >
+                                  {item.mois}
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         </div>
                         
