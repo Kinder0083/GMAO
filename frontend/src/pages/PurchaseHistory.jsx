@@ -347,55 +347,98 @@ const PurchaseHistory = () => {
           <CardContent>
             {stats?.par_mois && stats.par_mois.length > 0 ? (
               <>
-                {/* Histogramme avec dimensions explicites pour React 19 */}
-                <div className="w-full overflow-x-auto flex justify-center">
-                  <BarChart
-                    width={900}
-                    height={400}
-                    data={stats.par_mois.slice(-12)}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis 
-                      dataKey="mois" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      style={{ fontSize: '12px', fill: '#374151' }}
-                    />
-                    <YAxis 
-                      tickFormatter={(value) => `${(value / 1000).toFixed(0)}k €`}
-                      style={{ fontSize: '12px', fill: '#374151' }}
-                    />
-                    <Tooltip 
-                      formatter={(value) => [`${value.toLocaleString('fr-FR')} €`, 'Montant']}
-                      labelStyle={{ fontWeight: 'bold', color: '#000' }}
-                      contentStyle={{ 
-                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                        border: '1px solid #ccc', 
-                        borderRadius: '8px',
-                        padding: '10px'
-                      }}
-                    />
-                    <Legend />
-                    <Bar 
-                      dataKey="montant_total"
-                      name="Montant Total"
-                      fill="#3b82f6"
-                      radius={[8, 8, 0, 0]}
-                      minPointSize={5}
-                    >
-                      {stats.par_mois.slice(-12).map((entry, index) => {
-                        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
-                        return (
-                          <Cell 
-                            key={`cell-${index}`} 
-                            fill={colors[index % colors.length]}
-                          />
-                        );
-                      })}
-                    </Bar>
-                  </BarChart>
+                {/* Histogramme avec Nivo - Compatible React 19 */}
+                <div className="w-full" style={{ height: '450px' }}>
+                  <ResponsiveBar
+                    data={stats.par_mois.slice(-12).map((item, index) => ({
+                      mois: item.mois,
+                      montant: item.montant_total,
+                      montantLabel: `${item.montant_total.toLocaleString('fr-FR')} €`,
+                      color: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'][index % 6]
+                    }))}
+                    keys={['montant']}
+                    indexBy="mois"
+                    margin={{ top: 20, right: 30, bottom: 80, left: 70 }}
+                    padding={0.3}
+                    valueScale={{ type: 'linear' }}
+                    indexScale={{ type: 'band', round: true }}
+                    colors={(bar) => bar.data.color}
+                    borderRadius={8}
+                    borderColor={{
+                      from: 'color',
+                      modifiers: [['darker', 0.3]]
+                    }}
+                    axisTop={null}
+                    axisRight={null}
+                    axisBottom={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: -45,
+                      legend: '',
+                      legendPosition: 'middle',
+                      legendOffset: 60,
+                      truncateTickAt: 0
+                    }}
+                    axisLeft={{
+                      tickSize: 5,
+                      tickPadding: 5,
+                      tickRotation: 0,
+                      legend: 'Montant (€)',
+                      legendPosition: 'middle',
+                      legendOffset: -60,
+                      format: value => `${(value / 1000).toFixed(0)}k`
+                    }}
+                    labelSkipWidth={12}
+                    labelSkipHeight={12}
+                    labelTextColor={{
+                      from: 'color',
+                      modifiers: [['darker', 1.6]]
+                    }}
+                    legends={[
+                      {
+                        dataFrom: 'keys',
+                        anchor: 'top-right',
+                        direction: 'column',
+                        justify: false,
+                        translateX: 0,
+                        translateY: -20,
+                        itemsSpacing: 2,
+                        itemWidth: 100,
+                        itemHeight: 20,
+                        itemDirection: 'left-to-right',
+                        itemOpacity: 0.85,
+                        symbolSize: 20,
+                        effects: [
+                          {
+                            on: 'hover',
+                            style: {
+                              itemOpacity: 1
+                            }
+                          }
+                        ]
+                      }
+                    ]}
+                    role="application"
+                    ariaLabel="Graphique de l'évolution mensuelle des achats"
+                    tooltip={({ indexValue, value, data }) => (
+                      <div
+                        style={{
+                          padding: '12px',
+                          background: 'rgba(255, 255, 255, 0.95)',
+                          border: '1px solid #ccc',
+                          borderRadius: '8px',
+                        }}
+                      >
+                        <strong style={{ color: '#000' }}>{indexValue}</strong>
+                        <br />
+                        <span style={{ color: data.color }}>
+                          Montant: {value.toLocaleString('fr-FR')} €
+                        </span>
+                      </div>
+                    )}
+                    animate={true}
+                    motionConfig="gentle"
+                  />
                 </div>
                 
                 {/* Debug: Afficher les valeurs */}
