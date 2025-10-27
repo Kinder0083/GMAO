@@ -347,12 +347,12 @@ const PurchaseHistory = () => {
           <CardContent>
             {stats?.par_mois && stats.par_mois.length > 0 ? (
               <>
-                {/* Histogramme ULTRA SIMPLE */}
+                {/* Histogramme en bleu */}
                 <div className="w-full bg-white p-6 rounded-lg border">
                   {(() => {
                     const data = stats.par_mois.slice(-12);
                     const maxValue = Math.max(...data.map(d => d.montant_total));
-                    const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+                    const blueColor = '#3b82f6';
                     
                     return (
                       <div>
@@ -360,7 +360,6 @@ const PurchaseHistory = () => {
                         <div style={{ display: 'flex', alignItems: 'flex-end', height: '350px', gap: '8px', padding: '20px', border: '1px solid #e5e7eb', borderRadius: '8px', backgroundColor: '#fafafa' }}>
                           {data.map((item, index) => {
                             const heightPx = Math.max((item.montant_total / maxValue) * 300, 10);
-                            const color = colors[index % colors.length];
                             
                             return (
                               <div 
@@ -379,7 +378,7 @@ const PurchaseHistory = () => {
                                   style={{
                                     width: '100%',
                                     height: `${heightPx}px`,
-                                    backgroundColor: color,
+                                    backgroundColor: blueColor,
                                     borderRadius: '8px 8px 0 0',
                                     cursor: 'pointer',
                                     transition: 'all 0.3s',
@@ -413,16 +412,6 @@ const PurchaseHistory = () => {
                               }}
                             >
                               {item.mois}
-                            </div>
-                          ))}
-                        </div>
-                        
-                        {/* Légende des couleurs */}
-                        <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginTop: '30px', flexWrap: 'wrap' }}>
-                          {['Bleu', 'Vert', 'Orange', 'Rouge', 'Violet', 'Rose'].map((name, idx) => (
-                            <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              <div style={{ width: '16px', height: '16px', backgroundColor: colors[idx], borderRadius: '4px' }}></div>
-                              <span style={{ fontSize: '13px', color: '#666' }}>{name}</span>
                             </div>
                           ))}
                         </div>
