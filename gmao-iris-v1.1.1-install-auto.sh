@@ -194,6 +194,20 @@ fi
 sleep 2
 pct start $CTID || err "Impossible de démarrer le container"
 sleep 5
+
+# CORRECTION: Configurer le DNS immédiatement
+msg "Configuration du réseau..."
+pct exec $CTID -- bash -c 'cat > /etc/resolv.conf <<EOF
+nameserver 8.8.8.8
+nameserver 8.8.4.4
+nameserver 1.1.1.1
+EOF'
+
+# Vérifier la connectivité
+if ! pct exec $CTID -- ping -c 2 8.8.8.8 >/dev/null 2>&1; then
+    err "Le container n'a pas de connexion Internet. Vérifiez la configuration réseau de Proxmox."
+fi
+
 ok "Container $CTID créé et démarré"
 
 msg "Installation du système (5-7 min)..."
