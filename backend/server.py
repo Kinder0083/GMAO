@@ -1707,7 +1707,7 @@ async def delete_inventory_item(inv_id: str, current_user: dict = Depends(get_cu
 @api_router.get("/preventive-maintenance", response_model=List[PreventiveMaintenance])
 async def get_preventive_maintenance(current_user: dict = Depends(require_permission("preventiveMaintenance", "view"))):
     """Liste toutes les maintenances préventives"""
-    pm_list = await db.preventive_maintenance.find().to_list(1000)
+    pm_list = await db.preventive_maintenances.find().to_list(1000)
     
     for pm in pm_list:
         pm["id"] = str(pm["_id"])
