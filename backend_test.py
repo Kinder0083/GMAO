@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests the QHSE permissions system functionality after corrections
+Tests Import/Export functionality - Module Import/Export Error Corrections
 """
 
 import requests
 import json
 import os
+import io
+import pandas as pd
+import tempfile
 from datetime import datetime, timedelta
 
 # Use the correct backend URL from frontend .env
