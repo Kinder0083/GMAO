@@ -28,12 +28,15 @@ QHSE_PASSWORD = "Test123!"
 class ImportExportTester:
     def __init__(self):
         self.admin_session = requests.Session()
-        self.qhse_session = requests.Session()
         self.admin_token = None
-        self.qhse_token = None
         self.admin_data = None
-        self.qhse_data = None
-        self.created_work_order_id = None
+        
+        # Available modules for import/export
+        self.available_modules = [
+            "intervention-requests", "work-orders", "improvement-requests", 
+            "improvements", "equipments", "meters", "meter-readings", 
+            "users", "inventory", "locations", "vendors", "purchase-history"
+        ]
         
     def log(self, message, level="INFO"):
         """Log test messages with timestamp"""
