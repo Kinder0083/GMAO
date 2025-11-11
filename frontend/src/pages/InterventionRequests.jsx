@@ -306,8 +306,14 @@ const InterventionRequests = () => {
                           <span className="text-gray-400">-</span>
                         )}
                       </td>
-                      <td className="py-3 px-4 text-sm text-gray-600">
-                        {req.work_order_date_limite ? formatDate(req.work_order_date_limite) : '-'}
+                      <td className="py-3 px-4 text-sm">
+                        {req.work_order_date_limite ? (
+                          <span className={isOverdue(req.work_order_date_limite, req.work_order_statut) ? 'text-red-600 font-medium' : 'text-gray-600'}>
+                            {formatDate(req.work_order_date_limite)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-600">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}
