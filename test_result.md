@@ -799,6 +799,35 @@ backend:
           - L'endpoint GET /api/work-orders fonctionne sans erreurs de validation
           - Les bons de travail avec priorité "NORMALE" sont correctement retournés
           - Plus d'erreur ValidationError pour le champ priorite
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TEST CRITIQUE FRONTEND RÉUSSI - Page Bons de Travail après correction enum Priority
+          
+          🎯 TESTS EFFECTUÉS (Novembre 2025):
+          1. ✅ Connexion admin réussie (admin@gmao-iris.local / Admin123!)
+          2. ✅ Navigation vers /work-orders: SUCCESS
+          3. ✅ AUCUN message d'erreur "impossible de charger les bons de travail"
+          4. ✅ Titre "Ordres de travail" affiché correctement
+          5. ✅ Tableau des ordres de travail présent et fonctionnel
+          6. ✅ 3 ordres de travail visibles (filtrés par date du jour)
+          7. ✅ Toutes les priorités "Normale" affichées correctement
+          8. ✅ API /api/work-orders répond 200 OK (confirmé par monitoring réseau)
+          9. ✅ Page complètement chargée sans blocage
+          
+          📊 VÉRIFICATIONS CRITIQUES:
+          - ✅ Page se charge SANS erreur "impossible de charger..."
+          - ✅ Bons de travail avec priorité "NORMALE" affichés correctement
+          - ✅ Sérialisation Pydantic fonctionne parfaitement côté frontend
+          - ✅ Aucune erreur 500 sur l'endpoint work-orders
+          - ✅ Interface utilisateur complètement fonctionnelle
+          - ✅ API backend confirme 66 ordres dont 2 avec priorité NORMALE
+          
+          🎉 RÉSULTAT FINAL: CORRECTION ENUM PRIORITY ENTIÈREMENT VALIDÉE
+          - Le bug critique empêchant le chargement de la page est RÉSOLU
+          - L'ajout de `NORMALE = "NORMALE"` à l'enum Priority permet la sérialisation des valeurs NORMALE
+          - La page Bons de Travail fonctionne parfaitement
+          - Tous les critères de test du cahier des charges sont respectés
 
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
