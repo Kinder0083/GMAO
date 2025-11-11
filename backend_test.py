@@ -16,14 +16,10 @@ from datetime import datetime, timedelta
 BACKEND_URL = "https://iris-maintenance-1.preview.emergentagent.com/api"
 
 # Test credentials - try both admin accounts
-ADMIN_EMAIL_1 = "admin@example.com"
-ADMIN_PASSWORD_1 = "password123"
-ADMIN_EMAIL_2 = "admin@gmao-iris.local"
-ADMIN_PASSWORD_2 = "Admin123!"
-
-# QHSE test credentials (to be created)
-QHSE_EMAIL = "test_qhse@test.com"
-QHSE_PASSWORD = "Test123!"
+ADMIN_EMAIL_1 = "admin@gmao-iris.local"
+ADMIN_PASSWORD_1 = "Admin123!"
+ADMIN_EMAIL_2 = "buenogy@gmail.com"
+ADMIN_PASSWORD_2 = "nmrojvbvgb"
 
 class ImportExportTester:
     def __init__(self):
