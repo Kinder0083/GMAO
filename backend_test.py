@@ -31,16 +31,15 @@ class PreventiveMaintenanceTester:
         print(f"[{timestamp}] {level}: {message}")
         
     def test_admin_login(self):
-        """Test admin login - try both admin accounts"""
+        """Test admin login with specified credentials"""
         self.log("Testing admin login...")
         
-        # Try first admin account
         try:
             response = self.admin_session.post(
                 f"{BACKEND_URL}/auth/login",
                 json={
-                    "email": ADMIN_EMAIL_1,
-                    "password": ADMIN_PASSWORD_1
+                    "email": ADMIN_EMAIL,
+                    "password": ADMIN_PASSWORD
                 },
                 timeout=10
             )
@@ -55,43 +54,14 @@ class PreventiveMaintenanceTester:
                     "Authorization": f"Bearer {self.admin_token}"
                 })
                 
-                self.log(f"✅ Admin login successful with {ADMIN_EMAIL_1} - User: {self.admin_data.get('prenom')} {self.admin_data.get('nom')} (Role: {self.admin_data.get('role')})")
+                self.log(f"✅ Admin login successful - User: {self.admin_data.get('prenom')} {self.admin_data.get('nom')} (Role: {self.admin_data.get('role')})")
                 return True
             else:
-                self.log(f"⚠️ First admin login failed - Status: {response.status_code}, trying second account...")
-                
-        except requests.exceptions.RequestException as e:
-            self.log(f"⚠️ First admin login request failed - Error: {str(e)}, trying second account...")
-        
-        # Try second admin account
-        try:
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/auth/login",
-                json={
-                    "email": ADMIN_EMAIL_2,
-                    "password": ADMIN_PASSWORD_2
-                },
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.admin_token = data.get("access_token")
-                self.admin_data = data.get("user")
-                
-                # Set authorization header for future requests
-                self.admin_session.headers.update({
-                    "Authorization": f"Bearer {self.admin_token}"
-                })
-                
-                self.log(f"✅ Admin login successful with {ADMIN_EMAIL_2} - User: {self.admin_data.get('prenom')} {self.admin_data.get('nom')} (Role: {self.admin_data.get('role')})")
-                return True
-            else:
-                self.log(f"❌ Both admin logins failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                self.log(f"❌ Admin login failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Both admin login requests failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
     def create_test_excel_multi_sheet(self):
