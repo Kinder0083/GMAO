@@ -38,10 +38,18 @@ jobs:
 
       - name: Create working branch from default
         run: |
+          set -e
           WORK="remove-emergent-${{ steps.vars.outputs.timestamp }}"
-          git checkout ${{ steps.vars.outputs.default_branch }}
-          git pull origin ${{ steps.vars.outputs.default_branch }}
-          git checkout -b "$WORK"
+          DEFAULT="${{ steps.vars.outputs.default_branch }}"
+          echo "🌀 Default branch is: $DEFAULT"
+
+          # Assure-toi d'avoir la dernière version du dépôt
+          git fetch origin $DEFAULT
+
+          # Crée une nouvelle branche à partir de la branche distante par défaut
+          git checkout -b "$WORK" "origin/$DEFAULT"
+          echo "✅ Working branch created: $WORK"
+
 
       - name: Remove Emergent occurrences (search & delete)
         run: |
