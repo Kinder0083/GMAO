@@ -177,7 +177,7 @@ const MainLayout = () => {
       }
       
       // Charger les améliorations en retard (si permission)
-      if (canView('improvements')) {
+      if (canViewModule('improvements')) {
         try {
           const impResponse = await fetch(`${backend_url}/api/improvements`, {
             headers: { Authorization: `Bearer ${token}` }
