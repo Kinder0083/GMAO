@@ -4841,8 +4841,19 @@ async def startup_scheduler():
             replace_existing=True
         )
         
+        # Configurer la vérification automatique des mises à jour à 1h00 du matin
+        scheduler.add_job(
+            update_service.check_for_updates,
+            CronTrigger(hour=1, minute=0),  # Tous les jours à 1h00
+            id='check_updates',
+            name='Vérification automatique des mises à jour',
+            replace_existing=True
+        )
+        
         scheduler.start()
-        logger.info("✅ Scheduler démarré - Vérification des maintenances préventives programmée chaque jour à minuit")
+        logger.info("✅ Scheduler démarré:")
+        logger.info("   - Vérification maintenances préventives: tous les jours à 00h00")
+        logger.info("   - Vérification mises à jour: tous les jours à 01h00")
         
     except Exception as e:
         logger.error(f"❌ Erreur lors du démarrage du scheduler: {str(e)}")
