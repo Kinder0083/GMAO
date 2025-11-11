@@ -1728,7 +1728,7 @@ async def create_preventive_maintenance(pm_create: PreventiveMaintenanceCreate, 
     pm_dict["derniereMaintenance"] = None
     pm_dict["_id"] = ObjectId()
     
-    await db.preventive_maintenance.insert_one(pm_dict)
+    await db.preventive_maintenances.insert_one(pm_dict)
     
     pm = serialize_doc(pm_dict)
     if pm.get("equipement_id"):
