@@ -678,6 +678,53 @@ backend:
           1. Import "Toutes les données" fonctionne sans erreurs pandas
           2. Imports individuels fonctionnent sans erreurs de chargement
 
+  - task: "API GET /api/preventive-maintenance - Correction modèle Pydantic assigne_a_id"
+    implemented: true
+    working: true
+    file: "/app/backend/models.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: false
+    status_history:
+      - working: false
+        agent: "user"
+        comment: |
+          PROBLÈME CRITIQUE REPORTÉ:
+          - Le champ assigne_a_id dans le modèle PreventiveMaintenanceBase était défini comme str (non-optionnel)
+          - Certains documents dans MongoDB avaient cette valeur à None
+          - Causait une erreur pydantic_core.ValidationError lors de GET /api/preventive-maintenance
+      - working: "NA"
+        agent: "main"
+        comment: |
+          CORRECTION EFFECTUÉE:
+          - Ligne 682 dans /app/backend/models.py
+          - Changé assigne_a_id de str à Optional[str] = None dans PreventiveMaintenanceBase
+          - Permet aux documents avec assigne_a_id: null d'être correctement sérialisés
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ CORRECTION VALIDÉE - TESTS COMPLETS RÉUSSIS (3/3)
+          
+          🎯 TEST CRITIQUE: GET /api/preventive-maintenance après correction Pydantic
+          - ✅ Connexion admin réussie (admin@gmao-iris.local / Admin123!)
+          - ✅ GET /api/preventive-maintenance: SUCCESS (200 OK)
+          - ✅ Réponse JSON valide avec 3 enregistrements de maintenance préventive
+          - ✅ Enregistrements avec assigne_a_id = null: 1 trouvé
+          - ✅ Enregistrements avec assigne_a_id assigné: 1 trouvé
+          - ✅ Aucune erreur pydantic_core.ValidationError détectée
+          - ✅ Aucune erreur 500 Internal Server Error
+          
+          📊 VÉRIFICATIONS TECHNIQUES:
+          - ✅ Modèle PreventiveMaintenanceBase ligne 682: assigne_a_id: Optional[str] = None
+          - ✅ Les maintenances avec assignation null sont incluses dans la réponse
+          - ✅ Sérialisation Pydantic fonctionne correctement
+          - ✅ Pas d'erreurs de validation dans les logs backend
+          
+          🎉 CONCLUSION: La correction du modèle Pydantic est ENTIÈREMENT RÉUSSIE
+          - Le champ assigne_a_id accepte maintenant les valeurs null
+          - L'endpoint GET /api/preventive-maintenance fonctionne sans erreurs
+          - Tous les enregistrements sont correctement retournés
+
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
     implemented: true
