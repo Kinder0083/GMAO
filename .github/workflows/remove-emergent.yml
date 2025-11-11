@@ -1,0 +1,96 @@
+name: Remove Emergent Badge
+
+on:
+  workflow_dispatch:    # permet d'exécuter manuellement depuis l'onglet Actions
+  push:
+    branches:
+      - main            # facultatif : active pour exécutions à chaque push sur main
+
+jobs:
+  remove-badge:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # nécessaire pour push / créer PR
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine branches & timestamp
+        id: vars
+        run: |
+          TIMESTAMP=$(date -u +"%Y%m%d_%H%M%S")
+          echo "timestamp=$TIMESTAMP" >> $GITHUB_OUTPUT
+          DEFAULT_BRANCH=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's@origin/@@')
+          echo "default_branch=$DEFAULT_BRANCH" >> $GITHUB_OUTPUT
+
+      - name: Create backup branch
+        run: |
+          BACKUP="backup/emergent-${{ steps.vars.outputs.timestamp }}"
+          git checkout -b "$BACKUP"
+          git push origin "$BACKUP"
+
+      - name: Create working branch from default
+        run: |
+          WORK="remove-emergent-${{ steps.vars.outputs.timestamp }}"
+          git checkout ${{ steps.vars.outputs.default_branch }}
+          git pull origin ${{ steps.vars.outputs.default_branch }}
+          git checkout -b "$WORK"
+
+      - name: Remove Emergent occurrences (search & delete)
+        run: |
+          set -e
+          ROOT="."
+          # Patterns to search and delete lines that contain them
+          PATTERNS=("Made with Emergent" "emergent.ai" "made-with-emergent" "<script[^>]*emergent")
+          # File globs to target (expand as needed)
+          GLOBS="*.html *.htm *.js *.jsx *.ts *.tsx *.vue *.svelte *.php *.py *.md"
+          # Find files and apply sed deletions (safe - create .bak copy first)
+          find $ROOT -type f \( -name "*.html" -o -name "*.htm" -o -name "*.js" -o -name "*.jsx" -o -name "*.ts" -o -name "*.tsx" -o -name "*.vue" -o -name "*.svelte" -o -name "*.php" -o -name "*.py" -o -name "*.md" \) -print0 | while IFS= read -r -d '' file; do
+            cp "$file" "$file.bak_emerg"
+            for p in "${PATTERNS[@]}"; do
+              # Using sed to delete lines that match the pattern (case-sensitive)
+              sed -i "/$p/d" "$file" || true
+            done
+          done
+          # Add a CSS fallback in the first global CSS file found
+          CSS_FILE=$(find $ROOT -type f -name "global.css" -o -name "app.css" -o -name "index.css" | head -n 1 || true)
+          if [ -n "$CSS_FILE" ]; then
+            echo -e "\n/* Emergent badge hiding rule added by workflow */\na[href*=\"emergent.ai\"], .made-with-emergent { display: none !important; }\n" >> "$CSS_FILE"
+          fi
+
+      - name: Show summary - remaining matches (first 50 lines)
+        run: |
+          echo "### Remaining references (if any):"
+          grep -RIn --exclude-dir=.git -E "Made with Emergent|emergent.ai|made-with-emergent|<script[^>]*emergent" . || echo "No matches found."
+
+      - name: Commit changes (if any)
+        run: |
+          if git status --porcelain | grep .; then
+            git add -A
+            git commit -m "Remove Emergent badge automatically"
+            git push --set-upstream origin "remove-emergent-${{ steps.vars.outputs.timestamp }}"
+          else
+            echo "No changes to commit."
+            exit 0
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Remove Emergent badge automatically"
+          title: "Remove Emergent badge — automated cleanup"
+          body: |
+            This PR was created by the Remove Emergent Badge workflow.
+            - A backup branch was created: `backup/emergent-${{ steps.vars.outputs.timestamp }}`
+            - Changes: deletion of occurrences of "Made with Emergent", "emergent.ai", "made-with-emergent", and addition of a CSS hiding rule (if applicable).
+            Please review files and run your test suite / build before merging.
+          base: ${{ steps.vars.outputs.default_branch }}
+          head: "remove-emergent-${{ steps.vars.outputs.timestamp }}"
