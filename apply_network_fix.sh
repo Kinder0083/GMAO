@@ -341,10 +341,15 @@ export const auditAPI = {
     })
 };
 
-export default api;
 EOF
 
-log_success "Fichier api.js mis à jour avec la détection automatique"
+# Extraire tout APRÈS la ligne 4 du fichier original (conserve toutes les APIs existantes)
+tail -n +5 /app/frontend/src/services/api.js > /tmp/api_rest.js
+
+# Combiner le nouveau header avec le reste original
+cat /tmp/api_header.js /tmp/api_rest.js > /app/frontend/src/services/api.js
+
+log_success "Fichier api.js mis à jour avec la détection automatique (toutes les APIs conservées)"
 
 # 3. Vérifier la syntaxe du fichier
 log_info "Vérification du fichier..."
