@@ -2687,6 +2687,32 @@ async def import_data(
                 "Téléphone": "telephone",
                 "Phone": "telephone",
                 "Service": "service"
+            },
+            "inventory": {
+                "ID": "id",
+                "Nom": "name",
+                "Name": "name",
+                "Code": "code",
+                "Type": "type",
+                "Catégorie": "category",
+                "Category": "category",
+                "Quantité": "quantity",
+                "Quantity": "quantity",
+                "Zone": "location",
+                "Location": "location"
+            },
+            "vendors": {
+                "ID": "id",
+                "Nom": "name",
+                "Name": "name",
+                "Email": "email",
+                "Téléphone": "phone",
+                "Phone": "phone",
+                "Adresse": "address",
+                "Address": "address",
+                "Type": "type",
+                "Statut": "status",
+                "Status": "status"
             }
         }
         
