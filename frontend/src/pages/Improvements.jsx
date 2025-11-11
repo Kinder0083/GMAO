@@ -15,7 +15,7 @@ import { useSearchParams } from 'react-router-dom';
 const Improvements = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [workOrders, setImprovements] = useState([]);
+  const [improvements, setImprovements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoad, setInitialLoad] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
