@@ -2832,8 +2832,8 @@ async def import_data(
             if current_module in column_mappings:
                 df = df.rename(columns=column_mappings[current_module])
             
-            # Nettoyer les noms de colonnes
-            df.columns = df.columns.str.strip()
+            # Nettoyer les noms de colonnes - convertir en string d'abord
+            df.columns = [str(col).strip() if col is not None else f'col_{i}' for i, col in enumerate(df.columns)]
             
             # Convertir en dictionnaires
             items_to_import = df.to_dict('records')
