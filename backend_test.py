@@ -19,7 +19,7 @@ BACKEND_URL = "https://fixitnow-20.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Iris2024!"
 
-class PreventiveMaintenanceTester:
+class WorkOrdersTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
