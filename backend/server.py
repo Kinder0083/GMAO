@@ -2888,7 +2888,7 @@ async def import_data(
                     # Nettoyer les NaN
                     cleaned_item = {k: v for k, v in item.items() if pd.notna(v)}
                     
-                    # Convertir les champs qui doivent être des listes (comments, attachments, etc.)
+                    # Convertir et initialiser les champs qui doivent être des listes
                     list_fields = ["comments", "attachments", "historique", "permissions"]
                     for list_field in list_fields:
                         if list_field in cleaned_item:
@@ -2903,6 +2903,9 @@ async def import_data(
                                     cleaned_item[list_field] = []
                             elif not isinstance(cleaned_item[list_field], list):
                                 cleaned_item[list_field] = []
+                        else:
+                            # Initialiser le champ s'il n'existe pas
+                            cleaned_item[list_field] = []
                     
                     # Traitement spécifique purchase-history
                     if current_module == "purchase-history":
