@@ -2815,128 +2815,153 @@ async def import_data(
                 detail=f"Erreur de lecture: {str(e)}. Essayez CSV."
             )
         
-        # Appliquer le mapping des colonnes si disponible
-        if module in column_mappings:
-            df = df.rename(columns=column_mappings[module])
-        
-        # Nettoyer les noms de colonnes
-        df.columns = df.columns.str.strip()
-        
-        # Convertir en dictionnaires
-        items_to_import = df.to_dict('records')
-        
-        stats = {
-            "total": len(items_to_import),
+        # Traiter chaque feuille/module
+        overall_stats = {
+            "total": 0,
             "inserted": 0,
             "updated": 0,
             "skipped": 0,
-            "errors": []
+            "errors": [],
+            "modules": {}
         }
         
-        for idx, item in enumerate(items_to_import):
-            try:
-                # Nettoyer les NaN
-                cleaned_item = {k: v for k, v in item.items() if pd.notna(v)}
-                
-                # Traitement spécifique purchase-history
-                if module == "purchase-history":
-                    for num_field in ["quantite", "montantLigneHT", "quantiteRetournee"]:
-                        if num_field in cleaned_item:
-                            try:
-                                value = cleaned_item[num_field]
-                                if isinstance(value, str):
-                                    value = value.replace(',', '.').replace(' ', '')
-                                cleaned_item[num_field] = float(value)
-                            except:
-                                if num_field == "quantiteRetournee":
-                                    cleaned_item[num_field] = 0.0
-                                elif num_field == "quantite":
-                                    cleaned_item[num_field] = 0.0
+        for current_module, df in data_sheets.items():
+            collection_name = modules_to_import[current_module]
+            
+            # Appliquer le mapping des colonnes si disponible
+            if current_module in column_mappings:
+                df = df.rename(columns=column_mappings[current_module])
+            
+            # Nettoyer les noms de colonnes
+            df.columns = df.columns.str.strip()
+            
+            # Convertir en dictionnaires
+            items_to_import = df.to_dict('records')
+            
+            module_stats = {
+                "total": len(items_to_import),
+                "inserted": 0,
+                "updated": 0,
+                "skipped": 0,
+                "errors": []
+            }
+            
+            logger.info(f"🔄 Traitement du module '{current_module}': {len(items_to_import)} éléments")
+            
+            for idx, item in enumerate(items_to_import):
+                try:
+                    # Nettoyer les NaN
+                    cleaned_item = {k: v for k, v in item.items() if pd.notna(v)}
                     
-                    # Convertir dates françaises
-                    if "dateCreation" in cleaned_item:
-                        try:
-                            date_val = cleaned_item["dateCreation"]
-                            if isinstance(date_val, str):
-                                if '/' in date_val:
-                                    parts = date_val.split('/')
-                                    if len(parts) == 3:
-                                        cleaned_item["dateCreation"] = f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
-                                cleaned_item["dateCreation"] = datetime.fromisoformat(cleaned_item["dateCreation"])
-                            elif hasattr(date_val, 'to_pydatetime'):
-                                cleaned_item["dateCreation"] = date_val.to_pydatetime()
-                        except Exception as e:
-                            logger.warning(f"Ligne {idx+1}: date invalide")
-                            pass
-                    
-                    cleaned_item["dateEnregistrement"] = datetime.utcnow()
-                    if "creationUser" not in cleaned_item or not cleaned_item["creationUser"]:
-                        cleaned_item["creationUser"] = current_user.get("email", "import")
-                
-                # Traitement générique pour les autres modules
-                else:
-                    # Convertir les dates
-                    date_fields = ["dateCreation", "dateDebut", "dateFin", "installDate", "dateEnregistrement"]
-                    for date_field in date_fields:
-                        if date_field in cleaned_item:
+                    # Traitement spécifique purchase-history
+                    if current_module == "purchase-history":
+                        for num_field in ["quantite", "montantLigneHT", "quantiteRetournee"]:
+                            if num_field in cleaned_item:
+                                try:
+                                    value = cleaned_item[num_field]
+                                    if isinstance(value, str):
+                                        value = value.replace(',', '.').replace(' ', '')
+                                    cleaned_item[num_field] = float(value)
+                                except:
+                                    if num_field == "quantiteRetournee":
+                                        cleaned_item[num_field] = 0.0
+                                    elif num_field == "quantite":
+                                        cleaned_item[num_field] = 0.0
+                        
+                        # Convertir dates françaises
+                        if "dateCreation" in cleaned_item:
                             try:
-                                date_val = cleaned_item[date_field]
+                                date_val = cleaned_item["dateCreation"]
                                 if isinstance(date_val, str):
                                     if '/' in date_val:
                                         parts = date_val.split('/')
                                         if len(parts) == 3:
-                                            cleaned_item[date_field] = f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
-                                    cleaned_item[date_field] = datetime.fromisoformat(cleaned_item[date_field])
+                                            cleaned_item["dateCreation"] = f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+                                    cleaned_item["dateCreation"] = datetime.fromisoformat(cleaned_item["dateCreation"])
                                 elif hasattr(date_val, 'to_pydatetime'):
-                                    cleaned_item[date_field] = date_val.to_pydatetime()
-                            except:
+                                    cleaned_item["dateCreation"] = date_val.to_pydatetime()
+                            except Exception as e:
+                                logger.warning(f"Module {current_module}, ligne {idx+1}: date invalide")
                                 pass
-                    
-                    # Ajouter métadonnées
-                    if "dateCreation" not in cleaned_item:
-                        cleaned_item["dateCreation"] = datetime.utcnow()
-                
-                # Gérer l'ID
-                item_id = cleaned_item.get('id')
-                if item_id and 'id' in cleaned_item:
-                    del cleaned_item['id']
-                
-                if mode == "replace" and item_id:
-                    try:
-                        existing = await db[collection_name].find_one({"_id": ObjectId(item_id)})
                         
-                        if existing:
-                            await db[collection_name].replace_one(
-                                {"_id": ObjectId(item_id)},
-                                cleaned_item
-                            )
-                            stats["updated"] += 1
-                        else:
-                            cleaned_item["_id"] = ObjectId(item_id)
+                        cleaned_item["dateEnregistrement"] = datetime.utcnow()
+                        if "creationUser" not in cleaned_item or not cleaned_item["creationUser"]:
+                            cleaned_item["creationUser"] = current_user.get("email", "import")
+                    
+                    # Traitement générique pour les autres modules
+                    else:
+                        # Convertir les dates
+                        date_fields = ["dateCreation", "dateDebut", "dateFin", "installDate", "dateEnregistrement"]
+                        for date_field in date_fields:
+                            if date_field in cleaned_item:
+                                try:
+                                    date_val = cleaned_item[date_field]
+                                    if isinstance(date_val, str):
+                                        if '/' in date_val:
+                                            parts = date_val.split('/')
+                                            if len(parts) == 3:
+                                                cleaned_item[date_field] = f"{parts[2]}-{parts[1].zfill(2)}-{parts[0].zfill(2)}"
+                                        cleaned_item[date_field] = datetime.fromisoformat(cleaned_item[date_field])
+                                    elif hasattr(date_val, 'to_pydatetime'):
+                                        cleaned_item[date_field] = date_val.to_pydatetime()
+                                except:
+                                    pass
+                        
+                        # Ajouter métadonnées
+                        if "dateCreation" not in cleaned_item:
+                            cleaned_item["dateCreation"] = datetime.utcnow()
+                    
+                    # Gérer l'ID
+                    item_id = cleaned_item.get('id')
+                    if item_id and 'id' in cleaned_item:
+                        del cleaned_item['id']
+                    
+                    if mode == "replace" and item_id:
+                        try:
+                            existing = await db[collection_name].find_one({"_id": ObjectId(item_id)})
+                            
+                            if existing:
+                                await db[collection_name].replace_one(
+                                    {"_id": ObjectId(item_id)},
+                                    cleaned_item
+                                )
+                                module_stats["updated"] += 1
+                            else:
+                                cleaned_item["_id"] = ObjectId(item_id)
+                                await db[collection_name].insert_one(cleaned_item)
+                                module_stats["inserted"] += 1
+                        except:
+                            # Si l'ID n'est pas valide, insérer comme nouveau
+                            if "_id" in cleaned_item:
+                                del cleaned_item["_id"]
+                            cleaned_item["_id"] = ObjectId()
                             await db[collection_name].insert_one(cleaned_item)
-                            stats["inserted"] += 1
-                    except:
-                        # Si l'ID n'est pas valide, insérer comme nouveau
+                            module_stats["inserted"] += 1
+                    else:
+                        # Mode add
                         if "_id" in cleaned_item:
                             del cleaned_item["_id"]
                         cleaned_item["_id"] = ObjectId()
                         await db[collection_name].insert_one(cleaned_item)
-                        stats["inserted"] += 1
-                else:
-                    # Mode add
-                    if "_id" in cleaned_item:
-                        del cleaned_item["_id"]
-                    cleaned_item["_id"] = ObjectId()
-                    await db[collection_name].insert_one(cleaned_item)
-                    stats["inserted"] += 1
+                        module_stats["inserted"] += 1
+                
+                except Exception as e:
+                    module_stats["skipped"] += 1
+                    error_msg = f"Module {current_module}, ligne {module_stats['inserted'] + module_stats['updated'] + module_stats['skipped']}: {str(e)[:100]}"
+                    module_stats["errors"].append(error_msg)
+                    logger.warning(error_msg)
             
-            except Exception as e:
-                stats["skipped"] += 1
-                error_msg = f"Ligne {stats['inserted'] + stats['updated'] + stats['skipped']}: {str(e)[:100]}"
-                stats["errors"].append(error_msg)
-                logger.warning(error_msg)
+            # Ajouter les stats du module aux stats globales
+            overall_stats["total"] += module_stats["total"]
+            overall_stats["inserted"] += module_stats["inserted"]
+            overall_stats["updated"] += module_stats["updated"]
+            overall_stats["skipped"] += module_stats["skipped"]
+            overall_stats["errors"].extend(module_stats["errors"])
+            overall_stats["modules"][current_module] = module_stats
+            
+            logger.info(f"✅ Module '{current_module}' traité: {module_stats['inserted']} ajoutés, {module_stats['updated']} mis à jour, {module_stats['skipped']} ignorés")
         
-        return stats
+        return overall_stats
     
     except HTTPException:
         raise
