@@ -246,8 +246,8 @@ class WorkOrdersTester:
         return results
 
 if __name__ == "__main__":
-    tester = PreventiveMaintenanceTester()
-    results = tester.run_preventive_maintenance_tests()
+    tester = WorkOrdersTester()
+    results = tester.run_work_orders_tests()
     
     # Exit with appropriate code
     if all(results.values()):
