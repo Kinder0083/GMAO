@@ -1199,13 +1199,13 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "4.1"
-  test_sequence: 8
+  version: "4.2"
+  test_sequence: 9
   run_ui: false
 
 test_plan:
   current_focus:
-    - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
+    - "API Import/Export - Fix errors for all modules and multi-sheet imports"
   stuck_tasks: 
     - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
   test_all: false
