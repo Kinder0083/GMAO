@@ -21,19 +21,32 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Vérifie le mot de passe avec retry logic pour environnements contraints.
     Optimisé pour Proxmox LXC et containers avec ressources limitées.
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     max_retries = 3
     for attempt in range(max_retries):
         try:
             result = pwd_context.verify(plain_password, hashed_password)
+            logger.info(f"✅ Password verification successful on attempt {attempt + 1}")
             return result
-        except Exception as e:
+        except ValueError as e:
+            # ValueError signifie que le hash est invalide ou mal formé
+            logger.error(f"❌ Password verification ValueError on attempt {attempt + 1}: {str(e)}")
+            logger.error(f"   Hash prefix: {hashed_password[:20] if hashed_password else 'None'}...")
+            logger.error(f"   Plain password length: {len(plain_password) if plain_password else 0}")
             if attempt < max_retries - 1:
-                # Attendre un peu avant de réessayer
                 time.sleep(0.1 * (attempt + 1))
                 continue
             else:
-                # Dernière tentative échouée, logger et retourner False
-                print(f"❌ Password verification failed after {max_retries} attempts: {e}")
+                return False
+        except Exception as e:
+            # Autres erreurs (timeout, ressources, etc.)
+            logger.error(f"❌ Password verification Exception on attempt {attempt + 1}: {type(e).__name__}: {str(e)}")
+            if attempt < max_retries - 1:
+                time.sleep(0.1 * (attempt + 1))
+                continue
+            else:
                 return False
     return False
 
