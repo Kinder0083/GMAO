@@ -64,45 +64,64 @@ class WorkOrdersTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_preventive_maintenance_endpoint(self):
-        """Test GET /api/preventive-maintenance endpoint after Pydantic model correction"""
-        self.log("🧪 CRITICAL TEST: GET /api/preventive-maintenance endpoint")
-        self.log("Testing for Pydantic validation error fix (assigne_a_id: Optional[str] = None)")
+    def test_work_orders_endpoint(self):
+        """Test GET /api/work-orders endpoint after Priority enum correction"""
+        self.log("🧪 CRITICAL TEST: GET /api/work-orders endpoint")
+        self.log("Testing for Priority enum validation error fix (NORMALE added to enum)")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/preventive-maintenance",
+                f"{BACKEND_URL}/work-orders",
                 timeout=15
             )
             
             if response.status_code == 200:
-                self.log("✅ GET /api/preventive-maintenance returned 200 OK")
+                self.log("✅ GET /api/work-orders returned 200 OK")
                 
                 try:
                     data = response.json()
-                    self.log(f"✅ Response is valid JSON with {len(data)} preventive maintenance records")
+                    self.log(f"✅ Response is valid JSON with {len(data)} work order records")
                     
-                    # Check for records with assigne_a_id: null
-                    null_assigned_count = 0
-                    assigned_count = 0
+                    # Check for records with priorite: "NORMALE"
+                    normale_count = 0
+                    haute_count = 0
+                    moyenne_count = 0
+                    basse_count = 0
+                    aucune_count = 0
+                    other_priorities = set()
                     
                     for record in data:
-                        if record.get('assigne_a_id') is None:
-                            null_assigned_count += 1
-                        elif record.get('assigne_a_id'):
-                            assigned_count += 1
+                        priority = record.get('priorite')
+                        if priority == "NORMALE":
+                            normale_count += 1
+                        elif priority == "HAUTE":
+                            haute_count += 1
+                        elif priority == "MOYENNE":
+                            moyenne_count += 1
+                        elif priority == "BASSE":
+                            basse_count += 1
+                        elif priority == "AUCUNE":
+                            aucune_count += 1
+                        elif priority:
+                            other_priorities.add(priority)
                     
-                    self.log(f"✅ Records with assigne_a_id = null: {null_assigned_count}")
-                    self.log(f"✅ Records with assigne_a_id assigned: {assigned_count}")
+                    self.log(f"✅ Work orders with priorite = 'NORMALE': {normale_count}")
+                    self.log(f"✅ Work orders with priorite = 'HAUTE': {haute_count}")
+                    self.log(f"✅ Work orders with priorite = 'MOYENNE': {moyenne_count}")
+                    self.log(f"✅ Work orders with priorite = 'BASSE': {basse_count}")
+                    self.log(f"✅ Work orders with priorite = 'AUCUNE': {aucune_count}")
                     
-                    if null_assigned_count > 0:
-                        self.log("✅ CRITICAL SUCCESS: Records with assigne_a_id: null are correctly returned")
-                        self.log("✅ Pydantic validation error has been fixed!")
+                    if other_priorities:
+                        self.log(f"⚠️ Other priorities found: {other_priorities}")
+                    
+                    if normale_count > 0:
+                        self.log("✅ CRITICAL SUCCESS: Work orders with priorite 'NORMALE' are correctly returned")
+                        self.log("✅ Priority enum validation error has been fixed!")
                     else:
-                        self.log("ℹ️ No records with null assigne_a_id found, but endpoint works correctly")
+                        self.log("ℹ️ No work orders with 'NORMALE' priority found, but endpoint works correctly")
                     
                     # Verify no Pydantic validation errors in response
-                    self.log("✅ No Pydantic ValidationError - model correction successful")
+                    self.log("✅ No Pydantic ValidationError - Priority enum correction successful")
                     
                     return True
                     
@@ -112,26 +131,29 @@ class WorkOrdersTester:
                     return False
                     
             elif response.status_code == 500:
-                self.log("❌ GET /api/preventive-maintenance returned 500 Internal Server Error", "ERROR")
-                self.log("❌ This indicates the Pydantic validation error still exists!", "ERROR")
+                self.log("❌ GET /api/work-orders returned 500 Internal Server Error", "ERROR")
+                self.log("❌ This indicates the Priority enum validation error still exists!", "ERROR")
                 
                 # Check if it's the specific Pydantic error
                 if "pydantic_core.ValidationError" in response.text:
                     self.log("❌ CRITICAL: pydantic_core.ValidationError still present!", "ERROR")
-                    self.log("❌ The assigne_a_id field correction may not be working", "ERROR")
+                    self.log("❌ The Priority enum correction may not be working", "ERROR")
                 elif "ValidationError" in response.text:
                     self.log("❌ CRITICAL: ValidationError detected in response!", "ERROR")
+                elif "Input should be 'HAUTE', 'MOYENNE', 'BASSE' or 'AUCUNE'" in response.text:
+                    self.log("❌ CRITICAL: Priority enum validation error detected!", "ERROR")
+                    self.log("❌ 'NORMALE' value is not accepted by the enum", "ERROR")
                 
                 self.log(f"Error response: {response.text[:1000]}...", "ERROR")
                 return False
                 
             else:
-                self.log(f"❌ GET /api/preventive-maintenance failed - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ GET /api/work-orders failed - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text[:500]}...", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request to /api/preventive-maintenance failed - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Request to /api/work-orders failed - Error: {str(e)}", "ERROR")
             return False
     
     def check_backend_logs(self):
