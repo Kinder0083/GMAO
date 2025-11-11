@@ -34,9 +34,13 @@ const MainLayout = () => {
   const location = useLocation();
   const [user, setUser] = useState({ nom: 'Utilisateur', role: 'VIEWER', firstLogin: false, id: '' });
   const [workOrdersCount, setWorkOrdersCount] = useState(0);
-  const [overdueCount, setOverdueCount] = useState(0); // Nombre d'échéances dépassées
+  const [overdueCount, setOverdueCount] = useState(0); // Nombre d'échéances dépassées TOTAL
   const [overdueDetails, setOverdueDetails] = useState({}); // Détails par module
   const [overdueMenuOpen, setOverdueMenuOpen] = useState(false); // Menu déroulant échéances
+  // Compteurs séparés par catégorie
+  const [overdueExecutionCount, setOverdueExecutionCount] = useState(0); // Work orders + Improvements (orange)
+  const [overdueRequestsCount, setOverdueRequestsCount] = useState(0); // Demandes d'inter. + Demandes d'amél. (jaune)
+  const [overdueMaintenanceCount, setOverdueMaintenanceCount] = useState(0); // Maintenances préventives (bleu)
   const { canView, isAdmin } = usePermissions();
 
   useEffect(() => {
