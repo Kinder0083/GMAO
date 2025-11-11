@@ -1744,12 +1744,12 @@ async def update_preventive_maintenance(pm_id: str, pm_update: PreventiveMainten
     try:
         update_data = {k: v for k, v in pm_update.model_dump().items() if v is not None}
         
-        await db.preventive_maintenance.update_one(
+        await db.preventive_maintenances.update_one(
             {"_id": ObjectId(pm_id)},
             {"$set": update_data}
         )
         
-        pm = await db.preventive_maintenance.find_one({"_id": ObjectId(pm_id)})
+        pm = await db.preventive_maintenances.find_one({"_id": ObjectId(pm_id)})
         pm = serialize_doc(pm)
         
         if pm.get("equipement_id"):
