@@ -2690,8 +2690,14 @@ async def import_data(
             }
         }
         
+        # Lire le fichier selon le type et le module
+        data_sheets = {}
+        
         try:
             if file.filename.endswith('.csv'):
+                if module == "all":
+                    raise HTTPException(status_code=400, detail="Pour importer toutes les données, utilisez un fichier Excel multi-feuilles")
+                
                 # Détecter automatiquement le séparateur CSV
                 content_str = content.decode('utf-8', errors='ignore')
                 first_line = content_str.split('\n')[0] if content_str else ""
@@ -2710,47 +2716,95 @@ async def import_data(
                 logger.info(f"📋 Séparateur détecté: '{separator}'")
                 df = pd.read_csv(io.BytesIO(content), sep=separator, encoding='utf-8')
                 logger.info(f"✅ CSV lu: {len(df)} lignes, {len(df.columns)} colonnes")
+                data_sheets[module] = df
                 
             elif file.filename.endswith(('.xlsx', '.xls', '.xlsb')):
-                df = None
-                errors = []
-                
-                # Tentatives multiples de lecture
-                if file.filename.endswith('.xlsx'):
+                if module == "all":
+                    # Lire toutes les feuilles pour l'import complet
                     try:
-                        df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
-                        logger.info("✅ Fichier lu avec openpyxl")
-                    except Exception as e1:
-                        errors.append(f"openpyxl: {str(e1)[:100]}")
-                
-                if df is None:
-                    try:
-                        df = pd.read_excel(io.BytesIO(content), engine='xlrd')
-                        logger.info("✅ Fichier lu avec xlrd")
-                    except Exception as e2:
-                        errors.append(f"xlrd: {str(e2)[:100]}")
-                
-                if df is None and file.filename.endswith('.xlsb'):
-                    try:
-                        df = pd.read_excel(io.BytesIO(content), engine='pyxlsb')
-                        logger.info("✅ Fichier lu avec pyxlsb")
-                    except Exception as e3:
-                        errors.append(f"pyxlsb: {str(e3)[:100]}")
-                
-                if df is None:
-                    try:
-                        df = pd.read_excel(io.BytesIO(content))
-                        logger.info("✅ Fichier lu avec méthode par défaut")
-                    except Exception as e4:
-                        errors.append(f"default: {str(e4)[:100]}")
-                
-                if df is None:
-                    error_msg = "Impossible de lire le fichier Excel. Erreurs:\n" + "\n".join(errors)
-                    error_msg += "\n\n💡 Solutions:\n"
-                    error_msg += "1. Ouvrez le fichier dans Excel et sauvegardez-le à nouveau\n"
-                    error_msg += "2. Exportez en CSV depuis Excel\n"
-                    error_msg += "3. Utilisez un fichier Excel plus simple"
-                    raise HTTPException(status_code=400, detail=error_msg)
+                        all_sheets = pd.read_excel(io.BytesIO(content), sheet_name=None, engine='openpyxl')
+                        logger.info(f"✅ Fichier Excel multi-feuilles lu: {len(all_sheets)} feuilles")
+                        
+                        # Mapper les noms de feuilles aux modules
+                        sheet_to_module = {
+                            "intervention-requests": "intervention-requests",
+                            "intervention_requests": "intervention-requests", 
+                            "work-orders": "work-orders",
+                            "work_orders": "work-orders",
+                            "improvement-requests": "improvement-requests",
+                            "improvement_requests": "improvement-requests",
+                            "improvements": "improvements",
+                            "equipments": "equipments",
+                            "locations": "locations",
+                            "inventory": "inventory",
+                            "purchase-history": "purchase-history",
+                            "purchase_history": "purchase-history",
+                            "meters": "meters",
+                            "people": "people"
+                        }
+                        
+                        for sheet_name, df in all_sheets.items():
+                            # Essayer de mapper le nom de la feuille à un module
+                            module_name = sheet_to_module.get(sheet_name.lower())
+                            if module_name and module_name in modules_to_import:
+                                data_sheets[module_name] = df
+                                logger.info(f"📋 Feuille '{sheet_name}' mappée au module '{module_name}': {len(df)} lignes")
+                        
+                        if not data_sheets:
+                            available_sheets = list(all_sheets.keys())
+                            expected_sheets = list(modules_to_import.keys())
+                            raise HTTPException(
+                                status_code=400, 
+                                detail=f"Aucune feuille reconnue. Feuilles disponibles: {available_sheets}. Feuilles attendues: {expected_sheets}"
+                            )
+                            
+                    except Exception as e:
+                        if "Aucune feuille reconnue" in str(e):
+                            raise
+                        raise HTTPException(status_code=400, detail=f"Erreur lecture multi-feuilles: {str(e)}")
+                else:
+                    # Lire une seule feuille pour un module spécifique
+                    df = None
+                    errors = []
+                    
+                    # Tentatives multiples de lecture
+                    if file.filename.endswith('.xlsx'):
+                        try:
+                            df = pd.read_excel(io.BytesIO(content), engine='openpyxl')
+                            logger.info("✅ Fichier lu avec openpyxl")
+                        except Exception as e1:
+                            errors.append(f"openpyxl: {str(e1)[:100]}")
+                    
+                    if df is None:
+                        try:
+                            df = pd.read_excel(io.BytesIO(content), engine='xlrd')
+                            logger.info("✅ Fichier lu avec xlrd")
+                        except Exception as e2:
+                            errors.append(f"xlrd: {str(e2)[:100]}")
+                    
+                    if df is None and file.filename.endswith('.xlsb'):
+                        try:
+                            df = pd.read_excel(io.BytesIO(content), engine='pyxlsb')
+                            logger.info("✅ Fichier lu avec pyxlsb")
+                        except Exception as e3:
+                            errors.append(f"pyxlsb: {str(e3)[:100]}")
+                    
+                    if df is None:
+                        try:
+                            df = pd.read_excel(io.BytesIO(content))
+                            logger.info("✅ Fichier lu avec méthode par défaut")
+                        except Exception as e4:
+                            errors.append(f"default: {str(e4)[:100]}")
+                    
+                    if df is None:
+                        error_msg = "Impossible de lire le fichier Excel. Erreurs:\n" + "\n".join(errors)
+                        error_msg += "\n\n💡 Solutions:\n"
+                        error_msg += "1. Ouvrez le fichier dans Excel et sauvegardez-le à nouveau\n"
+                        error_msg += "2. Exportez en CSV depuis Excel\n"
+                        error_msg += "3. Utilisez un fichier Excel plus simple"
+                        raise HTTPException(status_code=400, detail=error_msg)
+                    
+                    data_sheets[module] = df
             else:
                 raise HTTPException(status_code=400, detail="Format non supporté (CSV, XLSX, XLS ou XLSB)")
         except HTTPException:
