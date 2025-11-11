@@ -1,0 +1,19 @@
+{
+  "version": "1.2.0",
+  "versionName": "Version BetaTest",
+  "releaseDate": "2025-01-11",
+  "description": "Pour le moment, a tester",
+  "changes": [
+    "✅ Système de permissions avancé avec 11 rôles",
+    "✅ Module de maintenance préventive",
+    "✅ Gestion des compteurs (eau, gaz, électricité)",
+    "✅ Demandes d'amélioration et améliorations",
+    "✅ Import/Export Excel multi-modules",
+    "✅ Journal d'audit complet",
+    "✅ Correction du système d'authentification"
+  ],
+  "minVersion": "1.0.0",
+  "breaking": false,
+  "downloadUrl": "https://github.com/Kinder0083/GMAO",
+  "author": "Grèg"
+}
