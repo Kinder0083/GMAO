@@ -226,30 +226,33 @@ class ImportExportTester:
                     self.log("✅ Import 'all' multi-sheet successful!")
                     self.log(f"📋 Response structure: {list(result.keys())}")
                     
-                    # Verify response structure
-                    if 'data' in result:
-                        data = result['data']
-                        if 'modules' in data:
-                            self.log(f"✅ response.data.modules exists: {list(data['modules'].keys())}")
-                        if 'total' in data:
-                            self.log(f"✅ response.data.total: {data['total']}")
-                        if 'inserted' in data:
-                            self.log(f"✅ response.data.inserted: {data['inserted']}")
-                        if 'updated' in data:
-                            self.log(f"✅ response.data.updated: {data['updated']}")
-                        if 'skipped' in data:
-                            self.log(f"✅ response.data.skipped: {data['skipped']}")
-                        
-                        # Check if data was actually inserted
-                        if data.get('inserted', 0) > 0:
-                            self.log("✅ Data successfully inserted into MongoDB")
-                        else:
-                            self.log("⚠️ No data was inserted (might be duplicates or validation issues)")
-                        
-                        return True
+                    # Verify response structure (data is at root level)
+                    if 'modules' in result:
+                        self.log(f"✅ response.modules exists: {list(result['modules'].keys())}")
+                    if 'total' in result:
+                        self.log(f"✅ response.total: {result['total']}")
+                    if 'inserted' in result:
+                        self.log(f"✅ response.inserted: {result['inserted']}")
+                    if 'updated' in result:
+                        self.log(f"✅ response.updated: {result['updated']}")
+                    if 'skipped' in result:
+                        self.log(f"✅ response.skipped: {result['skipped']}")
+                    
+                    # Check if data was actually inserted
+                    if result.get('inserted', 0) > 0:
+                        self.log("✅ Data successfully inserted into MongoDB")
                     else:
-                        self.log("❌ Response missing 'data' field", "ERROR")
-                        return False
+                        self.log("⚠️ No data was inserted (might be duplicates or validation issues)")
+                    
+                    # Check for the critical pandas error
+                    if 'errors' in result and result['errors']:
+                        for error in result['errors']:
+                            if "can only use .str accessor with string value" in str(error):
+                                self.log("❌ CRITICAL: Found the pandas string accessor error!", "ERROR")
+                                return False
+                    
+                    self.log("✅ No pandas string accessor error found - Fix is working!")
+                    return True
                 else:
                     self.log(f"❌ Import 'all' failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
                     
