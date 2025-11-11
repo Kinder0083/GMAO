@@ -724,6 +724,33 @@ backend:
           - Le champ assigne_a_id accepte maintenant les valeurs null
           - L'endpoint GET /api/preventive-maintenance fonctionne sans erreurs
           - Tous les enregistrements sont correctement retournés
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ TEST CRITIQUE FRONTEND RÉUSSI - Page Maintenance Préventive après correction Pydantic
+          
+          🎯 TESTS EFFECTUÉS (Novembre 2025):
+          1. ✅ Connexion admin réussie (admin@gmao-iris.local / Admin123!)
+          2. ✅ Navigation vers /preventive-maintenance: SUCCESS
+          3. ✅ AUCUN message d'erreur "Impossible de charger les maintenances préventives"
+          4. ✅ Titre "Maintenance Préventive" affiché correctement
+          5. ✅ Cartes statistiques présentes: Maintenances actives (3), Prochainement (2), Complétées ce mois (2)
+          6. ✅ API /api/preventive-maintenance répond correctement (Status: 200)
+          7. ✅ 3 maintenances préventives retournées par l'API
+          8. ✅ Interface utilisateur complètement fonctionnelle
+          
+          📊 VÉRIFICATIONS CRITIQUES:
+          - ✅ Page se charge SANS erreur "Impossible de charger..."
+          - ✅ Maintenances avec assignation null gérées correctement
+          - ✅ Sérialisation Pydantic fonctionne parfaitement
+          - ✅ Aucune erreur 500 sur l'endpoint preventive-maintenance
+          - ✅ Interface responsive et données affichées
+          
+          🎉 RÉSULTAT FINAL: CORRECTION PYDANTIC ENTIÈREMENT VALIDÉE
+          - Le bug critique empêchant le chargement de la page est RÉSOLU
+          - Le champ assigne_a_id: Optional[str] = None permet la sérialisation des valeurs null
+          - La page Maintenance Préventive fonctionne parfaitement
+          - Tous les critères de test du cahier des charges sont respectés
 
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
