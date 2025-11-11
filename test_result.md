@@ -2245,4 +2245,41 @@ agent_communication:
       2. Imports individuels fonctionnent sans erreurs de chargement
       
       Le système d'import/export est maintenant pleinement opérationnel pour tous les modules.
+  - agent: "testing"
+    message: |
+      ✅ TEST CRITIQUE RÉUSSI - ENDPOINT PREVENTIVE MAINTENANCE CORRIGÉ
+      
+      🎯 CONTEXTE DU TEST:
+      - Problème: Le champ assigne_a_id était défini comme str (non-optionnel) dans PreventiveMaintenanceBase
+      - Certains documents MongoDB avaient assigne_a_id: null, causant pydantic_core.ValidationError
+      - Correction: Changé assigne_a_id de str à Optional[str] = None (ligne 682 models.py)
+      
+      📊 RÉSULTATS DES TESTS (3/3 RÉUSSIS):
+      
+      **1. CONNEXION ADMIN**: ✅ SUCCESS
+      - Login admin@gmao-iris.local / Admin123!: RÉUSSI
+      - Token JWT obtenu et utilisé pour les requêtes suivantes
+      
+      **2. TEST ENDPOINT CRITIQUE**: ✅ SUCCESS
+      - GET /api/preventive-maintenance: 200 OK (vs 500 avant correction)
+      - Réponse JSON valide avec 3 enregistrements de maintenance préventive
+      - 1 enregistrement avec assigne_a_id = null: ✅ CORRECTEMENT INCLUS
+      - 1 enregistrement avec assigne_a_id assigné: ✅ PRÉSENT
+      - Aucune erreur pydantic_core.ValidationError détectée
+      
+      **3. VÉRIFICATION LOGS BACKEND**: ✅ SUCCESS
+      - Aucune erreur Pydantic dans les réponses backend
+      - Endpoint fonctionne de manière stable
+      
+      🔧 CORRECTION TECHNIQUE VALIDÉE:
+      - Modèle PreventiveMaintenanceBase ligne 682: assigne_a_id: Optional[str] = None
+      - Les documents avec assigne_a_id: null sont maintenant correctement sérialisés
+      - Plus d'erreur 500 Internal Server Error sur cet endpoint
+      
+      🎉 CONCLUSION: LA CORRECTION PYDANTIC EST ENTIÈREMENT FONCTIONNELLE
+      ✅ L'endpoint GET /api/preventive-maintenance retourne 200 OK avec données valides
+      ✅ Aucune erreur de validation Pydantic
+      ✅ Les maintenances avec assignation null sont incluses dans la réponse
+      
+      Le problème critique reporté est RÉSOLU - l'endpoint fonctionne parfaitement.
 
