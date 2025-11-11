@@ -679,7 +679,7 @@ class PreventiveMaintenanceBase(BaseModel):
     equipement_id: str
     frequence: Frequency
     prochaineMaintenance: datetime
-    assigne_a_id: str
+    assigne_a_id: Optional[str] = None
     duree: float
     statut: PMStatus = PMStatus.ACTIF
 
