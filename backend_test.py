@@ -176,21 +176,22 @@ class WorkOrdersTester:
             self.log(f"⚠️ Could not check backend logs: {str(e)}")
             return True  # Don't fail the test for this
     
-    def run_preventive_maintenance_tests(self):
-        """Run preventive maintenance endpoint tests after Pydantic model correction"""
+    def run_work_orders_tests(self):
+        """Run work orders endpoint tests after Priority enum correction"""
         self.log("=" * 80)
-        self.log("TESTING PREVENTIVE MAINTENANCE ENDPOINT - PYDANTIC MODEL CORRECTION")
+        self.log("TESTING WORK ORDERS ENDPOINT - PRIORITY ENUM CORRECTION")
         self.log("=" * 80)
-        self.log("CONTEXTE: Le champ assigne_a_id était défini comme str (non-optionnel)")
-        self.log("mais certains documents MongoDB avaient cette valeur à None,")
-        self.log("causant une erreur pydantic_core.ValidationError.")
+        self.log("CONTEXTE: L'endpoint GET /api/work-orders retournait une erreur 500")
+        self.log("avec un message de validation Pydantic pour le champ priorite.")
+        self.log("Certains bons de travail avaient la priorité 'NORMALE', mais cette")
+        self.log("valeur n'était pas définie dans l'enum Priority.")
         self.log("")
-        self.log("CORRECTION: assigne_a_id changé de str à Optional[str] = None")
+        self.log("CORRECTION: Ajout de NORMALE = 'NORMALE' à l'enum Priority")
         self.log("=" * 80)
         
         results = {
             "admin_login": False,
-            "preventive_maintenance_endpoint": False,
+            "work_orders_endpoint": False,
             "backend_logs_check": False
         }
         
@@ -201,15 +202,15 @@ class WorkOrdersTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # Test 2: Preventive Maintenance Endpoint (CRITICAL TEST)
-        results["preventive_maintenance_endpoint"] = self.test_preventive_maintenance_endpoint()
+        # Test 2: Work Orders Endpoint (CRITICAL TEST)
+        results["work_orders_endpoint"] = self.test_work_orders_endpoint()
         
         # Test 3: Check backend logs
         results["backend_logs_check"] = self.check_backend_logs()
         
         # Summary
         self.log("=" * 70)
-        self.log("PREVENTIVE MAINTENANCE TEST RESULTS SUMMARY")
+        self.log("WORK ORDERS TEST RESULTS SUMMARY")
         self.log("=" * 70)
         
         passed = sum(results.values())
@@ -222,20 +223,21 @@ class WorkOrdersTester:
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         # Detailed analysis
-        if results.get("preventive_maintenance_endpoint", False):
-            self.log("🎉 CRITICAL SUCCESS: GET /api/preventive-maintenance is working!")
-            self.log("✅ Fixed: Pydantic ValidationError for assigne_a_id resolved")
+        if results.get("work_orders_endpoint", False):
+            self.log("🎉 CRITICAL SUCCESS: GET /api/work-orders is working!")
+            self.log("✅ Fixed: Priority enum ValidationError resolved")
             self.log("✅ Endpoint returns 200 OK with valid data")
-            self.log("✅ Records with assigne_a_id: null are correctly included")
+            self.log("✅ Work orders with priorite 'NORMALE' are correctly included")
         else:
-            self.log("🚨 CRITICAL FAILURE: GET /api/preventive-maintenance still failing!")
-            self.log("❌ The Pydantic ValidationError may still exist")
-            self.log("❌ Check if the model correction was properly applied")
+            self.log("🚨 CRITICAL FAILURE: GET /api/work-orders still failing!")
+            self.log("❌ The Priority enum ValidationError may still exist")
+            self.log("❌ Check if the enum correction was properly applied")
         
         if passed == total:
-            self.log("🎉 ALL PREVENTIVE MAINTENANCE TESTS PASSED!")
-            self.log("✅ The Pydantic model correction has been successfully applied")
-            self.log("✅ No more ValidationError for assigne_a_id field")
+            self.log("🎉 ALL WORK ORDERS TESTS PASSED!")
+            self.log("✅ The Priority enum correction has been successfully applied")
+            self.log("✅ No more ValidationError for priorite field")
+            self.log("✅ All priorities (HAUTE, MOYENNE, BASSE, NORMALE, AUCUNE) are accepted")
         else:
             self.log("⚠️ Some tests failed - The issue may still exist")
             failed_tests = [test for test, result in results.items() if not result]
