@@ -213,13 +213,18 @@ const ImportExport = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {modules.filter(m => m.value !== 'all').map(mod => (
+                  {modules.map(mod => (
                     <SelectItem key={mod.value} value={mod.value}>
                       {mod.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {selectedModule === 'all' && (
+                <p className="text-xs text-amber-600">
+                  ⚠️ Pour importer toutes les données, utilisez un fichier Excel avec une feuille par module
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
