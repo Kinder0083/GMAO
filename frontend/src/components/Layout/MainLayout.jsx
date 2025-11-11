@@ -288,18 +288,62 @@ const MainLayout = () => {
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Icône rappel échéances */}
-          <button 
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
-            title="Échéances dépassées"
-          >
-            <img src="/rappel-calendrier.jpg" alt="Rappel" className="w-6 h-6 object-contain" />
-            {overdueCount > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {overdueCount > 9 ? '9+' : overdueCount}
-              </span>
+          {/* Icône rappel échéances avec menu déroulant */}
+          <div className="relative">
+            <button 
+              onClick={() => setOverdueMenuOpen(!overdueMenuOpen)}
+              className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+              title="Échéances dépassées"
+            >
+              <img src="/rappel-calendrier.jpg" alt="Rappel" className="w-6 h-6 object-contain" />
+              {overdueCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-orange-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                  {overdueCount > 9 ? '9+' : overdueCount}
+                </span>
+              )}
+            </button>
+
+            {/* Menu déroulant des échéances */}
+            {overdueMenuOpen && overdueCount > 0 && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="p-3 border-b border-gray-200">
+                  <h3 className="font-semibold text-gray-800">Échéances dépassées</h3>
+                  <p className="text-xs text-gray-500 mt-1">{overdueCount} élément{overdueCount > 1 ? 's' : ''} en retard</p>
+                </div>
+                <div className="py-2 max-h-80 overflow-y-auto">
+                  {Object.entries(overdueDetails).map(([key, detail]) => (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        navigate(detail.route);
+                        setOverdueMenuOpen(false);
+                      }}
+                      className="w-full px-4 py-3 hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm text-gray-700 group-hover:text-orange-600 font-medium">
+                          {detail.label}
+                        </span>
+                      </div>
+                      <span className="text-sm font-semibold text-orange-500">
+                        {detail.count}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
             )}
-          </button>
+            
+            {/* Message si aucune échéance */}
+            {overdueMenuOpen && overdueCount === 0 && (
+              <div className="absolute right-0 mt-2 w-72 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="p-4 text-center">
+                  <p className="text-sm text-gray-500">Aucune échéance dépassée</p>
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Cloche notifications */}
           <button 
