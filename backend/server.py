@@ -2543,7 +2543,7 @@ async def import_data(
 ):
     """Importer les données d'un module (admin uniquement)"""
     try:
-        if module not in EXPORT_MODULES:
+        if module not in EXPORT_MODULES and module != "all":
             raise HTTPException(status_code=400, detail="Module invalide")
         
         collection_name = EXPORT_MODULES[module]
