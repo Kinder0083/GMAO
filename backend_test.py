@@ -291,6 +291,7 @@ class ImportExportTester:
                 if response.status_code == 200:
                     result = response.json()
                     self.log(f"✅ Import {module} successful!")
+                    self.log(f"📋 Response structure: {list(result.keys())}")
                     
                     # Verify response structure
                     if 'data' in result:
