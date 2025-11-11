@@ -276,7 +276,7 @@ const ImportExport = () => {
             <CardTitle>Résultat de l'import</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
                 <Database size={24} className="text-blue-600" />
                 <div>
@@ -293,11 +293,11 @@ const ImportExport = () => {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-lg">
-                <AlertCircle size={24} className="text-orange-600" />
+              <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-lg">
+                <AlertCircle size={24} className="text-amber-600" />
                 <div>
                   <p className="text-sm text-gray-600">Mis à jour</p>
-                  <p className="text-2xl font-bold text-orange-600">{importResult.updated}</p>
+                  <p className="text-2xl font-bold text-amber-600">{importResult.updated}</p>
                 </div>
               </div>
 
@@ -310,17 +310,54 @@ const ImportExport = () => {
               </div>
             </div>
 
+            {/* Détails par module (import "all") */}
+            {importResult.modules && Object.keys(importResult.modules).length > 0 && (
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Détails par module</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Object.entries(importResult.modules).map(([moduleName, moduleStats]) => (
+                    <div key={moduleName} className="border rounded-lg p-4">
+                      <h4 className="font-medium text-sm mb-2 capitalize">
+                        {modules.find(m => m.value === moduleName)?.label || moduleName}
+                      </h4>
+                      <div className="space-y-1 text-sm">
+                        <div className="flex justify-between">
+                          <span className="text-gray-600">Total:</span>
+                          <span className="font-medium">{moduleStats.total}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-green-600">Ajoutés:</span>
+                          <span className="font-medium text-green-600">{moduleStats.inserted}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-amber-600">Mis à jour:</span>
+                          <span className="font-medium text-amber-600">{moduleStats.updated}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-red-600">Ignorés:</span>
+                          <span className="font-medium text-red-600">{moduleStats.skipped}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Erreurs */}
             {importResult.errors && importResult.errors.length > 0 && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-red-600 mb-2">Erreurs :</h4>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                  {importResult.errors.slice(0, 10).map((error, index) => (
-                    <li key={index}>{error}</li>
+              <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                <h3 className="font-semibold text-red-800 mb-2">Erreurs ({importResult.errors.length})</h3>
+                <div className="space-y-1 max-h-60 overflow-y-auto">
+                  {importResult.errors.slice(0, 10).map((error, idx) => (
+                    <p key={idx} className="text-sm text-red-700">• {error}</p>
                   ))}
                   {importResult.errors.length > 10 && (
-                    <li className="text-gray-500">... et {importResult.errors.length - 10} autres erreurs</li>
+                    <p className="text-sm text-red-600 font-medium mt-2">
+                      ... et {importResult.errors.length - 10} autres erreurs
+                    </p>
                   )}
-                </ul>
+                </div>
               </div>
             )}
           </CardContent>
