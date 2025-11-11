@@ -157,11 +157,15 @@ const MainLayout = () => {
       };
       
       const today = new Date();
-      today.setHours(23, 59, 59, 999); // Fin de journée pour inclure aujourd'hui
+      today.setHours(23, 59, 59, 999);
+      
       let total = 0;
+      let executionCount = 0; // Work orders + Improvements
+      let requestsCount = 0; // Demandes d'inter. + Demandes d'amél.
+      let maintenanceCount = 0; // Maintenances préventives
       const details = {};
       
-      // Charger les ordres de travail en retard (si permission)
+      // 1. Ordres de travail en retard (ORANGE)
       if (canViewModule('workOrders')) {
         try {
           const woResponse = await fetch(`${backend_url}/api/work-orders`, {
@@ -178,8 +182,10 @@ const MainLayout = () => {
               details.workOrders = {
                 count: overdueWO.length,
                 label: 'Ordres de travail',
-                route: '/work-orders'
+                route: '/work-orders',
+                category: 'execution'
               };
+              executionCount += overdueWO.length;
               total += overdueWO.length;
             }
           }
@@ -188,7 +194,7 @@ const MainLayout = () => {
         }
       }
       
-      // Charger les améliorations en retard (si permission)
+      // 2. Améliorations en retard (ORANGE)
       if (canViewModule('improvements')) {
         try {
           const impResponse = await fetch(`${backend_url}/api/improvements`, {
@@ -205,8 +211,10 @@ const MainLayout = () => {
               details.improvements = {
                 count: overdueImp.length,
                 label: 'Améliorations',
-                route: '/improvements'
+                route: '/improvements',
+                category: 'execution'
               };
+              executionCount += overdueImp.length;
               total += overdueImp.length;
             }
           }
@@ -215,7 +223,65 @@ const MainLayout = () => {
         }
       }
       
-      // Charger les maintenances préventives arrivées à échéance (si permission)
+      // 3. Demandes d'intervention en retard (JAUNE)
+      if (canViewModule('interventionRequests')) {
+        try {
+          const irResponse = await fetch(`${backend_url}/api/intervention-requests`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (irResponse.ok) {
+            const interventionRequests = await irResponse.json();
+            const overdueIR = interventionRequests.filter(ir => {
+              if (!ir.dateSouhaitee || ir.statut === 'TERMINE' || ir.statut === 'ANNULE') return false;
+              const dueDate = new Date(ir.dateSouhaitee);
+              return dueDate < today;
+            });
+            if (overdueIR.length > 0) {
+              details.interventionRequests = {
+                count: overdueIR.length,
+                label: "Demandes d'intervention",
+                route: '/intervention-requests',
+                category: 'requests'
+              };
+              requestsCount += overdueIR.length;
+              total += overdueIR.length;
+            }
+          }
+        } catch (err) {
+          console.error('Erreur intervention requests:', err);
+        }
+      }
+      
+      // 4. Demandes d'amélioration en retard (JAUNE)
+      if (canViewModule('improvementRequests')) {
+        try {
+          const imprResponse = await fetch(`${backend_url}/api/improvement-requests`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (imprResponse.ok) {
+            const improvementRequests = await imprResponse.json();
+            const overdueIMPR = improvementRequests.filter(impr => {
+              if (!impr.dateSouhaitee || impr.statut === 'TERMINE' || impr.statut === 'ANNULE') return false;
+              const dueDate = new Date(impr.dateSouhaitee);
+              return dueDate < today;
+            });
+            if (overdueIMPR.length > 0) {
+              details.improvementRequests = {
+                count: overdueIMPR.length,
+                label: "Demandes d'amélioration",
+                route: '/improvement-requests',
+                category: 'requests'
+              };
+              requestsCount += overdueIMPR.length;
+              total += overdueIMPR.length;
+            }
+          }
+        } catch (err) {
+          console.error('Erreur improvement requests:', err);
+        }
+      }
+      
+      // 5. Maintenances préventives (BLEU)
       if (canViewModule('preventiveMaintenance')) {
         try {
           const pmResponse = await fetch(`${backend_url}/api/preventive-maintenance`, {
@@ -232,8 +298,10 @@ const MainLayout = () => {
               details.preventiveMaintenance = {
                 count: overduePM.length,
                 label: 'Maintenances préventives',
-                route: '/preventive-maintenance'
+                route: '/preventive-maintenance',
+                category: 'maintenance'
               };
+              maintenanceCount += overduePM.length;
               total += overduePM.length;
             }
           }
@@ -243,6 +311,9 @@ const MainLayout = () => {
       }
       
       setOverdueCount(total);
+      setOverdueExecutionCount(executionCount);
+      setOverdueRequestsCount(requestsCount);
+      setOverdueMaintenanceCount(maintenanceCount);
       setOverdueDetails(details);
     } catch (error) {
       console.error('Erreur lors du chargement des échéances:', error);
