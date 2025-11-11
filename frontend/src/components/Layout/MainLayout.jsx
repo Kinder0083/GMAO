@@ -71,6 +71,7 @@ const MainLayout = () => {
         // Écouter les événements de création/modification d'ordres de travail
         const handleWorkOrderChange = () => {
           loadWorkOrdersCount(parsedUser.id);
+          loadOverdueCount(); // Aussi rafraîchir les échéances
         };
         
         window.addEventListener('workOrderCreated', handleWorkOrderChange);
@@ -87,6 +88,20 @@ const MainLayout = () => {
       }
     }
   }, []);
+
+  // Fermer le menu des échéances quand on clique en dehors
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (overdueMenuOpen && !event.target.closest('.relative')) {
+        setOverdueMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [overdueMenuOpen]);
 
   const loadWorkOrdersCount = async (userId) => {
     try {
