@@ -443,39 +443,66 @@ const WorkOrders = () => {
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedWorkOrder(wo);
-                              setDialogOpen(true);
-                            }}
-                            className="hover:bg-blue-50 hover:text-blue-600"
-                          >
-                            <Eye size={16} />
-                          </Button>
+                          <TooltipProvider delayDuration={300}>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedWorkOrder(wo);
+                                    setDialogOpen(true);
+                                  }}
+                                  className="hover:bg-blue-50 hover:text-blue-600"
+                                >
+                                  <Eye size={16} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent side="top">
+                                <p>Voir les détails</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                           {canEdit('workOrders') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedWorkOrder(wo);
-                                setFormDialogOpen(true);
-                              }}
-                              className="hover:bg-green-50 hover:text-green-600"
-                            >
-                              <Pencil size={16} />
-                            </Button>
+                            <TooltipProvider delayDuration={300}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      setSelectedWorkOrder(wo);
+                                      setFormDialogOpen(true);
+                                    }}
+                                    className="hover:bg-green-50 hover:text-green-600"
+                                  >
+                                    <Pencil size={16} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>Modifier</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                           {canDelete('workOrders') && (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleDelete(wo.id)}
-                              className="hover:bg-red-50 hover:text-red-600"
-                            >
-                              <Trash2 size={16} />
-                            </Button>
+                            <TooltipProvider delayDuration={300}>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDelete(wo.id)}
+                                    className="hover:bg-red-50 hover:text-red-600"
+                                  >
+                                    <Trash2 size={16} />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent side="top">
+                                  <p>Supprimer</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
                           )}
                         </div>
                       </td>
