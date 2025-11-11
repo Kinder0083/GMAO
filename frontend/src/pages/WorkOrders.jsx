@@ -12,6 +12,7 @@ import { useToast } from '../hooks/use-toast';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useSearchParams } from 'react-router-dom';
 import { usePermissions } from '../hooks/usePermissions';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 
 const WorkOrders = () => {
   const { toast } = useToast();
