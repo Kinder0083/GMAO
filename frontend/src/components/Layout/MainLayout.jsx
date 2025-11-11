@@ -479,6 +479,9 @@ const MainLayout = () => {
             )}
           </div>
           
+          {/* Badge de mise à jour (Admin uniquement) */}
+          {isAdmin() && <UpdateNotificationBadge />}
+          
           {/* Cloche notifications */}
           <button 
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
