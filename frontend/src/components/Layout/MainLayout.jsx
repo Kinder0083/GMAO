@@ -122,65 +122,93 @@ const MainLayout = () => {
       const backend_url = process.env.REACT_APP_BACKEND_URL;
       
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
+      today.setHours(23, 59, 59, 999); // Fin de journée pour inclure aujourd'hui
       let total = 0;
+      const details = {};
       
-      // Charger les ordres de travail en retard
-      try {
-        const woResponse = await fetch(`${backend_url}/api/work-orders`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (woResponse.ok) {
-          const workOrders = await woResponse.json();
-          const overdueWO = workOrders.filter(wo => {
-            if (!wo.dateLimite || wo.statut === 'TERMINE') return false;
-            const dueDate = new Date(wo.dateLimite);
-            return dueDate < today;
+      // Charger les ordres de travail en retard (si permission)
+      if (canView('workOrders')) {
+        try {
+          const woResponse = await fetch(`${backend_url}/api/work-orders`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          total += overdueWO.length;
+          if (woResponse.ok) {
+            const workOrders = await woResponse.json();
+            const overdueWO = workOrders.filter(wo => {
+              if (!wo.dateLimite || wo.statut === 'TERMINE' || wo.statut === 'ANNULE') return false;
+              const dueDate = new Date(wo.dateLimite);
+              return dueDate < today;
+            });
+            if (overdueWO.length > 0) {
+              details.workOrders = {
+                count: overdueWO.length,
+                label: 'Ordres de travail',
+                route: '/work-orders'
+              };
+              total += overdueWO.length;
+            }
+          }
+        } catch (err) {
+          console.error('Erreur work orders:', err);
         }
-      } catch (err) {
-        console.error('Erreur work orders:', err);
       }
       
-      // Charger les améliorations en retard
-      try {
-        const impResponse = await fetch(`${backend_url}/api/improvements`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (impResponse.ok) {
-          const improvements = await impResponse.json();
-          const overdueImp = improvements.filter(imp => {
-            if (!imp.dateLimite || imp.statut === 'TERMINE') return false;
-            const dueDate = new Date(imp.dateLimite);
-            return dueDate < today;
+      // Charger les améliorations en retard (si permission)
+      if (canView('improvements')) {
+        try {
+          const impResponse = await fetch(`${backend_url}/api/improvements`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          total += overdueImp.length;
+          if (impResponse.ok) {
+            const improvements = await impResponse.json();
+            const overdueImp = improvements.filter(imp => {
+              if (!imp.dateLimite || imp.statut === 'TERMINE' || imp.statut === 'ANNULE') return false;
+              const dueDate = new Date(imp.dateLimite);
+              return dueDate < today;
+            });
+            if (overdueImp.length > 0) {
+              details.improvements = {
+                count: overdueImp.length,
+                label: 'Améliorations',
+                route: '/improvements'
+              };
+              total += overdueImp.length;
+            }
+          }
+        } catch (err) {
+          console.error('Erreur improvements:', err);
         }
-      } catch (err) {
-        console.error('Erreur improvements:', err);
       }
       
-      // Charger les maintenances préventives arrivées à échéance
-      try {
-        const pmResponse = await fetch(`${backend_url}/api/preventive-maintenance`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (pmResponse.ok) {
-          const pms = await pmResponse.json();
-          const overduePM = pms.filter(pm => {
-            if (!pm.prochaineMaintenance || pm.statut !== 'ACTIF') return false;
-            const nextDate = new Date(pm.prochaineMaintenance);
-            return nextDate < today;
+      // Charger les maintenances préventives arrivées à échéance (si permission)
+      if (canView('preventiveMaintenance')) {
+        try {
+          const pmResponse = await fetch(`${backend_url}/api/preventive-maintenance`, {
+            headers: { Authorization: `Bearer ${token}` }
           });
-          total += overduePM.length;
+          if (pmResponse.ok) {
+            const pms = await pmResponse.json();
+            const overduePM = pms.filter(pm => {
+              if (!pm.prochaineMaintenance || pm.statut !== 'ACTIF') return false;
+              const nextDate = new Date(pm.prochaineMaintenance);
+              return nextDate < today;
+            });
+            if (overduePM.length > 0) {
+              details.preventiveMaintenance = {
+                count: overduePM.length,
+                label: 'Maintenances préventives',
+                route: '/preventive-maintenance'
+              };
+              total += overduePM.length;
+            }
+          }
+        } catch (err) {
+          console.error('Erreur preventive maintenance:', err);
         }
-      } catch (err) {
-        console.error('Erreur preventive maintenance:', err);
       }
       
       setOverdueCount(total);
+      setOverdueDetails(details);
     } catch (error) {
       console.error('Erreur lors du chargement des échéances:', error);
     }
