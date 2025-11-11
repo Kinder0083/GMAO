@@ -1244,8 +1244,7 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus:
-    - "API Import/Export - Fix errors for all modules and multi-sheet imports"
+  current_focus: []
   stuck_tasks: 
     - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
   test_all: false
