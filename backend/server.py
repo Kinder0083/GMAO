@@ -1765,12 +1765,109 @@ async def update_preventive_maintenance(pm_id: str, pm_update: PreventiveMainten
 async def delete_preventive_maintenance(pm_id: str, current_user: dict = Depends(require_permission("preventiveMaintenance", "delete"))):
     """Supprimer une maintenance préventive"""
     try:
-        result = await db.preventive_maintenance.delete_one({"_id": ObjectId(pm_id)})
+        result = await db.preventive_maintenances.delete_one({"_id": ObjectId(pm_id)})
         if result.deleted_count == 0:
             raise HTTPException(status_code=404, detail="Maintenance préventive non trouvée")
         return {"message": "Maintenance préventive supprimée"}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+def calculate_next_maintenance_date(current_date: datetime, frequency: str) -> datetime:
+    """Calcule la prochaine date de maintenance selon la fréquence"""
+    if frequency == "QUOTIDIENNE":
+        return current_date + timedelta(days=1)
+    elif frequency == "HEBDOMADAIRE":
+        return current_date + timedelta(weeks=1)
+    elif frequency == "MENSUELLE":
+        # Ajouter un mois
+        month = current_date.month
+        year = current_date.year
+        if month == 12:
+            month = 1
+            year += 1
+        else:
+            month += 1
+        return current_date.replace(year=year, month=month)
+    elif frequency == "ANNUELLE":
+        return current_date.replace(year=current_date.year + 1)
+    else:
+        # Par défaut, mensuelle
+        return current_date + timedelta(days=30)
+
+@api_router.post("/preventive-maintenance/check-and-execute")
+async def check_and_execute_due_maintenances(current_user: dict = Depends(get_current_admin_user)):
+    """Vérifie et exécute automatiquement les maintenances échues (admin uniquement)"""
+    try:
+        today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+        
+        # Trouver toutes les maintenances actives dont la date est aujourd'hui ou passée
+        pm_list = await db.preventive_maintenances.find({
+            "statut": "ACTIF",
+            "prochaineMaintenance": {"$lte": today + timedelta(days=1)}
+        }).to_list(length=None)
+        
+        created_count = 0
+        updated_count = 0
+        errors = []
+        
+        for pm in pm_list:
+            try:
+                # Récupérer l'équipement
+                equipement = await db.equipments.find_one({"_id": ObjectId(pm["equipement_id"])})
+                
+                # Créer le bon de travail
+                wo_id = str(uuid.uuid4())
+                work_order = {
+                    "_id": ObjectId(),
+                    "id": wo_id,
+                    "numero": f"PM-{datetime.utcnow().strftime('%Y%m%d')}-{secrets.token_hex(3).upper()}",
+                    "titre": f"Maintenance préventive: {pm['titre']}",
+                    "description": f"Maintenance automatique générée depuis la planification préventive",
+                    "type": "PREVENTIF",
+                    "priorite": "NORMALE",
+                    "statut": "OUVERT",
+                    "equipement_id": pm["equipement_id"],
+                    "emplacement_id": equipement.get("emplacement_id") if equipement else None,
+                    "assigne_a_id": pm.get("assigne_a_id"),
+                    "tempsEstime": pm.get("duree"),
+                    "dateLimite": datetime.utcnow() + timedelta(days=7),
+                    "dateCreation": datetime.utcnow(),
+                    "createdBy": "system",
+                    "comments": [],
+                    "attachments": [],
+                    "historique": []
+                }
+                
+                await db.work_orders.insert_one(work_order)
+                created_count += 1
+                
+                # Calculer la prochaine date de maintenance
+                next_date = calculate_next_maintenance_date(pm["prochaineMaintenance"], pm["frequence"])
+                
+                # Mettre à jour la maintenance préventive
+                await db.preventive_maintenances.update_one(
+                    {"_id": pm["_id"]},
+                    {
+                        "$set": {
+                            "prochaineMaintenance": next_date,
+                            "derniereMaintenance": datetime.utcnow()
+                        }
+                    }
+                )
+                updated_count += 1
+                
+            except Exception as e:
+                errors.append(f"Erreur pour PM {pm.get('titre', 'Unknown')}: {str(e)}")
+        
+        return {
+            "success": True,
+            "workOrdersCreated": created_count,
+            "maintenancesUpdated": updated_count,
+            "errors": errors
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ==================== USERS ROUTES ====================
 @api_router.get("/users", response_model=List[User])
