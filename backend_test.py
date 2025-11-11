@@ -222,8 +222,8 @@ class PreventiveMaintenanceTester:
         return results
 
 if __name__ == "__main__":
-    tester = ImportExportTester()
-    results = tester.run_import_export_tests()
+    tester = PreventiveMaintenanceTester()
+    results = tester.run_preventive_maintenance_tests()
     
     # Exit with appropriate code
     if all(results.values()):
