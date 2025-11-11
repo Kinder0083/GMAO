@@ -56,7 +56,8 @@ fi
 # 2. Appliquer la correction dans api.js
 log_info "Application de la correction de détection réseau..."
 
-cat > /app/frontend/src/services/api.js << 'EOF'
+# Créer le nouveau header avec la détection automatique
+cat > /tmp/api_header.js << 'EOF'
 import axios from 'axios';
 
 // Détection intelligente de l'URL backend
