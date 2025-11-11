@@ -2888,6 +2888,22 @@ async def import_data(
                     # Nettoyer les NaN
                     cleaned_item = {k: v for k, v in item.items() if pd.notna(v)}
                     
+                    # Convertir les champs qui doivent être des listes (comments, attachments, etc.)
+                    list_fields = ["comments", "attachments", "historique", "permissions"]
+                    for list_field in list_fields:
+                        if list_field in cleaned_item:
+                            if isinstance(cleaned_item[list_field], str):
+                                # Convertir string JSON en liste
+                                import json
+                                try:
+                                    parsed = json.loads(cleaned_item[list_field])
+                                    cleaned_item[list_field] = parsed if isinstance(parsed, list) else []
+                                except:
+                                    # Si c'est '[]' ou un string vide, mettre liste vide
+                                    cleaned_item[list_field] = []
+                            elif not isinstance(cleaned_item[list_field], list):
+                                cleaned_item[list_field] = []
+                    
                     # Traitement spécifique purchase-history
                     if current_module == "purchase-history":
                         for num_field in ["quantite", "montantLigneHT", "quantiteRetournee"]:
