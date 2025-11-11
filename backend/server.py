@@ -2971,21 +2971,21 @@ async def import_data(
                             if "numero" not in cleaned_item:
                                 cleaned_item["numero"] = "N/A"
                             if "statut" not in cleaned_item:
-                                cleaned_item["statut"] = "ouvert"
+                                cleaned_item["statut"] = "OUVERT"
                             if "priorite" not in cleaned_item:
-                                cleaned_item["priorite"] = "normale"
+                                cleaned_item["priorite"] = "NORMALE"
                         
                         elif current_module in ["intervention-requests", "improvement-requests"]:
                             # Champs obligatoires pour les demandes
                             if "statut" not in cleaned_item:
-                                cleaned_item["statut"] = "en_attente"
+                                cleaned_item["statut"] = "EN_ATTENTE"
                             if "priorite" not in cleaned_item:
-                                cleaned_item["priorite"] = "normale"
+                                cleaned_item["priorite"] = "NORMALE"
                         
                         elif current_module == "equipments":
                             # Champs obligatoires pour équipements
                             if "statut" not in cleaned_item:
-                                cleaned_item["statut"] = "operationnel"
+                                cleaned_item["statut"] = "OPERATIONNEL"
                             if "actif" not in cleaned_item:
                                 cleaned_item["actif"] = True
                         
