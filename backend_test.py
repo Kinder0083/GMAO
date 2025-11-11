@@ -157,19 +157,19 @@ class WorkOrdersTester:
             return False
     
     def check_backend_logs(self):
-        """Check backend logs for any Pydantic errors"""
-        self.log("🔍 Checking backend logs for Pydantic errors...")
+        """Check backend logs for any Priority enum errors"""
+        self.log("🔍 Checking backend logs for Priority enum errors...")
         
         try:
             # This is a placeholder - in a real environment we might check log files
             # For now, we'll just make a simple request to see if there are any obvious errors
-            response = self.admin_session.get(f"{BACKEND_URL}/preventive-maintenance", timeout=10)
+            response = self.admin_session.get(f"{BACKEND_URL}/work-orders", timeout=10)
             
-            if response.status_code == 500 and "pydantic" in response.text.lower():
-                self.log("❌ Backend logs show Pydantic errors still present", "ERROR")
+            if response.status_code == 500 and ("pydantic" in response.text.lower() or "priority" in response.text.lower()):
+                self.log("❌ Backend logs show Priority enum errors still present", "ERROR")
                 return False
             else:
-                self.log("✅ No obvious Pydantic errors in backend response")
+                self.log("✅ No obvious Priority enum errors in backend response")
                 return True
                 
         except Exception as e:
