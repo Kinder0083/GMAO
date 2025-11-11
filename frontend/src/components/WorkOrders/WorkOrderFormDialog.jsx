@@ -16,6 +16,7 @@ import { Paperclip, Camera } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { workOrdersAPI, equipmentsAPI, locationsAPI, usersAPI } from '../../services/api';
 import StatusChangeDialog from './StatusChangeDialog';
+import { validateDateNotPast } from '../../utils/dateValidation';
 
 const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const { toast } = useToast();
