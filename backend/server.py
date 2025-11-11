@@ -2961,9 +2961,45 @@ async def import_data(
                                 except:
                                     pass
                         
-                        # Ajouter métadonnées
+                        # Ajouter métadonnées obligatoires
                         if "dateCreation" not in cleaned_item:
                             cleaned_item["dateCreation"] = datetime.utcnow()
+                        
+                        # Initialiser champs spécifiques par module
+                        if current_module in ["work-orders", "improvements"]:
+                            # Champs obligatoires pour work-orders et improvements
+                            if "numero" not in cleaned_item:
+                                cleaned_item["numero"] = "N/A"
+                            if "statut" not in cleaned_item:
+                                cleaned_item["statut"] = "ouvert"
+                            if "priorite" not in cleaned_item:
+                                cleaned_item["priorite"] = "normale"
+                        
+                        elif current_module in ["intervention-requests", "improvement-requests"]:
+                            # Champs obligatoires pour les demandes
+                            if "statut" not in cleaned_item:
+                                cleaned_item["statut"] = "en_attente"
+                            if "priorite" not in cleaned_item:
+                                cleaned_item["priorite"] = "normale"
+                        
+                        elif current_module == "equipments":
+                            # Champs obligatoires pour équipements
+                            if "statut" not in cleaned_item:
+                                cleaned_item["statut"] = "operationnel"
+                            if "actif" not in cleaned_item:
+                                cleaned_item["actif"] = True
+                        
+                        elif current_module == "meters":
+                            # Champs obligatoires pour compteurs
+                            if "actif" not in cleaned_item:
+                                cleaned_item["actif"] = True
+                        
+                        elif current_module == "users":
+                            # Champs obligatoires pour utilisateurs
+                            if "actif" not in cleaned_item:
+                                cleaned_item["actif"] = True
+                            if "role" not in cleaned_item:
+                                cleaned_item["role"] = "VISUALISEUR"
                     
                     # Gérer l'ID
                     item_id = cleaned_item.get('id')
