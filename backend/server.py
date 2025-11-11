@@ -3011,6 +3011,8 @@ async def import_data(
                             existing = await db[collection_name].find_one({"_id": ObjectId(item_id)})
                             
                             if existing:
+                                # Garder l'id lors du replace
+                                cleaned_item["id"] = item_id
                                 await db[collection_name].replace_one(
                                     {"_id": ObjectId(item_id)},
                                     cleaned_item
@@ -3018,6 +3020,8 @@ async def import_data(
                                 module_stats["updated"] += 1
                             else:
                                 cleaned_item["_id"] = ObjectId(item_id)
+                                # Ajouter le champ id
+                                cleaned_item["id"] = item_id
                                 await db[collection_name].insert_one(cleaned_item)
                                 module_stats["inserted"] += 1
                         except:
