@@ -599,6 +599,45 @@ backend:
           - Tous les endpoints improvement-* maintenant accessibles
           - Tests complets: 15/15 RÉUSSIS
 
+  - task: "API Import/Export - Fix errors for all modules and multi-sheet imports"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "critical"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: |
+          PROBLÈMES REPORTÉS:
+          1. Import "Toutes les données" échoue avec erreur "can only use .str accessor with string value !"
+          2. Imports individuels (autres que Historique Achat) affichent "impossible de charger les données"
+      - working: "NA"
+        agent: "main"
+        comment: |
+          CORRECTIONS EFFECTUÉES:
+          1. Ligne 2836: Fixé df.columns.str.strip() pour convertir toutes les colonnes en string d'abord
+             - Ancienne méthode: df.columns = df.columns.str.strip()
+             - Nouvelle méthode: df.columns = [str(col).strip() if col is not None else f'col_{i}' for i, col in enumerate(df.columns)]
+             - Résout l'erreur pandas quand les colonnes ne sont pas des strings
+          
+          2. Ajouté column_mappings pour modules manquants:
+             - inventory: Mapping pour nom, code, type, catégorie, quantité, zone
+             - vendors: Mapping pour nom, email, téléphone, adresse, type, statut
+          
+          3. Corrigé mapping "people" vers "users" pour cohérence avec EXPORT_MODULES
+          
+          4. Amélioré sheet_to_module mapping pour import multi-feuilles:
+             - Ajouté "users", "people" (tous deux mappent vers "users")
+             - Ajouté "vendors", "fournisseurs" (tous deux mappent vers "vendors")
+          
+          5. Frontend: Supprimé restriction d'import "all", ajouté validation pour fichier .xlsx
+          
+          FICHIERS MODIFIÉS:
+          - /app/backend/server.py: Lignes 2836, 2678-2720, 2729-2746
+          - /app/frontend/src/pages/ImportExport.jsx: Lignes 82-94
+
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
     implemented: true
