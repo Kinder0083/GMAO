@@ -17,7 +17,7 @@ BACKEND_URL = "https://fixitnow-20.preview.emergentagent.com/api"
 
 # Test credentials - admin account as specified in the request
 ADMIN_EMAIL = "admin@gmao-iris.local"
-ADMIN_PASSWORD = "Iris2024!"
+ADMIN_PASSWORD = "Admin123!"
 
 class PreventiveMaintenanceTester:
     def __init__(self):
