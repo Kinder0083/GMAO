@@ -3024,7 +3024,14 @@ async def import_data(
                             # Si l'ID n'est pas valide, insérer comme nouveau
                             if "_id" in cleaned_item:
                                 del cleaned_item["_id"]
-                            cleaned_item["_id"] = ObjectId()
+                            
+                            # Générer nouvel ObjectId
+                            new_id = ObjectId()
+                            cleaned_item["_id"] = new_id
+                            
+                            # IMPORTANT: Ajouter le champ 'id' (string) pour Pydantic
+                            cleaned_item["id"] = str(new_id)
+                            
                             await db[collection_name].insert_one(cleaned_item)
                             module_stats["inserted"] += 1
                     else:
