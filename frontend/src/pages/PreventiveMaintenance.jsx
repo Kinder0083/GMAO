@@ -14,6 +14,23 @@ const PreventiveMaintenance = () => {
   const [selectedMaintenance, setSelectedMaintenance] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' ou 'tree'
 
+  // Fonction pour afficher le badge de statut
+  const getStatusBadge = (statut) => {
+    const statusConfig = {
+      'ACTIF': { label: 'Actif', className: 'bg-green-100 text-green-800' },
+      'INACTIF': { label: 'Inactif', className: 'bg-gray-100 text-gray-800' },
+      'SUSPENDU': { label: 'Suspendu', className: 'bg-yellow-100 text-yellow-800' }
+    };
+    
+    const config = statusConfig[statut] || statusConfig['INACTIF'];
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.className}`}>
+        {config.label}
+      </span>
+    );
+  };
+
   useEffect(() => {
     loadMaintenance();
   }, []);
