@@ -672,12 +672,18 @@ async def get_work_orders(
             wo["attachments"] = []
         else:
             # Convertir tous les ObjectId dans attachments
+            cleaned_attachments = []
             for att in wo["attachments"]:
+                # Ignorer si att n'est pas un dict
+                if not isinstance(att, dict):
+                    continue
                 if "_id" in att and isinstance(att["_id"], ObjectId):
                     att["_id"] = str(att["_id"])
                 for key, value in att.items():
                     if isinstance(value, ObjectId):
                         att[key] = str(value)
+                cleaned_attachments.append(att)
+            wo["attachments"] = cleaned_attachments
         
         if wo.get("assigne_a_id"):
             wo["assigneA"] = await get_user_by_id(wo["assigne_a_id"])
