@@ -64,44 +64,75 @@ class PreventiveMaintenanceTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def create_test_excel_multi_sheet(self):
-        """Create a multi-sheet Excel file for testing 'all' import"""
-        self.log("Creating multi-sheet Excel file for testing...")
+    def test_preventive_maintenance_endpoint(self):
+        """Test GET /api/preventive-maintenance endpoint after Pydantic model correction"""
+        self.log("🧪 CRITICAL TEST: GET /api/preventive-maintenance endpoint")
+        self.log("Testing for Pydantic validation error fix (assigne_a_id: Optional[str] = None)")
         
-        # Create sample data for different modules
-        work_orders_data = {
-            'Titre': ['Maintenance pompe A', 'Réparation ventilateur B'],
-            'Description': ['Maintenance préventive pompe', 'Réparation urgente ventilateur'],
-            'Priorité': ['MOYENNE', 'HAUTE'],
-            'Statut': ['OUVERT', 'EN_COURS'],
-            'Type': ['PREVENTIVE', 'CORRECTIVE']
-        }
-        
-        equipments_data = {
-            'Nom': ['Pompe hydraulique 001', 'Ventilateur industriel 002'],
-            'Code': ['PMP-001', 'VENT-002'],
-            'Type': ['POMPE', 'VENTILATEUR'],
-            'Marque': ['Grundfos', 'Soler&Palau'],
-            'Statut': ['OPERATIONNEL', 'EN_MAINTENANCE']
-        }
-        
-        users_data = {
-            'Email': ['test.import1@example.com', 'test.import2@example.com'],
-            'Prénom': ['Jean', 'Marie'],
-            'Nom': ['Dupont', 'Martin'],
-            'Rôle': ['TECHNICIEN', 'VISUALISEUR'],
-            'Service': ['Maintenance', 'Production']
-        }
-        
-        # Create Excel file with multiple sheets
-        with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp_file:
-            with pd.ExcelWriter(tmp_file.name, engine='openpyxl') as writer:
-                pd.DataFrame(work_orders_data).to_excel(writer, sheet_name='work-orders', index=False)
-                pd.DataFrame(equipments_data).to_excel(writer, sheet_name='equipments', index=False)
-                pd.DataFrame(users_data).to_excel(writer, sheet_name='users', index=False)
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/preventive-maintenance",
+                timeout=15
+            )
             
-            self.log(f"✅ Multi-sheet Excel file created: {tmp_file.name}")
-            return tmp_file.name
+            if response.status_code == 200:
+                self.log("✅ GET /api/preventive-maintenance returned 200 OK")
+                
+                try:
+                    data = response.json()
+                    self.log(f"✅ Response is valid JSON with {len(data)} preventive maintenance records")
+                    
+                    # Check for records with assigne_a_id: null
+                    null_assigned_count = 0
+                    assigned_count = 0
+                    
+                    for record in data:
+                        if record.get('assigne_a_id') is None:
+                            null_assigned_count += 1
+                        elif record.get('assigne_a_id'):
+                            assigned_count += 1
+                    
+                    self.log(f"✅ Records with assigne_a_id = null: {null_assigned_count}")
+                    self.log(f"✅ Records with assigne_a_id assigned: {assigned_count}")
+                    
+                    if null_assigned_count > 0:
+                        self.log("✅ CRITICAL SUCCESS: Records with assigne_a_id: null are correctly returned")
+                        self.log("✅ Pydantic validation error has been fixed!")
+                    else:
+                        self.log("ℹ️ No records with null assigne_a_id found, but endpoint works correctly")
+                    
+                    # Verify no Pydantic validation errors in response
+                    self.log("✅ No Pydantic ValidationError - model correction successful")
+                    
+                    return True
+                    
+                except json.JSONDecodeError as e:
+                    self.log(f"❌ Response is not valid JSON: {str(e)}", "ERROR")
+                    self.log(f"Response content: {response.text[:500]}...", "ERROR")
+                    return False
+                    
+            elif response.status_code == 500:
+                self.log("❌ GET /api/preventive-maintenance returned 500 Internal Server Error", "ERROR")
+                self.log("❌ This indicates the Pydantic validation error still exists!", "ERROR")
+                
+                # Check if it's the specific Pydantic error
+                if "pydantic_core.ValidationError" in response.text:
+                    self.log("❌ CRITICAL: pydantic_core.ValidationError still present!", "ERROR")
+                    self.log("❌ The assigne_a_id field correction may not be working", "ERROR")
+                elif "ValidationError" in response.text:
+                    self.log("❌ CRITICAL: ValidationError detected in response!", "ERROR")
+                
+                self.log(f"Error response: {response.text[:1000]}...", "ERROR")
+                return False
+                
+            else:
+                self.log(f"❌ GET /api/preventive-maintenance failed - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text[:500]}...", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request to /api/preventive-maintenance failed - Error: {str(e)}", "ERROR")
+            return False
     
     def create_test_csv_file(self, module):
         """Create a CSV file for testing individual module import"""
