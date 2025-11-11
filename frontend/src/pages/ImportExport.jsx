@@ -247,7 +247,7 @@ const ImportExport = () => {
                 type="file"
                 accept=".csv,.xlsx,.xls"
                 onChange={handleFileSelect}
-                disabled={importing || selectedModule === 'all'}
+                disabled={importing}
                 className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-50 file:text-green-700 hover:file:bg-green-100 cursor-pointer"
               />
               {selectedFile && (
@@ -259,7 +259,7 @@ const ImportExport = () => {
 
             <Button
               onClick={handleImport}
-              disabled={importing || !selectedFile || selectedModule === 'all'}
+              disabled={importing || !selectedFile}
               className="w-full bg-green-600 hover:bg-green-700"
             >
               <Upload size={20} className="mr-2" />
