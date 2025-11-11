@@ -449,6 +449,33 @@ const PreventiveMaintenance = () => {
         maintenance={selectedMaintenance}
         onSuccess={loadMaintenance}
       />
+
+      {/* Dialog de confirmation de suppression */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la suppression</DialogTitle>
+            <DialogDescription>
+              Êtes-vous sûr de vouloir supprimer la maintenance préventive "{maintenanceToDelete?.titre}" ?
+              Cette action est irréversible.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+            >
+              Supprimer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
