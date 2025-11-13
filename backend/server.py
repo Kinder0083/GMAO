@@ -2168,12 +2168,15 @@ async def set_password_permanent(
         )
         
         # Enregistrer l'action dans le journal d'audit
-        await log_action(
+        await audit_service.log_action(
             user_id=current_user_id,
-            action_type="update",
-            entity_type="user",
+            user_name=f"{current_user['prenom']} {current_user['nom']}",
+            user_email=current_user["email"],
+            action=ActionType.UPDATE,
+            entity_type=EntityType.USER,
             entity_id=user_id,
-            description=f"Mot de passe temporaire conservé comme permanent",
+            entity_name=f"{user.get('prenom', '')} {user.get('nom', '')}".strip(),
+            details=f"Mot de passe temporaire conservé comme permanent",
             changes={"firstLogin": False}
         )
         
