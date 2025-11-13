@@ -18,6 +18,7 @@ import { Loader2, Lock, AlertCircle } from 'lucide-react';
 const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
     oldPassword: '',
     newPassword: '',
