@@ -317,25 +317,31 @@ class PasswordPermanentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def check_backend_logs(self):
-        """Check backend logs for any Priority enum errors"""
-        self.log("🔍 Checking backend logs for Priority enum errors...")
+    def cleanup_test_user(self):
+        """Clean up the test user after tests"""
+        self.log("🧹 Cleaning up test user...")
+        
+        if not self.test_user_id:
+            self.log("No test user to clean up")
+            return True
         
         try:
-            # This is a placeholder - in a real environment we might check log files
-            # For now, we'll just make a simple request to see if there are any obvious errors
-            response = self.admin_session.get(f"{BACKEND_URL}/work-orders", timeout=10)
+            # Try to delete the test user (if endpoint exists)
+            response = self.admin_session.delete(
+                f"{BACKEND_URL}/users/{self.test_user_id}",
+                timeout=10
+            )
             
-            if response.status_code == 500 and ("pydantic" in response.text.lower() or "priority" in response.text.lower()):
-                self.log("❌ Backend logs show Priority enum errors still present", "ERROR")
-                return False
-            else:
-                self.log("✅ No obvious Priority enum errors in backend response")
+            if response.status_code in [200, 204, 404]:
+                self.log("✅ Test user cleaned up successfully")
                 return True
+            else:
+                self.log(f"⚠️ Could not clean up test user - Status: {response.status_code}")
+                return True  # Don't fail tests for cleanup issues
                 
         except Exception as e:
-            self.log(f"⚠️ Could not check backend logs: {str(e)}")
-            return True  # Don't fail the test for this
+            self.log(f"⚠️ Could not clean up test user: {str(e)}")
+            return True  # Don't fail tests for cleanup issues
     
     def run_work_orders_tests(self):
         """Run work orders endpoint tests after Priority enum correction"""
