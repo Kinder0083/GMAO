@@ -100,19 +100,12 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
     }
   };
 
-  const handleSkipPasswordChange = async () => {
-    // Confirmer avec l'utilisateur
-    const confirmed = window.confirm(
-      "⚠️ ATTENTION ⚠️\n\n" +
-      "Vous êtes sur le point de conserver votre mot de passe temporaire.\n\n" +
-      "Cela représente un risque de sécurité car d'autres personnes peuvent connaître ce mot de passe.\n\n" +
-      "Êtes-vous sûr de vouloir continuer à vos risques et périls ?"
-    );
+  const handleSkipPasswordChange = () => {
+    // Ouvrir le dialog de confirmation
+    setConfirmDialogOpen(true);
+  };
 
-    if (!confirmed) {
-      return;
-    }
-
+  const handleConfirmSkip = async () => {
     try {
       setLoading(true);
       await usersAPI.setPasswordPermanent(userId);
@@ -131,6 +124,8 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
         variant: 'default'
       });
 
+      // Fermer les deux dialogs
+      setConfirmDialogOpen(false);
       onOpenChange(false);
       if (onSuccess) onSuccess();
     } catch (error) {
@@ -142,6 +137,11 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleCancelSkip = () => {
+    // Fermer seulement le dialog de confirmation
+    setConfirmDialogOpen(false);
   };
 
   return (
