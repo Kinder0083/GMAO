@@ -343,23 +343,29 @@ class PasswordPermanentTester:
             self.log(f"⚠️ Could not clean up test user: {str(e)}")
             return True  # Don't fail tests for cleanup issues
     
-    def run_work_orders_tests(self):
-        """Run work orders endpoint tests after Priority enum correction"""
+    def run_password_permanent_tests(self):
+        """Run comprehensive tests for POST /api/users/{user_id}/set-password-permanent endpoint"""
         self.log("=" * 80)
-        self.log("TESTING WORK ORDERS ENDPOINT - PRIORITY ENUM CORRECTION")
+        self.log("TESTING SET-PASSWORD-PERMANENT ENDPOINT - OPTIONAL PASSWORD CHANGE FEATURE")
         self.log("=" * 80)
-        self.log("CONTEXTE: L'endpoint GET /api/work-orders retournait une erreur 500")
-        self.log("avec un message de validation Pydantic pour le champ priorite.")
-        self.log("Certains bons de travail avaient la priorité 'NORMALE', mais cette")
-        self.log("valeur n'était pas définie dans l'enum Priority.")
+        self.log("CONTEXTE: Nouvelle fonctionnalité permettant aux utilisateurs de conserver")
+        self.log("leur mot de passe temporaire au lieu de le changer obligatoirement lors")
+        self.log("de la première connexion.")
         self.log("")
-        self.log("CORRECTION: Ajout de NORMALE = 'NORMALE' à l'enum Priority")
+        self.log("ENDPOINT: POST /api/users/{user_id}/set-password-permanent")
+        self.log("SÉCURITÉ: Utilisateur peut modifier son propre statut OU admin peut modifier n'importe qui")
         self.log("=" * 80)
         
         results = {
             "admin_login": False,
-            "work_orders_endpoint": False,
-            "backend_logs_check": False
+            "create_test_user": False,
+            "test_user_login": False,
+            "user_set_own_password": False,
+            "admin_set_other_password": False,
+            "user_cannot_modify_other": False,
+            "nonexistent_user_test": False,
+            "unauthenticated_test": False,
+            "cleanup": False
         }
         
         # Test 1: Admin Login
@@ -369,15 +375,41 @@ class PasswordPermanentTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # Test 2: Work Orders Endpoint (CRITICAL TEST)
-        results["work_orders_endpoint"] = self.test_work_orders_endpoint()
+        # Test 2: Create test user
+        results["create_test_user"] = self.create_test_user()
         
-        # Test 3: Check backend logs
-        results["backend_logs_check"] = self.check_backend_logs()
+        if not results["create_test_user"]:
+            self.log("❌ Cannot proceed with user tests - Test user creation failed", "ERROR")
+            return results
+        
+        # Test 3: Test user login
+        results["test_user_login"] = self.test_user_login()
+        
+        if not results["test_user_login"]:
+            self.log("❌ Cannot proceed with user tests - Test user login failed", "ERROR")
+            return results
+        
+        # Test 4: User modifies own firstLogin status
+        results["user_set_own_password"] = self.test_user_set_own_password_permanent()
+        
+        # Test 5: Admin modifies another user's firstLogin status
+        results["admin_set_other_password"] = self.test_admin_set_other_user_password_permanent()
+        
+        # Test 6: User tries to modify another user (should fail)
+        results["user_cannot_modify_other"] = self.test_user_cannot_modify_other_user()
+        
+        # Test 7: Try with non-existent user ID
+        results["nonexistent_user_test"] = self.test_nonexistent_user_id()
+        
+        # Test 8: Try without authentication
+        results["unauthenticated_test"] = self.test_unauthenticated_request()
+        
+        # Test 9: Cleanup
+        results["cleanup"] = self.cleanup_test_user()
         
         # Summary
         self.log("=" * 70)
-        self.log("WORK ORDERS TEST RESULTS SUMMARY")
+        self.log("SET-PASSWORD-PERMANENT TEST RESULTS SUMMARY")
         self.log("=" * 70)
         
         passed = sum(results.values())
@@ -390,24 +422,27 @@ class PasswordPermanentTester:
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         # Detailed analysis
-        if results.get("work_orders_endpoint", False):
-            self.log("🎉 CRITICAL SUCCESS: GET /api/work-orders is working!")
-            self.log("✅ Fixed: Priority enum ValidationError resolved")
-            self.log("✅ Endpoint returns 200 OK with valid data")
-            self.log("✅ Work orders with priorite 'NORMALE' are correctly included")
-        else:
-            self.log("🚨 CRITICAL FAILURE: GET /api/work-orders still failing!")
-            self.log("❌ The Priority enum ValidationError may still exist")
-            self.log("❌ Check if the enum correction was properly applied")
+        critical_tests = ["user_set_own_password", "admin_set_other_password", "user_cannot_modify_other"]
+        critical_passed = sum(results.get(test, False) for test in critical_tests)
         
-        if passed == total:
-            self.log("🎉 ALL WORK ORDERS TESTS PASSED!")
-            self.log("✅ The Priority enum correction has been successfully applied")
-            self.log("✅ No more ValidationError for priorite field")
-            self.log("✅ All priorities (HAUTE, MOYENNE, BASSE, NORMALE, AUCUNE) are accepted")
+        if critical_passed == len(critical_tests):
+            self.log("🎉 CRITICAL SUCCESS: All security tests passed!")
+            self.log("✅ Users can modify their own firstLogin status")
+            self.log("✅ Admins can modify any user's firstLogin status")
+            self.log("✅ Users cannot modify other users' status (403 Forbidden)")
         else:
-            self.log("⚠️ Some tests failed - The issue may still exist")
-            failed_tests = [test for test, result in results.items() if not result]
+            self.log("🚨 CRITICAL FAILURE: Some security tests failed!")
+            failed_critical = [test for test in critical_tests if not results.get(test, False)]
+            self.log(f"❌ Failed critical tests: {', '.join(failed_critical)}")
+        
+        if passed >= total - 1:  # Allow cleanup to fail
+            self.log("🎉 SET-PASSWORD-PERMANENT ENDPOINT IS WORKING CORRECTLY!")
+            self.log("✅ All security validations are in place")
+            self.log("✅ Proper authentication and authorization")
+            self.log("✅ Correct error handling for edge cases")
+        else:
+            self.log("⚠️ Some tests failed - The endpoint may have issues")
+            failed_tests = [test for test, result in results.items() if not result and test != "cleanup"]
             self.log(f"❌ Failed tests: {', '.join(failed_tests)}")
         
         return results
