@@ -241,6 +241,60 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Dialog de confirmation pour conserver le mot de passe */}
+      <Dialog open={confirmDialogOpen} onOpenChange={setConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-[450px]" onInteractOutside={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <div className="flex items-center gap-3">
+              <div className="bg-orange-100 p-3 rounded-full">
+                <AlertCircle className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <DialogTitle className="text-orange-900">
+                  ⚠️ Êtes-vous bien sûr de ne pas vouloir changer de mot de passe ?
+                </DialogTitle>
+                <DialogDescription className="mt-2 text-orange-800">
+                  Cela représente un risque de sécurité car d'autres personnes peuvent connaître ce mot de passe temporaire.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mt-2">
+            <p className="text-sm text-orange-900">
+              <strong>Attention :</strong> En conservant votre mot de passe temporaire, vous acceptez les risques de sécurité associés.
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2 sm:gap-2">
+            <Button
+              type="button"
+              onClick={handleCancelSkip}
+              disabled={loading}
+              variant="outline"
+              className="flex-1"
+            >
+              Non, je veux changer mon mot de passe
+            </Button>
+            <Button
+              type="button"
+              onClick={handleConfirmSkip}
+              disabled={loading}
+              className="flex-1 bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  En cours...
+                </>
+              ) : (
+                'Oui, je conserve ce mot de passe'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
