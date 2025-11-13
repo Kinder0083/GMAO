@@ -240,9 +240,8 @@ const Inscription = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password">Mot de passe *</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 className={errors.password ? 'border-red-500' : ''}
@@ -255,9 +254,8 @@ const Inscription = () => {
 
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">Confirmer le mot de passe *</Label>
-              <Input
+              <PasswordInput
                 id="confirmPassword"
-                type="password"
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 className={errors.confirmPassword ? 'border-red-500' : ''}
