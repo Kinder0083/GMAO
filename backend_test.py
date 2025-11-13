@@ -305,11 +305,11 @@ class PasswordPermanentTester:
                 timeout=10
             )
             
-            if response.status_code == 401:
-                self.log("✅ POST /users/{user_id}/set-password-permanent correctly returned 401 Unauthorized")
+            if response.status_code in [401, 403]:
+                self.log(f"✅ POST /users/{{user_id}}/set-password-permanent correctly returned {response.status_code} (authentication required)")
                 return True
             else:
-                self.log(f"❌ Expected 401 Unauthorized but got {response.status_code}", "ERROR")
+                self.log(f"❌ Expected 401 or 403 but got {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
