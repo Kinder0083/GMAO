@@ -185,9 +185,8 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
 
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de passe temporaire *</Label>
-              <Input
+              <PasswordInput
                 id="password"
-                type="password"
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
                 placeholder="Minimum 8 caractères"
