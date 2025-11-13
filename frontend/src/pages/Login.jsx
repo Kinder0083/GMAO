@@ -114,10 +114,9 @@ const Login = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="password">Mot de passe</Label>
-                <Input
+                <PasswordInput
                   id="password"
                   name="password"
-                  type="password"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={handleChange}
