@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests GET /api/work-orders endpoint after Priority enum correction
+Tests POST /api/users/{user_id}/set-password-permanent endpoint - Optional password change feature
 """
 
 import requests
@@ -10,6 +10,7 @@ import os
 import io
 import pandas as pd
 import tempfile
+import uuid
 from datetime import datetime, timedelta
 
 # Use the correct backend URL from frontend .env
