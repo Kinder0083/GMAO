@@ -136,18 +136,7 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess }) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      // Empêcher la fermeture sans changer le mot de passe
-      if (!isOpen && formData.oldPassword === '') {
-        toast({
-          title: 'Action requise',
-          description: 'Vous devez changer votre mot de passe avant de continuer',
-          variant: 'destructive'
-        });
-        return;
-      }
-      onOpenChange(isOpen);
-    }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[450px]" onInteractOutside={(e) => e.preventDefault()}>
         <DialogHeader>
           <div className="flex items-center gap-3">
