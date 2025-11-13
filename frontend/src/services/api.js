@@ -47,8 +47,7 @@ export const authAPI = {
   resetPassword: (data) => api.post('/auth/reset-password', data),
   validateInvitation: (token) => api.get(`/auth/validate-invitation/${token}`),
   completeRegistration: (data) => api.post('/auth/complete-registration', data),
-  changePasswordFirstLogin: (data) => api.post('/auth/change-password-first-login', data),
-  skipPasswordChange: () => api.post('/auth/skip-password-change')
+  changePasswordFirstLogin: (data) => api.post('/auth/change-password-first-login', data)
 };
 
 // ==================== WORK ORDERS ====================
