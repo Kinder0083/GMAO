@@ -11,11 +11,11 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { PasswordInput } from '../ui/password-input';
 import { Label } from '../ui/label';
-import { authAPI } from '../../services/api';
+import { authAPI, usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, Lock, AlertCircle } from 'lucide-react';
 
-const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess }) => {
+const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
