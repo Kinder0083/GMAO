@@ -584,7 +584,13 @@ const MainLayout = () => {
       {/* Popups */}
       <FirstLoginPasswordDialog 
         open={firstLoginDialogOpen}
-        onClose={() => setFirstLoginDialogOpen(false)}
+        onOpenChange={setFirstLoginDialogOpen}
+        userId={user.id}
+        onSuccess={() => {
+          // Mettre à jour l'état local du user
+          setUser(prev => ({ ...prev, firstLogin: false }));
+          setFirstLoginDialogOpen(false);
+        }}
       />
       
       {/* Popup de mise à jour récente (tous les utilisateurs) */}
