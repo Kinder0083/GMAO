@@ -30,12 +30,35 @@ import InterventionRequests from "./pages/InterventionRequests";
 import ImprovementRequests from "./pages/ImprovementRequests";
 import Improvements from "./pages/Improvements";
 
-// Protected Route Component
+// Protected Route Component with Token Validation
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token');
+  
   if (!token) {
     return <Navigate to="/login" replace />;
   }
+
+  // Vérifier silencieusement la validité du token
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const payload = JSON.parse(window.atob(base64));
+    
+    // Vérifier si le token est expiré
+    const currentTime = Math.floor(Date.now() / 1000);
+    if (payload.exp && payload.exp < currentTime) {
+      // Token expiré, nettoyer et rediriger
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      return <Navigate to="/login" replace />;
+    }
+  } catch (error) {
+    // Token invalide, nettoyer et rediriger
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    return <Navigate to="/login" replace />;
+  }
+
   return children;
 };
 
