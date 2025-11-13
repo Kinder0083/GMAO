@@ -70,6 +70,81 @@ class PasswordPermanentTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
+    def create_test_user(self):
+        """Create a test user with firstLogin: true"""
+        self.log("Creating test user with firstLogin: true...")
+        
+        # Generate unique email for test user
+        unique_id = str(uuid.uuid4())[:8]
+        self.test_user_email = f"test.user.{unique_id}@test.local"
+        temp_password = "TempPass123!"
+        
+        try:
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/users/create-member",
+                json={
+                    "nom": "TestUser",
+                    "prenom": "Password",
+                    "email": self.test_user_email,
+                    "telephone": "0123456789",
+                    "role": "TECHNICIEN",
+                    "service": "Test Service",
+                    "password": temp_password
+                },
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                user_data = response.json()
+                self.test_user_id = user_data.get("id")
+                self.log(f"✅ Test user created successfully - ID: {self.test_user_id}, Email: {self.test_user_email}")
+                
+                # Store password for later login
+                self.test_user_password = temp_password
+                return True
+            else:
+                self.log(f"❌ Test user creation failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Test user creation request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_user_login(self):
+        """Test login with the created test user"""
+        self.log("Testing test user login...")
+        
+        try:
+            response = self.user_session.post(
+                f"{BACKEND_URL}/auth/login",
+                json={
+                    "email": self.test_user_email,
+                    "password": self.test_user_password
+                },
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.user_token = data.get("access_token")
+                self.user_data = data.get("user")
+                
+                # Set authorization header for future requests
+                self.user_session.headers.update({
+                    "Authorization": f"Bearer {self.user_token}"
+                })
+                
+                self.log(f"✅ Test user login successful - User: {self.user_data.get('prenom')} {self.user_data.get('nom')} (Role: {self.user_data.get('role')})")
+                self.log(f"✅ FirstLogin status: {self.user_data.get('firstLogin')}")
+                return True
+            else:
+                self.log(f"❌ Test user login failed - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Test user login request failed - Error: {str(e)}", "ERROR")
+            return False
+    
     def test_work_orders_endpoint(self):
         """Test GET /api/work-orders endpoint after Priority enum correction"""
         self.log("🧪 CRITICAL TEST: GET /api/work-orders endpoint")
