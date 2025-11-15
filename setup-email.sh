@@ -243,10 +243,10 @@ if command -v supervisorctl &> /dev/null; then
     
     # Chercher le nom du processus backend
     if supervisorctl status | grep -q "gmao-iris-backend"; then
-        sudo supervisorctl restart gmao-iris-backend
+        supervisorctl restart gmao-iris-backend
         echo -e "${GREEN}✅ Backend redémarré${NC}"
     elif supervisorctl status | grep -q "backend"; then
-        sudo supervisorctl restart backend
+        supervisorctl restart backend
         echo -e "${GREEN}✅ Backend redémarré${NC}"
     else
         echo -e "${YELLOW}⚠️  Processus backend non trouvé dans supervisor${NC}"
