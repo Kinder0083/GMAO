@@ -184,6 +184,101 @@ def send_invitation_email(to_email: str, token: str, role: str) -> bool:
                 margin: 20px 0;
             }}
             .footer {{
+
+
+def send_password_reset_email(to_email: str, prenom: str, reset_url: str) -> bool:
+    """
+    Envoyer un email de réinitialisation de mot de passe
+    
+    Args:
+        to_email: Email du destinataire
+        prenom: Prénom de l'utilisateur
+        reset_url: URL de réinitialisation avec token
+    
+    Returns:
+        bool: True si envoi réussi, False sinon
+    """
+    subject = "Réinitialisation de votre mot de passe - GMAO Iris"
+    
+    html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <style>
+        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+        .content {{ background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px; }}
+        .button {{ display: inline-block; padding: 15px 30px; background: #4F46E5; color: white; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
+        .warning {{ background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; margin: 20px 0; }}
+        .footer {{ text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 12px; }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Réinitialisation de mot de passe</h1>
+        </div>
+        <div class="content">
+            <p>Bonjour {prenom},</p>
+            
+            <p>Vous avez demandé la réinitialisation de votre mot de passe pour votre compte GMAO Iris.</p>
+            
+            <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe :</p>
+            
+            <div style="text-align: center;">
+                <a href="{reset_url}" class="button">Réinitialiser mon mot de passe</a>
+            </div>
+            
+            <div class="warning">
+                <strong>⚠️ Important :</strong>
+                <ul style="margin: 10px 0;">
+                    <li>Ce lien est valide pendant <strong>1 heure</strong></li>
+                    <li>Si vous n'avez pas demandé cette réinitialisation, ignorez cet email</li>
+                    <li>Ne partagez jamais ce lien avec personne</li>
+                </ul>
+            </div>
+            
+            <p style="font-size: 14px; color: #666; margin-top: 20px;">
+                Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
+                <a href="{reset_url}" style="color: #4F46E5; word-break: break-all;">{reset_url}</a>
+            </p>
+            
+            <p>Cordialement,<br>L'équipe GMAO Iris</p>
+        </div>
+        <div class="footer">
+            <p>Ceci est un email automatique, merci de ne pas y répondre.</p>
+            <p>© 2025 GMAO Iris - Tous droits réservés</p>
+        </div>
+    </div>
+</body>
+</html>
+    """
+    
+    text_content = f"""
+Bonjour {prenom},
+
+Vous avez demandé la réinitialisation de votre mot de passe pour votre compte GMAO Iris.
+
+Cliquez sur le lien ci-dessous pour créer un nouveau mot de passe :
+{reset_url}
+
+⚠️ Important :
+- Ce lien est valide pendant 1 heure
+- Si vous n'avez pas demandé cette réinitialisation, ignorez cet email
+- Ne partagez jamais ce lien avec personne
+
+Cordialement,
+L'équipe GMAO Iris
+
+---
+Ceci est un email automatique, merci de ne pas y répondre.
+© 2025 GMAO Iris - Tous droits réservés
+    """
+    
+    return send_email(to_email, subject, html_content, text_content)
+
                 margin-top: 20px;
                 text-align: center;
                 font-size: 12px;
