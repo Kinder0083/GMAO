@@ -14,7 +14,6 @@ backend/.pytest_cache/
 *.env
 !.env.example
 *.log
-backend/.venv/
 
 # Frontend
 frontend/node_modules/
