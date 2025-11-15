@@ -649,11 +649,42 @@ fi
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "  Configuration SMTP (Envoi d'emails)"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "Pour envoyer des invitations par email, vous devez configurer un serveur SMTP."
+echo ""
+read -p "Voulez-vous configurer le SMTP maintenant ? (y/n) : " configure_smtp
+
+if [[ "$configure_smtp" == "y" || "$configure_smtp" == "Y" ]]; then
+    echo ""
+    msg "Configuration SMTP dans le container..."
+    
+    # Exécuter le script setup-email.sh dans le container
+    pct exec $CTID -- bash -c "cd /opt/gmao-iris && bash setup-email.sh"
+    
+    echo ""
+    ok "Configuration SMTP terminée"
+else
+    echo ""
+    warn "Configuration SMTP ignorée"
+    echo "Vous pourrez la configurer plus tard avec :"
+    echo "  pct enter $CTID"
+    echo "  cd /opt/gmao-iris"
+    echo "  bash setup-email.sh"
+fi
+
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Commandes utiles"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "Entrer dans le container:"
 echo "  pct enter $CTID"
+echo ""
+echo "Configurer SMTP:"
+echo "  pct enter $CTID"
+echo "  cd /opt/gmao-iris && bash setup-email.sh"
 echo ""
 echo "Arrêter/Démarrer le container:"
 echo "  pct stop $CTID"
