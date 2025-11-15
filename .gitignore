@@ -2,10 +2,18 @@
 mongodb_data/
 
 # Backend
+backend/.env
+backend/.env.local
+backend/.env.*.local
+backend/venv/
 backend/__pycache__/
 backend/*.pyc
-backend/.env
-backend/venv/
+backend/.pytest_cache/
+
+# Ne jamais commiter les fichiers de configuration sensibles
+*.env
+!.env.example
+*.log
 backend/.venv/
 
 # Frontend
