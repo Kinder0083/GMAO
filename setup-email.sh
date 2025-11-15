@@ -17,20 +17,45 @@ echo "  CONFIGURATION SMTP - GMAO IRIS"
 echo "======================================"
 echo -e "${NC}"
 
-# Demander le chemin du backend
-echo -e "${YELLOW}Où se trouve le répertoire backend de votre application ?${NC}"
-read -p "Chemin (défaut: /opt/iris-maintenance/backend) : " user_backend_dir
-BACKEND_DIR="${user_backend_dir:-/opt/iris-maintenance/backend}"
+# Détection automatique du backend
+echo -e "${BLUE}🔍 Recherche automatique du backend GMAO...${NC}"
 
-# Vérifier que le répertoire existe
-if [ ! -d "$BACKEND_DIR" ]; then
-    echo -e "${RED}Erreur : Le répertoire $BACKEND_DIR n'existe pas${NC}"
+# Chercher le backend (contient server.py ET email_service.py)
+BACKEND_CANDIDATES=$(find /opt -maxdepth 3 -type f -name "server.py" 2>/dev/null | while read serverfile; do
+    backend_dir=$(dirname "$serverfile")
+    # Vérifier que email_service.py existe aussi
+    if [ -f "$backend_dir/email_service.py" ]; then
+        echo "$backend_dir"
+    fi
+done)
+
+# Compter le nombre de candidats
+BACKEND_COUNT=$(echo "$BACKEND_CANDIDATES" | grep -c "^/" 2>/dev/null || echo "0")
+
+if [ "$BACKEND_COUNT" -eq 0 ]; then
+    echo -e "${RED}❌ Aucun backend GMAO trouvé dans /opt${NC}"
+    echo ""
+    echo "Veuillez vérifier que l'application est installée dans /opt"
     exit 1
+elif [ "$BACKEND_COUNT" -eq 1 ]; then
+    BACKEND_DIR="$BACKEND_CANDIDATES"
+    echo -e "${GREEN}✅ Backend trouvé : $BACKEND_DIR${NC}"
+else
+    echo -e "${YELLOW}⚠️  Plusieurs backends trouvés :${NC}"
+    echo "$BACKEND_CANDIDATES" | nl
+    echo ""
+    read -p "Choisissez le numéro du backend à configurer : " choice
+    BACKEND_DIR=$(echo "$BACKEND_CANDIDATES" | sed -n "${choice}p")
+    
+    if [ -z "$BACKEND_DIR" ]; then
+        echo -e "${RED}Choix invalide${NC}"
+        exit 1
+    fi
 fi
 
 ENV_FILE="$BACKEND_DIR/.env"
 
-echo -e "${GREEN}✅ Répertoire backend : $BACKEND_DIR${NC}"
+echo -e "${GREEN}📂 Configuration de : $BACKEND_DIR${NC}"
 echo ""
 
 echo -e "${YELLOW}Ce script va configurer l'envoi d'emails pour GMAO IRIS.${NC}"
