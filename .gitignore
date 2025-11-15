@@ -55,3 +55,7 @@ backup*/
 # Environment
 .env
 .env.local
+-e 
+# Environment files
+*.env
+*.env.*
