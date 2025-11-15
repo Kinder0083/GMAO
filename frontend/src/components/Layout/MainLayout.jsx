@@ -22,7 +22,8 @@ import {
   Gauge,
   MessageSquare,
   Lightbulb,
-  Sparkles
+  Sparkles,
+  Shield
 } from 'lucide-react';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 import UpdateNotificationBadge from '../Common/UpdateNotificationBadge';
