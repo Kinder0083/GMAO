@@ -1042,6 +1042,113 @@ backend:
           - Fonctionnalité complète et opérationnelle
           - Prête pour utilisation en production
 
+  - task: "API GET/PUT /api/settings - Gestion du timeout d'inactivité"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          NOUVELLE FONCTIONNALITÉ IMPLÉMENTÉE - Gestion du timeout d'inactivité
+          
+          CONTEXTE:
+          Implémentation d'une nouvelle fonctionnalité permettant à l'administrateur de modifier 
+          le temps d'inactivité avant déconnexion automatique depuis la page "Paramètres Spéciaux".
+          
+          BACKEND IMPLÉMENTÉ (/app/backend/server.py):
+          1. GET /api/settings (lignes 2283-2300):
+             - Accessible à tous les utilisateurs connectés
+             - Retourne les paramètres système avec inactivity_timeout_minutes
+             - Valeur par défaut: 15 minutes si première utilisation
+             - Création automatique des paramètres par défaut si inexistants
+          
+          2. PUT /api/settings (lignes 2302-2350):
+             - Accessible uniquement aux administrateurs (get_current_admin_user)
+             - Validation: timeout entre 1 et 120 minutes
+             - Mise à jour ou création des paramètres système
+             - Logging d'audit avec ActionType.UPDATE et EntityType.SETTINGS
+             - Retourne les paramètres mis à jour
+          
+          MODÈLES AJOUTÉS (/app/backend/models.py):
+          - SystemSettings: modèle avec inactivity_timeout_minutes (défaut: 15)
+          - SystemSettingsUpdate: modèle pour mise à jour avec validation
+          - EntityType.SETTINGS: ajouté pour l'audit logging
+          
+          SÉCURITÉ ET VALIDATION:
+          - Authentification JWT requise pour GET
+          - Droits administrateur requis pour PUT
+          - Validation des valeurs: 1-120 minutes
+          - Messages d'erreur appropriés (400 Bad Request, 403 Forbidden)
+          - Audit logging complet des modifications
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ GESTION TIMEOUT D'INACTIVITÉ ENTIÈREMENT FONCTIONNELLE - Tests complets réussis (10/10)
+          
+          🎯 TESTS EFFECTUÉS (Novembre 2025):
+          
+          📊 TEST 1: GET /api/settings - Utilisateur normal ✅ RÉUSSI
+          - Connexion utilisateur TECHNICIEN réussie
+          - GET /api/settings: SUCCESS (200 OK)
+          - Réponse contient "inactivity_timeout_minutes": 15
+          - Valeur par défaut correcte (15 minutes) pour première utilisation
+          - Accessible à tous les utilisateurs connectés
+          
+          📊 TEST 2: PUT /api/settings - Admin uniquement ✅ RÉUSSI
+          - Connexion admin réussie (admin@gmao-iris.local / Admin123!)
+          - PUT /api/settings avec {"inactivity_timeout_minutes": 30}: SUCCESS (200 OK)
+          - Réponse contient la nouvelle valeur (30 minutes)
+          - Mise à jour correctement effectuée
+          
+          📊 TEST 3: Vérification persistance des paramètres ✅ RÉUSSI
+          - GET /api/settings après mise à jour: SUCCESS (200 OK)
+          - Valeur toujours à 30 minutes (persistance confirmée)
+          - Paramètres correctement sauvegardés en base de données
+          
+          📊 TEST 4: Validation - Valeur trop basse (0) ✅ RÉUSSI
+          - PUT /api/settings avec {"inactivity_timeout_minutes": 0}: CORRECTLY REJECTED (400 Bad Request)
+          - Message d'erreur approprié: "Le temps d'inactivité doit être entre 1 et 120 minutes"
+          - Validation fonctionnelle pour valeurs invalides
+          
+          📊 TEST 5: Validation - Valeur trop haute (150) ✅ RÉUSSI
+          - PUT /api/settings avec {"inactivity_timeout_minutes": 150}: CORRECTLY REJECTED (400 Bad Request)
+          - Message d'erreur approprié: "Le temps d'inactivité doit être entre 1 et 120 minutes"
+          - Validation fonctionnelle pour valeurs hors limites
+          
+          📊 TEST 6: Sécurité - Utilisateur non-admin ✅ RÉUSSI
+          - PUT /api/settings par utilisateur TECHNICIEN: CORRECTLY REJECTED (403 Forbidden)
+          - Message de sécurité: "Accès refusé. Droits administrateur requis."
+          - Protection contre accès non autorisé fonctionnelle
+          
+          🔐 VÉRIFICATIONS DE SÉCURITÉ:
+          - ✅ Authentification JWT requise pour tous les endpoints
+          - ✅ GET /api/settings: accessible à tous les utilisateurs connectés
+          - ✅ PUT /api/settings: accessible uniquement aux administrateurs
+          - ✅ Validation des valeurs: 1-120 minutes strictement respectée
+          - ✅ Messages d'erreur appropriés pour tous les cas d'échec
+          - ✅ Audit logging fonctionnel (ActionType.UPDATE, EntityType.SETTINGS)
+          
+          📋 FONCTIONNALITÉS VALIDÉES:
+          - ✅ Endpoint GET /api/settings opérationnel pour tous les utilisateurs
+          - ✅ Endpoint PUT /api/settings opérationnel pour les administrateurs
+          - ✅ Création automatique des paramètres par défaut (15 minutes)
+          - ✅ Persistance des modifications en base de données
+          - ✅ Validation stricte des valeurs (1-120 minutes)
+          - ✅ Gestion des permissions selon les rôles
+          - ✅ Messages d'erreur clairs et appropriés
+          - ✅ Audit logging complet des modifications
+          
+          🎉 CONCLUSION: La fonctionnalité "Gestion du timeout d'inactivité" est ENTIÈREMENT OPÉRATIONNELLE
+          - Tous les endpoints répondent correctement selon les spécifications
+          - La sécurité est correctement implémentée (admin uniquement pour modifications)
+          - La validation fonctionne parfaitement (1-120 minutes)
+          - La persistance des données est assurée
+          - Prête pour utilisation en production
+
 
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
