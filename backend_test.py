@@ -527,13 +527,13 @@ class InactivityTimeoutTester:
         return results
 
 if __name__ == "__main__":
-    tester = PasswordResetTester()
-    results = tester.run_password_reset_tests()
+    tester = InactivityTimeoutTester()
+    results = tester.run_inactivity_timeout_tests()
     
-    # Exit with appropriate code - allow cleanup to fail
-    critical_tests = ["admin_login", "forgot_password_flow", "get_test_user", 
-                     "admin_reset_password", "temporary_password_login", 
-                     "admin_reset_nonexistent", "non_admin_reset_denied"]
+    # Exit with appropriate code - allow cleanup and restore to fail
+    critical_tests = ["admin_login", "normal_user_setup", "get_settings_normal_user", 
+                     "update_settings_admin", "verify_settings_persistence", 
+                     "validation_too_low", "validation_too_high", "non_admin_security"]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
     
