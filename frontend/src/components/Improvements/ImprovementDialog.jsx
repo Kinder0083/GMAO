@@ -10,12 +10,15 @@ import { Badge } from '../ui/badge';
 import { Separator } from '../ui/separator';
 import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
-import { Calendar, Clock, User, MapPin, Wrench, FileText, MessageSquare, Send } from 'lucide-react';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Calendar, Clock, User, MapPin, Wrench, FileText, MessageSquare, Send, Plus } from 'lucide-react';
 import AttachmentsList from './AttachmentsList';
 import AttachmentUploader from './AttachmentUploader';
 import StatusChangeDialog from './StatusChangeDialog';
 import { improvementsAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatTimeToHoursMinutes } from '../../utils/timeFormat';
 
 const ImprovementDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const { toast } = useToast();
