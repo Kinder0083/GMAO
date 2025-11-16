@@ -1149,6 +1149,111 @@ backend:
           - La persistance des données est assurée
           - Prête pour utilisation en production
 
+  - task: "API Work Orders - Nouveau champ Catégorie"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py, /app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          NOUVELLE FONCTIONNALITÉ IMPLÉMENTÉE - Champ catégorie dans les ordres de travail
+          
+          CONTEXTE:
+          Ajout d'un nouveau champ "catégorie" optionnel dans les ordres de travail avec 5 valeurs possibles:
+          - CHANGEMENT_FORMAT (Changement de Format)
+          - TRAVAUX_PREVENTIFS (Travaux Préventifs)
+          - TRAVAUX_CURATIF (Travaux Curatif)
+          - TRAVAUX_DIVERS (Travaux Divers)
+          - FORMATION (Formation)
+          
+          BACKEND IMPLÉMENTÉ (/app/backend/models.py):
+          1. Enum WorkOrderCategory avec les 5 valeurs (lignes 271-276)
+          2. Champ categorie: Optional[WorkOrderCategory] = None dans WorkOrderBase (ligne 525)
+          3. Champ categorie dans WorkOrderUpdate pour permettre les modifications (ligne 541)
+          
+          ENDPOINTS MODIFIÉS (/app/backend/server.py):
+          - POST /api/work-orders: Accepte le champ categorie optionnel
+          - PUT /api/work-orders/{id}: Permet la mise à jour de la catégorie
+          - GET /api/work-orders: Retourne la catégorie dans la liste
+          - GET /api/work-orders/{id}: Retourne la catégorie dans les détails
+          
+          VALIDATION:
+          - Champ optionnel (peut être null)
+          - Validation automatique des valeurs par l'enum Pydantic
+          - Erreur 422 pour les valeurs invalides
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ CHAMP CATÉGORIE ENTIÈREMENT FONCTIONNEL - Tests complets réussis (8/8)
+          
+          🎯 TESTS EFFECTUÉS (Novembre 2025):
+          
+          📊 TEST 1: Créer ordre de travail AVEC catégorie ✅ RÉUSSI
+          - POST /api/work-orders avec categorie: "CHANGEMENT_FORMAT": SUCCESS (201 Created)
+          - Réponse contient "categorie": "CHANGEMENT_FORMAT"
+          - Tous les champs requis présents: id, titre, description, priorite, statut
+          
+          📊 TEST 2: Créer ordre de travail SANS catégorie ✅ RÉUSSI
+          - POST /api/work-orders sans champ categorie: SUCCESS (200 OK)
+          - Catégorie est null (comportement correct pour champ optionnel)
+          - Ordre de travail créé sans erreurs
+          
+          📊 TEST 3: Récupérer ordre avec catégorie ✅ RÉUSSI
+          - GET /api/work-orders/{id}: SUCCESS (200 OK)
+          - Réponse contient la catégorie correcte
+          - Note: Endpoint utilise lookup par champ 'id' (UUID) - fonctionnel
+          
+          📊 TEST 4: Mettre à jour catégorie ✅ RÉUSSI
+          - PUT /api/work-orders/{id} avec {"categorie": "TRAVAUX_PREVENTIFS"}: SUCCESS (200 OK)
+          - Catégorie mise à jour de "CHANGEMENT_FORMAT" vers "TRAVAUX_PREVENTIFS"
+          - Modification persistée correctement
+          
+          📊 TEST 5: Lister tous les ordres ✅ RÉUSSI
+          - GET /api/work-orders: SUCCESS (200 OK)
+          - Liste contient 5 ordres de travail
+          - 2 ordres avec catégorie affichés correctement
+          - 3 ordres sans catégorie (pas d'erreurs)
+          - Ordres de test trouvés dans la liste
+          
+          📊 TEST BONUS: Validation catégorie invalide ✅ RÉUSSI
+          - POST /api/work-orders avec "INVALID_CATEGORY": CORRECTLY REJECTED (422 Unprocessable Entity)
+          - Validation Pydantic fonctionne correctement
+          
+          📊 TEST COMPLET: Toutes les valeurs de catégorie ✅ RÉUSSI
+          - CHANGEMENT_FORMAT: ✓ WORKING
+          - TRAVAUX_PREVENTIFS: ✓ WORKING
+          - TRAVAUX_CURATIF: ✓ WORKING
+          - TRAVAUX_DIVERS: ✓ WORKING
+          - FORMATION: ✓ WORKING
+          
+          🔐 VÉRIFICATIONS TECHNIQUES:
+          - ✅ Enum WorkOrderCategory correctement défini
+          - ✅ Champ optionnel fonctionne (null accepté)
+          - ✅ Validation automatique des valeurs
+          - ✅ Sérialisation JSON sans erreurs
+          - ✅ Persistance des données en MongoDB
+          - ✅ Compatibilité avec ordres existants (sans catégorie)
+          
+          📋 FONCTIONNALITÉS VALIDÉES:
+          - ✅ Création d'ordres avec catégorie
+          - ✅ Création d'ordres sans catégorie (optionnel)
+          - ✅ Récupération des détails avec catégorie
+          - ✅ Mise à jour de la catégorie
+          - ✅ Listage de tous les ordres (avec/sans catégorie)
+          - ✅ Validation des valeurs invalides
+          - ✅ Toutes les 5 valeurs de catégorie fonctionnelles
+          
+          🎉 CONCLUSION: Le nouveau champ "Catégorie" est ENTIÈREMENT OPÉRATIONNEL
+          - Tous les tests du cahier des charges sont validés
+          - Le champ est correctement optionnel
+          - Toutes les valeurs d'enum fonctionnent
+          - Compatibilité assurée avec les données existantes
+          - Prêt pour utilisation en production
+
 
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
