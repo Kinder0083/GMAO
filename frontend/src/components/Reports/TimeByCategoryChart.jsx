@@ -188,6 +188,9 @@ const TimeByCategoryChart = () => {
                         const time = monthData.categories[category] || 0;
                         const heightPercent = maxValue > 0 ? (time / maxValue) * 100 : 0;
                         
+                        // Calculer le pourcentage par rapport au total du mois
+                        const percentOfMonth = totalTime > 0 ? ((time / totalTime) * 100).toFixed(1) : 0;
+                        
                         return (
                           <div
                             key={category}
@@ -202,7 +205,8 @@ const TimeByCategoryChart = () => {
                             {time > 0 && (
                               <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
                                 <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                                  {categoryLabels[category]}: {formatTime(time)}
+                                  <div className="font-semibold">{categoryLabels[category]}</div>
+                                  <div>{formatTime(time)} ({percentOfMonth}%)</div>
                                 </div>
                               </div>
                             )}
