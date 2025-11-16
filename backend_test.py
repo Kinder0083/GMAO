@@ -327,34 +327,30 @@ class WorkOrderTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_validation_too_high(self):
-        """TEST 5: Test de validation - Valeur trop haute"""
-        self.log("🧪 TEST 5: Validation test - Value too high (150 minutes)")
+    def test_cleanup_work_order(self):
+        """TEST 7: Nettoyer (supprimer l'ordre de test)"""
+        self.log("🧪 TEST 7: Nettoyer (supprimer l'ordre de test)")
+        
+        if not self.test_work_order_id:
+            self.log("⚠️ Pas d'ordre de travail de test à supprimer", "WARNING")
+            return True
         
         try:
-            response = self.admin_session.put(
-                f"{BACKEND_URL}/settings",
-                json={"inactivity_timeout_minutes": 150},
+            response = self.admin_session.delete(
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}",
                 timeout=10
             )
             
-            if response.status_code == 400:
-                self.log("✅ PUT /api/settings correctly returned 400 Bad Request for value 150")
-                
-                # Check error message
-                try:
-                    data = response.json()
-                    detail = data.get("detail", "")
-                    if "1 et 120" in detail or "entre" in detail.lower():
-                        self.log(f"✅ Appropriate error message: {detail}")
-                    else:
-                        self.log(f"⚠️ Error message: {detail}", "WARNING")
-                except:
-                    self.log("⚠️ Could not parse error message", "WARNING")
-                
+            if response.status_code == 200:
+                self.log("✅ Ordre de travail supprimé avec succès (Status 200)")
+                self.created_work_orders.remove(self.test_work_order_id)
+                self.test_work_order_id = None
+                return True
+            elif response.status_code == 404:
+                self.log("⚠️ Ordre de travail déjà supprimé (Status 404)", "WARNING")
                 return True
             else:
-                self.log(f"❌ Expected 400 Bad Request but got {response.status_code}", "ERROR")
+                self.log(f"❌ Suppression de l'ordre échouée - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
