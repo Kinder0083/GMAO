@@ -358,7 +358,7 @@ class UpdateService:
                 log_detailed(f"✅ Dépendances backend installées")
             
             # 4. Installer les dépendances frontend si package.json a changé
-            logger.info("📦 Installation des dépendances frontend...")
+            log_detailed("📦 Étape 4/7: Installation des dépendances frontend...")
             result = subprocess.run(
                 ["yarn", "install"],
                 cwd="/app/frontend",
@@ -367,8 +367,11 @@ class UpdateService:
                 timeout=300
             )
             
+            log_detailed(f"Yarn install returncode: {result.returncode}")
             if result.returncode != 0:
-                logger.warning(f"⚠️ Attention lors de l'installation des dépendances frontend: {result.stderr}")
+                log_detailed(f"⚠️ Warning yarn install: {result.stderr}", "WARNING")
+            else:
+                log_detailed(f"✅ Dépendances frontend installées")
             
             # 5. Enregistrer la mise à jour dans la DB
             await self.db.update_history.insert_one({
