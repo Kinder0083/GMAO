@@ -415,28 +415,32 @@ class InactivityTimeoutTester:
             self.log(f"⚠️ Could not clean up test user: {str(e)}")
             return True  # Don't fail tests for cleanup issues
     
-    def run_password_reset_tests(self):
-        """Run comprehensive tests for password reset functionality"""
+    def run_inactivity_timeout_tests(self):
+        """Run comprehensive tests for inactivity timeout settings functionality"""
         self.log("=" * 80)
-        self.log("TESTING PASSWORD RESET FUNCTIONALITY")
+        self.log("TESTING INACTIVITY TIMEOUT SETTINGS FUNCTIONALITY")
         self.log("=" * 80)
-        self.log("CONTEXTE: Test complet de la fonctionnalité 'Mot de passe oublié'")
-        self.log("et 'Réinitialisation admin'")
+        self.log("CONTEXTE: Test complet de la fonctionnalité 'Gestion du timeout d'inactivité'")
         self.log("")
         self.log("TESTS À EFFECTUER:")
-        self.log("1. Forgot Password Flow (POST /api/auth/forgot-password)")
-        self.log("2. Admin Reset Password (POST /api/users/{user_id}/reset-password-admin)")
-        self.log("3. Verify temporary password works for login")
+        self.log("1. GET /api/settings - Récupérer les paramètres système (utilisateur normal)")
+        self.log("2. PUT /api/settings - Mettre à jour les paramètres (admin uniquement)")
+        self.log("3. Vérifier que les paramètres sont persistés")
+        self.log("4. Test de validation - Valeur trop basse (0)")
+        self.log("5. Test de validation - Valeur trop haute (150)")
+        self.log("6. Test de sécurité - Non-admin")
         self.log("=" * 80)
         
         results = {
             "admin_login": False,
-            "forgot_password_flow": False,
-            "get_test_user": False,
-            "admin_reset_password": False,
-            "temporary_password_login": False,
-            "admin_reset_nonexistent": False,
-            "non_admin_reset_denied": False,
+            "normal_user_setup": False,
+            "get_settings_normal_user": False,
+            "update_settings_admin": False,
+            "verify_settings_persistence": False,
+            "validation_too_low": False,
+            "validation_too_high": False,
+            "non_admin_security": False,
+            "restore_settings": False,
             "cleanup": False
         }
         
@@ -447,34 +451,40 @@ class InactivityTimeoutTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # Test 2: Forgot Password Flow
-        results["forgot_password_flow"] = self.test_forgot_password_flow()
+        # Test 2: Setup normal user
+        results["normal_user_setup"] = self.test_normal_user_login()
         
-        # Test 3: Get or create test user
-        results["get_test_user"] = self.get_existing_user_for_reset()
-        
-        if not results["get_test_user"]:
-            self.log("❌ Cannot proceed with reset tests - No test user available", "ERROR")
+        if not results["normal_user_setup"]:
+            self.log("❌ Cannot proceed with normal user tests - User setup failed", "ERROR")
             return results
         
-        # Test 4: Admin Reset Password
-        results["admin_reset_password"] = self.test_admin_reset_password()
+        # Test 3: Get settings as normal user
+        results["get_settings_normal_user"] = self.test_get_settings_normal_user()
         
-        # Test 5: Verify temporary password login
-        results["temporary_password_login"] = self.test_temporary_password_login()
+        # Test 4: Update settings as admin
+        results["update_settings_admin"] = self.test_update_settings_admin()
         
-        # Test 6: Admin reset for non-existent user
-        results["admin_reset_nonexistent"] = self.test_admin_reset_nonexistent_user()
+        # Test 5: Verify settings persistence
+        results["verify_settings_persistence"] = self.test_verify_settings_persistence()
         
-        # Test 7: Non-admin user tries to reset password
-        results["non_admin_reset_denied"] = self.test_non_admin_reset_password()
+        # Test 6: Validation - too low
+        results["validation_too_low"] = self.test_validation_too_low()
         
-        # Test 8: Cleanup
+        # Test 7: Validation - too high
+        results["validation_too_high"] = self.test_validation_too_high()
+        
+        # Test 8: Security - non-admin
+        results["non_admin_security"] = self.test_non_admin_security()
+        
+        # Test 9: Restore original settings
+        results["restore_settings"] = self.restore_original_settings()
+        
+        # Test 10: Cleanup
         results["cleanup"] = self.cleanup_test_user()
         
         # Summary
         self.log("=" * 70)
-        self.log("PASSWORD RESET TEST RESULTS SUMMARY")
+        self.log("INACTIVITY TIMEOUT SETTINGS TEST RESULTS SUMMARY")
         self.log("=" * 70)
         
         passed = sum(results.values())
@@ -487,28 +497,31 @@ class InactivityTimeoutTester:
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         # Detailed analysis for critical tests
-        critical_tests = ["forgot_password_flow", "admin_reset_password", "temporary_password_login"]
+        critical_tests = ["get_settings_normal_user", "update_settings_admin", "verify_settings_persistence", 
+                         "validation_too_low", "validation_too_high", "non_admin_security"]
         critical_passed = sum(results.get(test, False) for test in critical_tests)
         
         if critical_passed == len(critical_tests):
-            self.log("🎉 CRITICAL SUCCESS: All main password reset tests passed!")
-            self.log("✅ Forgot password flow works correctly")
-            self.log("✅ Admin can reset user passwords")
-            self.log("✅ Temporary passwords work for login")
-            self.log("✅ FirstLogin field correctly managed")
+            self.log("🎉 CRITICAL SUCCESS: All main inactivity timeout tests passed!")
+            self.log("✅ GET /api/settings works for normal users")
+            self.log("✅ PUT /api/settings works for admin users")
+            self.log("✅ Settings are properly persisted")
+            self.log("✅ Validation works for invalid values")
+            self.log("✅ Security restrictions work for non-admin users")
         else:
-            self.log("🚨 CRITICAL FAILURE: Some main password reset tests failed!")
+            self.log("🚨 CRITICAL FAILURE: Some main inactivity timeout tests failed!")
             failed_critical = [test for test in critical_tests if not results.get(test, False)]
             self.log(f"❌ Failed critical tests: {', '.join(failed_critical)}")
         
-        if passed >= total - 1:  # Allow cleanup to fail
-            self.log("🎉 PASSWORD RESET FUNCTIONALITY IS WORKING CORRECTLY!")
-            self.log("✅ Both 'Mot de passe oublié' and 'Réinitialisation admin' work")
-            self.log("✅ Proper security validations in place")
-            self.log("✅ Temporary passwords function correctly")
+        if passed >= total - 2:  # Allow cleanup and restore to fail
+            self.log("🎉 INACTIVITY TIMEOUT SETTINGS FUNCTIONALITY IS WORKING CORRECTLY!")
+            self.log("✅ All endpoints respond correctly")
+            self.log("✅ Proper validation in place")
+            self.log("✅ Security restrictions enforced")
+            self.log("✅ Settings persistence works")
         else:
-            self.log("⚠️ Some tests failed - The password reset functionality may have issues")
-            failed_tests = [test for test, result in results.items() if not result and test != "cleanup"]
+            self.log("⚠️ Some tests failed - The inactivity timeout settings functionality may have issues")
+            failed_tests = [test for test, result in results.items() if not result and test not in ["cleanup", "restore_settings"]]
             self.log(f"❌ Failed tests: {', '.join(failed_tests)}")
         
         return results
