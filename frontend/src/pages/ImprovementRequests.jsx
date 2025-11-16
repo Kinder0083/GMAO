@@ -210,7 +210,18 @@ const ImprovementRequests = () => {
                 <tbody>
                   {filteredRequests.map((req) => (
                     <tr key={req.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 text-sm text-gray-600">{req.created_by_name || 'N/A'}</td>
+                      <td className="py-3 px-2 text-center">
+                        {req.created_by_prenom && req.created_by_nom ? (
+                          <div className="flex items-center justify-center">
+                            <AvatarInitials 
+                              prenom={req.created_by_prenom} 
+                              nom={req.created_by_nom}
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-gray-400 text-xs">-</span>
+                        )}
+                      </td>
                       <td className="py-3 px-4 text-sm text-gray-900 font-medium">{req.titre}</td>
                       <td className="py-3 px-4">{getPriorityBadge(req.priorite)}</td>
                       <td className="py-3 px-4 text-sm text-gray-600">
