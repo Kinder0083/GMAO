@@ -132,49 +132,9 @@ class CategoryTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_add_time_first(self):
-        """TEST 2: Ajouter du temps passé (première fois) - 2h30min"""
-        self.log("🧪 TEST 2: Ajouter du temps passé (première fois) - 2h30min")
-        
-        if not self.test_work_order_id:
-            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
-            return False
-        
-        try:
-            time_data = {
-                "hours": 2,
-                "minutes": 30
-            }
-            
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/add-time",
-                json=time_data,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ Ajout de temps réussi (Status 200)")
-                
-                # Vérifier que tempsReel = 2.5 heures (2h30min)
-                temps_reel = data.get("tempsReel")
-                expected_time = 2.5  # 2h30min = 2.5 heures
-                
-                if temps_reel == expected_time:
-                    self.log(f"✅ tempsReel = {temps_reel} heures (2h30min comme attendu)")
-                    return True
-                else:
-                    self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
-                    return False
-                    
-            else:
-                self.log(f"❌ Ajout de temps échoué - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
-                
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+    def test_create_curatif_order(self):
+        """TEST 2: Créer ordre avec catégorie TRAVAUX_CURATIF + temps passé"""
+        return self.test_create_work_order_with_category("TRAVAUX_CURATIF", "Test Curatif", 3, 30)
     
     def test_add_time_increment(self):
         """TEST 3: Ajouter du temps passé (incrémentation) - 1h15min"""
