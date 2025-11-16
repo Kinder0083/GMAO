@@ -156,35 +156,43 @@ class WorkOrderTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_get_settings_normal_user(self):
-        """TEST 1: Récupérer les paramètres système (GET /api/settings) - Utilisateur normal"""
-        self.log("🧪 TEST 1: GET /api/settings - Utilisateur normal")
+    def test_add_time_increment(self):
+        """TEST 3: Ajouter du temps passé (incrémentation) - 1h15min"""
+        self.log("🧪 TEST 3: Ajouter du temps passé (incrémentation) - 1h15min")
+        
+        if not self.test_work_order_id:
+            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
+            return False
         
         try:
-            response = self.user_session.get(f"{BACKEND_URL}/settings", timeout=10)
+            time_data = {
+                "hours": 1,
+                "minutes": 15
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/add-time",
+                json=time_data,
+                timeout=10
+            )
             
             if response.status_code == 200:
                 data = response.json()
-                self.log("✅ GET /api/settings returned 200 OK for normal user")
+                self.log("✅ Ajout de temps réussi (Status 200)")
                 
-                # Check for required field
-                if "inactivity_timeout_minutes" in data:
-                    timeout_value = data.get("inactivity_timeout_minutes")
-                    self.original_timeout = timeout_value  # Store for restoration later
-                    self.log(f"✅ Response contains 'inactivity_timeout_minutes': {timeout_value}")
-                    
-                    # Check if it's the default value (15) for first time
-                    if timeout_value == 15:
-                        self.log("✅ Default value is 15 minutes (as expected for first time)")
-                    else:
-                        self.log(f"ℹ️ Current timeout value: {timeout_value} minutes")
-                    
+                # Vérifier que tempsReel = 3.75 heures (2.5 + 1.25)
+                temps_reel = data.get("tempsReel")
+                expected_time = 3.75  # 2.5 + 1.25 = 3.75 heures
+                
+                if temps_reel == expected_time:
+                    self.log(f"✅ tempsReel = {temps_reel} heures (3h45min comme attendu)")
                     return True
                 else:
-                    self.log("❌ Response missing 'inactivity_timeout_minutes' field", "ERROR")
+                    self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
                     return False
+                    
             else:
-                self.log(f"❌ GET /api/settings failed - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Ajout de temps échoué - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
