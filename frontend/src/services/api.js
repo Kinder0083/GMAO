@@ -294,6 +294,10 @@ export const improvementsAPI = {
   update: (id, data) => api.put(`/improvements/${id}`, data),
   delete: (id) => api.delete(`/improvements/${id}`),
   
+  // Add time spent
+  addTimeSpent: (improvementId, hours, minutes) => 
+    api.post(`/improvements/${improvementId}/add-time`, { hours, minutes }),
+  
   // Attachments
   uploadAttachment: (id, file) => {
     const formData = new FormData();
