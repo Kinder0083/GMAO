@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests "Nouveau champ Catégorie dans les ordres de travail" functionality
+Tests "Système d'ajout de temps passé sur les ordres de travail" functionality
 """
 
 import requests
@@ -20,7 +20,7 @@ BACKEND_URL = "https://maintx-hub.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class WorkOrderCategoryTester:
+class WorkOrderTimeTrackingTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
