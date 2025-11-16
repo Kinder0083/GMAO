@@ -18,6 +18,7 @@ import AttachmentUploader from './AttachmentUploader';
 import StatusChangeDialog from './StatusChangeDialog';
 import { commentsAPI, workOrdersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatTimeToHoursMinutes } from '../../utils/timeFormat';
 
 const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const { toast } = useToast();
