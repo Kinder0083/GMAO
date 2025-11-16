@@ -144,6 +144,17 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     return <Badge variant={badge.variant}>{badge.label}</Badge>;
   };
 
+  const getCategoryLabel = (categorie) => {
+    const labels = {
+      'CHANGEMENT_FORMAT': 'Changement de Format',
+      'TRAVAUX_PREVENTIFS': 'Travaux Préventifs',
+      'TRAVAUX_CURATIF': 'Travaux Curatif',
+      'TRAVAUX_DIVERS': 'Travaux Divers',
+      'FORMATION': 'Formation'
+    };
+    return labels[categorie] || categorie;
+  };
+
   return (
     <>
       <Dialog open={open} onOpenChange={handleDialogClose}>
