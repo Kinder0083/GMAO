@@ -329,6 +329,9 @@ const ImprovementRequests = () => {
                           <span className="text-gray-600">-</span>
                         )}
                       </td>
+                      <td className="py-3 px-4 text-sm text-gray-700 font-medium">
+                        {req.work_order_temps_reel ? formatTimeToHoursMinutes(req.work_order_temps_reel) : '-'}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
