@@ -6,6 +6,7 @@ import { BarChart3, TrendingUp, Download, Calendar } from 'lucide-react';
 import { reportsAPI, equipmentsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import CustomPeriodDialog from '../components/Common/CustomPeriodDialog';
+import TimeByCategoryChart from '../components/Reports/TimeByCategoryChart';
 
 const Reports = () => {
   const { toast } = useToast();
