@@ -244,26 +244,43 @@ class WorkOrderTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_verify_settings_persistence(self):
-        """TEST 3: Vérifier que les paramètres sont persistés"""
-        self.log("🧪 TEST 3: Verify settings persistence - GET /api/settings after update")
+    def test_add_hours_only(self):
+        """TEST 5: Ajouter uniquement des heures - 3h"""
+        self.log("🧪 TEST 5: Ajouter uniquement des heures - 3h")
+        
+        if not self.test_work_order_id:
+            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
+            return False
         
         try:
-            response = self.admin_session.get(f"{BACKEND_URL}/settings", timeout=10)
+            time_data = {
+                "hours": 3,
+                "minutes": 0
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/add-time",
+                json=time_data,
+                timeout=10
+            )
             
             if response.status_code == 200:
                 data = response.json()
-                self.log("✅ GET /api/settings returned 200 OK")
+                self.log("✅ Ajout de temps réussi (Status 200)")
                 
-                # Check that the value is still 30
-                if data.get("inactivity_timeout_minutes") == 30:
-                    self.log("✅ Settings are persisted correctly - value is still 30 minutes")
+                # Vérifier que tempsReel = 7.5 heures (4.5 + 3)
+                temps_reel = data.get("tempsReel")
+                expected_time = 7.5  # 4.5 + 3 = 7.5 heures
+                
+                if temps_reel == expected_time:
+                    self.log(f"✅ tempsReel = {temps_reel} heures (7h30min comme attendu)")
                     return True
                 else:
-                    self.log(f"❌ Settings not persisted - value is {data.get('inactivity_timeout_minutes')}, expected 30", "ERROR")
+                    self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
                     return False
+                    
             else:
-                self.log(f"❌ GET /api/settings failed - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Ajout de temps échoué - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
