@@ -218,6 +218,17 @@ const WorkOrders = () => {
     );
   };
 
+  const getCategoryLabel = (categorie) => {
+    const labels = {
+      'CHANGEMENT_FORMAT': 'Changement de Format',
+      'TRAVAUX_PREVENTIFS': 'Travaux Préventifs',
+      'TRAVAUX_CURATIF': 'Travaux Curatif',
+      'TRAVAUX_DIVERS': 'Travaux Divers',
+      'FORMATION': 'Formation'
+    };
+    return labels[categorie] || '-';
+  };
+
   const handleViewWorkOrder = (wo) => {
     setSelectedWorkOrder(wo);
     setDialogOpen(true);
