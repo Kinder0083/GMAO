@@ -108,12 +108,23 @@ const TimeByCategoryChart = () => {
     return m > 0 ? `${h}h${m}m` : `${h}h`;
   };
 
-  // Calculer la hauteur maximale pour l'échelle
+  // Toggle visibility of a category
+  const toggleCategory = (category) => {
+    setVisibleCategories(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }));
+  };
+
+  // Calculer la hauteur maximale pour l'échelle en fonction des catégories visibles
   const getMaxValue = () => {
     if (!chartData || !chartData.months) return 100;
     let max = 0;
     chartData.months.forEach(month => {
-      const total = Object.values(month.categories).reduce((sum, val) => sum + val, 0);
+      // Ne compter que les catégories visibles
+      const total = Object.entries(month.categories)
+        .filter(([cat]) => visibleCategories[cat])
+        .reduce((sum, [_, val]) => sum + val, 0);
       if (total > max) max = total;
     });
     return Math.ceil(max * 1.1); // 10% de marge
