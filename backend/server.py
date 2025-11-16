@@ -5073,6 +5073,62 @@ async def update_improvement(
 async def delete_improvement(imp_id: str, current_user: dict = Depends(require_permission("improvements", "delete"))):
     """Supprimer une amélioration"""
     imp = await db.improvements.find_one({"id": imp_id})
+
+@api_router.post("/improvements/{imp_id}/add-time")
+async def add_time_to_improvement(imp_id: str, time_data: AddTimeSpent, current_user: dict = Depends(require_permission("improvements", "edit"))):
+    """Ajouter du temps passé à une amélioration"""
+    try:
+        # Récupérer l'amélioration existante
+        existing_imp = await db.improvements.find_one({"id": imp_id})
+        if not existing_imp:
+            raise HTTPException(status_code=404, detail="Amélioration non trouvée")
+        
+        # Convertir le temps en heures décimales
+        time_to_add = time_data.hours + (time_data.minutes / 60.0)
+        
+        # Récupérer le temps réel actuel (0 si None)
+        current_time = existing_imp.get("tempsReel", 0) or 0
+        
+        # Calculer le nouveau temps réel
+        new_time = current_time + time_to_add
+        
+        # Mettre à jour l'amélioration
+        await db.improvements.update_one(
+            {"id": imp_id},
+            {"$set": {"tempsReel": new_time}}
+        )
+        
+        # Log dans l'audit
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            user_name=f"{current_user['prenom']} {current_user['nom']}",
+            user_email=current_user["email"],
+            action=ActionType.UPDATE,
+            entity_type=EntityType.IMPROVEMENT,
+            entity_id=str(existing_imp["id"]),
+            entity_name=existing_imp["titre"],
+            details=f"Ajout de temps passé: {time_data.hours}h{time_data.minutes:02d}min",
+            changes={"tempsReel_old": current_time, "tempsReel_new": new_time, "time_added": time_to_add}
+        )
+        
+        # Récupérer l'amélioration mise à jour
+        imp = await db.improvements.find_one({"id": imp_id})
+        imp = serialize_doc(imp)
+        
+        if imp.get("assigne_a_id"):
+            imp["assigneA"] = await get_user_by_id(imp["assigne_a_id"])
+        if imp.get("emplacement_id"):
+            imp["emplacement"] = await get_location_by_id(imp["emplacement_id"])
+        if imp.get("equipement_id"):
+            imp["equipement"] = await get_equipment_by_id(imp["equipement_id"])
+        
+        return Improvement(**imp)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de l'ajout de temps : {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
     if not imp:
         raise HTTPException(status_code=404, detail="Amélioration non trouvée")
     
