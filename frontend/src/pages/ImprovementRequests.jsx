@@ -12,6 +12,8 @@ import { improvementRequestsAPI, improvementsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useNavigate } from 'react-router-dom';
+import AvatarInitials from '../components/ui/avatar-initials';
+import { formatTimeToHoursMinutes } from '../utils/timeFormat';
 
 const ImprovementRequests = () => {
   const { toast } = useToast();
