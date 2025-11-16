@@ -331,6 +331,7 @@ const WorkOrderFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
                 <SelectItem value="TRAVAUX_CURATIF">Travaux Curatif</SelectItem>
                 <SelectItem value="TRAVAUX_DIVERS">Travaux Divers</SelectItem>
                 <SelectItem value="FORMATION">Formation</SelectItem>
+                <SelectItem value="REGLAGE">Réglage</SelectItem>
               </SelectContent>
             </Select>
           </div>
