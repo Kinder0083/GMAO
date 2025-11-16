@@ -339,67 +339,6 @@ Ceci est un email automatique, merci de ne pas y répondre.
     
     return send_email(to_email, subject, html_content, text_content)
 
-                margin-top: 20px;
-                text-align: center;
-                font-size: 12px;
-                color: #666;
-            }}
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <div class="header">
-                <h1>🔧 GMAO Iris</h1>
-            </div>
-            <div class="content">
-                <h2>Bonjour,</h2>
-                <p>Vous avez été invité(e) à rejoindre <strong>GMAO Iris</strong> en tant que <strong>{role_label}</strong>.</p>
-                
-                <p>Pour compléter votre inscription, cliquez sur le bouton ci-dessous :</p>
-                
-                <div style="text-align: center;">
-                    <a href="{invitation_link}" class="button">Compléter mon inscription</a>
-                </div>
-                
-                <p style="font-size: 12px; color: #666;">
-                    Si le bouton ne fonctionne pas, copiez et collez ce lien dans votre navigateur :<br>
-                    <a href="{invitation_link}">{invitation_link}</a>
-                </p>
-                
-                <p><strong>⚠️ Important :</strong> Ce lien expire dans 7 jours.</p>
-                
-                <p>Cordialement,<br>L'équipe GMAO Iris</p>
-            </div>
-            <div class="footer">
-                <p>Ceci est un email automatique, merci de ne pas y répondre.</p>
-                <p>© 2025 GMAO Iris - Tous droits réservés</p>
-            </div>
-        </div>
-    </body>
-    </html>
-    """
-    
-    # Version texte
-    text_content = f"""
-Bonjour,
-
-Vous avez été invité(e) à rejoindre GMAO Iris en tant que {role_label}.
-
-Pour compléter votre inscription, cliquez sur le lien ci-dessous :
-{invitation_link}
-
-Ce lien expire dans 7 jours.
-
-Cordialement,
-L'équipe GMAO Iris
-
----
-Ceci est un email automatique, merci de ne pas y répondre.
-© 2025 GMAO Iris - Tous droits réservés
-    """
-    
-    return send_email(to_email, subject, html_content, text_content)
-
 
 def send_account_created_email(to_email: str, temp_password: str, prenom: str) -> bool:
     """
