@@ -27,9 +27,6 @@ const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSu
       if (location) {
         setFormData({
           nom: location.nom || '',
-          adresse: location.adresse || '',
-          ville: location.ville || '',
-          codePostal: location.codePostal || '',
           type: location.type || '',
           parent_id: location.parent_id || null
         });
@@ -37,18 +34,12 @@ const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSu
         // Création d'une sous-zone
         setFormData({
           nom: '',
-          adresse: '',
-          ville: '',
-          codePostal: '',
           type: '',
           parent_id: parentLocation.id
         });
       } else {
         setFormData({
           nom: '',
-          adresse: '',
-          ville: '',
-          codePostal: '',
           type: '',
           parent_id: null
         });
