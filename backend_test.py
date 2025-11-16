@@ -296,49 +296,34 @@ class InactivityTimeoutTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_temporary_password_login(self):
-        """TEST 3: Verify temporary password works for login"""
-        self.log("🧪 TEST 3: Verify temporary password works for login")
-        
-        if not self.temp_password or not self.test_user_email:
-            self.log("❌ No temporary password or test user email available", "ERROR")
-            return False
+    def test_validation_too_high(self):
+        """TEST 5: Test de validation - Valeur trop haute"""
+        self.log("🧪 TEST 5: Validation test - Value too high (150 minutes)")
         
         try:
-            response = requests.post(
-                f"{BACKEND_URL}/auth/login",
-                json={
-                    "email": self.test_user_email,
-                    "password": self.temp_password
-                },
+            response = self.admin_session.put(
+                f"{BACKEND_URL}/settings",
+                json={"inactivity_timeout_minutes": 150},
                 timeout=10
             )
             
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ Login with temporary password successful")
+            if response.status_code == 400:
+                self.log("✅ PUT /api/settings correctly returned 400 Bad Request for value 150")
                 
-                # Verify user data
-                user_data = data.get("user")
-                if user_data:
-                    self.log(f"✅ User logged in: {user_data.get('prenom')} {user_data.get('nom')}")
-                    
-                    # Check firstLogin status
-                    if user_data.get("firstLogin") == True:
-                        self.log("✅ FirstLogin status is True (user should change password)")
+                # Check error message
+                try:
+                    data = response.json()
+                    detail = data.get("detail", "")
+                    if "1 et 120" in detail or "entre" in detail.lower():
+                        self.log(f"✅ Appropriate error message: {detail}")
                     else:
-                        self.log(f"⚠️ FirstLogin status is {user_data.get('firstLogin')}, expected True", "WARNING")
-                    
-                    # Store token for potential future tests
-                    self.user_token = data.get("access_token")
-                    self.user_data = user_data
-                    
-                    return True
-                else:
-                    self.log("❌ No user data in login response", "ERROR")
-                    return False
+                        self.log(f"⚠️ Error message: {detail}", "WARNING")
+                except:
+                    self.log("⚠️ Could not parse error message", "WARNING")
+                
+                return True
             else:
-                self.log(f"❌ Login with temporary password failed - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Expected 400 Bad Request but got {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
