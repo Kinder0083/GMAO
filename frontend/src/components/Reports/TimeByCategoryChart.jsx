@@ -175,46 +175,48 @@ const TimeByCategoryChart = () => {
         {/* Graphique */}
         <div className="relative h-80 bg-gray-50 rounded-lg p-4">
           {chartData && chartData.months && (
-            <div className="flex items-end justify-around h-full gap-2">
+            <div className="flex items-end justify-start h-full gap-4 overflow-x-auto">
               {chartData.months.map((monthData, index) => {
                 const totalTime = Object.values(monthData.categories).reduce((sum, val) => sum + val, 0);
                 
                 return (
-                  <div key={index} className="flex flex-col items-center flex-1 h-full">
-                    {/* Barres empilées */}
-                    <div className="flex flex-col-reverse items-center justify-end flex-1 w-full mb-2">
+                  <div key={index} className="flex flex-col items-center min-w-[120px]">
+                    {/* Groupe de barres côte à côte */}
+                    <div className="flex items-end justify-center gap-1 h-64 w-full mb-2">
                       {Object.entries(monthData.categories).map(([category, time]) => {
-                        if (time === 0) return null;
                         const heightPercent = maxValue > 0 ? (time / maxValue) * 100 : 0;
                         
                         return (
                           <div
                             key={category}
-                            className="w-full relative group cursor-pointer hover:opacity-80 transition-opacity"
+                            className="relative group cursor-pointer hover:opacity-80 transition-opacity w-3"
                             style={{
                               height: `${heightPercent}%`,
-                              backgroundColor: categoryColors[category]
+                              backgroundColor: categoryColors[category],
+                              minHeight: time > 0 ? '4px' : '0px'
                             }}
                           >
                             {/* Tooltip */}
-                            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                              <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
-                                {categoryLabels[category]}: {formatTime(time)}
+                            {time > 0 && (
+                              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
+                                <div className="bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap">
+                                  {categoryLabels[category]}: {formatTime(time)}
+                                </div>
                               </div>
-                            </div>
+                            )}
                           </div>
                         );
                       })}
                     </div>
                     
                     {/* Label du mois */}
-                    <div className="text-xs text-gray-600 text-center mt-1 transform -rotate-45 origin-top-left">
+                    <div className="text-xs text-gray-600 text-center mt-1">
                       {formatMonthLabel(monthData.month)}
                     </div>
                     
                     {/* Total */}
                     {totalTime > 0 && (
-                      <div className="text-xs font-semibold text-gray-700 mt-6">
+                      <div className="text-xs font-semibold text-gray-700 mt-1">
                         {formatTime(totalTime)}
                       </div>
                     )}
