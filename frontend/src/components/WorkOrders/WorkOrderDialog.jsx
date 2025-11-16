@@ -200,7 +200,8 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
       'TRAVAUX_PREVENTIFS': 'Travaux Préventifs',
       'TRAVAUX_CURATIF': 'Travaux Curatif',
       'TRAVAUX_DIVERS': 'Travaux Divers',
-      'FORMATION': 'Formation'
+      'FORMATION': 'Formation',
+      'REGLAGE': 'Réglage'
     };
     return labels[categorie] || categorie;
   };
