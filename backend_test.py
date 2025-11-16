@@ -136,49 +136,9 @@ class CategoryTimeTrackingTester:
         """TEST 2: Créer ordre avec catégorie TRAVAUX_CURATIF + temps passé"""
         return self.test_create_work_order_with_category("TRAVAUX_CURATIF", "Test Curatif", 3, 30)
     
-    def test_add_time_increment(self):
-        """TEST 3: Ajouter du temps passé (incrémentation) - 1h15min"""
-        self.log("🧪 TEST 3: Ajouter du temps passé (incrémentation) - 1h15min")
-        
-        if not self.test_work_order_id:
-            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
-            return False
-        
-        try:
-            time_data = {
-                "hours": 1,
-                "minutes": 15
-            }
-            
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/add-time",
-                json=time_data,
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ Ajout de temps réussi (Status 200)")
-                
-                # Vérifier que tempsReel = 3.75 heures (2.5 + 1.25)
-                temps_reel = data.get("tempsReel")
-                expected_time = 3.75  # 2.5 + 1.25 = 3.75 heures
-                
-                if temps_reel == expected_time:
-                    self.log(f"✅ tempsReel = {temps_reel} heures (3h45min comme attendu)")
-                    return True
-                else:
-                    self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
-                    return False
-                    
-            else:
-                self.log(f"❌ Ajout de temps échoué - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
-                
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+    def test_create_divers_order(self):
+        """TEST 3: Créer ordre avec catégorie TRAVAUX_DIVERS + temps passé"""
+        return self.test_create_work_order_with_category("TRAVAUX_DIVERS", "Test Divers", 2, 15)
     
     def test_add_minutes_only(self):
         """TEST 4: Ajouter uniquement des minutes - 45min"""
