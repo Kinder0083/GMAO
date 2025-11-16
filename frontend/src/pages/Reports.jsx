@@ -429,6 +429,9 @@ const Reports = () => {
         </CardContent>
       </Card>
 
+      {/* Histogramme Evolution horaire des maintenances */}
+      <TimeByCategoryChart />
+
       <CustomPeriodDialog
         open={customPeriodOpen}
         onOpenChange={setCustomPeriodOpen}
