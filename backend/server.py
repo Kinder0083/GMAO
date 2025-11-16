@@ -2884,14 +2884,15 @@ async def get_time_by_category(start_month: str, current_user: dict = Depends(re
             month_start = current_month.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
             month_end = (month_start + relativedelta(months=1)) - relativedelta(seconds=1)
             
-            # Requête pour récupérer tous les ordres de travail terminés dans ce mois
+            # Requête pour récupérer tous les ordres de travail dans ce mois
             pipeline = [
                 {
                     "$match": {
                         "dateCreation": {
                             "$gte": month_start,
                             "$lte": month_end
-                        }
+                        },
+                        "categorie": {"$ne": None}  # Exclure les ordres sans catégorie
                     }
                 },
                 {
@@ -2914,9 +2915,16 @@ async def get_time_by_category(start_month: str, current_user: dict = Depends(re
                 "REGLAGE": 0
             }
             
+            # Debug logging
+            logger.info(f"Mois {current_month.strftime('%Y-%m')} - Résultats MongoDB: {results}")
+            
             for result in results:
-                if result["_id"] and result["_id"] in time_by_category:
-                    time_by_category[result["_id"]] = round(result["totalTime"], 2)
+                category = result.get("_id")
+                if category and category in time_by_category:
+                    time_by_category[category] = round(result["totalTime"], 2)
+                    logger.info(f"  Catégorie {category}: {result['totalTime']}h")
+                else:
+                    logger.warning(f"  Catégorie inconnue ou None: {category}")
             
             months_data.append({
                 "month": current_month.strftime("%Y-%m"),
