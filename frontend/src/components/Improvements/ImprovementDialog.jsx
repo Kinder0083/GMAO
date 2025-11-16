@@ -31,10 +31,13 @@ const ImprovementDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     if (!workOrder) return;
     try {
       setLoadingComments(true);
-      const comments = await improvementsAPI.getComments(workOrder.id);
-      setComments(comments || []);
+      const response = await improvementsAPI.getComments(workOrder.id);
+      // S'assurer que c'est un tableau
+      const commentsData = Array.isArray(response) ? response : (response?.data || []);
+      setComments(commentsData);
     } catch (error) {
       console.error('Erreur lors du chargement des commentaires:', error);
+      setComments([]); // Initialiser avec un tableau vide en cas d'erreur
     } finally {
       setLoadingComments(false);
     }
