@@ -4555,13 +4555,28 @@ async def create_improvement_request(
         logger.error(f"Erreur création demande d'amélioration: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-@api_router.get("/improvement-requests", response_model=List[ImprovementRequest])
+@api_router.get("/improvement-requests")
 async def get_all_improvement_requests(current_user: dict = Depends(require_permission("improvementRequests", "view"))):
-    """Récupérer toutes les demandes d'amélioration"""
+    """Récupérer toutes les demandes d'amélioration avec informations enrichies"""
     try:
         requests = []
         async for req in db.improvement_requests.find().sort("date_creation", -1):
-            requests.append(ImprovementRequest(**req))
+            req_dict = dict(req)
+            
+            # Enrichir avec les informations du créateur
+            if req.get("created_by_id"):
+                creator = await db.users.find_one({"id": req["created_by_id"]})
+                if creator:
+                    req_dict["created_by_prenom"] = creator.get("prenom", "")
+                    req_dict["created_by_nom"] = creator.get("nom", "")
+            
+            # Enrichir avec les informations de l'ordre de travail associé
+            if req.get("work_order_id"):
+                work_order = await db.work_orders.find_one({"id": req["work_order_id"]})
+                if work_order:
+                    req_dict["work_order_temps_reel"] = work_order.get("tempsReel", 0)
+            
+            requests.append(req_dict)
         return requests
     except Exception as e:
         logger.error(f"Erreur récupération demandes: {str(e)}")
