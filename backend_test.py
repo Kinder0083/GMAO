@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests POST /api/users/{user_id}/set-password-permanent endpoint - Optional password change feature
+Tests "Mot de passe oublié" et "Réinitialisation admin" functionality
 """
 
 import requests
