@@ -178,18 +178,29 @@ const TimeByCategoryChart = () => {
         </p>
       </CardHeader>
       <CardContent>
-        {/* Légende */}
+        {/* Légende interactive */}
         <div className="flex flex-wrap gap-4 mb-6 justify-center">
           {Object.entries(categoryLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-2">
+            <button
+              key={key}
+              onClick={() => toggleCategory(key)}
+              className="flex items-center gap-2 px-3 py-1 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+              style={{ opacity: visibleCategories[key] ? 1 : 0.4 }}
+            >
               <div 
                 className="w-4 h-4 rounded" 
                 style={{ backgroundColor: categoryColors[key] }}
               />
-              <span className="text-sm text-gray-700">{label}</span>
-            </div>
+              <span className="text-sm text-gray-700 font-medium">{label}</span>
+              {!visibleCategories[key] && (
+                <span className="text-xs text-gray-400">(masqué)</span>
+              )}
+            </button>
           ))}
         </div>
+        <p className="text-xs text-gray-500 text-center mb-4">
+          💡 Cliquez sur une catégorie pour l'afficher ou la masquer
+        </p>
 
         {/* Graphique */}
         <div className="relative h-80 bg-gray-50 rounded-lg p-4">
