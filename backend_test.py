@@ -30,7 +30,7 @@ class InactivityTimeoutTester:
         self.user_data = None
         self.test_user_id = None
         self.test_user_email = None
-        self.temp_password = None
+        self.original_timeout = None
         
     def log(self, message, level="INFO"):
         """Log test messages with timestamp"""
