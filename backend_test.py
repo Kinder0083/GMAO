@@ -388,13 +388,13 @@ class CategoryTimeTrackingTester:
         return results
 
 if __name__ == "__main__":
-    tester = WorkOrderTimeTrackingTester()
-    results = tester.run_work_order_time_tracking_tests()
+    tester = CategoryTimeTrackingTester()
+    results = tester.run_category_time_tracking_tests()
     
     # Exit with appropriate code - allow cleanup to fail
-    critical_tests = ["admin_login", "create_work_order", "add_time_first", 
-                     "add_time_increment", "add_minutes_only", "add_hours_only", 
-                     "get_work_order_final"]
+    critical_tests = ["admin_login", "create_curatif_order", "create_divers_order", 
+                     "create_formation_order", "create_changement_format_order", 
+                     "test_time_by_category_stats"]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
     
