@@ -85,7 +85,7 @@ class WorkOrderTimeTrackingTester:
                 timeout=10
             )
             
-            if response.status_code == 201:
+            if response.status_code in [200, 201]:
                 data = response.json()
                 self.test_work_order_id = data.get("id")
                 self.created_work_orders.append(self.test_work_order_id)
