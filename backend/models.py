@@ -1,10 +1,3 @@
-# Settings Models
-class SystemSettings(BaseModel):
-    inactivity_timeout_minutes: int = 15  # Temps d'inactivité en minutes avant déconnexion
-
-class SystemSettingsUpdate(BaseModel):
-    inactivity_timeout_minutes: Optional[int] = None
-
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional, List, Dict
 from datetime import datetime
