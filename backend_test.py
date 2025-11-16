@@ -288,34 +288,38 @@ class WorkOrderTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_validation_too_low(self):
-        """TEST 4: Test de validation - Valeur trop basse"""
-        self.log("🧪 TEST 4: Validation test - Value too low (0 minutes)")
+    def test_get_work_order_final(self):
+        """TEST 6: Récupérer l'ordre et vérifier le temps final"""
+        self.log("🧪 TEST 6: Récupérer l'ordre et vérifier le temps final")
+        
+        if not self.test_work_order_id:
+            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
+            return False
         
         try:
-            response = self.admin_session.put(
-                f"{BACKEND_URL}/settings",
-                json={"inactivity_timeout_minutes": 0},
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}",
                 timeout=10
             )
             
-            if response.status_code == 400:
-                self.log("✅ PUT /api/settings correctly returned 400 Bad Request for value 0")
+            if response.status_code == 200:
+                data = response.json()
+                self.log("✅ Récupération de l'ordre réussie (Status 200)")
                 
-                # Check error message
-                try:
-                    data = response.json()
-                    detail = data.get("detail", "")
-                    if "1 et 120" in detail or "entre" in detail.lower():
-                        self.log(f"✅ Appropriate error message: {detail}")
-                    else:
-                        self.log(f"⚠️ Error message: {detail}", "WARNING")
-                except:
-                    self.log("⚠️ Could not parse error message", "WARNING")
+                # Vérifier que tempsReel = 7.5 heures
+                temps_reel = data.get("tempsReel")
+                expected_time = 7.5
                 
-                return True
+                if temps_reel == expected_time:
+                    self.log(f"✅ tempsReel = {temps_reel} heures (7h30min comme attendu)")
+                    self.log("✅ Le temps total est correct après tous les ajouts")
+                    return True
+                else:
+                    self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
+                    return False
+                    
             else:
-                self.log(f"❌ Expected 400 Bad Request but got {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération de l'ordre échouée - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
