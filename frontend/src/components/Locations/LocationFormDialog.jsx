@@ -128,36 +128,6 @@ const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSu
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="adresse">Adresse</Label>
-            <Input
-              id="adresse"
-              value={formData.adresse}
-              onChange={(e) => setFormData({ ...formData, adresse: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="codePostal">Code postal</Label>
-              <Input
-                id="codePostal"
-                value={formData.codePostal}
-                onChange={(e) => setFormData({ ...formData, codePostal: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="ville">Ville</Label>
-              <Input
-                id="ville"
-                value={formData.ville}
-                onChange={(e) => setFormData({ ...formData, ville: e.target.value })}
-              />
-              />
-            </div>
-          </div>
-
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Annuler
