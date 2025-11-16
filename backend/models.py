@@ -538,6 +538,7 @@ class WorkOrderUpdate(BaseModel):
     description: Optional[str] = None
     statut: Optional[WorkOrderStatus] = None
     priorite: Optional[Priority] = None
+    categorie: Optional[WorkOrderCategory] = None
     equipement_id: Optional[str] = None
     assigne_a_id: Optional[str] = None
     emplacement_id: Optional[str] = None
