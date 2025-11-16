@@ -1,5 +1,6 @@
 """
 Service de gestion des mises à jour GMAO Iris
+VERSION CORRIGÉE - Détection automatique des chemins
 """
 import os
 import json
@@ -22,6 +23,22 @@ class UpdateService:
         self.github_repo = "GMAO"
         self.github_branch = "main"
         self.version_file_url = f"https://raw.githubusercontent.com/{self.github_user}/{self.github_repo}/{self.github_branch}/updates/version.json"
+        
+        # 🔥 CORRECTION: Détection automatique du répertoire racine de l'application
+        # Obtenir le chemin absolu du répertoire backend (où se trouve ce fichier)
+        self.backend_dir = Path(__file__).parent.resolve()
+        # Le répertoire racine est le parent du backend
+        self.app_root = self.backend_dir.parent
+        # Déduire le répertoire frontend
+        self.frontend_dir = self.app_root / "frontend"
+        # Répertoire pour les backups
+        self.backup_dir = self.app_root / "backups"
+        
+        logger.info(f"📂 Chemins détectés automatiquement:")
+        logger.info(f"   - App root: {self.app_root}")
+        logger.info(f"   - Backend: {self.backend_dir}")
+        logger.info(f"   - Frontend: {self.frontend_dir}")
+        logger.info(f"   - Backups: {self.backup_dir}")
         
     def parse_version(self, version_str: str) -> tuple:
         """Parse une version string en tuple (major, minor, patch)"""
@@ -165,12 +182,12 @@ class UpdateService:
         try:
             logger.info("📦 Création de la sauvegarde...")
             
-            backup_dir = Path("/app/backups")
-            backup_dir.mkdir(exist_ok=True)
+            # 🔥 CORRECTION: Utiliser self.backup_dir au lieu de /app/backups
+            self.backup_dir.mkdir(exist_ok=True)
             
             timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
             backup_name = f"backup_v{self.current_version}_{timestamp}"
-            backup_path = backup_dir / backup_name
+            backup_path = self.backup_dir / backup_name
             backup_path.mkdir(exist_ok=True)
             
             # 1. Sauvegarde MongoDB avec mongodump
@@ -199,7 +216,8 @@ class UpdateService:
             logger.info(f"✅ Export Excel créé: {excel_path}")
             
             # 3. Sauvegarde des fichiers uploads
-            uploads_src = Path("/app/backend/uploads")
+            # 🔥 CORRECTION: Utiliser self.backend_dir au lieu de /app/backend
+            uploads_src = self.backend_dir / "uploads"
             if uploads_src.exists():
                 uploads_dest = backup_path / "uploads"
                 shutil.copytree(uploads_src, uploads_dest)
@@ -307,6 +325,9 @@ class UpdateService:
             log_detailed(f"🚀 Application de la mise à jour vers {version}...")
             log_detailed(f"Current version: {self.current_version}")
             log_detailed(f"Branch: {self.github_branch}")
+            log_detailed(f"App root: {self.app_root}")
+            log_detailed(f"Backend dir: {self.backend_dir}")
+            log_detailed(f"Frontend dir: {self.frontend_dir}")
             
             # 1. Créer une sauvegarde
             log_detailed("📋 Étape 1/7: Création du backup de la base de données...")
@@ -322,10 +343,11 @@ class UpdateService:
             log_detailed(f"✅ Backup créé: {backup_result.get('backup_name')}")
             
             # 2. Git pull
+            # 🔥 CORRECTION: Utiliser self.app_root au lieu de /app
             log_detailed("📥 Étape 2/7: Téléchargement de la mise à jour depuis GitHub...")
             result = subprocess.run(
                 ["git", "pull", "origin", self.github_branch],
-                cwd="/app",
+                cwd=str(self.app_root),
                 capture_output=True,
                 text=True,
                 timeout=60
@@ -342,10 +364,23 @@ class UpdateService:
             log_detailed(f"✅ Mise à jour téléchargée")
             
             # 3. Installer les dépendances backend si requirements.txt a changé
+            # 🔥 CORRECTION: Détecter dynamiquement le chemin vers pip
             log_detailed("📦 Étape 3/7: Installation des dépendances backend...")
+            
+            # Trouver le pip du venv
+            venv_pip = self.backend_dir / "venv" / "bin" / "pip"
+            if not venv_pip.exists():
+                # Essayer d'autres emplacements possibles
+                venv_pip = Path("/root/.venv/bin/pip")
+                if not venv_pip.exists():
+                    # Utiliser pip système par défaut
+                    venv_pip = "pip"
+            
+            log_detailed(f"Utilisation de pip: {venv_pip}")
+            
             result = subprocess.run(
-                ["/root/.venv/bin/pip", "install", "-r", "requirements.txt"],
-                cwd="/app/backend",
+                [str(venv_pip), "install", "-r", "requirements.txt"],
+                cwd=str(self.backend_dir),
                 capture_output=True,
                 text=True,
                 timeout=300
@@ -358,10 +393,11 @@ class UpdateService:
                 log_detailed(f"✅ Dépendances backend installées")
             
             # 4. Installer les dépendances frontend si package.json a changé
+            # 🔥 CORRECTION: Utiliser self.frontend_dir au lieu de /app/frontend
             log_detailed("📦 Étape 4/7: Installation des dépendances frontend...")
             result = subprocess.run(
                 ["yarn", "install"],
-                cwd="/app/frontend",
+                cwd=str(self.frontend_dir),
                 capture_output=True,
                 text=True,
                 timeout=300
