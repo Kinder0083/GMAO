@@ -125,6 +125,7 @@ const Updates = () => {
         `${BACKEND_URL}/api/updates/apply`,
         {},
         {
+          params: { version: latestVersion.version },
           headers: { Authorization: `Bearer ${token}` }
         }
       );
