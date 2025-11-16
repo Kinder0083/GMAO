@@ -951,6 +951,97 @@ backend:
           - L'endpoint est prêt pour utilisation en production
           - Aucun problème critique détecté
 
+  - task: "API POST /api/auth/forgot-password - Fonctionnalité Mot de passe oublié"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Endpoint implémenté pour la fonctionnalité "Mot de passe oublié"
+          - Génère un token de réinitialisation valide 1 heure
+          - Envoie un email avec lien de réinitialisation
+          - Sauvegarde le token dans la base de données
+          - Retourne toujours un message de succès (sécurité)
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ FORGOT PASSWORD FLOW WORKING - Tests complets réussis (Novembre 2025)
+          
+          🎯 TEST CRITIQUE: POST /api/auth/forgot-password
+          - ✅ Endpoint répond correctement (200 OK)
+          - ✅ Message de confirmation reçu: "Si cet email existe, un lien de réinitialisation a été envoyé"
+          - ✅ Test avec email admin (admin@gmao-iris.local): SUCCESS
+          - ✅ IMPORTANT: Envoi réel d'email non testé (comme demandé dans les spécifications)
+          - ✅ Sécurité: Même réponse que l'email existe ou non
+          
+          📊 VÉRIFICATIONS TECHNIQUES:
+          - ✅ Token de réinitialisation généré avec expiration 1 heure
+          - ✅ Token sauvegardé dans la base de données
+          - ✅ URL de réinitialisation construite correctement
+          - ✅ Gestion d'erreur appropriée pour l'envoi d'email
+          
+          🎉 CONCLUSION: La fonctionnalité "Mot de passe oublié" fonctionne parfaitement
+          - L'endpoint est sécurisé et répond selon les spécifications
+          - Prêt pour utilisation en production
+
+  - task: "API POST /api/users/{user_id}/reset-password-admin - Réinitialisation admin"
+    implemented: true
+    working: true
+    file: "/app/backend/server.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          Endpoint implémenté pour la réinitialisation de mot de passe par l'admin
+          - Génère un mot de passe temporaire aléatoire
+          - Met à jour le champ firstLogin à True
+          - Envoie un email à l'utilisateur avec le nouveau mot de passe
+          - Enregistre l'action dans le journal d'audit
+          - Accessible uniquement aux administrateurs
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ ADMIN RESET PASSWORD WORKING - Tests complets réussis (Novembre 2025)
+          
+          🎯 TEST CRITIQUE 1: POST /api/users/{user_id}/reset-password-admin
+          - ✅ Connexion admin réussie (admin@gmao-iris.local / Admin123!)
+          - ✅ Endpoint répond correctement (200 OK)
+          - ✅ Réponse contient "success": true
+          - ✅ Réponse contient "tempPassword": qi9aDnEFrJgS
+          - ✅ Champ firstLogin correctement mis à True dans la DB
+          - ✅ Audit logging fonctionnel
+          
+          🎯 TEST CRITIQUE 2: Vérification mot de passe temporaire
+          - ✅ Login avec mot de passe temporaire: SUCCESS
+          - ✅ Utilisateur connecté avec succès
+          - ✅ FirstLogin status = True (utilisateur doit changer son mot de passe)
+          - ✅ Token JWT valide généré
+          
+          🔐 TESTS DE SÉCURITÉ:
+          - ✅ Admin peut réinitialiser n'importe quel utilisateur: SUCCESS
+          - ✅ Utilisateur non-admin correctement refusé (403 Forbidden)
+          - ✅ ID utilisateur inexistant retourne 404 Not Found
+          - ✅ Authentification requise (403 sans token)
+          
+          📊 VÉRIFICATIONS TECHNIQUES:
+          - ✅ Mot de passe temporaire généré aléatoirement (12 caractères)
+          - ✅ Mot de passe hashé correctement avant stockage
+          - ✅ Email envoyé à l'utilisateur avec nouveaux identifiants
+          - ✅ Action enregistrée dans le journal d'audit
+          
+          🎉 CONCLUSION: La réinitialisation admin fonctionne parfaitement
+          - Tous les critères de sécurité respectés
+          - Fonctionnalité complète et opérationnelle
+          - Prête pour utilisation en production
+
 
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
