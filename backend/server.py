@@ -2278,6 +2278,80 @@ async def reset_password_admin(
         logger.error(f"Erreur lors de la réinitialisation du mot de passe : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
+
+# ==================== SETTINGS ROUTES ====================
+@api_router.get("/settings")
+async def get_system_settings(current_user: dict = Depends(get_current_user)):
+    """Récupérer les paramètres système"""
+    try:
+        settings = await db.system_settings.find_one({"_id": "default"})
+        if not settings:
+            # Paramètres par défaut
+            default_settings = {
+                "_id": "default",
+                "inactivity_timeout_minutes": 15
+            }
+            await db.system_settings.insert_one(default_settings)
+            return SystemSettings(**default_settings)
+        
+        return SystemSettings(**settings)
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des paramètres : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
+@api_router.put("/settings")
+async def update_system_settings(
+    settings_update: SystemSettingsUpdate,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Mettre à jour les paramètres système (Admin uniquement)"""
+    try:
+        # Vérifier que la valeur est dans une plage acceptable (entre 1 et 120 minutes)
+        if settings_update.inactivity_timeout_minutes is not None:
+            if settings_update.inactivity_timeout_minutes < 1 or settings_update.inactivity_timeout_minutes > 120:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Le temps d'inactivité doit être entre 1 et 120 minutes"
+                )
+        
+        # Mettre à jour ou créer les paramètres
+        update_data = {k: v for k, v in settings_update.model_dump().items() if v is not None}
+        
+        settings = await db.system_settings.find_one({"_id": "default"})
+        if not settings:
+            # Créer les paramètres par défaut
+            default_settings = {
+                "_id": "default",
+                "inactivity_timeout_minutes": settings_update.inactivity_timeout_minutes or 15
+            }
+            await db.system_settings.insert_one(default_settings)
+            settings = default_settings
+        else:
+            # Mettre à jour
+            await db.system_settings.update_one(
+                {"_id": "default"},
+                {"$set": update_data}
+            )
+            settings.update(update_data)
+        
+        # Journaliser l'action
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            action_type="UPDATE",
+            module="SETTINGS",
+            details={
+                "action": "Modification des paramètres système",
+                "changes": update_data
+            }
+        )
+        
+        return SystemSettings(**settings)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la mise à jour des paramètres : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
 # ==================== VENDORS ROUTES ====================
 @api_router.get("/vendors", response_model=List[Vendor])
 async def get_vendors(current_user: dict = Depends(require_permission("vendors", "view"))):
