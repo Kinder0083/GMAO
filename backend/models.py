@@ -546,6 +546,11 @@ class WorkOrderUpdate(BaseModel):
     tempsEstime: Optional[float] = None
     tempsReel: Optional[float] = None
 
+
+class AddTimeSpent(BaseModel):
+    hours: int
+    minutes: int
+
 class WorkOrder(WorkOrderBase):
     id: str
     numero: str
