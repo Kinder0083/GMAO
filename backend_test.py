@@ -363,37 +363,31 @@ class InactivityTimeoutTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_non_admin_reset_password(self):
-        """TEST 5: Non-admin user tries to reset password (should fail)"""
-        self.log("🧪 TEST 5: Non-admin user tries to reset password (should fail)")
+    def restore_original_settings(self):
+        """Restore original settings after testing"""
+        self.log("🧹 Restoring original settings...")
         
-        if not self.user_token or not self.test_user_id:
-            self.log("⚠️ Skipping test - No user token available", "WARNING")
-            return True  # Skip this test if no user token
-        
-        # Create session with user token
-        user_session = requests.Session()
-        user_session.headers.update({
-            "Authorization": f"Bearer {self.user_token}"
-        })
+        if self.original_timeout is None:
+            self.log("⚠️ No original timeout value to restore", "WARNING")
+            return True
         
         try:
-            response = user_session.post(
-                f"{BACKEND_URL}/users/{self.test_user_id}/reset-password-admin",
+            response = self.admin_session.put(
+                f"{BACKEND_URL}/settings",
+                json={"inactivity_timeout_minutes": self.original_timeout},
                 timeout=10
             )
             
-            if response.status_code == 403:
-                self.log("✅ Non-admin user correctly denied access (403 Forbidden)")
+            if response.status_code == 200:
+                self.log(f"✅ Original settings restored - timeout: {self.original_timeout} minutes")
                 return True
             else:
-                self.log(f"❌ Expected 403 Forbidden but got {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
+                self.log(f"⚠️ Could not restore original settings - Status: {response.status_code}")
+                return True  # Don't fail tests for cleanup issues
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+        except Exception as e:
+            self.log(f"⚠️ Could not restore original settings: {str(e)}")
+            return True  # Don't fail tests for cleanup issues
     
     def cleanup_test_user(self):
         """Clean up the test user after tests"""
