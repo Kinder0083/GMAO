@@ -222,36 +222,38 @@ class CategoryTimeTrackingTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_cleanup_work_order(self):
-        """TEST 7: Nettoyer (supprimer l'ordre de test)"""
-        self.log("🧪 TEST 7: Nettoyer (supprimer l'ordre de test)")
+    def test_cleanup_work_orders(self):
+        """TEST 7: Nettoyer (supprimer les ordres de test créés)"""
+        self.log("🧪 TEST 7: Nettoyer (supprimer les ordres de test créés)")
         
-        if not self.test_work_order_id:
-            self.log("⚠️ Pas d'ordre de travail de test à supprimer", "WARNING")
+        if not self.created_work_orders:
+            self.log("⚠️ Pas d'ordres de travail de test à supprimer", "WARNING")
             return True
         
-        try:
-            response = self.admin_session.delete(
-                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}",
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                self.log("✅ Ordre de travail supprimé avec succès (Status 200)")
-                self.created_work_orders.remove(self.test_work_order_id)
-                self.test_work_order_id = None
-                return True
-            elif response.status_code == 404:
-                self.log("⚠️ Ordre de travail déjà supprimé (Status 404)", "WARNING")
-                return True
-            else:
-                self.log(f"❌ Suppression de l'ordre échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
+        success_count = 0
+        for wo_id in self.created_work_orders[:]:  # Copy to avoid modification during iteration
+            try:
+                response = self.admin_session.delete(
+                    f"{BACKEND_URL}/work-orders/{wo_id}",
+                    timeout=10
+                )
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+                if response.status_code == 200:
+                    self.log(f"✅ Ordre {wo_id} supprimé avec succès")
+                    self.created_work_orders.remove(wo_id)
+                    success_count += 1
+                elif response.status_code == 404:
+                    self.log(f"⚠️ Ordre {wo_id} déjà supprimé (Status 404)")
+                    self.created_work_orders.remove(wo_id)
+                    success_count += 1
+                else:
+                    self.log(f"❌ Suppression de l'ordre {wo_id} échouée - Status: {response.status_code}", "ERROR")
+                    
+            except requests.exceptions.RequestException as e:
+                self.log(f"❌ Request failed for {wo_id} - Error: {str(e)}", "ERROR")
+        
+        self.log(f"✅ Nettoyage terminé: {success_count} ordres supprimés")
+        return success_count > 0
     
     def cleanup_remaining_work_orders(self):
         """Nettoyer tous les ordres de travail créés pendant les tests"""
