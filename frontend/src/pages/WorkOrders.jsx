@@ -397,6 +397,7 @@ const WorkOrders = () => {
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Titre</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Priorité</th>
+                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Catégorie</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Assigné à</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Emplacement</th>
                     <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Équipement</th>
