@@ -26,6 +26,7 @@ class WorkOrderTimeTrackingTester:
         self.admin_token = None
         self.admin_data = None
         self.created_work_orders = []  # Track created work orders for cleanup
+        self.test_work_order_id = None  # ID of the test work order
         
     def log(self, message, level="INFO"):
         """Log test messages with timestamp"""
