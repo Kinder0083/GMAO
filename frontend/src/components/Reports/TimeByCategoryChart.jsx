@@ -10,6 +10,14 @@ const TimeByCategoryChart = () => {
   const [selectedMonth, setSelectedMonth] = useState('');
   const [chartData, setChartData] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [visibleCategories, setVisibleCategories] = useState({
+    CHANGEMENT_FORMAT: true,
+    TRAVAUX_PREVENTIFS: true,
+    TRAVAUX_CURATIF: true,
+    TRAVAUX_DIVERS: true,
+    FORMATION: true,
+    REGLAGE: true
+  });
 
   // Générer les options de mois (24 mois en arrière et 12 mois en avant)
   const generateMonthOptions = () => {
