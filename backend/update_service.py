@@ -374,6 +374,7 @@ class UpdateService:
                 log_detailed(f"✅ Dépendances frontend installées")
             
             # 5. Enregistrer la mise à jour dans la DB
+            log_detailed("📝 Étape 5/7: Enregistrement dans la base de données...")
             await self.db.update_history.insert_one({
                 "from_version": self.current_version,
                 "to_version": version,
@@ -381,17 +382,21 @@ class UpdateService:
                 "backup_name": backup_result.get("backup_name"),
                 "success": True
             })
+            log_detailed(f"✅ Historique enregistré")
             
             # 6. Mettre à jour la version actuelle
+            log_detailed("📝 Étape 6/7: Mise à jour de la version actuelle...")
             self.current_version = version
+            log_detailed(f"✅ Version mise à jour: {version}")
             
             # 7. Programmer le redémarrage des services avec délai
-            logger.info("🔄 Programmation du redémarrage des services dans 3 secondes...")
+            log_detailed("🔄 Étape 7/7: Programmation du redémarrage des services dans 3 secondes...")
             
             # Créer un script temporaire qui attendra 3 secondes puis redémarrera les services
             restart_script = """#!/bin/bash
 sleep 3
-sudo supervisorctl restart all
+echo "Redémarrage des services..." >> /tmp/update_process.log
+sudo supervisorctl restart all >> /tmp/update_process.log 2>&1
 """
             restart_script_path = "/tmp/restart_services.sh"
             with open(restart_script_path, "w") as f:
@@ -399,6 +404,7 @@ sudo supervisorctl restart all
             
             # Rendre le script exécutable
             os.chmod(restart_script_path, 0o755)
+            log_detailed(f"✅ Script de redémarrage créé: {restart_script_path}")
             
             # Lancer le script en arrière-plan
             subprocess.Popen(
@@ -407,6 +413,8 @@ sudo supervisorctl restart all
                 stderr=subprocess.DEVNULL,
                 start_new_session=True  # Détacher du processus parent
             )
+            
+            log_detailed("✅ MISE À JOUR TERMINÉE AVEC SUCCÈS - Services redémarrent dans 3s...")
             
             return {
                 "success": True,
@@ -417,6 +425,10 @@ sudo supervisorctl restart all
             }
             
         except Exception as e:
+            log_detailed(f"❌ ERREUR CRITIQUE: {str(e)}", "ERROR")
+            log_detailed(f"Type: {type(e).__name__}", "ERROR")
+            import traceback
+            log_detailed(f"Traceback: {traceback.format_exc()}", "ERROR")
             logger.error(f"❌ Erreur lors de l'application de la mise à jour: {str(e)}")
             return {
                 "success": False,
