@@ -3257,4 +3257,50 @@ agent_communication:
       ✅ Prêt pour utilisation en production
       
       **RECOMMANDATION**: Le système de temps passé peut être déployé en production sans restriction.
+  - agent: "testing"
+    message: |
+      🎉 TEST CRITIQUE TERMINÉ - EVOLUTION HORAIRE DES MAINTENANCES PAR CATÉGORIE
+      
+      ✅ **PROBLÈME UTILISATEUR ENTIÈREMENT RÉSOLU** (16 Novembre 2025):
+      L'utilisateur signalait que certaines catégories n'étaient pas comptées dans l'histogramme:
+      "Travaux Curatif", "Travaux Divers" et "Formation". 
+      
+      📊 **TESTS EFFECTUÉS (8/8 RÉUSSIS)**:
+      1. ✅ Connexion admin (admin@gmao-iris.local / Admin123!): SUCCESS
+      2. ✅ Créer ordre TRAVAUX_CURATIF + 3h30min: SUCCESS (3.5h ajoutées)
+      3. ✅ Créer ordre TRAVAUX_DIVERS + 2h15min: SUCCESS (2.25h ajoutées)
+      4. ✅ Créer ordre FORMATION + 1h45min: SUCCESS (1.75h ajoutées)
+      5. ✅ Créer ordre CHANGEMENT_FORMAT + 4h00min: SUCCESS (4.0h ajoutées)
+      6. ✅ Test GET /api/reports/time-by-category?start_month=2025-11: SUCCESS (200 OK)
+      7. ✅ Vérification toutes catégories comptées: SUCCESS
+      8. ✅ Nettoyage ordres de test: SUCCESS (4 ordres supprimés)
+      
+      🎯 **RÉSULTATS CRITIQUES VALIDÉS**:
+      - ✅ TRAVAUX_CURATIF: 3.5h (>= 3.5h attendu) ✓ COMPTÉE
+      - ✅ TRAVAUX_DIVERS: 2.25h (>= 2.25h attendu) ✓ COMPTÉE  
+      - ✅ FORMATION: 1.75h (>= 1.75h attendu) ✓ COMPTÉE
+      - ✅ CHANGEMENT_FORMAT: 9.0h (>= 4.0h attendu) ✓ COMPTÉE
+      
+      🔍 **VÉRIFICATIONS BACKEND LOGS**:
+      Debug messages confirmés dans /var/log/supervisor/backend.*.log:
+      ```
+      Mois 2025-11 - Résultats MongoDB: [{'_id': 'FORMATION', 'totalTime': 1.75}, 
+      {'_id': 'TRAVAUX_DIVERS', 'totalTime': 2.25}, {'_id': 'TRAVAUX_CURATIF', 'totalTime': 3.5}]
+      ```
+      
+      🔧 **ENDPOINT VALIDÉ**:
+      - ✅ GET /api/reports/time-by-category: Fonctionne parfaitement
+      - ✅ Structure réponse: 12 mois comme attendu
+      - ✅ Toutes catégories incluses dans l'histogramme
+      - ✅ Calculs de temps par catégorie corrects
+      - ✅ MongoDB aggregation pipeline opérationnel
+      
+      🎯 **CONCLUSION FINALE**:
+      ✅ **LE PROBLÈME REPORTÉ EST ENTIÈREMENT RÉSOLU**
+      ✅ Les catégories "Travaux Curatif", "Travaux Divers" et "Formation" sont correctement comptées
+      ✅ L'endpoint /api/reports/time-by-category inclut toutes les catégories avec leurs temps respectifs
+      ✅ L'histogramme "Evolution horaire des maintenances" fonctionne correctement
+      ✅ Aucun problème de comptage détecté
+      
+      **RECOMMANDATION**: L'endpoint est opérationnel et peut être utilisé en production sans restriction.
 
