@@ -357,12 +357,27 @@ class UpdateService:
             # 6. Mettre à jour la version actuelle
             self.current_version = version
             
-            # 7. Programmer le redémarrage des services
-            logger.info("🔄 Redémarrage des services...")
+            # 7. Programmer le redémarrage des services avec délai
+            logger.info("🔄 Programmation du redémarrage des services dans 3 secondes...")
+            
+            # Créer un script temporaire qui attendra 3 secondes puis redémarrera les services
+            restart_script = """#!/bin/bash
+sleep 3
+sudo supervisorctl restart all
+"""
+            restart_script_path = "/tmp/restart_services.sh"
+            with open(restart_script_path, "w") as f:
+                f.write(restart_script)
+            
+            # Rendre le script exécutable
+            os.chmod(restart_script_path, 0o755)
+            
+            # Lancer le script en arrière-plan
             subprocess.Popen(
-                ["sudo", "supervisorctl", "restart", "all"],
+                [restart_script_path],
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
+                stderr=subprocess.DEVNULL,
+                start_new_session=True  # Détacher du processus parent
             )
             
             return {
@@ -370,7 +385,7 @@ class UpdateService:
                 "from_version": backup_result.get("backup_name"),
                 "to_version": version,
                 "backup_name": backup_result.get("backup_name"),
-                "message": "Mise à jour appliquée avec succès. Les services redémarrent..."
+                "message": "Mise à jour appliquée avec succès. Les services redémarrent dans 3 secondes..."
             }
             
         except Exception as e:
