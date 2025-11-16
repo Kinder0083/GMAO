@@ -92,7 +92,7 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[900px] max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-blue-600" />
@@ -103,8 +103,8 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4 max-h-[60vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="flex flex-col h-full">
+          <div className="grid gap-4 py-4 overflow-y-auto flex-1">
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="prenom">Prénom *</Label>
