@@ -331,23 +331,31 @@ class InactivityTimeoutTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_admin_reset_nonexistent_user(self):
-        """TEST 4: Admin reset password for non-existent user (should fail)"""
-        self.log("🧪 TEST 4: Admin reset password for non-existent user (should fail)")
-        
-        fake_user_id = "999999999999999999999999"  # 24-character hex string
+    def test_non_admin_security(self):
+        """TEST 6: Test de sécurité - Non-admin"""
+        self.log("🧪 TEST 6: Security test - Non-admin user tries to update settings")
         
         try:
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/users/{fake_user_id}/reset-password-admin",
+            response = self.user_session.put(
+                f"{BACKEND_URL}/settings",
+                json={"inactivity_timeout_minutes": 20},
                 timeout=10
             )
             
-            if response.status_code == 404:
-                self.log("✅ POST /api/users/{nonexistent_id}/reset-password-admin correctly returned 404 Not Found")
+            if response.status_code == 403:
+                self.log("✅ PUT /api/settings correctly returned 403 Forbidden for non-admin user")
+                
+                # Check error message
+                try:
+                    data = response.json()
+                    detail = data.get("detail", "")
+                    self.log(f"✅ Security error message: {detail}")
+                except:
+                    self.log("⚠️ Could not parse error message", "WARNING")
+                
                 return True
             else:
-                self.log(f"❌ Expected 404 Not Found but got {response.status_code}", "ERROR")
+                self.log(f"❌ Expected 403 Forbidden but got {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
