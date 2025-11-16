@@ -302,6 +302,7 @@ class EntityType(str, Enum):
     PURCHASE_HISTORY = "PURCHASE_HISTORY"
     IMPROVEMENT_REQUEST = "IMPROVEMENT_REQUEST"
     IMPROVEMENT = "IMPROVEMENT"
+    SETTINGS = "SETTINGS"
 
 # Audit Log Models
 class AuditLog(BaseModel):
