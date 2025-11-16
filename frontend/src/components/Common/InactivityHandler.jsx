@@ -10,15 +10,31 @@ import {
 } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { AlertTriangle, LogOut } from 'lucide-react';
+import api from '../../services/api';
 
 const InactivityHandler = () => {
   const navigate = useNavigate();
   const [showWarning, setShowWarning] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const [lastActivity, setLastActivity] = useState(Date.now());
+  const [inactivityTimeout, setInactivityTimeout] = useState(15 * 60 * 1000); // Par défaut 15 minutes
+
+  // Charger les paramètres au démarrage
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const response = await api.settings.getSettings();
+        const timeoutMinutes = response.data.inactivity_timeout_minutes || 15;
+        setInactivityTimeout(timeoutMinutes * 60 * 1000);
+      } catch (error) {
+        console.error('Erreur lors du chargement des paramètres:', error);
+        // En cas d'erreur, garder la valeur par défaut
+      }
+    };
+    loadSettings();
+  }, []);
 
   // Durées en millisecondes
-  const INACTIVITY_TIMEOUT = 15 * 60 * 1000; // 15 minutes
   const WARNING_DURATION = 60 * 1000; // 60 secondes
 
   // Réinitialiser le timer d'activité
