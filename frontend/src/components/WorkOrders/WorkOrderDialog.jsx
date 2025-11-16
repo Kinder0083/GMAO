@@ -139,9 +139,16 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     }
   };
 
-  const handleStatusChange = async (newStatus) => {
+  const handleStatusChange = async (newStatus, hours = 0, minutes = 0) => {
     try {
+      // Ajouter le temps si renseigné
+      if (hours > 0 || minutes > 0) {
+        await workOrdersAPI.addTimeSpent(workOrder.id, hours, minutes);
+      }
+
+      // Mettre à jour le statut
       await workOrdersAPI.update(workOrder.id, { statut: newStatus });
+      
       toast({
         title: 'Succès',
         description: 'Le statut a été mis à jour'
