@@ -28,6 +28,7 @@ const SpecialSettings = () => {
 
   useEffect(() => {
     loadUsers();
+    loadSettings();
   }, []);
 
   const loadUsers = async () => {
@@ -43,6 +44,58 @@ const SpecialSettings = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadSettings = async () => {
+    try {
+      setLoadingSettings(true);
+      const response = await api.settings.getSettings();
+      setInactivityTimeout(response.data.inactivity_timeout_minutes);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger les paramètres système',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingSettings(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    if (inactivityTimeout < 1 || inactivityTimeout > 120) {
+      toast({
+        title: 'Erreur',
+        description: 'Le temps d\'inactivité doit être entre 1 et 120 minutes',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setSavingSettings(true);
+      await api.settings.updateSettings({
+        inactivity_timeout_minutes: inactivityTimeout
+      });
+      
+      toast({
+        title: 'Paramètres sauvegardés',
+        description: 'Les paramètres de déconnexion automatique ont été mis à jour',
+      });
+
+      // Recharger la page pour appliquer les nouveaux paramètres
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Impossible de sauvegarder les paramètres',
+        variant: 'destructive'
+      });
+    } finally {
+      setSavingSettings(false);
     }
   };
 
