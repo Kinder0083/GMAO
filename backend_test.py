@@ -148,50 +148,73 @@ class CategoryTimeTrackingTester:
         """TEST 5: Créer ordre avec catégorie CHANGEMENT_FORMAT + temps passé (pour comparaison)"""
         return self.test_create_work_order_with_category("CHANGEMENT_FORMAT", "Test Format", 4, 0)
     
-    def test_get_work_order_final(self):
-        """TEST 6: Récupérer l'ordre et vérifier le temps final via la liste"""
-        self.log("🧪 TEST 6: Récupérer l'ordre et vérifier le temps final via la liste")
-        
-        if not self.test_work_order_id:
-            self.log("❌ Pas d'ordre de travail de test disponible", "ERROR")
-            return False
+    def test_time_by_category_stats(self):
+        """TEST 6: Vérifier l'endpoint de statistiques par catégorie"""
+        self.log("🧪 TEST 6: Récupérer les stats du mois actuel (novembre 2025)")
         
         try:
-            # Utiliser l'endpoint de liste pour trouver notre ordre de travail
+            # Test avec le mois actuel (novembre 2025)
             response = self.admin_session.get(
-                f"{BACKEND_URL}/work-orders",
+                f"{BACKEND_URL}/reports/time-by-category?start_month=2025-11",
                 timeout=10
             )
             
             if response.status_code == 200:
-                work_orders = response.json()
-                self.log("✅ Récupération de la liste des ordres réussie (Status 200)")
+                data = response.json()
+                self.log("✅ Récupération des statistiques réussie (Status 200)")
                 
-                # Chercher notre ordre de travail par ID
-                test_order = None
-                for wo in work_orders:
-                    if wo.get("id") == self.test_work_order_id:
-                        test_order = wo
+                # Vérifier la structure de la réponse
+                if "months" not in data:
+                    self.log("❌ Réponse manque le champ 'months'", "ERROR")
+                    return False
+                
+                months = data["months"]
+                if len(months) != 12:
+                    self.log(f"❌ Attendu 12 mois, reçu {len(months)}", "ERROR")
+                    return False
+                
+                self.log(f"✅ La réponse contient {len(months)} mois")
+                
+                # Chercher le mois actuel (novembre 2025)
+                current_month_data = None
+                for month in months:
+                    if month.get("month") == "2025-11":
+                        current_month_data = month
                         break
                 
-                if test_order:
-                    # Vérifier que tempsReel = 7.5 heures
-                    temps_reel = test_order.get("tempsReel")
-                    expected_time = 7.5
-                    
-                    if temps_reel == expected_time:
-                        self.log(f"✅ tempsReel = {temps_reel} heures (7h30min comme attendu)")
-                        self.log("✅ Le temps total est correct après tous les ajouts")
-                        return True
+                if not current_month_data:
+                    self.log("❌ Mois actuel (2025-11) non trouvé dans la réponse", "ERROR")
+                    return False
+                
+                categories = current_month_data.get("categories", {})
+                self.log(f"✅ Mois actuel trouvé avec catégories: {categories}")
+                
+                # Vérifier que les catégories problématiques ont des valeurs > 0
+                expected_categories = {
+                    "TRAVAUX_CURATIF": 3.5,  # 3h30min
+                    "TRAVAUX_DIVERS": 2.25,  # 2h15min
+                    "FORMATION": 1.75,       # 1h45min
+                    "CHANGEMENT_FORMAT": 4.0  # 4h00min
+                }
+                
+                all_categories_found = True
+                for category, expected_time in expected_categories.items():
+                    actual_time = categories.get(category, 0)
+                    if actual_time >= expected_time:
+                        self.log(f"✅ {category}: {actual_time}h (>= {expected_time}h attendu)")
                     else:
-                        self.log(f"❌ tempsReel = {temps_reel}, attendu {expected_time}", "ERROR")
-                        return False
+                        self.log(f"❌ {category}: {actual_time}h (< {expected_time}h attendu)", "ERROR")
+                        all_categories_found = False
+                
+                if all_categories_found:
+                    self.log("✅ IMPORTANT: Toutes les 3 catégories problématiques ont des valeurs > 0")
+                    return True
                 else:
-                    self.log("❌ Ordre de travail de test non trouvé dans la liste", "ERROR")
+                    self.log("❌ PROBLÈME: Certaines catégories ne sont pas comptées correctement", "ERROR")
                     return False
                     
             else:
-                self.log(f"❌ Récupération de la liste échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération des statistiques échouée - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
