@@ -499,13 +499,13 @@ class WorkOrderTimeTrackingTester:
         return results
 
 if __name__ == "__main__":
-    tester = InactivityTimeoutTester()
-    results = tester.run_inactivity_timeout_tests()
+    tester = WorkOrderTimeTrackingTester()
+    results = tester.run_work_order_time_tracking_tests()
     
-    # Exit with appropriate code - allow cleanup and restore to fail
-    critical_tests = ["admin_login", "normal_user_setup", "get_settings_normal_user", 
-                     "update_settings_admin", "verify_settings_persistence", 
-                     "validation_too_low", "validation_too_high", "non_admin_security"]
+    # Exit with appropriate code - allow cleanup to fail
+    critical_tests = ["admin_login", "create_work_order", "add_time_first", 
+                     "add_time_increment", "add_minutes_only", "add_hours_only", 
+                     "get_work_order_final"]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
     
