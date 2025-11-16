@@ -3658,6 +3658,21 @@ async def get_update_history(current_user: dict = Depends(get_current_admin_user
     history = await update_manager.get_update_history()
     return {"history": history}
 
+@api_router.post("/updates/apply")
+async def apply_update(
+    github_token: Optional[str] = None,
+    current_user: dict = Depends(get_current_admin_user)
+):
+    """Applique la mise à jour (admin uniquement)"""
+    result = await update_manager.apply_update(github_token)
+    
+    if not result["success"]:
+        raise HTTPException(
+            status_code=500,
+            detail=result.get("message", "Erreur lors de la mise à jour")
+        )
+    
+    return result
 
 @api_router.post("/updates/backup")
 async def create_backup(current_user: dict = Depends(get_current_admin_user)):
