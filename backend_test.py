@@ -110,21 +110,21 @@ class SurveillanceTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_create_curatif_order(self):
-        """TEST 2: Créer ordre avec catégorie TRAVAUX_CURATIF + temps passé"""
-        return self.test_create_work_order_with_category("TRAVAUX_CURATIF", "Test Curatif", 3, 30)
+    def test_create_incendie_item(self):
+        """TEST 2: Créer item avec catégorie INCENDIE"""
+        return self.test_create_surveillance_item("INCENDIE", "Protection incendie", "BATIMENT 1", "MAINT")
     
-    def test_create_divers_order(self):
-        """TEST 3: Créer ordre avec catégorie TRAVAUX_DIVERS + temps passé"""
-        return self.test_create_work_order_with_category("TRAVAUX_DIVERS", "Test Divers", 2, 15)
+    def test_create_electrique_item(self):
+        """TEST 3: Créer item avec catégorie ELECTRIQUE"""
+        return self.test_create_surveillance_item("ELECTRIQUE", "Installations électriques", "BATIMENT 2", "PROD")
     
-    def test_create_formation_order(self):
-        """TEST 4: Créer ordre avec catégorie FORMATION + temps passé"""
-        return self.test_create_work_order_with_category("FORMATION", "Test Formation", 1, 45)
+    def test_create_mmri_item(self):
+        """TEST 4: Créer item avec catégorie MMRI"""
+        return self.test_create_surveillance_item("MMRI", "Mesures de maîtrise des risques", "BATIMENT 1", "QHSE")
     
-    def test_create_changement_format_order(self):
-        """TEST 5: Créer ordre avec catégorie CHANGEMENT_FORMAT + temps passé (pour comparaison)"""
-        return self.test_create_work_order_with_category("CHANGEMENT_FORMAT", "Test Format", 4, 0)
+    def test_create_securite_item(self):
+        """TEST 5: Créer item avec catégorie SECURITE_ENVIRONNEMENT"""
+        return self.test_create_surveillance_item("SECURITE_ENVIRONNEMENT", "Sécurité environnement", "BATIMENT 1 ET 2", "EXTERNE")
     
     def test_time_by_category_stats(self):
         """TEST 6: Vérifier l'endpoint de statistiques par catégorie"""
