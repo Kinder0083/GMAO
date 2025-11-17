@@ -2096,16 +2096,17 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "4.3"
-  test_sequence: 10
+  version: "4.4"
+  test_sequence: 11
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "API Plan de Surveillance - Endpoints CRUD complets"
   stuck_tasks: 
     - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
   test_all: false
-  test_priority: "critical_first"
+  test_priority: "high_first"
 
   - task: "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
     implemented: true
