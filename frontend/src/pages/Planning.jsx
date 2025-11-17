@@ -90,7 +90,7 @@ const Planning = () => {
         a => a.user_id === userId && a.date.split('T')[0] === dateStr
       );
 
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       const token = localStorage.getItem('token');
 
       if (existing) {
