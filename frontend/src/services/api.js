@@ -321,4 +321,36 @@ api.settings = {
   updateSettings: (data) => api.put('/settings', data)
 };
 
+// ==================== SURVEILLANCE ====================
+export const surveillanceAPI = {
+  // CRUD
+  getItems: (params) => api.get('/surveillance/items', { params }).then(res => res.data),
+  getItem: (id) => api.get(`/surveillance/items/${id}`).then(res => res.data),
+  createItem: (data) => api.post('/surveillance/items', data).then(res => res.data),
+  updateItem: (id, data) => api.put(`/surveillance/items/${id}`, data).then(res => res.data),
+  deleteItem: (id) => api.delete(`/surveillance/items/${id}`).then(res => res.data),
+  
+  // Upload
+  uploadFile: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/surveillance/items/${id}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => res.data);
+  },
+  
+  // Stats et alertes
+  getStats: () => api.get('/surveillance/stats').then(res => res.data),
+  getAlerts: () => api.get('/surveillance/alerts').then(res => res.data),
+  
+  // Import/Export
+  importData: (formData) => api.post('/surveillance/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  
+  exportTemplate: () => api.get('/surveillance/export/template', {
+    responseType: 'blob'
+  }).then(res => res.data)
+};
+
 export default api;
