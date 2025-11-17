@@ -15,6 +15,7 @@ import { surveillanceAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 
 function CompleteSurveillanceDialog({ open, item, onClose }) {
+  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     date_realisation: new Date().toISOString().split('T')[0],
