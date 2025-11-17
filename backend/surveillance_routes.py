@@ -404,7 +404,7 @@ async def import_surveillance_data(
                     updated_by=current_user.get("id")
                 )
                 
-                await db.surveillance_items.insert_one(item.dict())
+                await db.surveillance_items.insert_one(item.model_dump())
                 imported_count += 1
             except Exception as e:
                 errors.append(f"Ligne {index + 2}: {str(e)}")
