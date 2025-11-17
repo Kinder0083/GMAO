@@ -6,7 +6,7 @@ import ListView from '../components/Surveillance/ListView';
 import GridView from '../components/Surveillance/GridView';
 import CalendarView from '../components/Surveillance/CalendarView';
 import SurveillanceItemForm from '../components/Surveillance/SurveillanceItemForm';
-import { toast } from 'react-toastify';
+import { useToast } from '../hooks/use-toast';
 
 function SurveillancePlan() {
   const [activeTab, setActiveTab] = useState(0);
