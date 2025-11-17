@@ -456,33 +456,33 @@ class SurveillanceTester:
         self.log(f"✅ Nettoyage terminé: {success_count} items supprimés")
         return success_count >= 0  # Toujours réussir le nettoyage
     
-    def cleanup_remaining_work_orders(self):
-        """Nettoyer tous les ordres de travail créés pendant les tests"""
-        self.log("🧹 Nettoyage des ordres de travail restants...")
+    def cleanup_remaining_surveillance_items(self):
+        """Nettoyer tous les items de surveillance créés pendant les tests"""
+        self.log("🧹 Nettoyage des items de surveillance restants...")
         
-        if not self.created_work_orders:
-            self.log("Aucun ordre de travail à nettoyer")
+        if not self.created_items:
+            self.log("Aucun item de surveillance à nettoyer")
             return True
         
         success_count = 0
-        for wo_id in self.created_work_orders[:]:  # Copy list to avoid modification during iteration
+        for item_id in self.created_items[:]:  # Copy list to avoid modification during iteration
             try:
                 response = self.admin_session.delete(
-                    f"{BACKEND_URL}/work-orders/{wo_id}",
+                    f"{BACKEND_URL}/surveillance/items/{item_id}",
                     timeout=10
                 )
                 
                 if response.status_code in [200, 404]:
-                    self.log(f"✅ Ordre {wo_id} nettoyé")
-                    self.created_work_orders.remove(wo_id)
+                    self.log(f"✅ Item {item_id} nettoyé")
+                    self.created_items.remove(item_id)
                     success_count += 1
                 else:
-                    self.log(f"⚠️ Impossible de nettoyer l'ordre {wo_id} - Status: {response.status_code}")
+                    self.log(f"⚠️ Impossible de nettoyer l'item {item_id} - Status: {response.status_code}")
                     
             except Exception as e:
-                self.log(f"⚠️ Erreur lors du nettoyage de l'ordre {wo_id}: {str(e)}")
+                self.log(f"⚠️ Erreur lors du nettoyage de l'item {item_id}: {str(e)}")
         
-        self.log(f"Nettoyage terminé: {success_count} ordres supprimés")
+        self.log(f"Nettoyage terminé: {success_count} items supprimés")
         return True
     
     # Removed old methods - replaced with work order time tracking tests
