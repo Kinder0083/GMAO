@@ -1422,6 +1422,66 @@ backend:
           - L'histogramme "Evolution horaire des maintenances" fonctionne correctement
           - Aucun problème de comptage détecté
 
+  - task: "API Plan de Surveillance - Endpoints CRUD complets"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/surveillance_routes.py, /app/backend/server.py, /app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          IMPLÉMENTATION BACKEND PLAN DE SURVEILLANCE - Phase 1 complète
+          
+          FICHIERS CRÉÉS/MODIFIÉS:
+          1. /app/backend/models.py (lignes 1067-1171):
+             - Enums: SurveillanceItemStatus, SurveillanceCategory, SurveillanceResponsible
+             - Modèle: SurveillanceItem (avec tous les champs requis)
+             - Modèles: SurveillanceItemCreate, SurveillanceItemUpdate
+          
+          2. /app/backend/surveillance_routes.py (nouveau fichier):
+             - GET /api/surveillance/items - Liste des items avec filtres optionnels
+             - GET /api/surveillance/items/{item_id} - Détails d'un item
+             - POST /api/surveillance/items - Créer un item
+             - PUT /api/surveillance/items/{item_id} - Mettre à jour un item
+             - DELETE /api/surveillance/items/{item_id} - Supprimer un item (admin uniquement)
+             - POST /api/surveillance/items/{item_id}/upload - Upload pièce jointe
+             - GET /api/surveillance/stats - Statistiques globales
+             - GET /api/surveillance/alerts - Alertes échéances proches
+             - POST /api/surveillance/import - Import CSV/Excel (admin uniquement)
+             - GET /api/surveillance/export/template - Télécharger template CSV
+          
+          3. /app/backend/server.py:
+             - Import et intégration des routes surveillance
+             - Initialisation avec db et audit_service
+          
+          CORRECTIONS EFFECTUÉES:
+          - Fix erreur syntaxe dans update_service.py (await outside async function)
+          - Restructuration de la méthode apply_update
+          - Correction imports audit_service dans surveillance_routes.py
+          
+          FONCTIONNALITÉS IMPLÉMENTÉES:
+          ✅ CRUD complet pour items de surveillance
+          ✅ Filtres par catégorie, responsable, bâtiment, statut
+          ✅ Upload de pièces jointes
+          ✅ Statistiques par statut, catégorie, responsable
+          ✅ Pourcentage de réalisation global
+          ✅ Système d'alertes pour échéances proches (< 30 jours)
+          ✅ Import/Export CSV avec template
+          ✅ Audit logging pour toutes les actions
+          ✅ Permissions (DELETE réservé aux admins)
+          
+          À TESTER:
+          - Tous les endpoints CRUD
+          - Filtres et recherches
+          - Upload de fichiers
+          - Import/Export CSV
+          - Calcul des statistiques
+          - Système d'alertes
+          - Permissions admin
+
 frontend:
   - task: "Test critique - Tableau de bord pour utilisateur QHSE avec permissions limitées"
     implemented: true
