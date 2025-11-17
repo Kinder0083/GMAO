@@ -99,8 +99,9 @@
 ### 4. 🔄 Correction du Système de Mise à Jour
 **Problèmes résolus :**
 1. ❌ Erreur "SYSTEM" - `EntityType.SYSTEM` n'existait pas
-2. ❌ Routes dupliquées - 2 définitions de `/api/updates/apply`
-3. ❌ Paramètre version manquant - Frontend n'envoyait pas la version
+2. ❌ Erreur "OTHER" - `ActionType.OTHER` n'existait pas
+3. ❌ Routes dupliquées - 2 définitions de `/api/updates/apply`
+4. ❌ Paramètre version manquant - Frontend n'envoyait pas la version
 
 **Solutions :**
 
