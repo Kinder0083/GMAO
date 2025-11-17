@@ -46,6 +46,7 @@ const SpecialSettings = () => {
   useEffect(() => {
     loadUsers();
     loadSettings();
+    loadSmtpConfig();
   }, []);
 
   const loadUsers = async () => {
