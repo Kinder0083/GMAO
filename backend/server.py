@@ -5396,8 +5396,8 @@ async def get_current_version():
 # Import surveillance routes
 from surveillance_routes import router as surveillance_router, init_surveillance_routes
 
-# Initialize surveillance routes with database
-init_surveillance_routes(db)
+# Initialize surveillance routes with database and audit service
+init_surveillance_routes(db, audit_service)
 
 # Include surveillance routes
 api_router.include_router(surveillance_router)
