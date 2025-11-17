@@ -313,6 +313,13 @@ class UpdateService:
         # Fonction helper pour logger dans un fichier ET dans le logger
         def log_detailed(message, level="INFO"):
             logger.info(message)
+            try:
+                from datetime import datetime
+                with open("/tmp/update_process.log", "a") as f:
+                    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    f.write(f"[{timestamp}] [{level}] {message}\n")
+            except Exception as e:
+                logger.error(f"Erreur écriture log: {e}")
 
     def check_git_conflicts(self) -> Dict:
         """
