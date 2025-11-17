@@ -19,19 +19,21 @@ from models import (
     EntityType
 )
 from dependencies import get_current_user, get_current_admin_user
-from audit_service import audit_service
+from audit_service import AuditService
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/surveillance", tags=["surveillance"])
 
-# Variable globale pour la DB (sera injectée depuis server.py)
+# Variables globales (seront injectées depuis server.py)
 db = None
+audit_service = None
 
-def init_surveillance_routes(database):
-    """Initialise les routes avec la connexion DB"""
-    global db
+def init_surveillance_routes(database, audit_svc):
+    """Initialise les routes avec la connexion DB et audit service"""
+    global db, audit_service
     db = database
+    audit_service = audit_svc
 
 
 # ==================== CRUD Routes ====================
