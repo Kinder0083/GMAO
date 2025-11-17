@@ -9,6 +9,7 @@ import SurveillanceItemForm from '../components/Surveillance/SurveillanceItemFor
 import { useToast } from '../hooks/use-toast';
 
 function SurveillancePlan() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState(0);
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
