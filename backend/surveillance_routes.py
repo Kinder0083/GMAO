@@ -117,7 +117,7 @@ async def create_surveillance_item(
             user_name=f"{current_user['prenom']} {current_user['nom']}",
             user_email=current_user["email"],
             action=ActionType.CREATE,
-            entity_type=EntityType.OTHER,
+            entity_type=EntityType.SURVEILLANCE,
             entity_id=item.id,
             entity_name=f"Plan surveillance: {item.classe_type}"
         )
