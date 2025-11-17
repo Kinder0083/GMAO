@@ -146,7 +146,7 @@ async def update_surveillance_item(
         
         # Préparer les mises à jour
         update_data = {
-            k: v for k, v in item_update.dict(exclude_unset=True).items()
+            k: v for k, v in item_update.model_dump(exclude_unset=True).items()
             if v is not None
         }
         
