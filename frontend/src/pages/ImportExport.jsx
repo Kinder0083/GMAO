@@ -36,7 +36,7 @@ const ImportExport = () => {
   const handleExport = async () => {
     try {
       setExporting(true);
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       const token = localStorage.getItem('token');
 
       const response = await axios.get(
@@ -100,7 +100,7 @@ const ImportExport = () => {
 
     try {
       setImporting(true);
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       const token = localStorage.getItem('token');
 
       const formData = new FormData();
