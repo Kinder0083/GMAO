@@ -6,6 +6,7 @@ import { usersAPI } from '../services/api';
 import axios from 'axios';
 import { useToast } from '../hooks/use-toast';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
+import { getBackendURL } from '../utils/config';
 
 const Planning = () => {
   const { toast } = useToast();
