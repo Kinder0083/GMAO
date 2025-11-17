@@ -313,6 +313,130 @@ class UpdateService:
         # Fonction helper pour logger dans un fichier ET dans le logger
         def log_detailed(message, level="INFO"):
             logger.info(message)
+
+    def check_git_conflicts(self) -> Dict:
+        """
+        Vérifie s'il y a des modifications locales qui pourraient causer des conflits
+        
+        Returns:
+            Dict avec has_conflicts, modified_files, status
+        """
+        try:
+            # Vérifier le statut Git
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                cwd=str(self.app_root),
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+            
+            if result.returncode != 0:
+                return {
+                    "has_conflicts": False,
+                    "error": "Impossible de vérifier le statut Git",
+                    "modified_files": []
+                }
+            
+            # Parser les fichiers modifiés
+            modified_files = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    status = line[:2].strip()
+                    filename = line[3:].strip()
+                    modified_files.append({
+                        "file": filename,
+                        "status": status
+                    })
+            
+            has_conflicts = len(modified_files) > 0
+            
+            return {
+                "has_conflicts": has_conflicts,
+                "modified_files": modified_files,
+                "message": f"{len(modified_files)} fichier(s) modifié(s) localement" if has_conflicts else "Aucun conflit détecté"
+            }
+            
+        except Exception as e:
+            logger.error(f"Erreur lors de la vérification des conflits Git: {str(e)}")
+            return {
+                "has_conflicts": False,
+                "error": str(e),
+                "modified_files": []
+            }
+    
+    def resolve_git_conflicts(self, strategy: str) -> Dict:
+        """
+        Résout les conflits Git selon la stratégie choisie
+        
+        Args:
+            strategy: "reset" (écraser), "stash" (sauvegarder), ou "abort" (annuler)
+        
+        Returns:
+            Dict avec success et message
+        """
+        try:
+            if strategy == "reset":
+                # Écraser les modifications locales
+                result = subprocess.run(
+                    ["git", "reset", "--hard", "HEAD"],
+                    cwd=str(self.app_root),
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode != 0:
+                    return {
+                        "success": False,
+                        "message": f"Erreur lors du reset: {result.stderr}"
+                    }
+                
+                return {
+                    "success": True,
+                    "message": "Modifications locales écrasées avec succès"
+                }
+                
+            elif strategy == "stash":
+                # Sauvegarder les modifications locales
+                result = subprocess.run(
+                    ["git", "stash", "save", f"Auto-stash avant mise à jour - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"],
+                    cwd=str(self.app_root),
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode != 0:
+                    return {
+                        "success": False,
+                        "message": f"Erreur lors du stash: {result.stderr}"
+                    }
+                
+                return {
+                    "success": True,
+                    "message": "Modifications locales sauvegardées (git stash). Utilisez 'git stash pop' pour les restaurer."
+                }
+                
+            elif strategy == "abort":
+                return {
+                    "success": True,
+                    "message": "Mise à jour annulée par l'utilisateur"
+                }
+            
+            else:
+                return {
+                    "success": False,
+                    "message": f"Stratégie inconnue: {strategy}"
+                }
+                
+        except Exception as e:
+            logger.error(f"Erreur lors de la résolution des conflits: {str(e)}")
+            return {
+                "success": False,
+                "message": str(e)
+            }
+
             try:
                 from datetime import datetime
                 with open("/tmp/update_process.log", "a") as f:
