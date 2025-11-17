@@ -35,7 +35,7 @@ const ForgotPasswordDialog = ({ open, onClose }) => {
     setLoading(true);
 
     try {
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       await axios.post(`${backend_url}/api/auth/forgot-password`, { email });
       
       setSent(true);
