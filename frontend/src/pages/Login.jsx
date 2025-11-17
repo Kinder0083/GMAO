@@ -9,8 +9,7 @@ import { useToast } from '../hooks/use-toast';
 import { authAPI } from '../services/api';
 import ForgotPasswordDialog from '../components/Common/ForgotPasswordDialog';
 import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
+import { BACKEND_URL } from '../utils/config';
 
 const Login = () => {
   const navigate = useNavigate();
