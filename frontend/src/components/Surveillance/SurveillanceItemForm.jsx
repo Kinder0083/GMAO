@@ -53,7 +53,7 @@ function SurveillanceItemForm({ open, item, onClose }) {
     // Validation
     if (!formData.classe_type || !formData.category || !formData.batiment || 
         !formData.periodicite || !formData.responsable || !formData.executant) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+      toast({ title: 'Erreur', description: 'Veuillez remplir tous les champs obligatoires', variant: 'destructive' });
       return;
     }
 
@@ -76,11 +76,11 @@ function SurveillanceItemForm({ open, item, onClose }) {
       if (item) {
         // Mise à jour
         await surveillanceAPI.updateItem(item.id, apiData);
-        toast.success('Item mis à jour avec succès');
+        toast({ title: 'Succès', description: 'Item mis à jour avec succès' });
       } else {
         // Création
         await surveillanceAPI.createItem(apiData);
-        toast.success('Item créé avec succès');
+        toast({ title: 'Succès', description: 'Item créé avec succès' });
       }
       onClose(true);
     } catch (error) {

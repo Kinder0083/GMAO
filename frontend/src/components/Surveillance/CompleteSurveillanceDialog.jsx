@@ -45,11 +45,11 @@ function CompleteSurveillanceDialog({ open, item, onClose }) {
         await surveillanceAPI.uploadFile(item.id, selectedFile);
       }
 
-      toast.success('Contrôle marqué comme réalisé');
+      toast({ title: 'Succès', description: 'Contrôle marqué comme réalisé' });
       onClose(true);
     } catch (error) {
       console.error('Erreur:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast({ title: 'Erreur', description: 'Erreur lors de la mise à jour', variant: 'destructive' });
     } finally {
       setLoading(false);
     }

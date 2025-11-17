@@ -48,7 +48,7 @@ function SurveillancePlan() {
       setAlerts(alertsData.alerts || []);
     } catch (error) {
       console.error('Erreur chargement données:', error);
-      toast.error('Erreur lors du chargement des données');
+      toast({ title: 'Erreur', description: 'Erreur lors du chargement des données', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -91,10 +91,10 @@ function SurveillancePlan() {
     if (window.confirm('Êtes-vous sûr de vouloir supprimer cet item ?')) {
       try {
         await surveillanceAPI.deleteItem(itemId);
-        toast.success('Item supprimé avec succès');
+        toast({ title: 'Succès', description: 'Item supprimé avec succès' });
         loadData();
       } catch (error) {
-        toast.error('Erreur lors de la suppression');
+        toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' });
       }
     }
   };
@@ -120,9 +120,9 @@ function SurveillancePlan() {
       a.href = url;
       a.download = 'template_plan_surveillance.csv';
       a.click();
-      toast.success('Template téléchargé');
+      toast({ title: 'Succès', description: 'Template téléchargé' });
     } catch (error) {
-      toast.error('Erreur lors du téléchargement');
+      toast({ title: 'Erreur', description: 'Erreur lors du téléchargement', variant: 'destructive' });
     }
   };
 
