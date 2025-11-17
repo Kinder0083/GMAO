@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
-  TextField,
-  Grid,
-  MenuItem,
-  CircularProgress
-} from '@mui/material';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Textarea } from '../ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { surveillanceAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 
@@ -46,192 +41,114 @@ function SurveillanceItemForm({ open, item, onClose }) {
     }
   }, [item]);
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
   const handleSubmit = async () => {
-    // Validation
-    if (!formData.classe_type || !formData.category || !formData.batiment || 
-        !formData.periodicite || !formData.responsable || !formData.executant) {
-      toast({ title: 'Erreur', description: 'Veuillez remplir tous les champs obligatoires', variant: 'destructive' });
+    if (!formData.classe_type || !formData.category || !formData.batiment || !formData.periodicite || !formData.responsable || !formData.executant) {
+      toast({ title: 'Erreur', description: 'Champs obligatoires manquants', variant: 'destructive' });
       return;
     }
 
     setLoading(true);
     try {
-      // Préparer les données pour l'API
-      const apiData = {
-        classe_type: formData.classe_type,
-        category: formData.category,
-        batiment: formData.batiment,
-        periodicite: formData.periodicite,
-        responsable: formData.responsable,
-        executant: formData.executant,
-        description: formData.description || undefined,
-        derniere_visite: formData.derniere_visite || undefined,
-        prochain_controle: formData.prochain_controle || undefined,
-        commentaire: formData.commentaire || undefined
-      };
-
+      const apiData = { ...formData };
       if (item) {
-        // Mise à jour
         await surveillanceAPI.updateItem(item.id, apiData);
-        toast({ title: 'Succès', description: 'Item mis à jour avec succès' });
+        toast({ title: 'Succès', description: 'Item mis à jour' });
       } else {
-        // Création
         await surveillanceAPI.createItem(apiData);
-        toast({ title: 'Succès', description: 'Item créé avec succès' });
+        toast({ title: 'Succès', description: 'Item créé' });
       }
       onClose(true);
     } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de l\'enregistrement');
+      toast({ title: 'Erreur', description: 'Erreur enregistrement', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={open} onClose={() => onClose(false)} maxWidth="md" fullWidth>
-      <DialogTitle>
-        {item ? 'Éditer le contrôle' : 'Nouveau contrôle'}
-      </DialogTitle>
-      <DialogContent>
-        <Grid container spacing={2} sx={{ mt: 1 }}>
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              required
-              label="Type de contrôle"
-              value={formData.classe_type}
-              onChange={(e) => handleChange('classe_type', e.target.value)}
-              placeholder="Ex: Protection incendie"
-            />
-          </Grid>
+    <Dialog open={open} onOpenChange={() => onClose(false)}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{item ? 'Éditer le contrôle' : 'Nouveau contrôle'}</DialogTitle>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div>
+            <Label>Type de contrôle *</Label>
+            <Input value={formData.classe_type} onChange={(e) => setFormData({...formData, classe_type: e.target.value})} placeholder="Ex: Protection incendie" />
+          </div>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              required
-              select
-              label="Catégorie"
-              value={formData.category}
-              onChange={(e) => handleChange('category', e.target.value)}
-            >
-              <MenuItem value="MMRI">MMRI</MenuItem>
-              <MenuItem value="INCENDIE">Incendie</MenuItem>
-              <MenuItem value="SECURITE_ENVIRONNEMENT">Sécurité/Environnement</MenuItem>
-              <MenuItem value="ELECTRIQUE">Électrique</MenuItem>
-              <MenuItem value="MANUTENTION">Manutention</MenuItem>
-              <MenuItem value="EXTRACTION">Extraction</MenuItem>
-              <MenuItem value="AUTRE">Autre</MenuItem>
-            </TextField>
-          </Grid>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Catégorie *</Label>
+              <Select value={formData.category} onValueChange={(val) => setFormData({...formData, category: val})}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MMRI">MMRI</SelectItem>
+                  <SelectItem value="INCENDIE">Incendie</SelectItem>
+                  <SelectItem value="SECURITE_ENVIRONNEMENT">Sécurité/Env.</SelectItem>
+                  <SelectItem value="ELECTRIQUE">Électrique</SelectItem>
+                  <SelectItem value="MANUTENTION">Manutention</SelectItem>
+                  <SelectItem value="EXTRACTION">Extraction</SelectItem>
+                  <SelectItem value="AUTRE">Autre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Bâtiment *</Label>
+              <Input value={formData.batiment} onChange={(e) => setFormData({...formData, batiment: e.target.value})} placeholder="Ex: BATIMENT 1" />
+            </div>
+          </div>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              required
-              label="Bâtiment"
-              value={formData.batiment}
-              onChange={(e) => handleChange('batiment', e.target.value)}
-              placeholder="Ex: BATIMENT 1"
-            />
-          </Grid>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Périodicité *</Label>
+              <Input value={formData.periodicite} onChange={(e) => setFormData({...formData, periodicite: e.target.value})} placeholder="Ex: 6 mois" />
+            </div>
+            <div>
+              <Label>Responsable *</Label>
+              <Select value={formData.responsable} onValueChange={(val) => setFormData({...formData, responsable: val})}>
+                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MAINT">MAINT</SelectItem>
+                  <SelectItem value="PROD">PROD</SelectItem>
+                  <SelectItem value="QHSE">QHSE</SelectItem>
+                  <SelectItem value="EXTERNE">EXTERNE</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              required
-              label="Périodicité"
-              value={formData.periodicite}
-              onChange={(e) => handleChange('periodicite', e.target.value)}
-              placeholder="Ex: 6 mois, 1 an"
-            />
-          </Grid>
+          <div>
+            <Label>Exécutant *</Label>
+            <Input value={formData.executant} onChange={(e) => setFormData({...formData, executant: e.target.value})} placeholder="Ex: DESAUTEL" />
+          </div>
 
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              required
-              select
-              label="Responsable"
-              value={formData.responsable}
-              onChange={(e) => handleChange('responsable', e.target.value)}
-            >
-              <MenuItem value="MAINT">MAINT</MenuItem>
-              <MenuItem value="PROD">PROD</MenuItem>
-              <MenuItem value="QHSE">QHSE</MenuItem>
-              <MenuItem value="EXTERNE">EXTERNE</MenuItem>
-            </TextField>
-          </Grid>
+          <div>
+            <Label>Description</Label>
+            <Textarea value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={2} />
+          </div>
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              required
-              label="Exécutant"
-              value={formData.executant}
-              onChange={(e) => handleChange('executant', e.target.value)}
-              placeholder="Ex: DESAUTEL, APAVE"
-            />
-          </Grid>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label>Dernière visite</Label>
+              <Input type="date" value={formData.derniere_visite} onChange={(e) => setFormData({...formData, derniere_visite: e.target.value})} />
+            </div>
+            <div>
+              <Label>Prochain contrôle</Label>
+              <Input type="date" value={formData.prochain_controle} onChange={(e) => setFormData({...formData, prochain_controle: e.target.value})} />
+            </div>
+          </div>
 
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              label="Description"
-              value={formData.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Description détaillée du contrôle"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              type="date"
-              label="Dernière visite"
-              value={formData.derniere_visite}
-              onChange={(e) => handleChange('derniere_visite', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              type="date"
-              label="Prochain contrôle"
-              value={formData.prochain_controle}
-              onChange={(e) => handleChange('prochain_controle', e.target.value)}
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              fullWidth
-              multiline
-              rows={2}
-              label="Commentaire"
-              value={formData.commentaire}
-              onChange={(e) => handleChange('commentaire', e.target.value)}
-            />
-          </Grid>
-        </Grid>
+          <div>
+            <Label>Commentaire</Label>
+            <Textarea value={formData.commentaire} onChange={(e) => setFormData({...formData, commentaire: e.target.value})} rows={2} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => onClose(false)} disabled={loading}>Annuler</Button>
+          <Button onClick={handleSubmit} disabled={loading}>{loading ? 'Enregistrement...' : (item ? 'Mettre à jour' : 'Créer')}</Button>
+        </DialogFooter>
       </DialogContent>
-      <DialogActions>
-        <Button onClick={() => onClose(false)} disabled={loading}>
-          Annuler
-        </Button>
-        <Button onClick={handleSubmit} variant="contained" disabled={loading}>
-          {loading ? <CircularProgress size={24} /> : (item ? 'Mettre à jour' : 'Créer')}
-        </Button>
-      </DialogActions>
     </Dialog>
   );
 }
