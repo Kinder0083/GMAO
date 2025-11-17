@@ -474,6 +474,14 @@ const Updates = () => {
           </CardContent>
         )}
       </Card>
+
+      {/* Dialogue de gestion des conflits Git */}
+      <GitConflictDialog
+        open={showConflictDialog}
+        onClose={() => setShowConflictDialog(false)}
+        conflictData={conflictData}
+        onResolve={handleResolveConflict}
+      />
     </div>
   );
 };
