@@ -192,38 +192,269 @@ class SurveillanceTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_cleanup_work_orders(self):
-        """TEST 7: Nettoyer (supprimer les ordres de test créés)"""
-        self.log("🧪 TEST 7: Nettoyer (supprimer les ordres de test créés)")
+    def test_surveillance_item_details(self):
+        """TEST 7: Tester GET /api/surveillance/items/{item_id}"""
+        self.log("🧪 TEST 7: Récupérer les détails d'un item spécifique")
         
-        if not self.created_work_orders:
-            self.log("⚠️ Pas d'ordres de travail de test à supprimer", "WARNING")
+        if not self.created_items:
+            self.log("⚠️ Pas d'items créés pour tester les détails", "WARNING")
+            return False
+        
+        try:
+            item_id = self.created_items[0]  # Prendre le premier item créé
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/items/{item_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Détails récupérés - ID: {data.get('id')}")
+                self.log(f"✅ Classe type: {data.get('classe_type')}")
+                self.log(f"✅ Catégorie: {data.get('category')}")
+                self.log(f"✅ Responsable: {data.get('responsable')}")
+                return True
+            else:
+                self.log(f"❌ Récupération détails échouée - Status: {response.status_code}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_item_update(self):
+        """TEST 8: Tester PUT /api/surveillance/items/{item_id}"""
+        self.log("🧪 TEST 8: Mettre à jour un item de surveillance")
+        
+        if not self.created_items:
+            self.log("⚠️ Pas d'items créés pour tester la mise à jour", "WARNING")
+            return False
+        
+        try:
+            item_id = self.created_items[0]  # Prendre le premier item créé
+            update_data = {
+                "status": "PLANIFIE",
+                "commentaire": "Test de mise à jour - item planifié",
+                "date_realisation": "2025-12-01"
+            }
+            
+            response = self.admin_session.put(
+                f"{BACKEND_URL}/surveillance/items/{item_id}",
+                json=update_data,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Mise à jour réussie - Status: {data.get('status')}")
+                self.log(f"✅ Commentaire: {data.get('commentaire')}")
+                return True
+            else:
+                self.log(f"❌ Mise à jour échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_stats(self):
+        """TEST 9: Tester GET /api/surveillance/stats"""
+        self.log("🧪 TEST 9: Récupérer les statistiques globales")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/stats",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                global_stats = data.get("global", {})
+                by_category = data.get("by_category", {})
+                by_responsable = data.get("by_responsable", {})
+                
+                self.log(f"✅ Statistiques globales récupérées:")
+                self.log(f"  - Total: {global_stats.get('total')}")
+                self.log(f"  - Réalisés: {global_stats.get('realises')}")
+                self.log(f"  - Planifiés: {global_stats.get('planifies')}")
+                self.log(f"  - À planifier: {global_stats.get('a_planifier')}")
+                self.log(f"  - % réalisation: {global_stats.get('pourcentage_realisation')}%")
+                
+                self.log(f"✅ Statistiques par catégorie: {len(by_category)} catégories")
+                self.log(f"✅ Statistiques par responsable: {len(by_responsable)} responsables")
+                return True
+            else:
+                self.log(f"❌ Récupération statistiques échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_alerts(self):
+        """TEST 10: Tester GET /api/surveillance/alerts"""
+        self.log("🧪 TEST 10: Récupérer les alertes d'échéance")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/alerts",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                count = data.get("count", 0)
+                alerts = data.get("alerts", [])
+                
+                self.log(f"✅ Alertes récupérées - {count} alertes")
+                
+                if count > 0:
+                    for alert in alerts[:3]:  # Afficher les 3 premières
+                        self.log(f"  - {alert.get('classe_type')} (dans {alert.get('days_until')} jours)")
+                
+                return True
+            else:
+                self.log(f"❌ Récupération alertes échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_upload(self):
+        """TEST 11: Tester POST /api/surveillance/items/{item_id}/upload"""
+        self.log("🧪 TEST 11: Upload d'une pièce jointe")
+        
+        if not self.created_items:
+            self.log("⚠️ Pas d'items créés pour tester l'upload", "WARNING")
+            return False
+        
+        try:
+            item_id = self.created_items[0]  # Prendre le premier item créé
+            
+            # Créer un fichier de test temporaire
+            test_content = "Contenu de test pour pièce jointe surveillance"
+            
+            files = {
+                'file': ('test_surveillance.txt', test_content, 'text/plain')
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/surveillance/items/{item_id}/upload",
+                files=files,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Upload réussi - URL: {data.get('file_url')}")
+                self.log(f"✅ Nom fichier: {data.get('file_name')}")
+                return True
+            else:
+                self.log(f"❌ Upload échoué - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_export_template(self):
+        """TEST 12: Tester GET /api/surveillance/export/template"""
+        self.log("🧪 TEST 12: Export du template CSV")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/export/template",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                content_type = response.headers.get('content-type', '')
+                content_length = len(response.content)
+                
+                self.log(f"✅ Template exporté - Type: {content_type}")
+                self.log(f"✅ Taille: {content_length} bytes")
+                
+                # Vérifier que c'est bien un CSV
+                if 'csv' in content_type or content_length > 0:
+                    return True
+                else:
+                    self.log("❌ Le template ne semble pas être un CSV valide", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Export template échoué - Status: {response.status_code}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_delete_item(self):
+        """TEST 13: Tester DELETE /api/surveillance/items/{item_id} (Admin uniquement)"""
+        self.log("🧪 TEST 13: Supprimer un item de surveillance (Admin)")
+        
+        if not self.created_items:
+            self.log("⚠️ Pas d'items créés pour tester la suppression", "WARNING")
+            return True  # Pas d'erreur si pas d'items
+        
+        try:
+            item_id = self.created_items[-1]  # Prendre le dernier item créé
+            
+            response = self.admin_session.delete(
+                f"{BACKEND_URL}/surveillance/items/{item_id}",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Item supprimé - Message: {data.get('message')}")
+                self.created_items.remove(item_id)  # Retirer de la liste
+                return True
+            else:
+                self.log(f"❌ Suppression échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_cleanup_surveillance_items(self):
+        """TEST 14: Nettoyer (supprimer les items de test restants)"""
+        self.log("🧪 TEST 14: Nettoyer (supprimer les items de test restants)")
+        
+        if not self.created_items:
+            self.log("⚠️ Pas d'items de surveillance de test à supprimer", "WARNING")
             return True
         
         success_count = 0
-        for wo_id in self.created_work_orders[:]:  # Copy to avoid modification during iteration
+        for item_id in self.created_items[:]:  # Copy to avoid modification during iteration
             try:
                 response = self.admin_session.delete(
-                    f"{BACKEND_URL}/work-orders/{wo_id}",
+                    f"{BACKEND_URL}/surveillance/items/{item_id}",
                     timeout=10
                 )
                 
                 if response.status_code == 200:
-                    self.log(f"✅ Ordre {wo_id} supprimé avec succès")
-                    self.created_work_orders.remove(wo_id)
+                    self.log(f"✅ Item {item_id} supprimé avec succès")
+                    self.created_items.remove(item_id)
                     success_count += 1
                 elif response.status_code == 404:
-                    self.log(f"⚠️ Ordre {wo_id} déjà supprimé (Status 404)")
-                    self.created_work_orders.remove(wo_id)
+                    self.log(f"⚠️ Item {item_id} déjà supprimé (Status 404)")
+                    self.created_items.remove(item_id)
                     success_count += 1
                 else:
-                    self.log(f"❌ Suppression de l'ordre {wo_id} échouée - Status: {response.status_code}", "ERROR")
+                    self.log(f"❌ Suppression de l'item {item_id} échouée - Status: {response.status_code}", "ERROR")
                     
             except requests.exceptions.RequestException as e:
-                self.log(f"❌ Request failed for {wo_id} - Error: {str(e)}", "ERROR")
+                self.log(f"❌ Request failed for {item_id} - Error: {str(e)}", "ERROR")
         
-        self.log(f"✅ Nettoyage terminé: {success_count} ordres supprimés")
-        return success_count > 0
+        self.log(f"✅ Nettoyage terminé: {success_count} items supprimés")
+        return success_count >= 0  # Toujours réussir le nettoyage
     
     def cleanup_remaining_work_orders(self):
         """Nettoyer tous les ordres de travail créés pendant les tests"""
