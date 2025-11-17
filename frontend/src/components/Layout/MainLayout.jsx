@@ -124,7 +124,7 @@ const MainLayout = () => {
   const loadWorkOrdersCount = async (userId) => {
     try {
       const token = localStorage.getItem('token');
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       
       const response = await fetch(`${backend_url}/api/work-orders`, {
         headers: {
@@ -152,7 +152,7 @@ const MainLayout = () => {
   const loadOverdueCount = async () => {
     try {
       const token = localStorage.getItem('token');
-      const backend_url = process.env.REACT_APP_BACKEND_URL;
+      const backend_url = getBackendURL();
       
       // Récupérer les permissions depuis localStorage
       const userInfo = localStorage.getItem('user');
