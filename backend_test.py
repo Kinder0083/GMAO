@@ -67,64 +67,42 @@ class SurveillanceTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_create_work_order_with_category(self, category, title, hours, minutes):
-        """Créer un ordre de travail avec une catégorie spécifique et ajouter du temps"""
-        self.log(f"🧪 Créer ordre avec catégorie {category} + temps passé ({hours}h{minutes:02d}min)")
+    def test_create_surveillance_item(self, category, classe_type, batiment, responsable):
+        """Créer un item de surveillance avec des données spécifiques"""
+        self.log(f"🧪 Créer item surveillance - Catégorie: {category}, Type: {classe_type}")
         
         try:
-            # Créer l'ordre de travail
-            work_order_data = {
-                "titre": title,
-                "description": "Test",
-                "priorite": "MOYENNE",
-                "categorie": category,
-                "statut": "EN_COURS"
+            # Créer l'item de surveillance
+            item_data = {
+                "classe_type": classe_type,
+                "category": category,
+                "batiment": batiment,
+                "periodicite": "6 mois",
+                "responsable": responsable,
+                "executant": "DESAUTEL",
+                "description": f"Test surveillance {classe_type}",
+                "prochain_controle": "2025-06-15"
             }
             
             response = self.admin_session.post(
-                f"{BACKEND_URL}/work-orders",
-                json=work_order_data,
+                f"{BACKEND_URL}/surveillance/items",
+                json=item_data,
                 timeout=10
             )
             
             if response.status_code in [200, 201]:
                 data = response.json()
-                work_order_id = data.get("id")
-                self.created_work_orders.append(work_order_id)
-                self.test_work_orders[category] = work_order_id
+                item_id = data.get("id")
+                self.created_items.append(item_id)
+                self.test_items[category] = item_id
                 
-                self.log(f"✅ Ordre créé avec succès - ID: {work_order_id}")
-                self.log(f"✅ Catégorie: {data.get('categorie')}")
-                
-                # Ajouter du temps passé
-                time_data = {
-                    "hours": hours,
-                    "minutes": minutes
-                }
-                
-                time_response = self.admin_session.post(
-                    f"{BACKEND_URL}/work-orders/{work_order_id}/add-time",
-                    json=time_data,
-                    timeout=10
-                )
-                
-                if time_response.status_code == 200:
-                    time_data_response = time_response.json()
-                    expected_time = hours + (minutes / 60.0)
-                    actual_time = time_data_response.get("tempsReel")
-                    
-                    if actual_time == expected_time:
-                        self.log(f"✅ Temps ajouté avec succès: {actual_time}h")
-                        return True
-                    else:
-                        self.log(f"❌ Temps incorrect - Attendu: {expected_time}h, Reçu: {actual_time}h", "ERROR")
-                        return False
-                else:
-                    self.log(f"❌ Ajout de temps échoué - Status: {time_response.status_code}", "ERROR")
-                    return False
+                self.log(f"✅ Item créé avec succès - ID: {item_id}")
+                self.log(f"✅ Catégorie: {data.get('category')}")
+                self.log(f"✅ Classe type: {data.get('classe_type')}")
+                return True
                     
             else:
-                self.log(f"❌ Création d'ordre échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Création d'item échouée - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
