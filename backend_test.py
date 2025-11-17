@@ -485,37 +485,46 @@ class SurveillanceTester:
         self.log(f"Nettoyage terminé: {success_count} items supprimés")
         return True
     
-    # Removed old methods - replaced with work order time tracking tests
-    
-    def run_category_time_tracking_tests(self):
-        """Run comprehensive tests for category time tracking in reports"""
+    def run_surveillance_tests(self):
+        """Run comprehensive tests for Plan de Surveillance endpoints"""
         self.log("=" * 80)
-        self.log("TESTING EVOLUTION HORAIRE DES MAINTENANCES - CATEGORY COUNTING")
+        self.log("TESTING PLAN DE SURVEILLANCE - ENDPOINTS CRUD COMPLETS")
         self.log("=" * 80)
-        self.log("CONTEXTE: Test de l'endpoint 'Evolution horaire des maintenances' pour vérifier")
-        self.log("le comptage de toutes les catégories, notamment:")
-        self.log("- TRAVAUX_CURATIF")
-        self.log("- TRAVAUX_DIVERS") 
-        self.log("- FORMATION")
+        self.log("CONTEXTE: Test complet du module Plan de Surveillance avec tous les endpoints:")
+        self.log("- CRUD de base (GET, POST, PUT, DELETE)")
+        self.log("- Upload de pièces jointes")
+        self.log("- Statistiques et alertes")
+        self.log("- Import/Export")
         self.log("")
         self.log("TESTS À EFFECTUER:")
         self.log("1. Se connecter en tant qu'admin")
-        self.log("2. Créer ordre avec catégorie TRAVAUX_CURATIF + temps passé")
-        self.log("3. Créer ordre avec catégorie TRAVAUX_DIVERS + temps passé")
-        self.log("4. Créer ordre avec catégorie FORMATION + temps passé")
-        self.log("5. Créer ordre avec catégorie CHANGEMENT_FORMAT + temps passé (comparaison)")
-        self.log("6. Tester GET /api/reports/time-by-category?start_month=2025-11")
-        self.log("7. Nettoyer les ordres de test créés")
+        self.log("2. Créer items avec différentes catégories (INCENDIE, ELECTRIQUE, MMRI, SECURITE)")
+        self.log("3. Tester les filtres (catégorie, responsable, bâtiment)")
+        self.log("4. Récupérer les détails d'un item")
+        self.log("5. Mettre à jour un item (status, commentaire)")
+        self.log("6. Tester les statistiques globales")
+        self.log("7. Tester les alertes d'échéance")
+        self.log("8. Upload d'une pièce jointe")
+        self.log("9. Export du template CSV")
+        self.log("10. Supprimer un item (admin uniquement)")
+        self.log("11. Nettoyer les items de test créés")
         self.log("=" * 80)
         
         results = {
             "admin_login": False,
-            "create_curatif_order": False,
-            "create_divers_order": False,
-            "create_formation_order": False,
-            "create_changement_format_order": False,
-            "test_time_by_category_stats": False,
-            "cleanup_work_orders": False,
+            "create_incendie_item": False,
+            "create_electrique_item": False,
+            "create_mmri_item": False,
+            "create_securite_item": False,
+            "test_surveillance_list_with_filters": False,
+            "test_surveillance_item_details": False,
+            "test_surveillance_item_update": False,
+            "test_surveillance_stats": False,
+            "test_surveillance_alerts": False,
+            "test_surveillance_upload": False,
+            "test_surveillance_export_template": False,
+            "test_surveillance_delete_item": False,
+            "test_cleanup_surveillance_items": False,
             "cleanup_remaining": False
         }
         
@@ -526,30 +535,45 @@ class SurveillanceTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # Test 2: Create TRAVAUX_CURATIF order
-        results["create_curatif_order"] = self.test_create_curatif_order()
+        # Test 2-5: Create surveillance items with different categories
+        results["create_incendie_item"] = self.test_create_incendie_item()
+        results["create_electrique_item"] = self.test_create_electrique_item()
+        results["create_mmri_item"] = self.test_create_mmri_item()
+        results["create_securite_item"] = self.test_create_securite_item()
         
-        # Test 3: Create TRAVAUX_DIVERS order
-        results["create_divers_order"] = self.test_create_divers_order()
+        # Test 6: List with filters
+        results["test_surveillance_list_with_filters"] = self.test_surveillance_list_with_filters()
         
-        # Test 4: Create FORMATION order
-        results["create_formation_order"] = self.test_create_formation_order()
+        # Test 7: Item details
+        results["test_surveillance_item_details"] = self.test_surveillance_item_details()
         
-        # Test 5: Create CHANGEMENT_FORMAT order (for comparison)
-        results["create_changement_format_order"] = self.test_create_changement_format_order()
+        # Test 8: Update item
+        results["test_surveillance_item_update"] = self.test_surveillance_item_update()
         
-        # Test 6: Test time-by-category stats
-        results["test_time_by_category_stats"] = self.test_time_by_category_stats()
+        # Test 9: Statistics
+        results["test_surveillance_stats"] = self.test_surveillance_stats()
         
-        # Test 7: Cleanup work orders
-        results["cleanup_work_orders"] = self.test_cleanup_work_orders()
+        # Test 10: Alerts
+        results["test_surveillance_alerts"] = self.test_surveillance_alerts()
         
-        # Test 8: Cleanup remaining
-        results["cleanup_remaining"] = self.cleanup_remaining_work_orders()
+        # Test 11: Upload
+        results["test_surveillance_upload"] = self.test_surveillance_upload()
+        
+        # Test 12: Export template
+        results["test_surveillance_export_template"] = self.test_surveillance_export_template()
+        
+        # Test 13: Delete item
+        results["test_surveillance_delete_item"] = self.test_surveillance_delete_item()
+        
+        # Test 14: Cleanup
+        results["test_cleanup_surveillance_items"] = self.test_cleanup_surveillance_items()
+        
+        # Test 15: Final cleanup
+        results["cleanup_remaining"] = self.cleanup_remaining_surveillance_items()
         
         # Summary
         self.log("=" * 70)
-        self.log("CATEGORY TIME TRACKING TEST RESULTS SUMMARY")
+        self.log("PLAN DE SURVEILLANCE TEST RESULTS SUMMARY")
         self.log("=" * 70)
         
         passed = sum(results.values())
@@ -562,29 +586,40 @@ class SurveillanceTester:
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         # Detailed analysis for critical tests
-        critical_tests = ["create_curatif_order", "create_divers_order", "create_formation_order", 
-                         "create_changement_format_order", "test_time_by_category_stats"]
+        critical_tests = [
+            "create_incendie_item", "create_electrique_item", "create_mmri_item", "create_securite_item",
+            "test_surveillance_list_with_filters", "test_surveillance_item_details", 
+            "test_surveillance_item_update", "test_surveillance_stats", "test_surveillance_alerts",
+            "test_surveillance_upload", "test_surveillance_export_template", "test_surveillance_delete_item"
+        ]
         critical_passed = sum(results.get(test, False) for test in critical_tests)
         
         if critical_passed == len(critical_tests):
-            self.log("🎉 CRITICAL SUCCESS: All main category tracking tests passed!")
-            self.log("✅ POST /api/work-orders with categories works correctly")
-            self.log("✅ POST /api/work-orders/{id}/add-time works for all categories")
-            self.log("✅ GET /api/reports/time-by-category includes all categories")
-            self.log("✅ TRAVAUX_CURATIF, TRAVAUX_DIVERS, FORMATION are counted correctly")
+            self.log("🎉 CRITICAL SUCCESS: All main surveillance endpoints tests passed!")
+            self.log("✅ POST /api/surveillance/items works correctly")
+            self.log("✅ GET /api/surveillance/items with filters works correctly")
+            self.log("✅ GET /api/surveillance/items/{id} works correctly")
+            self.log("✅ PUT /api/surveillance/items/{id} works correctly")
+            self.log("✅ DELETE /api/surveillance/items/{id} works correctly (admin only)")
+            self.log("✅ POST /api/surveillance/items/{id}/upload works correctly")
+            self.log("✅ GET /api/surveillance/stats works correctly")
+            self.log("✅ GET /api/surveillance/alerts works correctly")
+            self.log("✅ GET /api/surveillance/export/template works correctly")
         else:
-            self.log("🚨 CRITICAL FAILURE: Some main category tracking tests failed!")
+            self.log("🚨 CRITICAL FAILURE: Some main surveillance endpoint tests failed!")
             failed_critical = [test for test in critical_tests if not results.get(test, False)]
             self.log(f"❌ Failed critical tests: {', '.join(failed_critical)}")
         
-        if results.get("test_time_by_category_stats", False):
-            self.log("🎉 ENDPOINT EVOLUTION HORAIRE DES MAINTENANCES IS WORKING CORRECTLY!")
-            self.log("✅ All categories are being counted in the histogram")
-            self.log("✅ TRAVAUX_CURATIF, TRAVAUX_DIVERS, FORMATION have values > 0")
-            self.log("✅ The reported issue is RESOLVED")
+        if critical_passed == len(critical_tests):
+            self.log("🎉 PLAN DE SURVEILLANCE ENDPOINTS ARE WORKING CORRECTLY!")
+            self.log("✅ All CRUD operations functional")
+            self.log("✅ Filters and statistics working")
+            self.log("✅ Upload and export features working")
+            self.log("✅ Admin permissions respected")
+            self.log("✅ The Plan de Surveillance backend is READY FOR PRODUCTION")
         else:
-            self.log("⚠️ ENDPOINT ISSUE DETECTED - Categories may not be counted correctly")
-            self.log("❌ The reported issue is NOT RESOLVED")
+            self.log("⚠️ PLAN DE SURVEILLANCE ISSUES DETECTED")
+            self.log("❌ Some endpoints are not working correctly")
         
         return results
 
