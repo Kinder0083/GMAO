@@ -127,10 +127,8 @@ async def create_surveillance_item(
         
         return item_dict
     except Exception as e:
-        import traceback
-        error_details = f"Error: {str(e)}, Traceback: {traceback.format_exc()}"
-        logger.error(f"Erreur création item surveillance: {error_details}")
-        raise HTTPException(status_code=500, detail=error_details)
+        logger.error(f"Erreur création item surveillance: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.put("/items/{item_id}")
