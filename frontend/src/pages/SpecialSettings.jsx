@@ -117,6 +117,89 @@ const SpecialSettings = () => {
     }
   };
 
+
+
+  // Fonctions SMTP
+  const loadSmtpConfig = async () => {
+    try {
+      setLoadingSmtp(true);
+      const response = await api.get('/smtp/config');
+      setSmtpConfig(response.data);
+      // Initialiser l'email de test avec l'email de l'utilisateur connecté
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.email) {
+        setTestEmail(user.email);
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de charger la configuration SMTP',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoadingSmtp(false);
+    }
+  };
+
+  const handleSaveSmtpConfig = async () => {
+    try {
+      setSavingSmtp(true);
+      await api.put('/smtp/config', smtpConfig);
+      
+      toast({
+        title: 'Configuration sauvegardée',
+        description: 'La configuration SMTP a été mise à jour avec succès',
+      });
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Impossible de sauvegarder la configuration SMTP',
+        variant: 'destructive'
+      });
+    } finally {
+      setSavingSmtp(false);
+    }
+  };
+
+  const handleTestSmtp = async () => {
+    if (!testEmail || !testEmail.includes('@')) {
+      toast({
+        title: 'Email invalide',
+        description: 'Veuillez entrer une adresse email valide',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    try {
+      setTestingSmtp(true);
+      const response = await api.post('/smtp/test', {
+        test_email: testEmail
+      });
+      
+      if (response.data.success) {
+        toast({
+          title: 'Test réussi',
+          description: `Email de test envoyé avec succès à ${testEmail}`,
+        });
+      } else {
+        toast({
+          title: 'Test échoué',
+          description: response.data.message || 'L\'envoi de l\'email de test a échoué',
+          variant: 'destructive'
+        });
+      }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Erreur lors du test SMTP',
+        variant: 'destructive'
+      });
+    } finally {
+      setTestingSmtp(false);
+    }
+  };
+
   const handleResetPassword = async (userId, userName) => {
     if (!window.confirm(`Êtes-vous sûr de vouloir réinitialiser le mot de passe de ${userName} ?`)) {
       return;
