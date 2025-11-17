@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Download, Upload, Database, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
+import { getBackendURL } from '../utils/config';
 
 const ImportExport = () => {
   const { toast } = useToast();
