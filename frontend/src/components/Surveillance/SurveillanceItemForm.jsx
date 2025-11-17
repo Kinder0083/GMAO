@@ -11,7 +11,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import { surveillanceAPI } from '../../services/api';
-import { toast } from 'react-toastify';
+import { useToast } from '../../hooks/use-toast';
 
 function SurveillanceItemForm({ open, item, onClose }) {
   const [loading, setLoading] = useState(false);
