@@ -1062,3 +1062,111 @@ class SMTPConfigUpdate(BaseModel):
 class SMTPTestRequest(BaseModel):
     test_email: EmailStr
 
+
+# Plan de Surveillance Models
+class SurveillanceItemStatus(str, Enum):
+    PLANIFIER = "PLANIFIER"  # À planifier
+    PLANIFIE = "PLANIFIE"    # Planifié mais non réalisé
+    REALISE = "REALISE"      # Réalisé
+
+class SurveillanceCategory(str, Enum):
+    MMRI = "MMRI"  # Mesures de maîtrise des risques instrumentées
+    INCENDIE = "INCENDIE"  # Sécurité incendie
+    SECURITE_ENVIRONNEMENT = "SECURITE_ENVIRONNEMENT"  # Sécurité/Environnement
+    ELECTRIQUE = "ELECTRIQUE"  # Installations électriques
+    MANUTENTION = "MANUTENTION"  # Engins de manutention
+    EXTRACTION = "EXTRACTION"  # Extraction des liquides
+    AUTRE = "AUTRE"  # Autre
+
+class SurveillanceResponsible(str, Enum):
+    MAINT = "MAINT"
+    PROD = "PROD"
+    QHSE = "QHSE"
+    EXTERNE = "EXTERNE"
+
+class SurveillanceItem(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    classe_type: str  # Ex: "Protection incendie", "Installations électriques"
+    category: SurveillanceCategory
+    batiment: str  # Ex: "BATIMENT 1", "BATIMENT 1 ET 2"
+    periodicite: str  # Ex: "6 mois", "1 an", "3 ans"
+    responsable: SurveillanceResponsible
+    executant: str  # Nom de l'exécutant (entreprise externe ou interne)
+    description: Optional[str] = None  # Description détaillée du contrôle
+    
+    # Dates et suivi
+    derniere_visite: Optional[str] = None  # Date ISO ou X
+    prochain_controle: Optional[str] = None  # Date ISO
+    status: SurveillanceItemStatus = SurveillanceItemStatus.PLANIFIER
+    date_realisation: Optional[str] = None  # Date de réalisation effective
+    
+    # Suivi mensuel (12 mois)
+    janvier: bool = False
+    fevrier: bool = False
+    mars: bool = False
+    avril: bool = False
+    mai: bool = False
+    juin: bool = False
+    juillet: bool = False
+    aout: bool = False
+    septembre: bool = False
+    octobre: bool = False
+    novembre: bool = False
+    decembre: bool = False
+    
+    # Documents et commentaires
+    commentaire: Optional[str] = None
+    piece_jointe_url: Optional[str] = None  # URL du fichier uploadé
+    piece_jointe_nom: Optional[str] = None  # Nom original du fichier
+    
+    # Alertes
+    alerte_envoyee: bool = False  # True si alerte d'échéance déjà envoyée
+    alerte_date: Optional[str] = None  # Date de la dernière alerte
+    
+    # Métadonnées
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+
+class SurveillanceItemCreate(BaseModel):
+    classe_type: str
+    category: SurveillanceCategory
+    batiment: str
+    periodicite: str
+    responsable: SurveillanceResponsible
+    executant: str
+    description: Optional[str] = None
+    derniere_visite: Optional[str] = None
+    prochain_controle: Optional[str] = None
+    commentaire: Optional[str] = None
+
+class SurveillanceItemUpdate(BaseModel):
+    classe_type: Optional[str] = None
+    category: Optional[SurveillanceCategory] = None
+    batiment: Optional[str] = None
+    periodicite: Optional[str] = None
+    responsable: Optional[SurveillanceResponsible] = None
+    executant: Optional[str] = None
+    description: Optional[str] = None
+    derniere_visite: Optional[str] = None
+    prochain_controle: Optional[str] = None
+    status: Optional[SurveillanceItemStatus] = None
+    date_realisation: Optional[str] = None
+    janvier: Optional[bool] = None
+    fevrier: Optional[bool] = None
+    mars: Optional[bool] = None
+    avril: Optional[bool] = None
+    mai: Optional[bool] = None
+    juin: Optional[bool] = None
+    juillet: Optional[bool] = None
+    aout: Optional[bool] = None
+    septembre: Optional[bool] = None
+    octobre: Optional[bool] = None
+    novembre: Optional[bool] = None
+    decembre: Optional[bool] = None
+    commentaire: Optional[str] = None
+    piece_jointe_url: Optional[str] = None
+    piece_jointe_nom: Optional[str] = None
+
+
