@@ -31,6 +31,7 @@ import RecentUpdatePopup from '../Common/RecentUpdatePopup';
 import InactivityHandler from '../Common/InactivityHandler';
 import TokenValidator from '../Common/TokenValidator';
 import { usePermissions } from '../../hooks/usePermissions';
+import { getBackendURL } from '../../utils/config';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
