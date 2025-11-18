@@ -4276,6 +4276,51 @@ agent_communication:
       - working: "NA"
         agent: "main"
         comment: |
+          NOUVEAU MODULE DOCUMENTATIONS IMPLÉMENTÉ - Test complet requis
+          
+          CONTEXTE:
+          Implémentation d'un module complet "Documentations" permettant de créer des Pôles de Service,
+          d'y attacher des documents (Word, PDF, Excel, photos), et de générer des Bons de Travail en ligne
+          basés sur un template Word dynamique.
+          
+          ENDPOINTS BACKEND IMPLÉMENTÉS:
+          1. Gestion des Pôles de Service:
+             - POST /api/documentations/poles - Créer un pôle de service
+             - GET /api/documentations/poles - Récupérer tous les pôles
+             - GET /api/documentations/poles/{pole_id} - Détails d'un pôle spécifique
+             - PUT /api/documentations/poles/{pole_id} - Mettre à jour un pôle
+             - DELETE /api/documentations/poles/{pole_id} - Supprimer un pôle
+          
+          2. Gestion des Documents attachés:
+             - POST /api/documentations/poles/{pole_id}/documents - Uploader un document
+             - GET /api/documentations/documents/{doc_id}/download - Télécharger un document
+             - DELETE /api/documentations/documents/{doc_id} - Supprimer un document
+          
+          3. Génération de Bons de Travail:
+             - POST /api/documentations/poles/{pole_id}/bon-de-travail - Générer un PDF de bon de travail
+             - Génération PDF à partir du template Word avec données du formulaire
+             - Retourne le PDF généré et l'URL de téléchargement
+          
+          MODÈLES DE DONNÉES:
+          - PoleService: nom, description, responsable, date_creation, documents[]
+          - ServiceDocument: nom_fichier, type_fichier, taille, url, date_upload, uploaded_by
+          - BonDeTravailForm: Formulaire dynamique avec champs personnalisables
+          
+          FONCTIONNALITÉS SPÉCIALES:
+          - Upload de fichiers avec support de multiples formats (DOCX, PDF, XLSX, XLS, JPG, PNG, etc.)
+          - Génération dynamique de PDF à partir de template Word
+          - Envoi par email via application par défaut (mailto: link)
+          - Audit logging complet des actions
+          
+          SÉCURITÉ:
+          - Authentification JWT requise pour tous les endpoints
+          - Permissions éditeur requises pour création/modification/suppression
+          - Validation des types de fichiers uploadés
+          - Gestion sécurisée des chemins de fichiers
+      
+      - working: "NA"
+        agent: "main"
+        comment: |
           NOUVEAU MODULE PRESQU'ACCIDENT IMPLÉMENTÉ - Test complet requis
           
           CONTEXTE:
