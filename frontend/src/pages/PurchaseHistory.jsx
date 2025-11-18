@@ -626,6 +626,9 @@ const PurchaseHistory = () => {
         purchase={selectedPurchase}
         onSuccess={loadData}
       />
+      
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   );
 };
