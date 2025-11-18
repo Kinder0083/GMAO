@@ -359,6 +359,129 @@ async def get_badge_stats(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.get("/rapport-stats")
+async def get_rapport_stats(current_user: dict = Depends(get_current_user)):
+    """
+    Récupérer les statistiques complètes pour la page Rapport
+    Inclut tous les KPIs : taux de réalisation par catégorie, bâtiment, périodicité, etc.
+    """
+    try:
+        items = await db.surveillance_items.find().to_list(length=None)
+        
+        total = len(items)
+        if total == 0:
+            return {
+                "global": {
+                    "total": 0,
+                    "realises": 0,
+                    "planifies": 0,
+                    "a_planifier": 0,
+                    "pourcentage_realisation": 0,
+                    "en_retard": 0,
+                    "a_temps": 0
+                },
+                "by_category": {},
+                "by_batiment": {},
+                "by_periodicite": {},
+                "by_responsable": {},
+                "anomalies": 0
+            }
+        
+        today = datetime.now(timezone.utc).date()
+        
+        # Statistiques globales
+        realises = [i for i in items if i.get("status") == SurveillanceItemStatus.REALISE.value]
+        planifies = [i for i in items if i.get("status") == SurveillanceItemStatus.PLANIFIE.value]
+        a_planifier = [i for i in items if i.get("status") == SurveillanceItemStatus.PLANIFIER.value]
+        
+        # Calculer les items en retard et à temps
+        en_retard = 0
+        a_temps = 0
+        for item in items:
+            if item.get("status") != SurveillanceItemStatus.REALISE.value and item.get("prochain_controle"):
+                try:
+                    prochain_controle = datetime.fromisoformat(item["prochain_controle"]).date()
+                    if prochain_controle < today:
+                        en_retard += 1
+                    else:
+                        a_temps += 1
+                except:
+                    pass
+        
+        # Compter les anomalies (items avec commentaires mentionnant des problèmes)
+        anomalies = 0
+        for item in items:
+            commentaire = item.get("commentaire", "").lower()
+            if any(keyword in commentaire for keyword in ["anomalie", "problème", "défaut", "dysfonctionnement", "intervention", "réparation"]):
+                anomalies += 1
+        
+        # Par catégorie
+        by_category = {}
+        for cat in SurveillanceCategory:
+            cat_items = [i for i in items if i.get("category") == cat.value]
+            cat_realises = len([i for i in cat_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
+            by_category[cat.value] = {
+                "total": len(cat_items),
+                "realises": cat_realises,
+                "pourcentage": round((cat_realises / len(cat_items) * 100) if cat_items else 0, 1)
+            }
+        
+        # Par bâtiment
+        by_batiment = {}
+        batiments = set([i.get("batiment", "Non spécifié") for i in items])
+        for bat in batiments:
+            bat_items = [i for i in items if i.get("batiment") == bat]
+            bat_realises = len([i for i in bat_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
+            by_batiment[bat] = {
+                "total": len(bat_items),
+                "realises": bat_realises,
+                "pourcentage": round((bat_realises / len(bat_items) * 100) if bat_items else 0, 1)
+            }
+        
+        # Par périodicité
+        by_periodicite = {}
+        periodicites = set([i.get("periodicite", "Non spécifié") for i in items])
+        for per in periodicites:
+            per_items = [i for i in items if i.get("periodicite") == per]
+            per_realises = len([i for i in per_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
+            by_periodicite[per] = {
+                "total": len(per_items),
+                "realises": per_realises,
+                "pourcentage": round((per_realises / len(per_items) * 100) if per_items else 0, 1)
+            }
+        
+        # Par responsable
+        by_responsable = {}
+        for resp in SurveillanceResponsible:
+            resp_items = [i for i in items if i.get("responsable") == resp.value]
+            resp_realises = len([i for i in resp_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
+            by_responsable[resp.value] = {
+                "total": len(resp_items),
+                "realises": resp_realises,
+                "pourcentage": round((resp_realises / len(resp_items) * 100) if resp_items else 0, 1)
+            }
+        
+        return {
+            "global": {
+                "total": total,
+                "realises": len(realises),
+                "planifies": len(planifies),
+                "a_planifier": len(a_planifier),
+                "pourcentage_realisation": round((len(realises) / total * 100), 1),
+                "en_retard": en_retard,
+                "a_temps": a_temps
+            },
+            "by_category": by_category,
+            "by_batiment": by_batiment,
+            "by_periodicite": by_periodicite,
+            "by_responsable": by_responsable,
+            "anomalies": anomalies
+        }
+    except Exception as e:
+        logger.error(f"Erreur récupération rapport stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ==================== Upload de pièces jointes ====================
 
 @router.post("/items/{item_id}/upload")
