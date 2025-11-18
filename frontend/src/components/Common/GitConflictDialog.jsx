@@ -19,44 +19,45 @@ const GitConflictDialog = ({ open, onClose, conflictData, onResolve }) => {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px]">
+      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center gap-3">
-            <div className="bg-orange-100 rounded-full p-2">
-              <AlertTriangle className="h-6 w-6 text-orange-600" />
+          <div className="flex items-center gap-4">
+            <div className="bg-orange-100 rounded-full p-3">
+              <AlertTriangle className="h-8 w-8 text-orange-600" />
             </div>
             <div>
-              <DialogTitle className="text-xl">Modifications locales détectées</DialogTitle>
-              <DialogDescription className="mt-1">
-                Des modifications ont été faites sur votre serveur et pourraient être écrasées
+              <DialogTitle className="text-2xl font-bold">Modifications locales détectées</DialogTitle>
+              <DialogDescription className="mt-2 text-base">
+                Des modifications ont été faites sur votre serveur et pourraient être écrasées par la mise à jour
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="py-4">
+        <div className="py-6 space-y-6">
           {/* Liste des fichiers modifiés */}
-          <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-4">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-              <FileWarning className="h-4 w-4 text-orange-600" />
+          <div className="bg-gray-50 border border-gray-200 rounded-lg p-5 shadow-sm">
+            <h4 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <FileWarning className="h-5 w-5 text-orange-600" />
               Fichiers modifiés ({modified_files.length})
             </h4>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
               {modified_files.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 text-sm">
-                  <div className="bg-orange-200 text-orange-800 px-2 py-0.5 rounded text-xs font-mono">
+                <div key={index} className="flex items-center gap-3 p-2 bg-white rounded hover:bg-gray-50 transition-colors">
+                  <div className="bg-orange-200 text-orange-800 px-3 py-1 rounded text-sm font-mono font-semibold min-w-[80px] text-center">
                     {file.status}
                   </div>
-                  <span className="text-gray-700 font-mono text-xs">{file.file}</span>
+                  <span className="text-gray-700 font-mono text-sm flex-1">{file.file}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Explication */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-900">
-              <strong>Que faire ?</strong> Vous avez 3 options pour gérer ces modifications avant de continuer la mise à jour :
+          <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-5 shadow-sm">
+            <p className="text-base text-blue-900 leading-relaxed">
+              <strong className="text-lg">Que faire ?</strong><br/>
+              <span className="mt-2 block">Vous avez 3 options pour gérer ces modifications avant de continuer la mise à jour :</span>
             </p>
           </div>
         </div>
