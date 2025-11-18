@@ -561,6 +561,9 @@ function PresquAccidentList() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }
