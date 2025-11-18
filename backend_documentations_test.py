@@ -77,6 +77,7 @@ class DocumentationsTester:
         try:
             pole_data = {
                 "nom": "Pôle Technique Test",
+                "pole": "MAINTENANCE",  # Required ServicePole enum
                 "description": "Pôle de test pour la documentation technique",
                 "responsable": "Jean Dupont"
             }
