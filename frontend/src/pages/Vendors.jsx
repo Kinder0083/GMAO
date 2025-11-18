@@ -326,6 +326,9 @@ const Vendors = () => {
         vendor={selectedVendor}
         onSuccess={loadVendors}
       />
+      
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   );
 };
