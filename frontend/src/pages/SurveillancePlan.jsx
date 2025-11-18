@@ -78,15 +78,22 @@ function SurveillancePlan() {
   };
 
   const handleDelete = async (itemId) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet item ?')) {
-      try {
-        await surveillanceAPI.deleteItem(itemId);
-        toast({ title: 'Succès', description: 'Item supprimé' });
-        loadData();
-      } catch (error) {
-        toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' });
+    confirm({
+      title: 'Supprimer l\'item',
+      description: 'Êtes-vous sûr de vouloir supprimer cet item ? Cette action est irréversible.',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await surveillanceAPI.deleteItem(itemId);
+          toast({ title: 'Succès', description: 'Item supprimé' });
+          loadData();
+        } catch (error) {
+          toast({ title: 'Erreur', description: 'Erreur lors de la suppression', variant: 'destructive' });
+        }
       }
-    }
+    });
   };
 
   const handleFormClose = (shouldRefresh) => {
