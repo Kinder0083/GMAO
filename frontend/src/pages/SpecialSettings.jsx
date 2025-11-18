@@ -628,6 +628,67 @@ const SpecialSettings = () => {
                 </div>
               </div>
 
+              {/* Section Adresses IP / URLs */}
+              <div className="mt-6 pt-6 border-t border-gray-200">
+                <h3 className="text-md font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                  <Globe className="h-5 w-5 text-gray-600" />
+                  Configuration des URLs de l'application
+                </h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Ces URLs sont utilisées pour les liens dans les emails et la sécurité CORS
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* URL Frontend */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      URL Frontend (Interface utilisateur) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={smtpConfig.frontend_url}
+                      onChange={(e) => setSmtpConfig({...smtpConfig, frontend_url: e.target.value})}
+                      placeholder="https://votre-domaine.com"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Exemple : https://maintenance-alert-2.preview.emergentagent.com
+                    </p>
+                  </div>
+
+                  {/* URL Backend */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      URL Backend (API) <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={smtpConfig.backend_url}
+                      onChange={(e) => setSmtpConfig({...smtpConfig, backend_url: e.target.value})}
+                      placeholder="https://votre-domaine.com"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Exemple : https://maintenance-alert-2.preview.emergentagent.com
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-amber-800">
+                      <p className="font-semibold mb-1">⚠️ Important :</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Ces URLs doivent correspondre au domaine ou à l'adresse IP de votre serveur</li>
+                        <li>Modifiez ces paramètres seulement si vous avez changé de domaine ou d'IP</li>
+                        <li>Un redémarrage de l'application peut être nécessaire après modification</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Utiliser TLS */}
               <div className="flex items-center gap-3">
                 <input
