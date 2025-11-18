@@ -5488,6 +5488,15 @@ init_presqu_accident_routes(db, audit_service)
 # Include presqu'accident routes
 api_router.include_router(presqu_accident_router)
 
+# Import documentations routes
+from documentations_routes import router as documentations_router, init_documentations_routes
+
+# Initialize documentations routes with database and audit service
+init_documentations_routes(db, audit_service)
+
+# Include documentations routes
+api_router.include_router(documentations_router)
+
 # Include the router in the main app (MUST be after all endpoint definitions)
 app.include_router(api_router)
 
