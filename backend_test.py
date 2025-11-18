@@ -702,13 +702,13 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_export_template(self):
-        """TEST 12: Tester GET /api/surveillance/export/template"""
-        self.log("🧪 TEST 12: Export du template CSV")
+    def test_presqu_accident_export_template(self):
+        """TEST 12: Tester GET /api/presqu-accident/export/template"""
+        self.log("🧪 TEST 12: Export du template CSV pour presqu'accidents")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/surveillance/export/template",
+                f"{BACKEND_URL}/presqu-accident/export/template",
                 timeout=10
             )
             
@@ -721,12 +721,20 @@ class PresquAccidentTester:
                 
                 # Vérifier que c'est bien un CSV
                 if 'csv' in content_type or content_length > 0:
-                    return True
+                    # Vérifier le contenu du template
+                    content = response.content.decode('utf-8-sig')
+                    if 'titre' in content and 'description' in content and 'service' in content:
+                        self.log("✅ Template contient les colonnes attendues (titre, description, service)")
+                        return True
+                    else:
+                        self.log("❌ Le template ne contient pas les colonnes attendues", "ERROR")
+                        return False
                 else:
                     self.log("❌ Le template ne semble pas être un CSV valide", "ERROR")
                     return False
             else:
                 self.log(f"❌ Export template échoué - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
