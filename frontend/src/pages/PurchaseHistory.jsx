@@ -90,13 +90,19 @@ const PurchaseHistory = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet achat ?')) {
-      try {
-        await purchaseHistoryAPI.delete(id);
-        toast({
-          title: 'Succès',
-          description: 'Achat supprimé'
-        });
+    confirm({
+      title: 'Supprimer l\'achat',
+      description: 'Êtes-vous sûr de vouloir supprimer cet achat ? Cette action est irréversible.',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await purchaseHistoryAPI.delete(id);
+          toast({
+            title: 'Succès',
+            description: 'Achat supprimé'
+          });
         loadData();
       } catch (error) {
         toast({
