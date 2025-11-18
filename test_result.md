@@ -4134,7 +4134,6 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Plan de Surveillance - API Rapport Stats /api/surveillance/rapport-stats"
     - "Plan de Surveillance - Page Rapport avec 3 modes d'affichage"
     - "Plan de Surveillance - Route et Navigation vers Rapport"
   stuck_tasks: []
