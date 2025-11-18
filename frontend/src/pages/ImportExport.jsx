@@ -26,6 +26,7 @@ const ImportExport = () => {
     { value: 'improvements', label: 'Améliorations' },
     { value: 'equipments', label: 'Équipements' },
     { value: 'meters', label: 'Compteurs' },
+    { value: 'surveillance-items', label: 'Plan de Surveillance' },
     { value: 'users', label: 'Utilisateurs (Équipes)' },
     { value: 'inventory', label: 'Inventaire' },
     { value: 'locations', label: 'Zones' },
