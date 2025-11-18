@@ -56,7 +56,7 @@ const Inscription = () => {
       setTokenValid(false);
       toast({
         title: 'Lien invalide',
-        description: formatErrorMessage(error, 'Ce lien d\')invitation est invalide ou expiré',
+        description: formatErrorMessage(error, 'Ce lien d\'invitation est invalide ou expiré'),
         variant: 'destructive'
       });
     } finally {
