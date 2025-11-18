@@ -772,37 +772,37 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_cleanup_surveillance_items(self):
-        """TEST 14: Nettoyer (supprimer les items de test restants)"""
-        self.log("🧪 TEST 14: Nettoyer (supprimer les items de test restants)")
+    def test_cleanup_presqu_accident_items(self):
+        """TEST 14: Nettoyer (supprimer les presqu'accidents de test restants)"""
+        self.log("🧪 TEST 14: Nettoyer (supprimer les presqu'accidents de test restants)")
         
         if not self.created_items:
-            self.log("⚠️ Pas d'items de surveillance de test à supprimer", "WARNING")
+            self.log("⚠️ Pas de presqu'accidents de test à supprimer", "WARNING")
             return True
         
         success_count = 0
         for item_id in self.created_items[:]:  # Copy to avoid modification during iteration
             try:
                 response = self.admin_session.delete(
-                    f"{BACKEND_URL}/surveillance/items/{item_id}",
+                    f"{BACKEND_URL}/presqu-accident/items/{item_id}",
                     timeout=10
                 )
                 
                 if response.status_code == 200:
-                    self.log(f"✅ Item {item_id} supprimé avec succès")
+                    self.log(f"✅ Presqu'accident {item_id} supprimé avec succès")
                     self.created_items.remove(item_id)
                     success_count += 1
                 elif response.status_code == 404:
-                    self.log(f"⚠️ Item {item_id} déjà supprimé (Status 404)")
+                    self.log(f"⚠️ Presqu'accident {item_id} déjà supprimé (Status 404)")
                     self.created_items.remove(item_id)
                     success_count += 1
                 else:
-                    self.log(f"❌ Suppression de l'item {item_id} échouée - Status: {response.status_code}", "ERROR")
+                    self.log(f"❌ Suppression du presqu'accident {item_id} échouée - Status: {response.status_code}", "ERROR")
                     
             except requests.exceptions.RequestException as e:
                 self.log(f"❌ Request failed for {item_id} - Error: {str(e)}", "ERROR")
         
-        self.log(f"✅ Nettoyage terminé: {success_count} items supprimés")
+        self.log(f"✅ Nettoyage terminé: {success_count} presqu'accidents supprimés")
         return success_count >= 0  # Toujours réussir le nettoyage
     
     def cleanup_remaining_surveillance_items(self):
