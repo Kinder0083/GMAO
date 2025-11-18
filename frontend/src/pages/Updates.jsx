@@ -13,12 +13,14 @@ import {
   Package
 } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
+import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import axios from 'axios';
 import { BACKEND_URL } from '../utils/config';
 import GitConflictDialog from '../components/Common/GitConflictDialog';
 
 const Updates = () => {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [currentVersion, setCurrentVersion] = useState('');
