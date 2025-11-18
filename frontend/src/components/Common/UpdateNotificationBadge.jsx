@@ -313,6 +313,9 @@ const UpdateNotificationBadge = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </>
   );
 };
