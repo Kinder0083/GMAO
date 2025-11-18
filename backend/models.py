@@ -229,6 +229,7 @@ def get_default_permissions_by_role(role: str) -> UserPermissions:
             inventory=ModulePermission(view=True, edit=True, delete=True),
             locations=ModulePermission(view=True, edit=True, delete=True),
             meters=ModulePermission(view=True, edit=True, delete=True),
+            surveillance=ModulePermission(view=True, edit=True, delete=True),
             vendors=ModulePermission(view=True, edit=True, delete=True),
             reports=ModulePermission(view=True, edit=False, delete=False),
             people=ModulePermission(view=True, edit=False, delete=False),
