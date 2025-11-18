@@ -449,8 +449,8 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_badge_stats_without_auth(self):
-        """TEST SÉCURITÉ: Tester GET /api/surveillance/badge-stats SANS authentification"""
+    def test_presqu_accident_badge_stats_without_auth(self):
+        """TEST SÉCURITÉ: Tester GET /api/presqu-accident/badge-stats SANS authentification"""
         self.log("🧪 TEST SÉCURITÉ: Badge stats sans authentification")
         
         try:
@@ -458,7 +458,7 @@ class PresquAccidentTester:
             no_auth_session = requests.Session()
             
             response = no_auth_session.get(
-                f"{BACKEND_URL}/surveillance/badge-stats",
+                f"{BACKEND_URL}/presqu-accident/badge-stats",
                 timeout=10
             )
             
