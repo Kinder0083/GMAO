@@ -1143,6 +1143,7 @@ class SurveillanceItemCreate(BaseModel):
     derniere_visite: Optional[str] = None
     prochain_controle: Optional[str] = None
     commentaire: Optional[str] = None
+    duree_rappel_echeance: int = 30  # Durée en jours avant échéance pour l'alerte (défaut: 30)
 
 class SurveillanceItemUpdate(BaseModel):
     classe_type: Optional[str] = None
