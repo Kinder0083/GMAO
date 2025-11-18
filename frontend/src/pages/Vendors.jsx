@@ -39,17 +39,23 @@ const Vendors = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce fournisseur ?')) {
-      try {
-        await vendorsAPI.delete(id);
-        toast({
-          title: 'Succès',
-          description: 'Fournisseur supprimé'
-        });
-        loadVendors();
-      } catch (error) {
-        toast({
-          title: 'Erreur',
+    confirm({
+      title: 'Supprimer le fournisseur',
+      description: 'Êtes-vous sûr de vouloir supprimer ce fournisseur ? Cette action est irréversible.',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await vendorsAPI.delete(id);
+          toast({
+            title: 'Succès',
+            description: 'Fournisseur supprimé'
+          });
+          loadVendors();
+        } catch (error) {
+          toast({
+            title: 'Erreur',
           description: 'Impossible de supprimer le fournisseur',
           variant: 'destructive'
         });
