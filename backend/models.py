@@ -1062,6 +1062,8 @@ class SMTPConfig(BaseModel):
     smtp_from_email: str = ""
     smtp_from_name: str = "GMAO Iris"
     smtp_use_tls: bool = True
+    frontend_url: str = ""
+    backend_url: str = ""
 
 class SMTPConfigUpdate(BaseModel):
     smtp_host: Optional[str] = None
@@ -1071,6 +1073,8 @@ class SMTPConfigUpdate(BaseModel):
     smtp_from_email: Optional[str] = None
     smtp_from_name: Optional[str] = None
     smtp_use_tls: Optional[bool] = None
+    frontend_url: Optional[str] = None
+    backend_url: Optional[str] = None
 
 class SMTPTestRequest(BaseModel):
     test_email: EmailStr
