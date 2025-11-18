@@ -741,25 +741,26 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_delete_item(self):
-        """TEST 13: Tester DELETE /api/surveillance/items/{item_id} (Admin uniquement)"""
-        self.log("🧪 TEST 13: Supprimer un item de surveillance (Admin)")
+    def test_presqu_accident_delete_item(self):
+        """TEST 13: Tester DELETE /api/presqu-accident/items/{item_id} (Admin uniquement)"""
+        self.log("🧪 TEST 13: Supprimer un presqu'accident (Admin)")
         
         if not self.created_items:
-            self.log("⚠️ Pas d'items créés pour tester la suppression", "WARNING")
+            self.log("⚠️ Pas de presqu'accidents créés pour tester la suppression", "WARNING")
             return True  # Pas d'erreur si pas d'items
         
         try:
             item_id = self.created_items[-1]  # Prendre le dernier item créé
             
             response = self.admin_session.delete(
-                f"{BACKEND_URL}/surveillance/items/{item_id}",
+                f"{BACKEND_URL}/presqu-accident/items/{item_id}",
                 timeout=10
             )
             
             if response.status_code == 200:
                 data = response.json()
-                self.log(f"✅ Item supprimé - Message: {data.get('message')}")
+                self.log(f"✅ Presqu'accident supprimé - Message: {data.get('message')}")
+                self.log(f"✅ Succès: {data.get('success')}")
                 self.created_items.remove(item_id)  # Retirer de la liste
                 return True
             else:
