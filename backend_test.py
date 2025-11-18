@@ -324,6 +324,94 @@ class SurveillanceTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
+    def test_surveillance_badge_stats(self):
+        """TEST CRITIQUE: Tester GET /api/surveillance/badge-stats - Badge de notification du header"""
+        self.log("🧪 TEST CRITIQUE: Badge de notification - GET /api/surveillance/badge-stats")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/badge-stats",
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Vérifier que les champs requis sont présents
+                if "echeances_proches" not in data:
+                    self.log("❌ Champ 'echeances_proches' manquant dans la réponse", "ERROR")
+                    return False
+                
+                if "pourcentage_realisation" not in data:
+                    self.log("❌ Champ 'pourcentage_realisation' manquant dans la réponse", "ERROR")
+                    return False
+                
+                echeances_proches = data.get("echeances_proches")
+                pourcentage_realisation = data.get("pourcentage_realisation")
+                
+                # Vérifier les types de données
+                if not isinstance(echeances_proches, int):
+                    self.log(f"❌ 'echeances_proches' doit être un entier, reçu: {type(echeances_proches)}", "ERROR")
+                    return False
+                
+                if not isinstance(pourcentage_realisation, (int, float)):
+                    self.log(f"❌ 'pourcentage_realisation' doit être un nombre, reçu: {type(pourcentage_realisation)}", "ERROR")
+                    return False
+                
+                # Vérifier les valeurs logiques
+                if echeances_proches < 0:
+                    self.log(f"❌ 'echeances_proches' ne peut pas être négatif: {echeances_proches}", "ERROR")
+                    return False
+                
+                if not (0 <= pourcentage_realisation <= 100):
+                    self.log(f"❌ 'pourcentage_realisation' doit être entre 0 et 100: {pourcentage_realisation}", "ERROR")
+                    return False
+                
+                self.log(f"✅ Badge stats récupérées avec succès:")
+                self.log(f"  - Échéances proches: {echeances_proches}")
+                self.log(f"  - Pourcentage réalisation: {pourcentage_realisation}%")
+                
+                # Validation logique métier
+                self.log("✅ Validation des types de données: RÉUSSIE")
+                self.log("✅ Validation des valeurs logiques: RÉUSSIE")
+                self.log("✅ Structure de réponse JSON: CONFORME")
+                
+                return True
+            else:
+                self.log(f"❌ Badge stats échoué - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_surveillance_badge_stats_without_auth(self):
+        """TEST SÉCURITÉ: Tester GET /api/surveillance/badge-stats SANS authentification"""
+        self.log("🧪 TEST SÉCURITÉ: Badge stats sans authentification")
+        
+        try:
+            # Créer une session sans token d'authentification
+            no_auth_session = requests.Session()
+            
+            response = no_auth_session.get(
+                f"{BACKEND_URL}/surveillance/badge-stats",
+                timeout=10
+            )
+            
+            # Doit retourner 401 Unauthorized ou 403 Forbidden
+            if response.status_code in [401, 403]:
+                self.log(f"✅ Protection par authentification fonctionnelle - Status: {response.status_code}")
+                return True
+            else:
+                self.log(f"❌ SÉCURITÉ COMPROMISE - Endpoint accessible sans authentification - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
     def test_surveillance_upload(self):
         """TEST 11: Tester POST /api/surveillance/items/{item_id}/upload"""
         self.log("🧪 TEST 11: Upload d'une pièce jointe")
