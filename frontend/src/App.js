@@ -106,6 +106,8 @@ function App() {
             <Route path="improvements" element={<Improvements />} />
             <Route path="surveillance-plan" element={<SurveillancePlan />} />
             <Route path="surveillance-rapport" element={<SurveillanceRapport />} />
+            <Route path="presqu-accident" element={<PresquAccidentList />} />
+            <Route path="presqu-accident-rapport" element={<PresquAccidentRapport />} />
           </Route>
         </Routes>
       </BrowserRouter>
