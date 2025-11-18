@@ -355,4 +355,38 @@ export const surveillanceAPI = {
   }).then(res => res.data)
 };
 
+// ==================== PRESQU'ACCIDENT ====================
+export const presquAccidentAPI = {
+  // CRUD
+  getItems: (params) => api.get('/presqu-accident/items', { params }).then(res => res.data),
+  getItem: (id) => api.get(`/presqu-accident/items/${id}`).then(res => res.data),
+  createItem: (data) => api.post('/presqu-accident/items', data).then(res => res.data),
+  updateItem: (id, data) => api.put(`/presqu-accident/items/${id}`, data).then(res => res.data),
+  deleteItem: (id) => api.delete(`/presqu-accident/items/${id}`).then(res => res.data),
+  
+  // Upload
+  uploadFile: (id, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post(`/presqu-accident/items/${id}/upload`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    }).then(res => res.data);
+  },
+  
+  // Stats et alertes
+  getStats: () => api.get('/presqu-accident/stats').then(res => res.data),
+  getAlerts: () => api.get('/presqu-accident/alerts').then(res => res.data),
+  getBadgeStats: () => api.get('/presqu-accident/badge-stats').then(res => res.data),
+  getRapportStats: () => api.get('/presqu-accident/rapport-stats').then(res => res.data),
+  
+  // Import/Export
+  importData: (formData) => api.post('/presqu-accident/import', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }).then(res => res.data),
+  
+  exportTemplate: () => api.get('/presqu-accident/export/template', {
+    responseType: 'blob'
+  }).then(res => res.data)
+};
+
 export default api;
