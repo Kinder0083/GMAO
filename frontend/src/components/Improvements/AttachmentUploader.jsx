@@ -43,7 +43,7 @@ const AttachmentUploader = ({ workOrderId, onUploadComplete }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: formatErrorMessage(error, 'Impossible d\')uploader le fichier',
+        description: formatErrorMessage(error, 'Impossible d\'uploader le fichier'),
         variant: 'destructive'
       });
     } finally {
