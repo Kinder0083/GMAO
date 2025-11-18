@@ -98,6 +98,7 @@ def get_default_permissions_by_role(role: str) -> UserPermissions:
     
     # QHSE : Demande d'inter./Demandes d'amél. en visualisation et modification
     # Ordres de travail/Améliorations/Compteurs en visualisation seulement
+    # QHSE a accès complet au Plan de Surveillance (view + edit + delete)
     elif role == "QHSE":
         return UserPermissions(
             dashboard=ModulePermission(view=True, edit=False, delete=False),
@@ -110,6 +111,7 @@ def get_default_permissions_by_role(role: str) -> UserPermissions:
             inventory=ModulePermission(view=True, edit=False, delete=False),
             locations=ModulePermission(view=True, edit=False, delete=False),
             meters=ModulePermission(view=True, edit=False, delete=False),
+            surveillance=ModulePermission(view=True, edit=True, delete=True),
             vendors=ModulePermission(view=False, edit=False, delete=False),
             reports=ModulePermission(view=True, edit=False, delete=False),
             people=ModulePermission(view=False, edit=False, delete=False),
