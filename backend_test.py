@@ -118,21 +118,21 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_create_incendie_item(self):
-        """TEST 2: Créer item avec catégorie INCENDIE"""
-        return self.test_create_surveillance_item("INCENDIE", "Protection incendie", "BATIMENT 1", "MAINT")
+    def test_create_adv_item(self):
+        """TEST 2: Créer presqu'accident avec service ADV"""
+        return self.test_create_presqu_accident_item("ADV", "FAIBLE", "Bureau ADV", "ADV")
     
-    def test_create_electrique_item(self):
-        """TEST 3: Créer item avec catégorie ELECTRIQUE"""
-        return self.test_create_surveillance_item("ELECTRIQUE", "Installations électriques", "BATIMENT 2", "PROD")
+    def test_create_logistique_item(self):
+        """TEST 3: Créer presqu'accident avec service LOGISTIQUE"""
+        return self.test_create_presqu_accident_item("LOGISTIQUE", "MOYEN", "Entrepôt principal", "LOGISTIQUE")
     
-    def test_create_mmri_item(self):
-        """TEST 4: Créer item avec catégorie MMRI"""
-        return self.test_create_surveillance_item("MMRI", "Mesures de maîtrise des risques", "BATIMENT 1", "QHSE")
+    def test_create_production_item(self):
+        """TEST 4: Créer presqu'accident avec service PRODUCTION"""
+        return self.test_create_presqu_accident_item("PRODUCTION", "ELEVE", "Atelier de production", "PRODUCTION")
     
-    def test_create_securite_item(self):
-        """TEST 5: Créer item avec catégorie SECURITE_ENVIRONNEMENT"""
-        return self.test_create_surveillance_item("SECURITE_ENVIRONNEMENT", "Sécurité environnement", "BATIMENT 1 ET 2", "EXTERNE")
+    def test_create_qhse_item(self):
+        """TEST 5: Créer presqu'accident avec service QHSE"""
+        return self.test_create_presqu_accident_item("QHSE", "CRITIQUE", "Zone de sécurité", "QHSE")
     
     def test_surveillance_list_with_filters(self):
         """TEST 6: Tester GET /api/surveillance/items avec filtres"""
