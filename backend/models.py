@@ -1301,3 +1301,163 @@ class PresquAccidentItemUpdate(BaseModel):
     piece_jointe_nom: Optional[str] = None
 
 
+
+# ==================== DOCUMENTATIONS & PÔLES DE SERVICE ====================
+
+class DocumentType(str, Enum):
+    FORMULAIRE = "FORMULAIRE"  # Formulaire créé en ligne
+    PIECE_JOINTE = "PIECE_JOINTE"  # Document uploadé (PDF, Word, Excel, etc.)
+    TEMPLATE = "TEMPLATE"  # Template de formulaire
+
+class ServicePole(str, Enum):
+    MAINTENANCE = "MAINTENANCE"
+    PRODUCTION = "PRODUCTION"
+    QHSE = "QHSE"
+    LOGISTIQUE = "LOGISTIQUE"
+    LABO = "LABO"
+    ADV = "ADV"
+    INDUS = "INDUS"
+    DIRECTION = "DIRECTION"
+    RH = "RH"
+    AUTRE = "AUTRE"
+
+class PoleDeService(BaseModel):
+    """Pôle de Service - Conteneur pour les documents"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    nom: str  # Nom du pôle (ex: "Maintenance", "Production")
+    pole: ServicePole  # Type de pôle
+    description: Optional[str] = None
+    responsable: Optional[str] = None  # Responsable du pôle
+    couleur: Optional[str] = "#3b82f6"  # Couleur pour l'UI
+    icon: Optional[str] = "Folder"  # Icône Lucide React
+    
+    # Métadonnées
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: Optional[str] = None
+
+class Document(BaseModel):
+    """Document ou formulaire dans un pôle de service"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Informations de base
+    titre: str
+    description: Optional[str] = None
+    pole_id: str  # ID du pôle de service parent
+    type_document: DocumentType
+    
+    # Pour les pièces jointes
+    fichier_url: Optional[str] = None  # URL du fichier uploadé
+    fichier_nom: Optional[str] = None  # Nom original du fichier
+    fichier_type: Optional[str] = None  # MIME type
+    fichier_taille: Optional[int] = None  # Taille en bytes
+    
+    # Pour les formulaires en ligne
+    formulaire_data: Optional[dict] = None  # Structure JSON du formulaire
+    
+    # Métadonnées
+    version: str = "1.0"
+    statut: str = "ACTIF"  # ACTIF, ARCHIVE, BROUILLON
+    tags: List[str] = []
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: Optional[str] = None
+    updated_by: Optional[str] = None
+
+class BonDeTravail(BaseModel):
+    """Bon de Travail - Formulaire spécifique maintenance"""
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    
+    # Travaux à réaliser
+    localisation_ligne: str
+    description_travaux: str
+    nom_intervenants: str
+    
+    # Risques identifiés
+    risques_materiel: List[str] = []  # Checkboxes cochées
+    risques_materiel_autre: Optional[str] = None
+    
+    risques_autorisation: List[str] = []  # Point chaud, Espace confiné
+    
+    risques_produits: List[str] = []  # Toxique, Inflammable, etc.
+    
+    risques_environnement: List[str] = []  # Co-activité, Passage chariot, etc.
+    risques_environnement_autre: Optional[str] = None
+    
+    # Précautions à prendre
+    precautions_materiel: List[str] = []
+    precautions_materiel_autre: Optional[str] = None
+    
+    precautions_epi: List[str] = []  # Équipements de protection
+    precautions_epi_autre: Optional[str] = None
+    
+    precautions_environnement: List[str] = []
+    precautions_environnement_autre: Optional[str] = None
+    
+    # Engagement
+    date_engagement: str
+    nom_agent_maitrise: str
+    nom_representant: str
+    
+    # Métadonnées
+    pole_id: str  # Lié au pôle Maintenance
+    statut: str = "BROUILLON"  # BROUILLON, VALIDE, ENVOYE
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    created_by: Optional[str] = None
+
+# Models CRUD
+class PoleDeServiceCreate(BaseModel):
+    nom: str
+    pole: ServicePole
+    description: Optional[str] = None
+    responsable: Optional[str] = None
+    couleur: Optional[str] = "#3b82f6"
+    icon: Optional[str] = "Folder"
+
+class PoleDeServiceUpdate(BaseModel):
+    nom: Optional[str] = None
+    pole: Optional[ServicePole] = None
+    description: Optional[str] = None
+    responsable: Optional[str] = None
+    couleur: Optional[str] = None
+    icon: Optional[str] = None
+
+class DocumentCreate(BaseModel):
+    titre: str
+    description: Optional[str] = None
+    pole_id: str
+    type_document: DocumentType
+    formulaire_data: Optional[dict] = None
+    tags: List[str] = []
+
+class DocumentUpdate(BaseModel):
+    titre: Optional[str] = None
+    description: Optional[str] = None
+    type_document: Optional[DocumentType] = None
+    formulaire_data: Optional[dict] = None
+    statut: Optional[str] = None
+    tags: Optional[List[str]] = None
+
+class BonDeTravailCreate(BaseModel):
+    localisation_ligne: str
+    description_travaux: str
+    nom_intervenants: str
+    risques_materiel: List[str] = []
+    risques_materiel_autre: Optional[str] = None
+    risques_autorisation: List[str] = []
+    risques_produits: List[str] = []
+    risques_environnement: List[str] = []
+    risques_environnement_autre: Optional[str] = None
+    precautions_materiel: List[str] = []
+    precautions_materiel_autre: Optional[str] = None
+    precautions_epi: List[str] = []
+    precautions_epi_autre: Optional[str] = None
+    precautions_environnement: List[str] = []
+    precautions_environnement_autre: Optional[str] = None
+    date_engagement: str
+    nom_agent_maitrise: str
+    nom_representant: str
+    pole_id: str
+
+
