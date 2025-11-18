@@ -348,13 +348,13 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_alerts(self):
-        """TEST 10: Tester GET /api/surveillance/alerts"""
-        self.log("🧪 TEST 10: Récupérer les alertes d'échéance")
+    def test_presqu_accident_alerts(self):
+        """TEST 10: Tester GET /api/presqu-accident/alerts"""
+        self.log("🧪 TEST 10: Récupérer les alertes de presqu'accidents")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/surveillance/alerts",
+                f"{BACKEND_URL}/presqu-accident/alerts",
                 timeout=10
             )
             
@@ -367,7 +367,15 @@ class PresquAccidentTester:
                 
                 if count > 0:
                     for alert in alerts[:3]:  # Afficher les 3 premières
-                        self.log(f"  - {alert.get('classe_type')} (dans {alert.get('days_until')} jours)")
+                        urgence = alert.get('urgence', 'normal')
+                        titre = alert.get('titre', 'Sans titre')
+                        service = alert.get('service', 'N/A')
+                        self.log(f"  - {titre} ({service}) - Urgence: {urgence}")
+                        
+                        if alert.get('days_overdue'):
+                            self.log(f"    En retard de {alert.get('days_overdue')} jours")
+                        elif alert.get('days_until'):
+                            self.log(f"    Échéance dans {alert.get('days_until')} jours")
                 
                 return True
             else:
