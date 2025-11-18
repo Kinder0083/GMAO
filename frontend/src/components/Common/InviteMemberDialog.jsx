@@ -60,7 +60,7 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: formatErrorMessage(error, 'Impossible d\')envoyer l\'invitation',
+        description: formatErrorMessage(error, 'Impossible d\'envoyer l\'invitation'),
         variant: 'destructive'
       });
     } finally {
