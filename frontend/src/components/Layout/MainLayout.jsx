@@ -73,11 +73,14 @@ const MainLayout = () => {
         loadWorkOrdersCount(parsedUser.id);
         // Charger le nombre d'échéances dépassées
         loadOverdueCount();
+        // Charger les stats du badge de surveillance
+        loadSurveillanceBadgeStats();
         
         // Rafraîchir les notifications toutes les 60 secondes
         const intervalId = setInterval(() => {
           loadWorkOrdersCount(parsedUser.id);
           loadOverdueCount();
+          loadSurveillanceBadgeStats();
         }, 60000); // 60 secondes
         
         // Écouter les événements de création/modification/suppression
