@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '../components/ui/alert';
 import { Plus, Download, Upload, Bell } from 'lucide-react';
 import { surveillanceAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import ListView from '../components/Surveillance/ListView';
 import GridView from '../components/Surveillance/GridView';
 import CalendarView from '../components/Surveillance/CalendarView';
@@ -16,6 +17,7 @@ import SurveillanceItemForm from '../components/Surveillance/SurveillanceItemFor
 
 function SurveillancePlan() {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [stats, setStats] = useState(null);
