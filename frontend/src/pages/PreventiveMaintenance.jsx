@@ -89,17 +89,23 @@ const PreventiveMaintenance = () => {
   };
 
   const handleExecuteNow = async (pm) => {
-    if (window.confirm('Voulez-vous créer un ordre de travail pour cette maintenance ?')) {
-      try {
-        // Créer un ordre de travail basé sur la maintenance préventive
-        await workOrdersAPI.create({
-          titre: pm.titre,
-          description: `Maintenance préventive: ${pm.titre}`,
-          statut: 'OUVERT',
-          priorite: 'MOYENNE',
-          equipement_id: pm.equipement?.id,
-          assigne_a_id: pm.assigneA?.id,
-          tempsEstime: pm.duree,
+    confirm({
+      title: 'Créer un ordre de travail',
+      description: `Voulez-vous créer un ordre de travail pour la maintenance "${pm.titre}" ?`,
+      confirmText: 'Créer',
+      cancelText: 'Annuler',
+      variant: 'default',
+      onConfirm: async () => {
+        try {
+          // Créer un ordre de travail basé sur la maintenance préventive
+          await workOrdersAPI.create({
+            titre: pm.titre,
+            description: `Maintenance préventive: ${pm.titre}`,
+            statut: 'OUVERT',
+            priorite: 'MOYENNE',
+            equipement_id: pm.equipement?.id,
+            assigne_a_id: pm.assigneA?.id,
+            tempsEstime: pm.duree,
           dateLimite: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // +7 jours
         });
         
