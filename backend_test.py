@@ -637,8 +637,8 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_rapport_stats_without_auth(self):
-        """TEST SÉCURITÉ: Tester GET /api/surveillance/rapport-stats SANS authentification"""
+    def test_presqu_accident_rapport_stats_without_auth(self):
+        """TEST SÉCURITÉ: Tester GET /api/presqu-accident/rapport-stats SANS authentification"""
         self.log("🧪 TEST SÉCURITÉ: Rapport stats sans authentification")
         
         try:
@@ -646,7 +646,7 @@ class PresquAccidentTester:
             no_auth_session = requests.Session()
             
             response = no_auth_session.get(
-                f"{BACKEND_URL}/surveillance/rapport-stats",
+                f"{BACKEND_URL}/presqu-accident/rapport-stats",
                 timeout=10
             )
             
