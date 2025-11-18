@@ -38,6 +38,7 @@ const PermissionsGrid = ({ role, permissions, onChange }) => {
     { key: 'meters', label: 'Compteurs' },
     { key: 'surveillance', label: 'Plan de Surveillance' },
     { key: 'presquaccident', label: 'Presqu\'accident' },
+    { key: 'documentations', label: 'Documentations' },
     { key: 'vendors', label: 'Fournisseurs' },
     { key: 'reports', label: 'Rapports' },
     { key: 'people', label: 'Équipes' },
