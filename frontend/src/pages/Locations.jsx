@@ -6,9 +6,11 @@ import { Plus, Search, MapPin, Pencil, Trash2, LayoutGrid, List, ChevronRight, C
 import LocationFormDialog from '../components/Locations/LocationFormDialog';
 import { locationsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import { useConfirmDialog } from '../components/ui/confirm-dialog';
 
 const Locations = () => {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [locations, setLocations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
