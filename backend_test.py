@@ -475,13 +475,13 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_rapport_stats(self):
-        """TEST CRITIQUE: Tester GET /api/surveillance/rapport-stats - Statistiques complètes pour la page Rapport"""
-        self.log("🧪 TEST CRITIQUE: Statistiques Rapport - GET /api/surveillance/rapport-stats")
+    def test_presqu_accident_rapport_stats(self):
+        """TEST CRITIQUE: Tester GET /api/presqu-accident/rapport-stats - Statistiques complètes pour la page Rapport"""
+        self.log("🧪 TEST CRITIQUE: Statistiques Rapport - GET /api/presqu-accident/rapport-stats")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/surveillance/rapport-stats",
+                f"{BACKEND_URL}/presqu-accident/rapport-stats",
                 timeout=10
             )
             
@@ -489,7 +489,7 @@ class PresquAccidentTester:
                 data = response.json()
                 
                 # Vérifier la structure de réponse JSON
-                required_keys = ["global", "by_category", "by_batiment", "by_periodicite", "by_responsable", "anomalies"]
+                required_keys = ["global", "by_service", "by_severite", "by_lieu", "by_month"]
                 for key in required_keys:
                     if key not in data:
                         self.log(f"❌ Champ '{key}' manquant dans la réponse", "ERROR")
@@ -497,7 +497,7 @@ class PresquAccidentTester:
                 
                 # Vérifier la structure des statistiques globales
                 global_stats = data.get("global", {})
-                global_required = ["total", "realises", "planifies", "a_planifier", "pourcentage_realisation", "en_retard", "a_temps"]
+                global_required = ["total", "a_traiter", "en_cours", "termine", "archive", "pourcentage_traitement", "delai_moyen_traitement", "en_retard"]
                 for key in global_required:
                     if key not in global_stats:
                         self.log(f"❌ Champ 'global.{key}' manquant dans la réponse", "ERROR")
@@ -508,59 +508,56 @@ class PresquAccidentTester:
                     self.log(f"❌ 'global.total' doit être un entier, reçu: {type(global_stats.get('total'))}", "ERROR")
                     return False
                 
-                if not isinstance(global_stats.get("realises"), int):
-                    self.log(f"❌ 'global.realises' doit être un entier, reçu: {type(global_stats.get('realises'))}", "ERROR")
+                if not isinstance(global_stats.get("a_traiter"), int):
+                    self.log(f"❌ 'global.a_traiter' doit être un entier, reçu: {type(global_stats.get('a_traiter'))}", "ERROR")
                     return False
                 
-                if not isinstance(global_stats.get("planifies"), int):
-                    self.log(f"❌ 'global.planifies' doit être un entier, reçu: {type(global_stats.get('planifies'))}", "ERROR")
+                if not isinstance(global_stats.get("en_cours"), int):
+                    self.log(f"❌ 'global.en_cours' doit être un entier, reçu: {type(global_stats.get('en_cours'))}", "ERROR")
                     return False
                 
-                if not isinstance(global_stats.get("a_planifier"), int):
-                    self.log(f"❌ 'global.a_planifier' doit être un entier, reçu: {type(global_stats.get('a_planifier'))}", "ERROR")
+                if not isinstance(global_stats.get("termine"), int):
+                    self.log(f"❌ 'global.termine' doit être un entier, reçu: {type(global_stats.get('termine'))}", "ERROR")
+                    return False
+                
+                if not isinstance(global_stats.get("archive"), int):
+                    self.log(f"❌ 'global.archive' doit être un entier, reçu: {type(global_stats.get('archive'))}", "ERROR")
                     return False
                 
                 if not isinstance(global_stats.get("en_retard"), int):
                     self.log(f"❌ 'global.en_retard' doit être un entier, reçu: {type(global_stats.get('en_retard'))}", "ERROR")
                     return False
                 
-                if not isinstance(global_stats.get("a_temps"), int):
-                    self.log(f"❌ 'global.a_temps' doit être un entier, reçu: {type(global_stats.get('a_temps'))}", "ERROR")
+                if not isinstance(global_stats.get("delai_moyen_traitement"), int):
+                    self.log(f"❌ 'global.delai_moyen_traitement' doit être un entier, reçu: {type(global_stats.get('delai_moyen_traitement'))}", "ERROR")
                     return False
                 
-                if not isinstance(global_stats.get("pourcentage_realisation"), (int, float)):
-                    self.log(f"❌ 'global.pourcentage_realisation' doit être un nombre, reçu: {type(global_stats.get('pourcentage_realisation'))}", "ERROR")
-                    return False
-                
-                if not isinstance(data.get("anomalies"), int):
-                    self.log(f"❌ 'anomalies' doit être un entier, reçu: {type(data.get('anomalies'))}", "ERROR")
+                if not isinstance(global_stats.get("pourcentage_traitement"), (int, float)):
+                    self.log(f"❌ 'global.pourcentage_traitement' doit être un nombre, reçu: {type(global_stats.get('pourcentage_traitement'))}", "ERROR")
                     return False
                 
                 # Vérifier les valeurs logiques
                 total = global_stats.get("total", 0)
-                realises = global_stats.get("realises", 0)
-                planifies = global_stats.get("planifies", 0)
-                a_planifier = global_stats.get("a_planifier", 0)
-                pourcentage = global_stats.get("pourcentage_realisation", 0)
+                termine = global_stats.get("termine", 0)
+                pourcentage = global_stats.get("pourcentage_traitement", 0)
                 
                 # Validation mathématique
                 if total > 0:
-                    calculated_percentage = round((realises / total * 100), 1)
+                    calculated_percentage = round((termine / total * 100), 1)
                     if abs(calculated_percentage - pourcentage) > 0.1:
                         self.log(f"❌ Calcul pourcentage incorrect: attendu {calculated_percentage}%, reçu {pourcentage}%", "ERROR")
                         return False
                 
                 # Vérifier que le pourcentage est entre 0 et 100
                 if not (0 <= pourcentage <= 100):
-                    self.log(f"❌ 'pourcentage_realisation' doit être entre 0 et 100: {pourcentage}", "ERROR")
+                    self.log(f"❌ 'pourcentage_traitement' doit être entre 0 et 100: {pourcentage}", "ERROR")
                     return False
                 
-                # Vérifier les structures par catégorie, bâtiment, etc.
+                # Vérifier les structures par service, sévérité, etc.
                 for section_name, section_data in [
-                    ("by_category", data.get("by_category", {})),
-                    ("by_batiment", data.get("by_batiment", {})),
-                    ("by_periodicite", data.get("by_periodicite", {})),
-                    ("by_responsable", data.get("by_responsable", {}))
+                    ("by_service", data.get("by_service", {})),
+                    ("by_severite", data.get("by_severite", {})),
+                    ("by_lieu", data.get("by_lieu", {}))
                 ]:
                     if not isinstance(section_data, dict):
                         self.log(f"❌ '{section_name}' doit être un dictionnaire", "ERROR")
@@ -572,7 +569,7 @@ class PresquAccidentTester:
                             self.log(f"❌ '{section_name}.{key}' doit être un dictionnaire", "ERROR")
                             return False
                         
-                        required_sub_keys = ["total", "realises", "pourcentage"]
+                        required_sub_keys = ["total", "termine", "pourcentage"]
                         for sub_key in required_sub_keys:
                             if sub_key not in value:
                                 self.log(f"❌ Champ '{section_name}.{key}.{sub_key}' manquant", "ERROR")
@@ -583,8 +580,8 @@ class PresquAccidentTester:
                             self.log(f"❌ '{section_name}.{key}.total' doit être un entier", "ERROR")
                             return False
                         
-                        if not isinstance(value.get("realises"), int):
-                            self.log(f"❌ '{section_name}.{key}.realises' doit être un entier", "ERROR")
+                        if not isinstance(value.get("termine"), int):
+                            self.log(f"❌ '{section_name}.{key}.termine' doit être un entier", "ERROR")
                             return False
                         
                         if not isinstance(value.get("pourcentage"), (int, float)):
@@ -597,21 +594,32 @@ class PresquAccidentTester:
                             self.log(f"❌ '{section_name}.{key}.pourcentage' doit être entre 0 et 100: {sub_pourcentage}", "ERROR")
                             return False
                 
+                # Vérifier by_month (structure différente)
+                by_month = data.get("by_month", {})
+                if not isinstance(by_month, dict):
+                    self.log("❌ 'by_month' doit être un dictionnaire", "ERROR")
+                    return False
+                
+                for month_key, count in by_month.items():
+                    if not isinstance(count, int):
+                        self.log(f"❌ 'by_month.{month_key}' doit être un entier", "ERROR")
+                        return False
+                
                 self.log(f"✅ Rapport stats récupérées avec succès:")
                 self.log(f"  - Total: {global_stats.get('total')}")
-                self.log(f"  - Réalisés: {global_stats.get('realises')}")
-                self.log(f"  - Planifiés: {global_stats.get('planifies')}")
-                self.log(f"  - À planifier: {global_stats.get('a_planifier')}")
-                self.log(f"  - % réalisation: {global_stats.get('pourcentage_realisation')}%")
+                self.log(f"  - À traiter: {global_stats.get('a_traiter')}")
+                self.log(f"  - En cours: {global_stats.get('en_cours')}")
+                self.log(f"  - Terminé: {global_stats.get('termine')}")
+                self.log(f"  - Archivé: {global_stats.get('archive')}")
+                self.log(f"  - % traitement: {global_stats.get('pourcentage_traitement')}%")
+                self.log(f"  - Délai moyen traitement: {global_stats.get('delai_moyen_traitement')} jours")
                 self.log(f"  - En retard: {global_stats.get('en_retard')}")
-                self.log(f"  - À temps: {global_stats.get('a_temps')}")
-                self.log(f"  - Anomalies: {data.get('anomalies')}")
                 
                 # Afficher les statistiques par section
-                self.log(f"✅ Statistiques par catégorie: {len(data.get('by_category', {}))} catégories")
-                self.log(f"✅ Statistiques par bâtiment: {len(data.get('by_batiment', {}))} bâtiments")
-                self.log(f"✅ Statistiques par périodicité: {len(data.get('by_periodicite', {}))} périodicités")
-                self.log(f"✅ Statistiques par responsable: {len(data.get('by_responsable', {}))} responsables")
+                self.log(f"✅ Statistiques par service: {len(data.get('by_service', {}))} services")
+                self.log(f"✅ Statistiques par sévérité: {len(data.get('by_severite', {}))} niveaux")
+                self.log(f"✅ Statistiques par lieu: {len(data.get('by_lieu', {}))} lieux")
+                self.log(f"✅ Statistiques par mois: {len(data.get('by_month', {}))} mois")
                 
                 # Validation logique métier
                 self.log("✅ Validation de la structure JSON: CONFORME")
