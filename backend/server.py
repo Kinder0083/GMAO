@@ -280,6 +280,15 @@ async def register(user_create: UserCreate):
     
     return User(**serialize_doc(user_dict))
 
+@api_router.get("/version")
+async def get_version():
+    """Obtenir la version actuelle de l'application (endpoint public)"""
+    return {
+        "version": "1.5.0",
+        "versionName": "Rapport de Surveillance Avancé",
+        "releaseDate": "2025-01-18"
+    }
+
 @api_router.post("/auth/login", response_model=Token)
 async def login(login_request: LoginRequest):
     """Se connecter et obtenir un token JWT"""
