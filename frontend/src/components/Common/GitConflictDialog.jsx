@@ -99,10 +99,10 @@ const GitConflictDialog = ({ open, onClose, conflictData, onResolve }) => {
             variant="outline"
             className="w-full justify-start py-6 px-5 h-auto hover:shadow-lg transition-all"
           >
-            <X className="h-4 w-4 mr-2" />
+            <X className="h-6 w-6 mr-3 flex-shrink-0" />
             <div className="text-left flex-1">
-              <div className="font-semibold">Annuler la mise à jour</div>
-              <div className="text-xs font-normal text-gray-600">
+              <div className="font-bold text-base mb-1">Annuler la mise à jour</div>
+              <div className="text-sm font-normal text-gray-600 leading-relaxed">
                 Garder mes modifications et ne pas faire la mise à jour maintenant
               </div>
             </div>
