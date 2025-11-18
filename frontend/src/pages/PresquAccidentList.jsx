@@ -14,6 +14,8 @@ import { useConfirmDialog } from '../components/ui/confirm-dialog';
 
 function PresquAccidentList() {
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
+  const importInputRef = useRef(null);
   const [items, setItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
   const [stats, setStats] = useState(null);
