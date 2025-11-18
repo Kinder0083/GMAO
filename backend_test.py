@@ -664,7 +664,7 @@ class SurveillanceTester:
         # Test 16: Cleanup
         results["test_cleanup_surveillance_items"] = self.test_cleanup_surveillance_items()
         
-        # Test 15: Final cleanup
+        # Test 17: Final cleanup
         results["cleanup_remaining"] = self.cleanup_remaining_surveillance_items()
         
         # Summary
