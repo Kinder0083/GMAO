@@ -81,23 +81,24 @@ const UpdateNotificationBadge = () => {
   const handleApplyUpdate = async () => {
     if (!updateInfo) return;
 
-    const confirmed = window.confirm(
-      `⚠️ ATTENTION ⚠️\n\n` +
-      `Vous allez installer la version ${updateInfo.new_version || updateInfo.version}.\n\n` +
-      `Cette opération va:\n` +
-      `• Créer une sauvegarde complète de la base de données\n` +
-      `• Exporter toutes les données en Excel\n` +
-      `• Télécharger la mise à jour depuis GitHub\n` +
-      `• Redémarrer tous les services\n\n` +
-      `L'application sera indisponible pendant quelques minutes.\n\n` +
-      `Voulez-vous continuer ?`
-    );
+    confirm({
+      title: '⚠️ ATTENTION - Installation de la mise à jour',
+      description: 
+        `Vous allez installer la version ${updateInfo.new_version || updateInfo.version}.\n\n` +
+        `Cette opération va:\n` +
+        `• Créer une sauvegarde complète de la base de données\n` +
+        `• Exporter toutes les données en Excel\n` +
+        `• Télécharger la mise à jour depuis GitHub\n` +
+        `• Redémarrer tous les services\n\n` +
+        `L'application sera indisponible pendant quelques minutes.\n\n` +
+        `Voulez-vous continuer ?`,
+      confirmText: 'Installer',
+      cancelText: 'Annuler',
+      variant: 'default',
+      onConfirm: async () => {
+        setIsApplying(true);
 
-    if (!confirmed) return;
-
-    setIsApplying(true);
-
-    try {
+        try {
       const token = localStorage.getItem('token');
       const version = updateInfo.new_version || updateInfo.version;
       
