@@ -51,25 +51,32 @@ const PurchaseHistory = () => {
   };
 
   const handleDeleteAll = async () => {
-    if (window.confirm('⚠️ ATTENTION ! Êtes-vous sûr de vouloir supprimer TOUT l\'historique d\'achat ? Cette action est irréversible !')) {
-      try {
-        console.log('Début suppression de tout l\'historique...');
-        const result = await purchaseHistoryAPI.deleteAll();
-        console.log('Résultat suppression:', result);
-        toast({
-          title: 'Succès',
-          description: `${result.data.deleted_count} achats supprimés`
-        });
-        loadData();
-      } catch (error) {
-        console.error('Erreur lors de la suppression:', error);
-        toast({
-          title: 'Erreur',
-          description: error.response?.data?.detail || 'Impossible de supprimer l\'historique',
-          variant: 'destructive'
-        });
+    confirm({
+      title: '⚠️ ATTENTION - Suppression totale',
+      description: 'Êtes-vous sûr de vouloir supprimer TOUT l\'historique d\'achat ?\n\nCette action est irréversible et supprimera définitivement toutes les données.',
+      confirmText: 'Supprimer tout',
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          console.log('Début suppression de tout l\'historique...');
+          const result = await purchaseHistoryAPI.deleteAll();
+          console.log('Résultat suppression:', result);
+          toast({
+            title: 'Succès',
+            description: `${result.data.deleted_count} achats supprimés`
+          });
+          loadData();
+        } catch (error) {
+          console.error('Erreur lors de la suppression:', error);
+          toast({
+            title: 'Erreur',
+            description: error.response?.data?.detail || 'Impossible de supprimer l\'historique',
+            variant: 'destructive'
+          });
+        }
       }
-    }
+    });
   };
 
   const toggleExpand = (numeroCommande) => {
