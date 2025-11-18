@@ -72,7 +72,7 @@ const PurchaseHistory = () => {
           console.error('Erreur lors de la suppression:', error);
           toast({
             title: 'Erreur',
-            description: formatErrorMessage(error, 'Impossible de supprimer l\')historique',
+            description: formatErrorMessage(error, 'Impossible de supprimer l\'historique'),
             variant: 'destructive'
           });
         }
