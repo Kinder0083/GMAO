@@ -1124,6 +1124,7 @@ class SurveillanceItem(BaseModel):
     # Alertes
     alerte_envoyee: bool = False  # True si alerte d'échéance déjà envoyée
     alerte_date: Optional[str] = None  # Date de la dernière alerte
+    duree_rappel_echeance: int = 30  # Durée en jours avant échéance pour déclencher l'alerte (défaut: 30)
     
     # Métadonnées
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
