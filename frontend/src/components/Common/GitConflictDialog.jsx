@@ -62,17 +62,17 @@ const GitConflictDialog = ({ open, onClose, conflictData, onResolve }) => {
           </div>
         </div>
 
-        <DialogFooter className="flex-col sm:flex-col gap-3">
+        <DialogFooter className="flex-col sm:flex-col gap-4 mt-4">
           {/* Option 1 : Écraser */}
           <Button
             onClick={() => handleResolve('reset')}
             variant="destructive"
-            className="w-full justify-start"
+            className="w-full justify-start py-6 px-5 h-auto hover:shadow-lg transition-all"
           >
-            <Trash2 className="h-4 w-4 mr-2" />
+            <Trash2 className="h-6 w-6 mr-3 flex-shrink-0" />
             <div className="text-left flex-1">
-              <div className="font-semibold">Écraser mes modifications</div>
-              <div className="text-xs font-normal opacity-90">
+              <div className="font-bold text-base mb-1">Écraser mes modifications</div>
+              <div className="text-sm font-normal opacity-90 leading-relaxed">
                 Supprimer mes changements et appliquer la mise à jour (recommandé si les modifications ne sont pas importantes)
               </div>
             </div>
@@ -82,12 +82,12 @@ const GitConflictDialog = ({ open, onClose, conflictData, onResolve }) => {
           <Button
             onClick={() => handleResolve('stash')}
             variant="outline"
-            className="w-full justify-start border-green-300 hover:bg-green-50"
+            className="w-full justify-start py-6 px-5 h-auto border-2 border-green-400 hover:bg-green-50 hover:shadow-lg transition-all"
           >
-            <Save className="h-4 w-4 mr-2 text-green-600" />
+            <Save className="h-6 w-6 mr-3 text-green-600 flex-shrink-0" />
             <div className="text-left flex-1">
-              <div className="font-semibold">Sauvegarder puis mettre à jour</div>
-              <div className="text-xs font-normal text-gray-600">
+              <div className="font-bold text-base mb-1 text-gray-900">Sauvegarder puis mettre à jour</div>
+              <div className="text-sm font-normal text-gray-600 leading-relaxed">
                 Sauvegarder temporairement mes modifications (git stash) puis appliquer la mise à jour
               </div>
             </div>
@@ -97,7 +97,7 @@ const GitConflictDialog = ({ open, onClose, conflictData, onResolve }) => {
           <Button
             onClick={() => handleResolve('abort')}
             variant="outline"
-            className="w-full justify-start"
+            className="w-full justify-start py-6 px-5 h-auto hover:shadow-lg transition-all"
           >
             <X className="h-4 w-4 mr-2" />
             <div className="text-left flex-1">
