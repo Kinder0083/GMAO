@@ -238,6 +238,9 @@ function SurveillancePlan() {
       {openForm && (
         <SurveillanceItemForm open={openForm} item={selectedItem} onClose={handleFormClose} />
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog />
     </div>
   );
 }
