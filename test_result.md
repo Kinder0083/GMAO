@@ -3853,3 +3853,257 @@ agent_communication:
       
       ➡️ **RECOMMANDATION**: Le main agent peut maintenant procéder à l'intégration frontend du badge de notification ou marquer cette tâche comme terminée.
 
+
+  - task: "Plan de Surveillance - API Rapport Stats /api/surveillance/rapport-stats"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/surveillance_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ NOUVELLE API ENDPOINT - RAPPORT STATISTIQUES COMPLET
+          
+          📋 FONCTIONNALITÉ:
+          Nouvel endpoint GET /api/surveillance/rapport-stats qui calcule et retourne toutes les statistiques pour la page Rapport du Plan de Surveillance.
+          
+          📊 DONNÉES RETOURNÉES:
+          1. **Statistiques globales (global)**:
+             - total: nombre total d'items
+             - realises: nombre d'items réalisés
+             - planifies: nombre d'items planifiés
+             - a_planifier: nombre d'items à planifier
+             - pourcentage_realisation: taux global de réalisation (0-100)
+             - en_retard: items dont la date de prochain contrôle est dépassée
+             - a_temps: items dans les délais
+          
+          2. **Statistiques par catégorie (by_category)**:
+             - Pour chaque catégorie (MMRI, INCENDIE, ELECTRIQUE, etc.)
+             - total, realises, pourcentage par catégorie
+          
+          3. **Statistiques par bâtiment (by_batiment)**:
+             - Pour chaque bâtiment (BATIMENT 1, BATIMENT 2, etc.)
+             - total, realises, pourcentage par bâtiment
+          
+          4. **Statistiques par périodicité (by_periodicite)**:
+             - Pour chaque périodicité (Mensuel, Trimestriel, Semestriel, etc.)
+             - total, realises, pourcentage par périodicité
+          
+          5. **Statistiques par responsable (by_responsable)**:
+             - Pour chaque responsable (MAINT, PROD, etc.)
+             - total, realises, pourcentage par responsable
+          
+          6. **Nombre d'anomalies (anomalies)**:
+             - Comptage des items avec des mots-clés d'anomalie dans les commentaires
+          
+          🔧 IMPLÉMENTATION:
+          - Endpoint ajouté dans /app/backend/surveillance_routes.py après l'endpoint badge-stats
+          - Calculs complexes avec agrégation de données
+          - Gestion des cas où aucun item n'existe (retour de valeurs par défaut)
+          - Utilisation de datetime pour les calculs de retard
+          - Protection par authentification JWT (Depends(get_current_user))
+          
+          📝 À TESTER:
+          1. GET /api/surveillance/rapport-stats avec authentification
+          2. Structure de réponse JSON (6 sections)
+          3. Calculs corrects pour chaque section
+          4. Gestion du cas avec 0 items
+          5. Gestion du cas avec items en retard vs à temps
+          6. Comptage d'anomalies basé sur les mots-clés
+
+  - task: "Plan de Surveillance - Service API frontend getRapportStats"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/services/api.js"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ SERVICE API FRONTEND AJOUTÉ
+          
+          Fonction getRapportStats() ajoutée dans surveillanceAPI:
+          - Appelle GET /api/surveillance/rapport-stats
+          - Retourne la promesse avec les données
+          - Gestion automatique du token JWT via intercepteur axios
+          
+          Localisation: /app/frontend/src/services/api.js, ligne ~346
+
+frontend:
+  - task: "Plan de Surveillance - Page Rapport avec 3 modes d'affichage"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/SurveillanceRapport.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ NOUVELLE PAGE - RAPPORT PLAN DE SURVEILLANCE AVEC 3 MODES D'AFFICHAGE
+          
+          📄 FICHIER CRÉÉ:
+          /app/frontend/src/pages/SurveillanceRapport.jsx (composant complet de 700+ lignes)
+          
+          🎨 FONCTIONNALITÉS IMPLÉMENTÉES:
+          
+          1. **Sélecteur de mode d'affichage** (sauvegardé dans localStorage):
+             - 🟦 Mode Cartes (cards): Affichage en grille de cartes colorées avec barres de progression
+             - 📊 Mode Tableau (table): Affichage en tableaux HTML détaillés
+             - 📈 Mode Graphiques (charts): Graphiques interactifs (camembert + barres)
+          
+          2. **Statistiques globales** (toujours affichées en haut):
+             - Card "Taux de réalisation global" (vert)
+             - Card "Contrôles en retard" (rouge)
+             - Card "Contrôles à temps" (bleu)
+             - Card "Anomalies détectées" (orange)
+          
+          3. **Mode Cartes (CardsDisplay)**:
+             - Section "Taux de réalisation par catégorie"
+             - Section "Taux de réalisation par bâtiment"
+             - Section "Taux de réalisation par périodicité"
+             - Cartes colorées avec bordure gauche (bleu, violet, vert)
+             - Barres de progression horizontales
+          
+          4. **Mode Tableau (TableDisplay)**:
+             - Tableau détaillé par catégorie (colonnes: Catégorie, Total, Réalisés, Taux, Progression)
+             - Tableau détaillé par bâtiment
+             - Tableau détaillé par périodicité
+             - Barres de progression dans chaque ligne
+             - Hover effects sur les lignes
+          
+          5. **Mode Graphiques (ChartsDisplay)**:
+             - Graphique camembert (ResponsivePie) pour catégories
+             - Graphique barres (ResponsiveBar) pour taux par catégorie
+             - Graphique barres pour bâtiments
+             - Graphique barres pour périodicités
+             - Utilisation de @nivo/pie et @nivo/bar
+             - Légendes et axes configurés
+          
+          🔧 INTÉGRATIONS:
+          - Appel API surveillanceAPI.getRapportStats() au chargement
+          - useState pour gérer displayMode et stats
+          - useEffect pour sauvegarder le mode choisi dans localStorage
+          - Toast pour les erreurs
+          - Loading state pendant le chargement
+          
+          📦 COMPOSANTS UI UTILISÉS:
+          - Card, CardContent, CardHeader, CardTitle
+          - Button, Select, SelectContent, SelectItem, SelectTrigger, SelectValue
+          - Icons: AlertCircle, TrendingUp, BarChart3, Table2, Grid3X3, PieChart
+          
+          🎨 DESIGN:
+          - Layout responsive (grid-cols-1 md:grid-cols-2 lg:grid-cols-3)
+          - Hover effects et transitions
+          - Couleurs cohérentes (bleu, violet, vert, orange, rouge)
+          - Padding et spacing harmonieux
+          
+          📝 À TESTER:
+          1. Navigation vers /surveillance-rapport
+          2. Chargement des statistiques depuis l'API
+          3. Fonctionnement du sélecteur de mode
+          4. Persistance du mode dans localStorage
+          5. Affichage correct des 3 modes:
+             - Mode Cartes avec toutes les sections
+             - Mode Tableau avec tous les tableaux
+             - Mode Graphiques avec tous les charts
+          6. Calculs et affichages corrects des pourcentages
+          7. Responsive design sur différentes tailles d'écran
+          8. Gestion du cas avec 0 items
+          9. Gestion des erreurs API
+
+  - task: "Plan de Surveillance - Route et Navigation vers Rapport"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js, /app/frontend/src/components/Layout/MainLayout.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ ROUTE ET NAVIGATION AJOUTÉES
+          
+          MODIFICATIONS:
+          
+          1. /app/frontend/src/App.js:
+             - Import: import SurveillanceRapport from "./pages/SurveillanceRapport";
+             - Route: <Route path="surveillance-rapport" element={<SurveillanceRapport />} />
+             - Ajoutée juste après la route surveillance-plan
+          
+          2. /app/frontend/src/components/Layout/MainLayout.jsx:
+             - Nouvel item dans menuItems:
+               { icon: FileText, label: 'Rapport Surveillance', path: '/surveillance-rapport', module: 'surveillance' }
+             - Positionné entre "Plan de Surveillance" et "Rapports"
+             - Utilise l'icône FileText déjà importée
+             - Protection par permission module 'surveillance' (même que Plan de Surveillance)
+          
+          📝 À TESTER:
+          1. Lien "Rapport Surveillance" visible dans la sidebar (après "Plan de Surveillance")
+          2. Click sur le lien redirige vers /surveillance-rapport
+          3. Page SurveillanceRapport se charge correctement
+          4. Permissions: visible uniquement si canView('surveillance')
+
+metadata:
+  created_by: "main_agent"
+  version: "2.0"
+  test_sequence: 1
+  run_ui: true
+
+test_plan:
+  current_focus:
+    - "Plan de Surveillance - API Rapport Stats /api/surveillance/rapport-stats"
+    - "Plan de Surveillance - Page Rapport avec 3 modes d'affichage"
+    - "Plan de Surveillance - Route et Navigation vers Rapport"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      🎯 PHASE 2 - RAPPORT PLAN DE SURVEILLANCE IMPLÉMENTÉ
+      
+      J'ai terminé l'implémentation complète de la Phase 2: Nouveaux KPIs dans la page Rapport.
+      
+      ✅ BACKEND:
+      - Nouvel endpoint GET /api/surveillance/rapport-stats qui calcule toutes les statistiques nécessaires:
+        * Statistiques globales (total, réalisés, en retard, à temps, anomalies)
+        * Statistiques par catégorie (MMRI, INCENDIE, ELECTRIQUE, etc.)
+        * Statistiques par bâtiment (BATIMENT 1, BATIMENT 2, etc.)
+        * Statistiques par périodicité (Mensuel, Trimestriel, Semestriel, etc.)
+        * Statistiques par responsable (MAINT, PROD, etc.)
+      
+      ✅ FRONTEND:
+      - Nouvelle page /surveillance-rapport avec 3 modes d'affichage au choix de l'utilisateur:
+        1. Mode Cartes: Cartes colorées avec barres de progression
+        2. Mode Tableau: Tableaux HTML détaillés
+        3. Mode Graphiques: Graphiques interactifs (camembert + barres) avec @nivo
+      - Le mode choisi est sauvegardé dans localStorage pour persistance
+      - 4 cartes de statistiques globales toujours affichées en haut
+      - Navigation ajoutée dans la sidebar (entre "Plan de Surveillance" et "Rapports")
+      
+      📋 TESTS À EFFECTUER:
+      1. **Backend**: Tester l'endpoint /api/surveillance/rapport-stats
+         - Avec items en base (vérifier tous les calculs)
+         - Sans items en base (cas vide)
+         - Avec et sans authentification
+      
+      2. **Frontend**: Tester la page /surveillance-rapport
+         - Navigation depuis la sidebar
+         - Chargement des données
+         - Sélecteur de mode (3 modes)
+         - Persistance du mode dans localStorage
+         - Affichage correct de tous les KPIs
+         - Responsive design
+      
+      Le backend et le frontend sont prêts pour les tests automatisés.
+      Priorité: HIGH (il s'agit de la demande principale de l'utilisateur)
+
