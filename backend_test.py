@@ -1001,17 +1001,17 @@ class PresquAccidentTester:
         return results
 
 if __name__ == "__main__":
-    tester = SurveillanceTester()
-    results = tester.run_surveillance_tests()
+    tester = PresquAccidentTester()
+    results = tester.run_presqu_accident_tests()
     
     # Exit with appropriate code - allow cleanup to fail
     critical_tests = [
-        "admin_login", "create_incendie_item", "create_electrique_item", "create_mmri_item", 
-        "create_securite_item", "test_surveillance_list_with_filters", "test_surveillance_item_details", 
-        "test_surveillance_item_update", "test_surveillance_stats", "test_surveillance_alerts",
-        "test_surveillance_badge_stats", "test_surveillance_badge_stats_without_auth",
-        "test_surveillance_rapport_stats", "test_surveillance_rapport_stats_without_auth",
-        "test_surveillance_upload", "test_surveillance_export_template", "test_surveillance_delete_item"
+        "admin_login", "create_adv_item", "create_logistique_item", "create_production_item", 
+        "create_qhse_item", "test_presqu_accident_list_with_filters", "test_presqu_accident_item_details", 
+        "test_presqu_accident_item_update", "test_presqu_accident_stats", "test_presqu_accident_alerts",
+        "test_presqu_accident_badge_stats", "test_presqu_accident_badge_stats_without_auth",
+        "test_presqu_accident_rapport_stats", "test_presqu_accident_rapport_stats_without_auth",
+        "test_presqu_accident_upload", "test_presqu_accident_export_template", "test_presqu_accident_delete_item"
     ]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
