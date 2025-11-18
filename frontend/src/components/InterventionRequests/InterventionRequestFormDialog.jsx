@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useToast } from '../../hooks/use-toast';
 import { interventionRequestsAPI, equipmentsAPI, locationsAPI } from '../../services/api';
 import { validateDateNotPast } from '../../utils/dateValidation';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const InterventionRequestFormDialog = ({ open, onOpenChange, request, onSuccess }) => {
   const { toast } = useToast();
@@ -114,7 +115,7 @@ const InterventionRequestFormDialog = ({ open, onOpenChange, request, onSuccess 
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

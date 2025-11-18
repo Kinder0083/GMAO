@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, Mail } from 'lucide-react';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
@@ -59,7 +60,7 @@ const InviteMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'envoyer l\'invitation',
+        description: formatErrorMessage(error, 'Impossible d\')envoyer l\'invitation',
         variant: 'destructive'
       });
     } finally {

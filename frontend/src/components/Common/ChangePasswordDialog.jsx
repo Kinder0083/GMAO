@@ -7,6 +7,7 @@ import { Label } from '../ui/label';
 import { Lock } from 'lucide-react';
 import { authAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const ChangePasswordDialog = ({ open, onOpenChange }) => {
   const { toast } = useToast();
@@ -78,7 +79,7 @@ const ChangePasswordDialog = ({ open, onOpenChange }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de modifier le mot de passe',
+        description: formatErrorMessage(error, 'Impossible de modifier le mot de passe'),
         variant: 'destructive'
       });
     } finally {

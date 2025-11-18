@@ -15,6 +15,7 @@ import { Separator } from '../ui/separator';
 import { Plus, Trash2, TrendingUp, TrendingDown, Activity, Calendar } from 'lucide-react';
 import { metersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 import {
   LineChart,
   Line,
@@ -99,7 +100,7 @@ const MeterDialog = ({ open, onOpenChange, meter, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'ajouter le relevé',
+        description: formatErrorMessage(error, 'Impossible d\')ajouter le relevé',
         variant: 'destructive'
       });
     }

@@ -10,6 +10,7 @@ import { authAPI } from '../services/api';
 import ForgotPasswordDialog from '../components/Common/ForgotPasswordDialog';
 import axios from 'axios';
 import { BACKEND_URL } from '../utils/config';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -66,7 +67,7 @@ const Login = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Email ou mot de passe incorrect',
+        description: formatErrorMessage(error, 'Email ou mot de passe incorrect'),
         variant: 'destructive'
       });
     } finally {

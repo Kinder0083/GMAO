@@ -3,6 +3,7 @@ import { Button } from '../ui/button';
 import { Camera, Plus, X, File, Image, Video } from 'lucide-react';
 import { improvementsAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const AttachmentUploader = ({ workOrderId, onUploadComplete }) => {
   const { toast } = useToast();
@@ -42,7 +43,7 @@ const AttachmentUploader = ({ workOrderId, onUploadComplete }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'uploader le fichier',
+        description: formatErrorMessage(error, 'Impossible d\')uploader le fichier',
         variant: 'destructive'
       });
     } finally {

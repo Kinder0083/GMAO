@@ -8,6 +8,7 @@ import { User, Mail, Phone, Lock, Bell, Globe } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
 import ChangePasswordDialog from '../components/Common/ChangePasswordDialog';
 import { authAPI } from '../services/api';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Settings = () => {
   const { toast } = useToast();
@@ -87,7 +88,7 @@ const Settings = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'enregistrer les modifications',
+        description: formatErrorMessage(error, 'Impossible d\')enregistrer les modifications',
         variant: 'destructive'
       });
     } finally {

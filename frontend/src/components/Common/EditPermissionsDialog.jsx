@@ -12,6 +12,7 @@ import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, Shield } from 'lucide-react';
 import PermissionsGrid from './PermissionsGrid';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const EditPermissionsDialog = ({ open, onOpenChange, user, onSuccess }) => {
   const { toast } = useToast();
@@ -48,7 +49,7 @@ const EditPermissionsDialog = ({ open, onOpenChange, user, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de mettre à jour les permissions',
+        description: formatErrorMessage(error, 'Impossible de mettre à jour les permissions'),
         variant: 'destructive',
       });
     } finally {

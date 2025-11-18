@@ -12,6 +12,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useToast } from '../../hooks/use-toast';
 import { inventoryAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const InventoryFormDialog = ({ open, onOpenChange, item, onSuccess }) => {
   const { toast } = useToast();
@@ -86,7 +87,7 @@ const InventoryFormDialog = ({ open, onOpenChange, item, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

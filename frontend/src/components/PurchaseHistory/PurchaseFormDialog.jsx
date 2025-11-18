@@ -5,6 +5,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useToast } from '../../hooks/use-toast';
 import { purchaseHistoryAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const PurchaseFormDialog = ({ open, onOpenChange, purchase, onSuccess }) => {
   const { toast } = useToast();
@@ -90,7 +91,7 @@ const PurchaseFormDialog = ({ open, onOpenChange, purchase, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

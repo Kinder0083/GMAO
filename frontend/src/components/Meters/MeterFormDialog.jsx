@@ -14,6 +14,7 @@ import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { metersAPI, locationsAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const MeterFormDialog = ({ open, onOpenChange, meter, onSuccess }) => {
   const { toast } = useToast();
@@ -99,7 +100,7 @@ const MeterFormDialog = ({ open, onOpenChange, meter, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

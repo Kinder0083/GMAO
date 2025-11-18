@@ -12,6 +12,7 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { useToast } from '../../hooks/use-toast';
 import { locationsAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSuccess, allLocations = [] }) => {
   const { toast } = useToast();
@@ -77,7 +78,7 @@ const LocationFormDialog = ({ open, onOpenChange, location, parentLocation, onSu
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

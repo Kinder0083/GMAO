@@ -16,6 +16,7 @@ import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, UserPlus } from 'lucide-react';
 import PermissionsGrid from './PermissionsGrid';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
   const { toast } = useToast();
@@ -82,7 +83,7 @@ const CreateMemberDialog = ({ open, onOpenChange, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de créer le membre',
+        description: formatErrorMessage(error, 'Impossible de créer le membre'),
         variant: 'destructive'
       });
     } finally {

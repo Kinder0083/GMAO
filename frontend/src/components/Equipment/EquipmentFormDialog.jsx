@@ -13,6 +13,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { equipmentsAPI, locationsAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const EquipmentFormDialog = ({ open, onOpenChange, equipment, onSuccess, parentId = null, defaultLocation = null }) => {
   const { toast } = useToast();
@@ -112,7 +113,7 @@ const EquipmentFormDialog = ({ open, onOpenChange, equipment, onSuccess, parentI
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

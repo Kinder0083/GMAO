@@ -15,6 +15,7 @@ import { usePermissions } from '../hooks/usePermissions';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../components/ui/tooltip';
 import AvatarInitials from '../components/ui/avatar-initials';
 import { formatTimeToHoursMinutes } from '../utils/timeFormat';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const WorkOrders = () => {
   const { toast } = useToast();
@@ -67,7 +68,7 @@ const WorkOrders = () => {
           console.error('Détails erreur:', error.response?.data);
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Impossible d\'ouvrir l\'ordre de travail',
+            description: formatErrorMessage(error, 'Impossible d\')ouvrir l\'ordre de travail',
             variant: 'destructive'
           });
           // Retirer le paramètre même en cas d'erreur

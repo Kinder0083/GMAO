@@ -8,6 +8,7 @@ import { Label } from '../components/ui/label';
 import { UserPlus, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { authAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Inscription = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const Inscription = () => {
       setTokenValid(false);
       toast({
         title: 'Lien invalide',
-        description: error.response?.data?.detail || 'Ce lien d\'invitation est invalide ou expiré',
+        description: formatErrorMessage(error, 'Ce lien d\')invitation est invalide ou expiré',
         variant: 'destructive'
       });
     } finally {
@@ -121,7 +122,7 @@ const Inscription = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue lors de l\'inscription',
+        description: formatErrorMessage(error, 'Une erreur est survenue lors de l\')inscription',
         variant: 'destructive'
       });
     } finally {

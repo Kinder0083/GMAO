@@ -13,6 +13,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { improvementRequestsAPI, usersAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const ConvertToImprovementDialog = ({ open, onOpenChange, request, onSuccess }) => {
   const { toast } = useToast();
@@ -62,7 +63,7 @@ const ConvertToImprovementDialog = ({ open, onOpenChange, request, onSuccess }) 
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de convertir la demande',
+        description: formatErrorMessage(error, 'Impossible de convertir la demande'),
         variant: 'destructive'
       });
     } finally {

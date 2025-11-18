@@ -7,6 +7,7 @@ import LocationFormDialog from '../components/Locations/LocationFormDialog';
 import { locationsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useConfirmDialog } from '../components/ui/confirm-dialog';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Locations = () => {
   const { toast } = useToast();
@@ -58,7 +59,7 @@ const Locations = () => {
         } catch (error) {
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Impossible de supprimer la zone',
+            description: formatErrorMessage(error, 'Impossible de supprimer la zone'),
             variant: 'destructive'
           });
         }

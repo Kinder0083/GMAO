@@ -6,6 +6,7 @@ import { Label } from '../ui/label';
 import { Edit } from 'lucide-react';
 import { usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const EditUserDialog = ({ open, onOpenChange, user, onSuccess }) => {
   const { toast } = useToast();
@@ -65,7 +66,7 @@ const EditUserDialog = ({ open, onOpenChange, user, onSuccess }) => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de modifier l\'utilisateur',
+        description: formatErrorMessage(error, 'Impossible de modifier l\')utilisateur',
         variant: 'destructive'
       });
     } finally {

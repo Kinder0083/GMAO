@@ -13,6 +13,7 @@ import { Label } from '../ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { useToast } from '../../hooks/use-toast';
 import { preventiveMaintenanceAPI, equipmentsAPI, usersAPI } from '../../services/api';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const PreventiveMaintenanceFormDialog = ({ open, onOpenChange, maintenance, onSuccess }) => {
   const { toast } = useToast();
@@ -99,7 +100,7 @@ const PreventiveMaintenanceFormDialog = ({ open, onOpenChange, maintenance, onSu
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

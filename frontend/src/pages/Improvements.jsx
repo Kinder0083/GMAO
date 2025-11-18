@@ -13,6 +13,7 @@ import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { useSearchParams } from 'react-router-dom';
 import AvatarInitials from '../components/ui/avatar-initials';
 import { formatTimeToHoursMinutes } from '../utils/timeFormat';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Improvements = () => {
   const { toast } = useToast();
@@ -64,7 +65,7 @@ const Improvements = () => {
           console.error('Détails erreur:', error.response?.data);
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Impossible d\'ouvrir l\'amélioration',
+            description: formatErrorMessage(error, 'Impossible d\')ouvrir l\'amélioration',
             variant: 'destructive'
           });
           // Retirer le paramètre même en cas d'erreur

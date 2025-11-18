@@ -14,6 +14,7 @@ import { useToast } from '../../hooks/use-toast';
 import { useConfirmDialog } from '../ui/confirm-dialog';
 import axios from 'axios';
 import { BACKEND_URL } from '../../utils/config';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const UpdateNotificationBadge = () => {
   const [updateAvailable, setUpdateAvailable] = useState(false);
@@ -126,7 +127,7 @@ const UpdateNotificationBadge = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Erreur lors de la mise à jour',
+        description: formatErrorMessage(error, 'Erreur lors de la mise à jour'),
         variant: 'destructive'
       });
       setIsApplying(false);

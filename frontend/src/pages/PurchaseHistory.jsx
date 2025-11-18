@@ -8,6 +8,7 @@ import { useToast } from '../hooks/use-toast';
 import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import PurchaseFormDialog from '../components/PurchaseHistory/PurchaseFormDialog';
 import { ResponsiveBar } from '@nivo/bar';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const PurchaseHistory = () => {
   const { toast } = useToast();
@@ -71,7 +72,7 @@ const PurchaseHistory = () => {
           console.error('Erreur lors de la suppression:', error);
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Impossible de supprimer l\'historique',
+            description: formatErrorMessage(error, 'Impossible de supprimer l\')historique',
             variant: 'destructive'
           });
         }
@@ -142,7 +143,7 @@ const PurchaseHistory = () => {
       console.error('Erreur téléchargement template:', error);
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de télécharger le template',
+        description: formatErrorMessage(error, 'Impossible de télécharger le template'),
         variant: 'destructive'
       });
     }

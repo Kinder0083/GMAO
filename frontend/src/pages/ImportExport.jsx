@@ -7,6 +7,7 @@ import { Download, Upload, Database, CheckCircle, XCircle, AlertCircle } from 'l
 import { useToast } from '../hooks/use-toast';
 import axios from 'axios';
 import { getBackendURL } from '../utils/config';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const ImportExport = () => {
   const { toast } = useToast();
@@ -70,7 +71,7 @@ const ImportExport = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'exporter les données',
+        description: formatErrorMessage(error, 'Impossible d\')exporter les données',
         variant: 'destructive'
       });
     } finally {
@@ -130,7 +131,7 @@ const ImportExport = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible d\'importer les données',
+        description: formatErrorMessage(error, 'Impossible d\')importer les données',
         variant: 'destructive'
       });
     } finally {

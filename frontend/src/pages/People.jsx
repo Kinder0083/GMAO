@@ -11,6 +11,7 @@ import PermissionsManagementDialog from '../components/Common/PermissionsManagem
 import DeleteConfirmDialog from '../components/Common/DeleteConfirmDialog';
 import { usersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const People = () => {
   const { toast } = useToast();
@@ -120,7 +121,7 @@ const People = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de supprimer le membre',
+        description: formatErrorMessage(error, 'Impossible de supprimer le membre'),
         variant: 'destructive'
       });
     }

@@ -14,6 +14,7 @@ import { Label } from '../ui/label';
 import { authAPI, usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { Loader2, Lock, AlertCircle } from 'lucide-react';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => {
   const { toast } = useToast();
@@ -92,7 +93,7 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de changer le mot de passe',
+        description: formatErrorMessage(error, 'Impossible de changer le mot de passe'),
         variant: 'destructive'
       });
     } finally {
@@ -131,7 +132,7 @@ const FirstLoginPasswordDialog = ({ open, onOpenChange, onSuccess, userId }) => 
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {

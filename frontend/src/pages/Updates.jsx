@@ -17,6 +17,7 @@ import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import axios from 'axios';
 import { BACKEND_URL } from '../utils/config';
 import GitConflictDialog from '../components/Common/GitConflictDialog';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const Updates = () => {
   const { toast } = useToast();
@@ -176,7 +177,7 @@ const Updates = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de résoudre les conflits',
+        description: formatErrorMessage(error, 'Impossible de résoudre les conflits'),
         variant: 'destructive'
       });
     }
@@ -241,7 +242,7 @@ const Updates = () => {
           
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Échec de la mise à jour',
+            description: formatErrorMessage(error, 'Échec de la mise à jour'),
             variant: 'destructive'
           });
         } finally {

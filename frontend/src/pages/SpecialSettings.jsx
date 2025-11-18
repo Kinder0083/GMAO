@@ -17,6 +17,7 @@ import {
 import api, { usersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useConfirmDialog } from '../components/ui/confirm-dialog';
+import { formatErrorMessage } from '../utils/errorFormatter';
 
 const SpecialSettings = () => {
   const { confirm, ConfirmDialog } = useConfirmDialog();
@@ -115,7 +116,7 @@ const SpecialSettings = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de sauvegarder les paramètres',
+        description: formatErrorMessage(error, 'Impossible de sauvegarder les paramètres'),
         variant: 'destructive'
       });
     } finally {
@@ -159,7 +160,7 @@ const SpecialSettings = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Impossible de sauvegarder la configuration SMTP',
+        description: formatErrorMessage(error, 'Impossible de sauvegarder la configuration SMTP'),
         variant: 'destructive'
       });
     } finally {
@@ -198,7 +199,7 @@ const SpecialSettings = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Erreur lors du test SMTP',
+        description: formatErrorMessage(error, 'Erreur lors du test SMTP'),
         variant: 'destructive'
       });
     } finally {
@@ -233,7 +234,7 @@ const SpecialSettings = () => {
         } catch (error) {
           toast({
             title: 'Erreur',
-            description: error.response?.data?.detail || 'Impossible de réinitialiser le mot de passe',
+            description: formatErrorMessage(error, 'Impossible de réinitialiser le mot de passe'),
             variant: 'destructive'
           });
         } finally {

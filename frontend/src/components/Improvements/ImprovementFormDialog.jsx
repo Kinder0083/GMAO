@@ -16,6 +16,7 @@ import { Paperclip, Camera } from 'lucide-react';
 import { useToast } from '../../hooks/use-toast';
 import { improvementsAPI, equipmentsAPI, locationsAPI, usersAPI } from '../../services/api';
 import StatusChangeDialog from './StatusChangeDialog';
+import { formatErrorMessage } from '../../utils/errorFormatter';
 
 const ImprovementFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const { toast } = useToast();
@@ -227,7 +228,7 @@ const ImprovementFormDialog = ({ open, onOpenChange, workOrder, onSuccess }) => 
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: error.response?.data?.detail || 'Une erreur est survenue',
+        description: formatErrorMessage(error, 'Une erreur est survenue'),
         variant: 'destructive'
       });
     } finally {
