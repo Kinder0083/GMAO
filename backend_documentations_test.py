@@ -230,16 +230,41 @@ class DocumentationsTester:
             self.log(f"❌ Erreur requête modification pôle - Error: {str(e)}", "ERROR")
             return False
     
-    def test_upload_document(self):
-        """Test POST /api/documentations/poles/{pole_id}/documents - Uploader un document"""
-        self.log("🧪 Test 5: POST /api/documentations/poles/{pole_id}/documents - Uploader un document")
+    def test_create_and_upload_document(self):
+        """Test POST /api/documentations/documents puis upload - Créer et uploader un document"""
+        self.log("🧪 Test 5: POST /api/documentations/documents puis upload - Créer et uploader un document")
         
         if not self.test_pole_id:
             self.log("❌ Pas de pôle de test disponible", "ERROR")
             return False
         
         try:
-            # Créer un fichier de test temporaire
+            # Étape 1: Créer un document
+            doc_data = {
+                "titre": "Document de test",
+                "description": "Document de test pour le module Documentations",
+                "pole_id": self.test_pole_id,
+                "type_document": "PIECE_JOINTE"
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/documentations/documents",
+                json=doc_data,
+                timeout=10
+            )
+            
+            if response.status_code not in [200, 201]:
+                self.log(f"❌ Création document échouée - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+            
+            doc_response = response.json()
+            self.test_document_id = doc_response.get("id")
+            if self.test_document_id:
+                self.created_documents.append(self.test_document_id)
+            
+            self.log(f"✅ Document créé - ID: {self.test_document_id}")
+            
+            # Étape 2: Uploader un fichier pour ce document
             test_content = "Ceci est un document de test pour le module Documentations\nContenu de test avec des données techniques."
             
             with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as temp_file:
@@ -252,7 +277,7 @@ class DocumentationsTester:
                     files = {'file': ('test_document.txt', f, 'text/plain')}
                     
                     response = self.admin_session.post(
-                        f"{BACKEND_URL}/documentations/poles/{self.test_pole_id}/documents",
+                        f"{BACKEND_URL}/documentations/documents/{self.test_document_id}/upload",
                         files=files,
                         timeout=30
                     )
@@ -260,26 +285,15 @@ class DocumentationsTester:
                 if response.status_code in [200, 201]:
                     data = response.json()
                     
-                    # Vérifier les champs requis
-                    required_fields = ["document_id", "nom_fichier", "url", "type_fichier"]
-                    missing_fields = [field for field in required_fields if field not in data]
-                    
-                    if missing_fields:
-                        self.log(f"⚠️  Champs manquants dans la réponse: {missing_fields}", "WARNING")
-                    
-                    self.test_document_id = data.get("document_id")
-                    if self.test_document_id:
-                        self.created_documents.append(self.test_document_id)
-                    
-                    self.log(f"✅ Document uploadé avec succès")
-                    self.log(f"   Document ID: {data.get('document_id')}")
-                    self.log(f"   Nom fichier: {data.get('nom_fichier')}")
-                    self.log(f"   URL: {data.get('url')}")
-                    self.log(f"   Type fichier: {data.get('type_fichier')}")
+                    self.log(f"✅ Fichier uploadé avec succès")
+                    self.log(f"   Nom fichier: {data.get('file_name')}")
+                    self.log(f"   URL: {data.get('file_url')}")
+                    self.log(f"   Type fichier: {data.get('file_type')}")
+                    self.log(f"   Taille: {data.get('file_size')} bytes")
                     
                     return True
                 else:
-                    self.log(f"❌ Upload document échoué - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                    self.log(f"❌ Upload fichier échoué - Status: {response.status_code}, Response: {response.text}", "ERROR")
                     return False
                     
             finally:
@@ -287,10 +301,10 @@ class DocumentationsTester:
                 os.unlink(temp_file_path)
                 
         except requests.exceptions.RequestException as e:
-            self.log(f"❌ Erreur requête upload document - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Erreur requête document/upload - Error: {str(e)}", "ERROR")
             return False
         except Exception as e:
-            self.log(f"❌ Erreur générale upload document - Error: {str(e)}", "ERROR")
+            self.log(f"❌ Erreur générale document/upload - Error: {str(e)}", "ERROR")
             return False
     
     def test_download_document(self):
