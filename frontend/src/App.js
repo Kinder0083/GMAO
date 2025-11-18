@@ -111,6 +111,9 @@ function App() {
             <Route path="surveillance-rapport" element={<SurveillanceRapport />} />
             <Route path="presqu-accident" element={<PresquAccidentList />} />
             <Route path="presqu-accident-rapport" element={<PresquAccidentRapport />} />
+            <Route path="documentations" element={<Documentations />} />
+            <Route path="documentations/:poleId" element={<PoleDetails />} />
+            <Route path="documentations/:poleId/bon-de-travail" element={<BonDeTravailForm />} />
           </Route>
         </Routes>
       </BrowserRouter>
