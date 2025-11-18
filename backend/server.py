@@ -3075,6 +3075,7 @@ EXPORT_MODULES = {
     "equipments": "equipments",
     "meters": "meters",
     "meter-readings": "meter_readings",
+    "surveillance-items": "surveillance_items",
     "users": "users",
     "inventory": "inventory",
     "locations": "locations",
