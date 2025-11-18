@@ -56,11 +56,12 @@ const Vendors = () => {
         } catch (error) {
           toast({
             title: 'Erreur',
-          description: 'Impossible de supprimer le fournisseur',
-          variant: 'destructive'
-        });
+            description: 'Impossible de supprimer le fournisseur',
+            variant: 'destructive'
+          });
+        }
       }
-    }
+    });
   };
 
   const filteredVendors = vendors.filter(vendor => {
