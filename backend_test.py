@@ -663,26 +663,26 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_upload(self):
-        """TEST 11: Tester POST /api/surveillance/items/{item_id}/upload"""
-        self.log("🧪 TEST 11: Upload d'une pièce jointe")
+    def test_presqu_accident_upload(self):
+        """TEST 11: Tester POST /api/presqu-accident/items/{item_id}/upload"""
+        self.log("🧪 TEST 11: Upload d'une pièce jointe pour presqu'accident")
         
         if not self.created_items:
-            self.log("⚠️ Pas d'items créés pour tester l'upload", "WARNING")
+            self.log("⚠️ Pas de presqu'accidents créés pour tester l'upload", "WARNING")
             return False
         
         try:
             item_id = self.created_items[0]  # Prendre le premier item créé
             
             # Créer un fichier de test temporaire
-            test_content = "Contenu de test pour pièce jointe surveillance"
+            test_content = "Contenu de test pour pièce jointe presqu'accident - rapport d'incident détaillé"
             
             files = {
-                'file': ('test_surveillance.txt', test_content, 'text/plain')
+                'file': ('rapport_presqu_accident.txt', test_content, 'text/plain')
             }
             
             response = self.admin_session.post(
-                f"{BACKEND_URL}/surveillance/items/{item_id}/upload",
+                f"{BACKEND_URL}/presqu-accident/items/{item_id}/upload",
                 files=files,
                 timeout=10
             )
@@ -691,6 +691,7 @@ class PresquAccidentTester:
                 data = response.json()
                 self.log(f"✅ Upload réussi - URL: {data.get('file_url')}")
                 self.log(f"✅ Nom fichier: {data.get('file_name')}")
+                self.log(f"✅ Succès: {data.get('success')}")
                 return True
             else:
                 self.log(f"❌ Upload échoué - Status: {response.status_code}", "ERROR")
