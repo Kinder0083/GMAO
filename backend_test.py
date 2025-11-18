@@ -20,13 +20,13 @@ BACKEND_URL = "https://surveillance-plus.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class SurveillanceTester:
+class PresquAccidentTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
         self.admin_data = None
-        self.created_items = []  # Track created surveillance items for cleanup
-        self.test_items = {}  # Dictionary to store surveillance item IDs
+        self.created_items = []  # Track created presqu'accident items for cleanup
+        self.test_items = {}  # Dictionary to store presqu'accident item IDs
         
     def log(self, message, level="INFO"):
         """Log test messages with timestamp"""
