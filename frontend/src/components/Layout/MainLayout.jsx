@@ -379,6 +379,7 @@ const MainLayout = () => {
     { icon: FileText, label: 'Rapport Surveillance', path: '/surveillance-rapport', module: 'surveillance' },
     { icon: AlertTriangle, label: 'Presqu\'accident', path: '/presqu-accident', module: 'presquaccident' },
     { icon: FileText, label: 'Rapport P.accident', path: '/presqu-accident-rapport', module: 'presquaccident' },
+    { icon: FolderOpen, label: 'Documentations', path: '/documentations', module: 'documentations' },
     { icon: BarChart3, label: 'Rapports', path: '/reports', module: 'reports' },
     { icon: Users, label: 'Équipes', path: '/people', module: 'people' },
     { icon: Calendar, label: 'Planning', path: '/planning', module: 'planning' },
