@@ -253,12 +253,12 @@ function PresquAccidentList() {
                 className="pl-10"
               />
             </div>
-            <Select value={filters.service} onValueChange={(value) => setFilters({...filters, service: value})}>
+            <Select value={filters.service || "all"} onValueChange={(value) => setFilters({...filters, service: value === "all" ? "" : value})}>
               <SelectTrigger>
                 <SelectValue placeholder="Service" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les services</SelectItem>
+                <SelectItem value="all">Tous les services</SelectItem>
                 <SelectItem value="ADV">ADV</SelectItem>
                 <SelectItem value="LOGISTIQUE">Logistique</SelectItem>
                 <SelectItem value="PRODUCTION">Production</SelectItem>
