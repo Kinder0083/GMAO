@@ -65,7 +65,7 @@ const Improvements = () => {
           console.error('Détails erreur:', error.response?.data);
           toast({
             title: 'Erreur',
-            description: formatErrorMessage(error, 'Impossible d\')ouvrir l\'amélioration',
+            description: formatErrorMessage(error, 'Impossible d\'ouvrir l\'amélioration'),
             variant: 'destructive'
           });
           // Retirer le paramètre même en cas d'erreur
