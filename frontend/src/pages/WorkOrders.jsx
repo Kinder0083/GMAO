@@ -68,7 +68,7 @@ const WorkOrders = () => {
           console.error('Détails erreur:', error.response?.data);
           toast({
             title: 'Erreur',
-            description: formatErrorMessage(error, 'Impossible d\')ouvrir l\'ordre de travail',
+            description: formatErrorMessage(error, 'Impossible d\'ouvrir l\'ordre de travail'),
             variant: 'destructive'
           });
           // Retirer le paramètre même en cas d'erreur
