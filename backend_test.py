@@ -306,31 +306,38 @@ class PresquAccidentTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_surveillance_stats(self):
-        """TEST 9: Tester GET /api/surveillance/stats"""
-        self.log("🧪 TEST 9: Récupérer les statistiques globales")
+    def test_presqu_accident_stats(self):
+        """TEST 9: Tester GET /api/presqu-accident/stats"""
+        self.log("🧪 TEST 9: Récupérer les statistiques globales des presqu'accidents")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/surveillance/stats",
+                f"{BACKEND_URL}/presqu-accident/stats",
                 timeout=10
             )
             
             if response.status_code == 200:
                 data = response.json()
                 global_stats = data.get("global", {})
-                by_category = data.get("by_category", {})
-                by_responsable = data.get("by_responsable", {})
+                by_service = data.get("by_service", {})
+                by_severite = data.get("by_severite", {})
                 
                 self.log(f"✅ Statistiques globales récupérées:")
                 self.log(f"  - Total: {global_stats.get('total')}")
-                self.log(f"  - Réalisés: {global_stats.get('realises')}")
-                self.log(f"  - Planifiés: {global_stats.get('planifies')}")
-                self.log(f"  - À planifier: {global_stats.get('a_planifier')}")
-                self.log(f"  - % réalisation: {global_stats.get('pourcentage_realisation')}%")
+                self.log(f"  - À traiter: {global_stats.get('a_traiter')}")
+                self.log(f"  - En cours: {global_stats.get('en_cours')}")
+                self.log(f"  - Terminé: {global_stats.get('termine')}")
+                self.log(f"  - Archivé: {global_stats.get('archive')}")
+                self.log(f"  - % traitement: {global_stats.get('pourcentage_traitement')}%")
                 
-                self.log(f"✅ Statistiques par catégorie: {len(by_category)} catégories")
-                self.log(f"✅ Statistiques par responsable: {len(by_responsable)} responsables")
+                self.log(f"✅ Statistiques par service: {len(by_service)} services")
+                self.log(f"✅ Statistiques par sévérité: {len(by_severite)} niveaux")
+                
+                # Vérifier la structure des données
+                for service, stats in by_service.items():
+                    if 'total' in stats and 'termine' in stats and 'pourcentage' in stats:
+                        self.log(f"  - Service {service}: {stats['total']} total, {stats['termine']} terminés ({stats['pourcentage']}%)")
+                
                 return True
             else:
                 self.log(f"❌ Récupération statistiques échouée - Status: {response.status_code}", "ERROR")
