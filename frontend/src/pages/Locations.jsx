@@ -41,15 +41,21 @@ const Locations = () => {
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cette zone ?')) {
-      try {
-        await locationsAPI.delete(id);
-        toast({
-          title: 'Succès',
-          description: 'Zone supprimée'
-        });
-        loadLocations();
-      } catch (error) {
+    confirm({
+      title: 'Supprimer la zone',
+      description: 'Êtes-vous sûr de vouloir supprimer cette zone ? Cette action est irréversible.',
+      confirmText: 'Supprimer',
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await locationsAPI.delete(id);
+          toast({
+            title: 'Succès',
+            description: 'Zone supprimée'
+          });
+          loadLocations();
+        } catch (error) {
         toast({
           title: 'Erreur',
           description: error.response?.data?.detail || 'Impossible de supprimer la zone',
