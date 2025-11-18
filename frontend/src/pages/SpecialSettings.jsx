@@ -16,8 +16,10 @@ import {
 } from 'lucide-react';
 import api, { usersAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
+import { useConfirmDialog } from '../components/ui/confirm-dialog';
 
 const SpecialSettings = () => {
+  const { confirm, ConfirmDialog } = useConfirmDialog();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [resetting, setResetting] = useState(null);
