@@ -131,7 +131,7 @@ const ImportExport = () => {
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: formatErrorMessage(error, 'Impossible d\')importer les données',
+        description: formatErrorMessage(error, 'Impossible d\'importer les données'),
         variant: 'destructive'
       });
     } finally {
