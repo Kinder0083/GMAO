@@ -345,39 +345,60 @@ class DocumentationsTester:
             self.log(f"❌ Erreur requête téléchargement document - Error: {str(e)}", "ERROR")
             return False
     
-    def test_generate_bon_de_travail(self):
-        """Test POST /api/documentations/poles/{pole_id}/bon-de-travail - Générer un PDF"""
-        self.log("🧪 Test 7: POST /api/documentations/poles/{pole_id}/bon-de-travail - Générer un PDF")
+    def test_create_and_generate_bon_de_travail(self):
+        """Test POST /api/documentations/bons-travail puis PDF - Créer et générer un PDF"""
+        self.log("🧪 Test 7: POST /api/documentations/bons-travail puis PDF - Créer et générer un PDF")
         
         if not self.test_pole_id:
             self.log("❌ Pas de pôle de test disponible", "ERROR")
             return False
         
         try:
+            # Étape 1: Créer un bon de travail
             bon_data = {
-                "titre": "Bon de travail test",
-                "description": "Description du travail à effectuer",
-                "date_souhaitee": "2025-12-01",
-                "demandeur": "Jean Dupont",
-                "pole_service": "Pôle Technique Test"
+                "localisation_ligne": "Ligne de production A",
+                "description_travaux": "Maintenance préventive des équipements",
+                "nom_intervenants": "Jean Dupont, Marie Martin",
+                "risques_materiel": ["Coupure", "Chute"],
+                "risques_produits": ["Toxique"],
+                "precautions_materiel": ["Gants", "Casque"],
+                "precautions_epi": ["Masque", "Lunettes"],
+                "date_engagement": "2025-12-01",
+                "nom_agent_maitrise": "Pierre Durand",
+                "nom_representant": "Sophie Bernard",
+                "pole_id": self.test_pole_id
             }
             
             response = self.admin_session.post(
-                f"{BACKEND_URL}/documentations/poles/{self.test_pole_id}/bon-de-travail",
+                f"{BACKEND_URL}/documentations/bons-travail",
                 json=bon_data,
+                timeout=30
+            )
+            
+            if response.status_code not in [200, 201]:
+                self.log(f"❌ Création bon de travail échouée - Status: {response.status_code}, Response: {response.text}", "ERROR")
+                return False
+            
+            bon_response = response.json()
+            bon_id = bon_response.get("id")
+            
+            self.log(f"✅ Bon de travail créé - ID: {bon_id}")
+            
+            # Étape 2: Générer le PDF
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/documentations/bons-travail/{bon_id}/pdf",
                 timeout=30
             )
             
             if response.status_code == 200:
                 data = response.json()
                 
-                # Vérifier les champs requis
-                if "pdf_url" in data:
-                    self.log(f"✅ Bon de travail PDF généré avec succès")
-                    self.log(f"   PDF URL: {data.get('pdf_url')}")
+                if data.get("success"):
+                    self.log(f"✅ Génération PDF initiée avec succès")
+                    self.log(f"   Message: {data.get('message')}")
                     return True
                 else:
-                    self.log(f"⚠️  PDF URL manquante dans la réponse", "WARNING")
+                    self.log(f"⚠️  Réponse PDF inattendue: {data}", "WARNING")
                     return False
             else:
                 # La génération PDF peut échouer si les dépendances sont manquantes
