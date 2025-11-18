@@ -269,12 +269,12 @@ function PresquAccidentList() {
                 <SelectItem value="AUTRE">Autre</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={filters.status} onValueChange={(value) => setFilters({...filters, status: value})}>
+            <Select value={filters.status || "all"} onValueChange={(value) => setFilters({...filters, status: value === "all" ? "" : value})}>
               <SelectTrigger>
                 <SelectValue placeholder="Statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all">Tous les statuts</SelectItem>
                 <SelectItem value="A_TRAITER">À traiter</SelectItem>
                 <SelectItem value="EN_COURS">En cours</SelectItem>
                 <SelectItem value="TERMINE">Terminé</SelectItem>
