@@ -119,19 +119,19 @@ const UpdateNotificationBadge = () => {
         });
 
         // Attendre 10 secondes puis recharger la page
-          setTimeout(() => {
-            window.location.reload();
-          }, 10000);
-        }
-      } catch (error) {
-        toast({
-          title: 'Erreur',
-          description: error.response?.data?.detail || 'Erreur lors de la mise à jour',
-          variant: 'destructive'
-        });
-        setIsApplying(false);
+        setTimeout(() => {
+          window.location.reload();
+        }, 10000);
       }
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: error.response?.data?.detail || 'Erreur lors de la mise à jour',
+        variant: 'destructive'
+      });
+      setIsApplying(false);
     }
+      }
     });
   };
 
