@@ -11,6 +11,7 @@ import {
   DialogFooter,
 } from '../ui/dialog';
 import { useToast } from '../../hooks/use-toast';
+import { useConfirmDialog } from '../ui/confirm-dialog';
 import axios from 'axios';
 import { BACKEND_URL } from '../../utils/config';
 
@@ -20,6 +21,7 @@ const UpdateNotificationBadge = () => {
   const [showModal, setShowModal] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
+  const { confirm, ConfirmDialog } = useConfirmDialog();
 
   useEffect(() => {
     checkForUpdates();
