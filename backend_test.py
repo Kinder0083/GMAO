@@ -958,44 +958,44 @@ class PresquAccidentTester:
         
         # Detailed analysis for critical tests
         critical_tests = [
-            "create_incendie_item", "create_electrique_item", "create_mmri_item", "create_securite_item",
-            "test_surveillance_list_with_filters", "test_surveillance_item_details", 
-            "test_surveillance_item_update", "test_surveillance_stats", "test_surveillance_alerts",
-            "test_surveillance_badge_stats", "test_surveillance_badge_stats_without_auth",
-            "test_surveillance_rapport_stats", "test_surveillance_rapport_stats_without_auth",
-            "test_surveillance_upload", "test_surveillance_export_template", "test_surveillance_delete_item"
+            "create_adv_item", "create_logistique_item", "create_production_item", "create_qhse_item",
+            "test_presqu_accident_list_with_filters", "test_presqu_accident_item_details", 
+            "test_presqu_accident_item_update", "test_presqu_accident_stats", "test_presqu_accident_alerts",
+            "test_presqu_accident_badge_stats", "test_presqu_accident_badge_stats_without_auth",
+            "test_presqu_accident_rapport_stats", "test_presqu_accident_rapport_stats_without_auth",
+            "test_presqu_accident_upload", "test_presqu_accident_export_template", "test_presqu_accident_delete_item"
         ]
         critical_passed = sum(results.get(test, False) for test in critical_tests)
         
         if critical_passed == len(critical_tests):
-            self.log("🎉 CRITICAL SUCCESS: All main surveillance endpoints tests passed!")
-            self.log("✅ POST /api/surveillance/items works correctly")
-            self.log("✅ GET /api/surveillance/items with filters works correctly")
-            self.log("✅ GET /api/surveillance/items/{id} works correctly")
-            self.log("✅ PUT /api/surveillance/items/{id} works correctly")
-            self.log("✅ DELETE /api/surveillance/items/{id} works correctly (admin only)")
-            self.log("✅ POST /api/surveillance/items/{id}/upload works correctly")
-            self.log("✅ GET /api/surveillance/stats works correctly")
-            self.log("✅ GET /api/surveillance/alerts works correctly")
-            self.log("✅ GET /api/surveillance/badge-stats works correctly")
-            self.log("✅ GET /api/surveillance/badge-stats security works correctly")
-            self.log("✅ GET /api/surveillance/rapport-stats works correctly")
-            self.log("✅ GET /api/surveillance/rapport-stats security works correctly")
-            self.log("✅ GET /api/surveillance/export/template works correctly")
+            self.log("🎉 CRITICAL SUCCESS: All main presqu'accident endpoints tests passed!")
+            self.log("✅ POST /api/presqu-accident/items works correctly")
+            self.log("✅ GET /api/presqu-accident/items with filters works correctly")
+            self.log("✅ GET /api/presqu-accident/items/{id} works correctly")
+            self.log("✅ PUT /api/presqu-accident/items/{id} works correctly")
+            self.log("✅ DELETE /api/presqu-accident/items/{id} works correctly (admin only)")
+            self.log("✅ POST /api/presqu-accident/items/{id}/upload works correctly")
+            self.log("✅ GET /api/presqu-accident/stats works correctly")
+            self.log("✅ GET /api/presqu-accident/alerts works correctly")
+            self.log("✅ GET /api/presqu-accident/badge-stats works correctly")
+            self.log("✅ GET /api/presqu-accident/badge-stats security works correctly")
+            self.log("✅ GET /api/presqu-accident/rapport-stats works correctly")
+            self.log("✅ GET /api/presqu-accident/rapport-stats security works correctly")
+            self.log("✅ GET /api/presqu-accident/export/template works correctly")
         else:
-            self.log("🚨 CRITICAL FAILURE: Some main surveillance endpoint tests failed!")
+            self.log("🚨 CRITICAL FAILURE: Some main presqu'accident endpoint tests failed!")
             failed_critical = [test for test in critical_tests if not results.get(test, False)]
             self.log(f"❌ Failed critical tests: {', '.join(failed_critical)}")
         
         if critical_passed == len(critical_tests):
-            self.log("🎉 PLAN DE SURVEILLANCE ENDPOINTS ARE WORKING CORRECTLY!")
+            self.log("🎉 PRESQU'ACCIDENT (NEAR MISS) ENDPOINTS ARE WORKING CORRECTLY!")
             self.log("✅ All CRUD operations functional")
             self.log("✅ Filters and statistics working")
             self.log("✅ Upload and export features working")
             self.log("✅ Admin permissions respected")
-            self.log("✅ The Plan de Surveillance backend is READY FOR PRODUCTION")
+            self.log("✅ The Presqu'accident backend is READY FOR PRODUCTION")
         else:
-            self.log("⚠️ PLAN DE SURVEILLANCE ISSUES DETECTED")
+            self.log("⚠️ PRESQU'ACCIDENT ISSUES DETECTED")
             self.log("❌ Some endpoints are not working correctly")
         
         return results
