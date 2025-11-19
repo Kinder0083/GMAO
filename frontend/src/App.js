@@ -116,6 +116,8 @@ function App() {
             <Route path="documentations" element={<Documentations />} />
             <Route path="documentations/:poleId" element={<PoleDetails />} />
             <Route path="documentations/:poleId/bon-de-travail" element={<BonDeTravailForm />} />
+            <Route path="documentations/:poleId/bon-de-travail/:bonId/view" element={<BonDeTravailView />} />
+            <Route path="documentations/:poleId/bon-de-travail/:bonId/edit" element={<BonDeTravailForm />} />
             <Route path="ssh" element={<SSHTerminal />} />
           </Route>
         </Routes>
