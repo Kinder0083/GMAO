@@ -112,27 +112,27 @@ function PoleDetails() {
     return currentUser && currentUser.role === 'ADMIN';
   };
   
-  const handleDeleteBonTravail = async (bonId) => {
-    const confirmed = await confirm({
+  const handleDeleteBonTravail = (bonId) => {
+    confirm({
       title: 'Supprimer le bon de travail',
-      message: 'Êtes-vous sûr de vouloir supprimer ce bon de travail ? Cette action est irréversible.',
+      description: 'Êtes-vous sûr de vouloir supprimer ce bon de travail ? Cette action est irréversible.',
       confirmText: 'Supprimer',
-      cancelText: 'Annuler'
-    });
-    
-    if (confirmed) {
-      try {
-        await documentationsAPI.deleteBonTravail(bonId);
-        toast({ title: 'Succès', description: 'Bon de travail supprimé' });
-        loadData(); // Recharger la liste
-      } catch (error) {
-        toast({
-          title: 'Erreur',
-          description: formatErrorMessage(error, 'Erreur lors de la suppression'),
-          variant: 'destructive'
-        });
+      cancelText: 'Annuler',
+      variant: 'destructive',
+      onConfirm: async () => {
+        try {
+          await documentationsAPI.deleteBonTravail(bonId);
+          toast({ title: 'Succès', description: 'Bon de travail supprimé' });
+          loadData(); // Recharger la liste
+        } catch (error) {
+          toast({
+            title: 'Erreur',
+            description: formatErrorMessage(error, 'Erreur lors de la suppression'),
+            variant: 'destructive'
+          });
+        }
       }
-    }
+    });
   };
 
   const handleSubmitDocument = async (e) => {
