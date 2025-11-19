@@ -50,12 +50,31 @@ def init_documentations_routes(database, audit_svc):
 
 @router.get("/poles", response_model=List[dict])
 async def get_poles(current_user: dict = Depends(get_current_user)):
-    """Récupérer tous les pôles de service"""
+    """Récupérer tous les pôles de service avec leurs documents et bons de travail"""
     try:
         poles = await db.poles_service.find().to_list(length=None)
+        
+        # Pour chaque pôle, récupérer les documents et bons associés
         for pole in poles:
             if "_id" in pole:
                 del pole["_id"]
+            
+            # Récupérer les documents associés
+            documents = await db.documents.find({"pole_id": pole["id"]}).to_list(length=None)
+            for doc in documents:
+                if "_id" in doc:
+                    del doc["_id"]
+            
+            # Récupérer les bons de travail associés
+            bons_travail = await db.bons_travail.find({"pole_id": pole["id"]}).to_list(length=None)
+            for bon in bons_travail:
+                if "_id" in bon:
+                    del bon["_id"]
+            
+            # Ajouter les documents et bons au pôle
+            pole["documents"] = documents
+            pole["bons_travail"] = bons_travail
+        
         return poles
     except Exception as e:
         logger.error(f"Erreur récupération pôles: {str(e)}")
