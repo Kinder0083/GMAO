@@ -335,3 +335,13 @@ backup*/
 # Environment files
 *.env
 *.env.*
+
+# Sauvegardes et fichiers temporaires de déploiement
+*.backup.*
+frontend/.env.backup.*
+backend/.env.backup.*
+
+# Ne pas commiter les .env avec secrets
+# Commiter uniquement les .env.example
+.env.production
+.env.local
