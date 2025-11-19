@@ -50,6 +50,10 @@ function Documentations() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedPole, setSelectedPole] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' ou 'list'
+  const [expandedPoles, setExpandedPoles] = useState(new Set());
+  const [previewDocument, setPreviewDocument] = useState(null);
+  const [openPreview, setOpenPreview] = useState(false);
 
   const [formData, setFormData] = useState({
     nom: '',
