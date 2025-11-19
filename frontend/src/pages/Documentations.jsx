@@ -178,6 +178,29 @@ function Documentations() {
     navigate(`/documentations/${poleId}`);
   };
 
+  const togglePoleExpansion = (poleId) => {
+    const newExpanded = new Set(expandedPoles);
+    if (newExpanded.has(poleId)) {
+      newExpanded.delete(poleId);
+    } else {
+      newExpanded.add(poleId);
+    }
+    setExpandedPoles(newExpanded);
+  };
+
+  const handleDocumentPreview = async (document) => {
+    setPreviewDocument(document);
+    setOpenPreview(true);
+  };
+
+  const getFileIcon = (type) => {
+    if (type?.includes('pdf') || type?.includes('word') || type?.includes('document')) return FileText;
+    if (type?.includes('sheet') || type?.includes('excel')) return FileSpreadsheet;
+    if (type?.includes('image')) return FileImage;
+    if (type?.includes('video')) return FileVideo;
+    return FileText;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
