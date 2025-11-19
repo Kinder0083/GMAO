@@ -20,7 +20,7 @@ BACKEND_URL = "https://mainttracker-1.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class PresquAccidentTester:
+class SSHAndDocumentationsTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
