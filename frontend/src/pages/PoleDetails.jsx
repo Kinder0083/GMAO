@@ -293,17 +293,19 @@ function PoleDetails() {
                       <Eye className="h-4 w-4 mr-1" />
                       Voir
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate(`/documentations/${poleId}/bon-de-travail/${bon.id}/edit`);
-                      }}
-                    >
-                      <Edit className="h-4 w-4 mr-1" />
-                      Modifier
-                    </Button>
+                    {canEditBonTravail(bon) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/documentations/${poleId}/bon-de-travail/${bon.id}/edit`);
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Modifier
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant="outline"
