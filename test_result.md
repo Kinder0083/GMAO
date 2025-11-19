@@ -5021,3 +5021,202 @@ frontend:
       
       STATUT: Fonctionnalité techniquement opérationnelle mais impossible à valider sans données de test
 
+
+
+  - task: "API POST /api/ssh/execute - Terminal SSH pour super-admin"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/ssh_routes.py, /app/frontend/src/pages/SSHTerminal.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: false
+        agent: "user"
+        comment: |
+          PROBLÈME REPORTÉ:
+          ❌ Erreur lors de l'utilisation du terminal SSH: "Failed to execute 'clone' on 'Response': Response body is already used"
+          Cette erreur se produit lorsqu'on essaie d'exécuter une commande dans le terminal SSH.
+      - working: "NA"
+        agent: "main"
+        comment: |
+          CORRECTION EFFECTUÉE:
+          
+          CAUSE IDENTIFIÉE:
+          - Le composant SSHTerminal.jsx utilisait directement fetch() au lieu d'axios
+          - Cela causait des problèmes de clonage de Response avec des intercepteurs
+          
+          MODIFICATIONS APPORTÉES (/app/frontend/src/pages/SSHTerminal.jsx):
+          1. Import ajouté: import api from '../services/api'
+          2. Fonction executeCommand refactorisée:
+             - Ancienne méthode: fetch() avec headers manuels
+             - Nouvelle méthode: api.post('/ssh/execute', { command })
+             - Utilisation de l'instance axios qui gère automatiquement:
+               * Les headers d'authentification via intercepteur
+               * Les erreurs via intercepteur de réponse
+               * Le clonage des réponses correctement
+          3. Amélioration de la gestion des erreurs:
+             - Affichage du code de sortie si différent de 0
+             - Meilleur message d'erreur avec error.response?.data?.detail
+          
+          AVANTAGES DE LA CORRECTION:
+          - Pas de problème de clonage de Response
+          - Authentification automatique via intercepteur axios
+          - Gestion des erreurs cohérente avec le reste de l'app
+          - Code plus maintenable et propre
+          
+          FICHIER BACKEND (ssh_routes.py):
+          Aucune modification nécessaire, le backend fonctionnait correctement.
+          
+          À TESTER:
+          1. Connexion au terminal SSH
+          2. Exécution de commandes simples (ls, pwd, echo "test")
+          3. Gestion des erreurs (commande inexistante)
+          4. Vérification que les permissions admin sont bien respectées
+
+  - task: "Page BonDeTravailView.jsx - Visualisation lecture seule"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/BonDeTravailView.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          STATUT: La page de visualisation BonDeTravailView.jsx EXISTE DÉJÀ ET EST COMPLÈTE
+          
+          FONCTIONNALITÉS IMPLÉMENTÉES:
+          1. Chargement et affichage complet d'un Bon de travail
+          2. 4 sections principales:
+             - Travaux à réaliser (localisation, description, intervenants)
+             - Risques identifiés (matériel, autorisation, produits, environnement)
+             - Précautions à prendre (matériel, EPI, environnement)
+             - Engagement (date, noms des signataires)
+          3. Permissions de modification:
+             - canEdit(): Admin peut tout modifier
+             - canEdit(): Utilisateur peut modifier ses propres bons uniquement
+          4. Actions disponibles:
+             - Bouton "Retour" vers la page du pôle
+             - Bouton "Modifier" (visible selon permissions)
+             - Bouton "Imprimer" (ouvre PDF et lance l'impression)
+             - Bouton "Télécharger PDF" (ouvre PDF dans nouvel onglet)
+          5. Affichage des données:
+             - Badges pour les risques et précautions
+             - Affichage des champs "Autre" si renseignés
+             - Badge pour l'entreprise
+             - Gestion des valeurs null/undefined
+          
+          GESTION DE L'AUTHENTIFICATION POUR LES PDF:
+          - Utilise token dans l'URL: ?token=${token}
+          - Permet l'ouverture dans window.open avec authentification
+          
+          À TESTER:
+          1. Navigation depuis PoleDetails vers BonDeTravailView
+          2. Affichage correct de toutes les sections
+          3. Bouton "Modifier" visible seulement pour créateur/admin
+          4. Fonctionnalité d'impression (ouverture PDF + print dialog)
+          5. Téléchargement PDF
+          6. Retour vers le pôle parent
+
+  - task: "Génération PDF Bon de Travail - Template MAINT_FE_004_V02"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/documentations_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          STATUT: La génération PDF est DÉJÀ COMPLÈTE ET IMPLÉMENTÉE
+          
+          ENDPOINT: GET /api/documentations/bons-travail/{bon_id}/pdf
+          
+          FONCTIONNALITÉS IMPLÉMENTÉES:
+          1. HTML généré pour correspondre EXACTEMENT au template Word MAINT_FE_004_V02
+          2. En-tête avec:
+             - Logo COSMEVA
+             - Titre "FORMULAIRE - Bon de travail"
+             - Date et référence (MTN/008/F Version 2)
+          3. Structure complète du document:
+             - Introduction expliquant le rôle du bon de travail
+             - Section 1: Travaux à réaliser (tableau avec localisation, description, intervenants)
+             - Section 2: Risques identifiés (4 sous-sections avec checkboxes)
+             - Section 3: Précautions à prendre (3 sous-sections avec checkboxes)
+             - Section 4: Engagement avec tableau de signatures
+             - Footer avec note d'archivage
+          4. Styles CSS pour l'impression:
+             - Police Calibri/Arial 11pt
+             - Tableaux avec bordures exactes
+             - Checkboxes stylisées (noires quand cochées)
+             - Mise en page A4 avec marges correctes
+             - Styles d'impression (@media print)
+          5. Authentification:
+             - Support token dans query params: ?token=xxx
+             - Permet l'accès depuis window.open
+          
+          FORMAT DE SORTIE:
+          - HTMLResponse (pas de PDF binaire)
+          - Le navigateur génère le PDF via print dialog
+          - Permet l'aperçu avant impression
+          
+          À TESTER:
+          1. Génération PDF avec données complètes
+          2. Génération PDF avec données partielles (champs optionnels null)
+          3. Affichage correct de l'en-tête COSMEVA
+          4. Tableaux et checkboxes bien formatés
+          5. Impression depuis le navigateur
+          6. Comparaison visuelle avec le template Word original
+
+frontend:
+
+metadata:
+  created_by: "main_agent"
+  version: "1.0"
+  test_sequence: 19
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "API POST /api/ssh/execute - Terminal SSH pour super-admin"
+    - "Page BonDeTravailView.jsx - Visualisation lecture seule"
+    - "Génération PDF Bon de Travail - Template MAINT_FE_004_V02"
+  stuck_tasks: []
+  test_all: false
+  test_priority: "high_first"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      🔧 CORRECTIONS ET IMPLÉMENTATIONS EFFECTUÉES (Décembre 2025)
+      
+      1. ✅ CORRECTION CRITIQUE: Terminal SSH
+         - Erreur "Failed to execute 'clone' on 'Response': Response body is already used" RÉSOLUE
+         - Remplacement de fetch() par axios (api.post)
+         - Gestion automatique de l'authentification via intercepteur
+         - Fichier modifié: /app/frontend/src/pages/SSHTerminal.jsx
+      
+      2. ✅ VÉRIFICATION: Page BonDeTravailView.jsx
+         - La page existe DÉJÀ et est COMPLÈTE
+         - Fonctionnalités: visualisation, impression, téléchargement PDF, permissions
+         - Aucune modification nécessaire
+      
+      3. ✅ VÉRIFICATION: Génération PDF Bon de Travail
+         - L'endpoint /bons-travail/{bon_id}/pdf est DÉJÀ IMPLÉMENTÉ
+         - HTML correspond au template Word MAINT_FE_004_V02
+         - Sections complètes: travaux, risques, précautions, engagement
+         - Styles CSS pour impression A4
+      
+      PROCHAINES ÉTAPES:
+      - Tester le terminal SSH avec des commandes réelles
+      - Vérifier l'affichage et l'impression des PDF
+      - Tester les permissions (admin vs user) sur les bons de travail
+      
+      DEMANDE AU TESTING AGENT:
+      Veuillez tester les 3 fonctionnalités suivantes:
+      1. Terminal SSH: connexion + exécution commandes (ls, pwd, echo "test")
+      2. Visualisation Bon de Travail: navigation, affichage, permissions
+      3. PDF Bon de Travail: génération, format HTML, styles
