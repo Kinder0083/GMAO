@@ -250,12 +250,15 @@ function PoleDetails() {
           <h2 className="text-xl font-semibold">Bons de Travail ({bonsTravail.length})</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {bonsTravail.map((bon) => (
-              <Card key={bon.id} className="hover:shadow-lg transition-shadow">
+              <Card key={bon.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{bon.titre}</CardTitle>
+                  <CardTitle className="text-base">{bon.titre || "Sans titre"}</CardTitle>
                   <p className="text-sm text-gray-500">
-                    {new Date(bon.date_creation).toLocaleDateString('fr-FR')}
+                    {bon.created_at ? new Date(bon.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
                   </p>
+                  {bon.entreprise && (
+                    <p className="text-xs text-gray-400">Entreprise: {bon.entreprise}</p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {bon.description && (
