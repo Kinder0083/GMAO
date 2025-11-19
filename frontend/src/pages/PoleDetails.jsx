@@ -85,7 +85,7 @@ function PoleDetails() {
   };
 
   const handleCreateBonTravail = () => {
-    navigate(`/documentations/${poleId}/bon-travail/new`);
+    navigate(`/documentations/${poleId}/bon-de-travail`);
   };
 
   const handleSubmitDocument = async (e) => {
