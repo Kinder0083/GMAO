@@ -718,7 +718,7 @@ class DocumentationPolesTester:
         
         # Summary
         self.log("=" * 80)
-        self.log("SSH TERMINAL & DOCUMENTATIONS TEST RESULTS SUMMARY")
+        self.log("DOCUMENTATION POLES TEST RESULTS SUMMARY")
         self.log("=" * 80)
         
         passed = sum(results.values())
@@ -730,81 +730,67 @@ class DocumentationPolesTester:
         
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
-        # Analyse détaillée par priorité
-        ssh_tests = ["ssh_execute_simple", "ssh_execute_list", "ssh_execute_echo", "ssh_execute_non_admin"]
-        ssh_passed = sum(results.get(test, False) for test in ssh_tests)
-        
-        pdf_tests = ["get_bons_travail_list", "get_bon_travail_details", "create_bon_travail", "generate_bon_pdf", "generate_bon_pdf_with_token"]
-        pdf_passed = sum(results.get(test, False) for test in pdf_tests)
-        
-        crud_tests = ["get_bons_travail_list", "get_bon_travail_details", "create_bon_travail"]
-        crud_passed = sum(results.get(test, False) for test in crud_tests)
+        # Analyse détaillée des tests critiques
+        critical_tests = ["get_poles_with_documents", "get_pole_by_id", "compare_with_documents_endpoint"]
+        critical_passed = sum(results.get(test, False) for test in critical_tests)
         
         self.log("\n" + "=" * 60)
-        self.log("ANALYSE PAR PRIORITÉ")
+        self.log("ANALYSE CRITIQUE DES CORRECTIONS")
         self.log("=" * 60)
         
-        # PRIORITÉ 1: SSH Terminal (CRITIQUE)
-        if ssh_passed == len(ssh_tests):
-            self.log("🎉 PRIORITÉ 1 - SSH TERMINAL: ✅ SUCCÈS CRITIQUE")
-            self.log("✅ POST /api/ssh/execute fonctionne correctement")
-            self.log("✅ Commandes simples (pwd) exécutées")
-            self.log("✅ Commandes complexes (ls -la) exécutées")
-            self.log("✅ Commandes echo fonctionnelles")
-            self.log("✅ Sécurité: Accès refusé aux non-admin (403 Forbidden)")
-            self.log("✅ Pas d'erreur 'Response body is already used'")
-            self.log("✅ stdout, stderr, exit_code correctement retournés")
+        # CORRECTION 1: GET /api/documentations/poles
+        if results.get("get_poles_with_documents", False):
+            self.log("🎉 CORRECTION 1 - GET /api/documentations/poles: ✅ SUCCÈS CRITIQUE")
+            self.log("✅ Endpoint accessible (200 OK)")
+            self.log("✅ Chaque pôle contient un champ 'documents' (array)")
+            self.log("✅ Chaque pôle contient un champ 'bons_travail' (array)")
+            self.log("✅ Structure de données correcte pour l'affichage en vue liste")
+            self.log("✅ Les documents et bons sont maintenant automatiquement inclus")
         else:
-            self.log("🚨 PRIORITÉ 1 - SSH TERMINAL: ❌ ÉCHEC CRITIQUE")
-            failed_ssh = [test for test in ssh_tests if not results.get(test, False)]
-            self.log(f"❌ Tests SSH échoués: {', '.join(failed_ssh)}")
+            self.log("🚨 CORRECTION 1 - GET /api/documentations/poles: ❌ ÉCHEC CRITIQUE")
+            self.log("❌ Les pôles ne contiennent pas les champs requis")
+            self.log("❌ La vue liste ne pourra pas afficher les documents")
         
-        # PRIORITÉ 2: Génération PDF (HAUTE)
-        if pdf_passed == len(pdf_tests):
-            self.log("🎉 PRIORITÉ 2 - GÉNÉRATION PDF: ✅ SUCCÈS HAUTE PRIORITÉ")
-            self.log("✅ GET /api/documentations/bons-travail/{id}/pdf fonctionne")
-            self.log("✅ Response 200 OK")
-            self.log("✅ Content-Type: text/html")
-            self.log("✅ HTML contient 'COSMEVA', 'Bon de travail', 'MTN/008/F'")
-            self.log("✅ Structure complète: Travaux, Risques, Précautions, Engagement")
-            self.log("✅ Authentification Bearer token ET query param ?token=xxx")
+        # CORRECTION 2: GET /api/documentations/poles/{pole_id}
+        if results.get("get_pole_by_id", False):
+            self.log("🎉 CORRECTION 2 - GET /api/documentations/poles/{pole_id}: ✅ SUCCÈS CRITIQUE")
+            self.log("✅ Endpoint spécifique accessible (200 OK)")
+            self.log("✅ Structure correcte avec documents et bons_travail")
+            self.log("✅ Données cohérentes avec l'endpoint de liste")
         else:
-            self.log("🚨 PRIORITÉ 2 - GÉNÉRATION PDF: ❌ ÉCHEC HAUTE PRIORITÉ")
-            failed_pdf = [test for test in pdf_tests if not results.get(test, False)]
-            self.log(f"❌ Tests PDF échoués: {', '.join(failed_pdf)}")
+            self.log("🚨 CORRECTION 2 - GET /api/documentations/poles/{pole_id}: ❌ ÉCHEC CRITIQUE")
+            self.log("❌ Structure incorrecte pour pôle spécifique")
         
-        # PRIORITÉ 3: CRUD Bons de Travail (MOYENNE)
-        if crud_passed == len(crud_tests):
-            self.log("🎉 PRIORITÉ 3 - CRUD BONS DE TRAVAIL: ✅ SUCCÈS MOYENNE PRIORITÉ")
-            self.log("✅ GET /api/documentations/bons-travail - Liste OK")
-            self.log("✅ GET /api/documentations/bons-travail/{id} - Détails OK")
-            self.log("✅ POST /api/documentations/bons-travail - Création OK")
-            self.log("✅ Champs requis: id, titre, entreprise, created_by, created_at")
-            self.log("✅ Format JSON valide")
+        # VÉRIFICATION 3: Cohérence avec endpoint documents
+        if results.get("compare_with_documents_endpoint", False):
+            self.log("🎉 VÉRIFICATION 3 - COHÉRENCE ENDPOINTS: ✅ SUCCÈS CRITIQUE")
+            self.log("✅ Les nombres de documents correspondent")
+            self.log("✅ Les mêmes documents apparaissent dans les deux endpoints")
+            self.log("✅ Pas de perte de données lors de l'inclusion automatique")
         else:
-            self.log("🚨 PRIORITÉ 3 - CRUD BONS DE TRAVAIL: ❌ ÉCHEC MOYENNE PRIORITÉ")
-            failed_crud = [test for test in crud_tests if not results.get(test, False)]
-            self.log(f"❌ Tests CRUD échoués: {', '.join(failed_crud)}")
+            self.log("🚨 VÉRIFICATION 3 - COHÉRENCE ENDPOINTS: ❌ PROBLÈME DÉTECTÉ")
+            self.log("❌ Incohérence entre les endpoints")
+            self.log("❌ Possible perte de données ou doublons")
         
         # Conclusion finale
         self.log("\n" + "=" * 80)
-        self.log("CONCLUSION FINALE")
+        self.log("CONCLUSION FINALE - CORRECTION CRITIQUE")
         self.log("=" * 80)
         
-        if ssh_passed == len(ssh_tests) and pdf_passed == len(pdf_tests) and crud_passed == len(crud_tests):
-            self.log("🎉 TOUS LES TESTS CRITIQUES RÉUSSIS!")
-            self.log("✅ Terminal SSH: OPÉRATIONNEL (correction validée)")
-            self.log("✅ Génération PDF: OPÉRATIONNELLE (utilisateur peut générer)")
-            self.log("✅ CRUD Bons de Travail: OPÉRATIONNEL (support des tests)")
-            self.log("✅ Les modules SSH et Documentations sont PRÊTS POUR PRODUCTION")
+        if critical_passed == len(critical_tests):
+            self.log("🎉 CORRECTION ENTIÈREMENT RÉUSSIE!")
+            self.log("✅ GET /api/documentations/poles retourne les pôles avec documents et bons")
+            self.log("✅ GET /api/documentations/poles/{pole_id} retourne la structure correcte")
+            self.log("✅ Cohérence parfaite entre tous les endpoints")
+            self.log("✅ La vue liste peut maintenant afficher les documents")
+            self.log("✅ Le problème reporté par l'utilisateur est RÉSOLU")
+            self.log("✅ Les endpoints sont PRÊTS POUR PRODUCTION")
         else:
-            self.log("⚠️ PROBLÈMES DÉTECTÉS DANS LES MODULES CRITIQUES")
-            if ssh_passed < len(ssh_tests):
-                self.log("❌ Terminal SSH: PROBLÈMES CRITIQUES")
-            if pdf_passed < len(pdf_tests):
-                self.log("❌ Génération PDF: PROBLÈMES HAUTE PRIORITÉ")
-            if crud_passed < len(crud_tests):
-                self.log("❌ CRUD Bons de Travail: PROBLÈMES MOYENNE PRIORITÉ")
+            self.log("⚠️ CORRECTION INCOMPLÈTE - PROBLÈMES PERSISTANTS")
+            failed_critical = [test for test in critical_tests if not results.get(test, False)]
+            self.log(f"❌ Tests critiques échoués: {', '.join(failed_critical)}")
+            self.log("❌ La vue liste pourrait encore ne pas afficher les documents")
+            self.log("❌ Intervention supplémentaire requise")
         
         return results
 
