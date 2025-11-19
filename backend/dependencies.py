@@ -5,6 +5,7 @@ from auth import decode_access_token
 from bson import ObjectId
 
 security = HTTPBearer()
+security_optional = HTTPBearer(auto_error=False)
 
 # Database will be injected from server.py
 db = None
@@ -12,6 +13,32 @@ db = None
 def set_database(database):
     global db
     db = database
+
+async def get_current_user_optional(credentials: HTTPAuthorizationCredentials = Depends(security_optional)):
+    """Version optionnelle de get_current_user qui ne lève pas d'erreur si pas de credentials"""
+    if credentials is None:
+        return None
+    
+    token = credentials.credentials
+    payload = decode_access_token(token)
+    
+    if payload is None:
+        return None
+    
+    user_id = payload.get("sub")
+    if user_id is None:
+        return None
+    
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if user is None:
+        return None
+    
+    user["id"] = str(user["_id"])
+    del user["_id"]
+    user.pop("password", None)
+    user.pop("hashed_password", None)
+    
+    return user
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
