@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Presqu'accident (Near Miss) endpoints - CRUD complets
+Tests SSH Terminal and Documentations (Bons de Travail) endpoints
 """
 
 import requests
