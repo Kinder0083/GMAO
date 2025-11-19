@@ -3,7 +3,7 @@ from pydantic import BaseModel
 import subprocess
 import logging
 from typing import Optional
-from auth import get_current_user
+from dependencies import get_current_user
 
 router = APIRouter(prefix="/ssh", tags=["SSH Terminal"])
 logger = logging.getLogger(__name__)
