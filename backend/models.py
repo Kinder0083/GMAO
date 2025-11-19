@@ -1453,6 +1453,7 @@ class DocumentUpdate(BaseModel):
     tags: Optional[List[str]] = None
 
 class BonDeTravailCreate(BaseModel):
+    titre: str
     localisation_ligne: str
     description_travaux: str
     nom_intervenants: str
@@ -1472,5 +1473,6 @@ class BonDeTravailCreate(BaseModel):
     nom_agent_maitrise: str
     nom_representant: str
     pole_id: str
+    entreprise: str = "Non assignée"
 
 
