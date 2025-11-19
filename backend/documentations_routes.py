@@ -671,25 +671,192 @@ async def delete_bon_travail(
 
 # ==================== GÉNÉRATION PDF & EMAIL ====================
 
-@router.post("/bons-travail/{bon_id}/pdf")
+@router.get("/bons-travail/{bon_id}/pdf")
 async def generate_bon_pdf(
     bon_id: str,
-    current_user: dict = Depends(get_current_user)
+    token: str = None,
+    current_user: dict = Depends(get_current_user_optional)
 ):
-    """Générer un PDF pour un bon de travail"""
+    """Générer un PDF (HTML) pour un bon de travail"""
     try:
+        # Vérifier l'authentification via token si nécessaire
+        if not current_user and token:
+            payload = decode_access_token(token)
+            if payload is None:
+                raise HTTPException(status_code=401, detail="Token invalide ou expiré")
+        elif not current_user and not token:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
         bon = await db.bons_travail.find_one({"id": bon_id})
         if not bon:
             raise HTTPException(status_code=404, detail="Bon de travail non trouvé")
         
-        # TODO: Implémenter la génération PDF avec ReportLab ou WeasyPrint
-        # Pour l'instant, retourner un message
+        # Générer HTML pour impression
+        html_content = f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <title>Bon de Travail - {bon.get('titre', 'Sans titre')}</title>
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    margin: 20mm;
+                    line-height: 1.6;
+                }}
+                h1 {{
+                    color: #2563eb;
+                    border-bottom: 3px solid #2563eb;
+                    padding-bottom: 10px;
+                }}
+                h2 {{
+                    color: #1e40af;
+                    margin-top: 30px;
+                    border-left: 4px solid #2563eb;
+                    padding-left: 10px;
+                }}
+                .section {{
+                    margin-bottom: 20px;
+                    page-break-inside: avoid;
+                }}
+                .field {{
+                    margin-bottom: 15px;
+                }}
+                .label {{
+                    font-weight: bold;
+                    color: #374151;
+                }}
+                .value {{
+                    margin-top: 5px;
+                    color: #1f2937;
+                }}
+                .badge {{
+                    display: inline-block;
+                    padding: 4px 12px;
+                    margin: 4px;
+                    background-color: #e5e7eb;
+                    border-radius: 4px;
+                    font-size: 14px;
+                }}
+                .header {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 30px;
+                }}
+                .meta {{
+                    color: #6b7280;
+                    font-size: 14px;
+                }}
+                @media print {{
+                    body {{ margin: 15mm; }}
+                    .no-print {{ display: none; }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <h1>BON DE TRAVAIL</h1>
+                    <div class="meta">
+                        <strong>{bon.get('titre', 'Sans titre')}</strong><br>
+                        Entreprise: {bon.get('entreprise', 'Non assignée')}<br>
+                        Créé le: {bon.get('created_at', '')[:10] if bon.get('created_at') else 'N/A'}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>1. Travaux à réaliser</h2>
+                <div class="field">
+                    <div class="label">Localisation / Ligne :</div>
+                    <div class="value">{bon.get('localisation_ligne', 'Non renseigné')}</div>
+                </div>
+                <div class="field">
+                    <div class="label">Description des travaux :</div>
+                    <div class="value">{bon.get('description_travaux', 'Non renseigné')}</div>
+                </div>
+                <div class="field">
+                    <div class="label">Nom des intervenants :</div>
+                    <div class="value">{bon.get('nom_intervenants', 'Non renseigné')}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>2. Risques identifiés</h2>
+                <div class="field">
+                    <div class="label">Matériel :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{r}</span>' for r in bon.get('risques_materiel', [])]) or 'Aucun'}
+                        {f'<br>Autre: {bon.get("risques_materiel_autre")}' if bon.get('risques_materiel_autre') else ''}
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="label">Autorisation :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{r}</span>' for r in bon.get('risques_autorisation', [])]) or 'Aucun'}
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="label">Produits :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{r}</span>' for r in bon.get('risques_produits', [])]) or 'Aucun'}
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="label">Environnement :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{r}</span>' for r in bon.get('risques_environnement', [])]) or 'Aucun'}
+                        {f'<br>Autre: {bon.get("risques_environnement_autre")}' if bon.get('risques_environnement_autre') else ''}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>3. Précautions à prendre</h2>
+                <div class="field">
+                    <div class="label">Matériel :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_materiel', [])]) or 'Aucune'}
+                        {f'<br>Autre: {bon.get("precautions_materiel_autre")}' if bon.get('precautions_materiel_autre') else ''}
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="label">EPI (Équipements de Protection Individuelle) :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_epi', [])]) or 'Aucun'}
+                        {f'<br>Autre: {bon.get("precautions_epi_autre")}' if bon.get('precautions_epi_autre') else ''}
+                    </div>
+                </div>
+                <div class="field">
+                    <div class="label">Environnement :</div>
+                    <div class="value">
+                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_environnement', [])]) or 'Aucune'}
+                        {f'<br>Autre: {bon.get("precautions_environnement_autre")}' if bon.get('precautions_environnement_autre') else ''}
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4. Engagement</h2>
+                <div class="field">
+                    <div class="label">Date d'engagement :</div>
+                    <div class="value">{bon.get('date_engagement', 'Non renseignée')}</div>
+                </div>
+                <div class="field">
+                    <div class="label">Nom Agent de Maîtrise :</div>
+                    <div class="value">{bon.get('nom_agent_maitrise', 'Non renseigné')}</div>
+                </div>
+                <div class="field">
+                    <div class="label">Nom Représentant :</div>
+                    <div class="value">{bon.get('nom_representant', 'Non renseigné')}</div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
         
-        return {
-            "success": True,
-            "message": "Génération PDF en cours de développement",
-            "bon_id": bon_id
-        }
+        return HTMLResponse(content=html_content)
     except HTTPException:
         raise
     except Exception as e:
