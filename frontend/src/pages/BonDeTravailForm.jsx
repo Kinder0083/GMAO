@@ -110,8 +110,16 @@ function BonDeTravailForm() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const poleData = await documentationsAPI.getPole(poleId);
+      const [poleData, bonsTravail] = await Promise.all([
+        documentationsAPI.getPole(poleId),
+        documentationsAPI.getBonsTravail({ pole_id: poleId })
+      ]);
+      
       setPole(poleData);
+      
+      // Extraire les entreprises uniques
+      const uniqueEntreprises = [...new Set(bonsTravail.map(b => b.entreprise).filter(Boolean))];
+      setEntreprises(uniqueEntreprises);
 
       if (bonId && bonId !== 'new') {
         const bonData = await documentationsAPI.getBonTravail(bonId);
