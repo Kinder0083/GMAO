@@ -313,7 +313,10 @@ function PoleDetails() {
                         <Button
                           size="sm"
                           variant="outline"
-                          onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/documents/${doc.id}/view`, '_blank')}
+                          onClick={() => {
+                            const token = localStorage.getItem('token');
+                            window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/documents/${doc.id}/view?token=${token}`, '_blank');
+                          }}
                           title="Ouvrir dans un nouvel onglet"
                         >
                           <Eye className="h-4 w-4" />
