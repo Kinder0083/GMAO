@@ -4010,7 +4010,7 @@ agent_communication:
           Localisation: /app/frontend/src/services/api.js, ligne ~346
 
 frontend:
-  - task: "Module Documentations - Pages frontend et intégration"
+  - task: "Module Documentations - Pages frontend et intégration + Vues multiples + Prévisualisation"
     implemented: true
     working: "NA"
     file: "/app/frontend/src/pages/Documentations.jsx, /app/frontend/src/pages/PoleDetails.jsx, /app/frontend/src/pages/BonDeTravailForm.jsx, /app/frontend/src/App.js, /app/frontend/src/components/Layout/MainLayout.jsx"
