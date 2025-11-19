@@ -615,11 +615,18 @@ async def update_bon_travail(
     bon_update: dict,
     current_user: dict = Depends(get_current_user)
 ):
-    """Mettre à jour un bon de travail"""
+    """Mettre à jour un bon de travail - Permissions : admin ou créateur uniquement"""
     try:
         existing = await db.bons_travail.find_one({"id": bon_id})
         if not existing:
             raise HTTPException(status_code=404, detail="Bon de travail non trouvé")
+        
+        # Vérifier les permissions : admin ou créateur
+        if current_user.get("role") != "ADMIN" and existing.get("created_by") != current_user.get("id"):
+            raise HTTPException(
+                status_code=403, 
+                detail="Vous n'avez pas la permission de modifier ce bon de travail"
+            )
         
         bon_update["updated_at"] = datetime.now(timezone.utc).isoformat()
         
