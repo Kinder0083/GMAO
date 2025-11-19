@@ -441,8 +441,10 @@ function Documentations() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
-                                        onClick={() => handleDocumentPreview(doc)}
-                                        title="Prévisualiser"
+                                        onClick={() => {
+                                          window.open(`${getBackendURL()}/api/documentations/documents/${doc.id}/view`, '_blank');
+                                        }}
+                                        title="Ouvrir dans un nouvel onglet"
                                       >
                                         <Eye className="h-4 w-4" />
                                       </Button>
@@ -450,7 +452,7 @@ function Documentations() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={() => {
-                                          window.open(`${getBackendURL()}${doc.fichier_url}`, '_blank');
+                                          window.open(`${getBackendURL()}/api/documentations/documents/${doc.id}/download`, '_blank');
                                         }}
                                         title="Télécharger"
                                       >
