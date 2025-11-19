@@ -877,20 +877,23 @@ async def generate_bon_pdf(
                 </div>
             </div>
 
+            <!-- SECTION 1: TRAVAUX À RÉALISER -->
             <div class="section">
-                <h2>1. Travaux à réaliser</h2>
-                <div class="field">
-                    <div class="label">Localisation / Ligne :</div>
-                    <div class="value">{bon.get('localisation_ligne', 'Non renseigné')}</div>
-                </div>
-                <div class="field">
-                    <div class="label">Description des travaux :</div>
-                    <div class="value">{bon.get('description_travaux', 'Non renseigné')}</div>
-                </div>
-                <div class="field">
-                    <div class="label">Nom des intervenants :</div>
-                    <div class="value">{bon.get('nom_intervenants', 'Non renseigné')}</div>
-                </div>
+                <div class="section-title">TRAVAUX À RÉALISER</div>
+                <table>
+                    <tr>
+                        <th style="width: 30%;">Localisation / Ligne</th>
+                        <td>{bon.get('localisation_ligne', 'Non renseigné')}</td>
+                    </tr>
+                    <tr>
+                        <th>Description</th>
+                        <td>{bon.get('description_travaux', 'Non renseigné')}</td>
+                    </tr>
+                    <tr>
+                        <th>Nom des intervenants</th>
+                        <td>{bon.get('nom_intervenants', 'Non renseigné')}</td>
+                    </tr>
+                </table>
             </div>
 
             <div class="section">
