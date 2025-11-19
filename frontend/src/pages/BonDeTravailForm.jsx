@@ -278,6 +278,16 @@ function BonDeTravailForm() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
+              <Label>Titre du bon de travail *</Label>
+              <Input
+                value={formData.titre}
+                onChange={(e) => setFormData({ ...formData, titre: e.target.value })}
+                placeholder="ex: Maintenance ligne 3"
+                required
+              />
+            </div>
+            
+            <div>
               <Label>Localisation / Ligne *</Label>
               <Input
                 value={formData.localisation_ligne}
