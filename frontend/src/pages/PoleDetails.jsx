@@ -342,8 +342,10 @@ function PoleDetails() {
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
