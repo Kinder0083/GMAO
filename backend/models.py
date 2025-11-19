@@ -1412,10 +1412,12 @@ class BonDeTravail(BaseModel):
     
     # Métadonnées
     pole_id: str  # Lié au pôle Maintenance
+    entreprise: str = "Non assignée"  # Entreprise du bon de travail
     statut: str = "BROUILLON"  # BROUILLON, VALIDE, ENVOYE
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     created_by: Optional[str] = None
+    titre: Optional[str] = None  # Titre du bon de travail
 
 # Models CRUD
 class PoleDeServiceCreate(BaseModel):
