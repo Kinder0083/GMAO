@@ -38,6 +38,15 @@ function PoleDetails() {
   const [documents, setDocuments] = useState([]);
   const [bonsTravail, setBonsTravail] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentUser, setCurrentUser] = useState(null);
+  
+  // Charger l'utilisateur actuel
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setCurrentUser(JSON.parse(userData));
+    }
+  }, []);
   const [openDocForm, setOpenDocForm] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [uploading, setUploading] = useState(false);
