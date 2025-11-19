@@ -67,42 +67,80 @@ class DocumentationPolesTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_ssh_execute_simple_command(self):
-        """TEST 1: Exécuter une commande SSH simple - pwd"""
-        self.log("🧪 TEST 1: SSH Execute - Commande simple (pwd)")
+    def test_get_poles_with_documents(self):
+        """TEST 1: CRITIQUE - GET /api/documentations/poles - Vérifier que chaque pôle contient documents et bons_travail"""
+        self.log("🧪 TEST 1: CRITIQUE - GET /api/documentations/poles - Pôles avec documents et bons")
         
         try:
-            command_data = {
-                "command": "pwd"
-            }
-            
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/ssh/execute",
-                json=command_data,
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/documentations/poles",
                 timeout=15
             )
             
             if response.status_code == 200:
                 data = response.json()
-                self.log(f"✅ Commande SSH exécutée avec succès")
-                self.log(f"✅ stdout: {data.get('stdout', '').strip()}")
-                self.log(f"✅ stderr: {data.get('stderr', '').strip()}")
-                self.log(f"✅ exit_code: {data.get('exit_code')}")
+                self.log(f"✅ Endpoint accessible - Status: 200 OK")
+                self.log(f"✅ Nombre de pôles retournés: {len(data)}")
                 
-                # Vérifier que la structure de réponse est correcte
-                if 'stdout' in data and 'stderr' in data and 'exit_code' in data:
-                    if data.get('exit_code') == 0:
-                        self.log("✅ Commande exécutée avec succès (exit_code = 0)")
-                        return True
+                if len(data) == 0:
+                    self.log("⚠️ Aucun pôle trouvé dans la base de données")
+                    return True  # Still consider it working
+                
+                # Vérifier chaque pôle
+                all_poles_valid = True
+                for i, pole in enumerate(data):
+                    pole_name = pole.get('nom', f'Pôle {i+1}')
+                    self.log(f"📋 Analyse du pôle: {pole_name}")
+                    
+                    # Vérification critique 1: Champ "documents" existe et est un array
+                    if 'documents' not in pole:
+                        self.log(f"❌ CRITIQUE: Pôle '{pole_name}' - Champ 'documents' MANQUANT", "ERROR")
+                        all_poles_valid = False
+                    elif not isinstance(pole['documents'], list):
+                        self.log(f"❌ CRITIQUE: Pôle '{pole_name}' - Champ 'documents' n'est pas un array", "ERROR")
+                        all_poles_valid = False
                     else:
-                        self.log(f"⚠️ Commande exécutée mais avec exit_code non-zéro: {data.get('exit_code')}")
-                        return True  # Still consider it working
+                        doc_count = len(pole['documents'])
+                        self.log(f"✅ Pôle '{pole_name}' - documents: array avec {doc_count} éléments")
+                        self.documents_count[pole_name] = {'documents': doc_count}
+                    
+                    # Vérification critique 2: Champ "bons_travail" existe et est un array
+                    if 'bons_travail' not in pole:
+                        self.log(f"❌ CRITIQUE: Pôle '{pole_name}' - Champ 'bons_travail' MANQUANT", "ERROR")
+                        all_poles_valid = False
+                    elif not isinstance(pole['bons_travail'], list):
+                        self.log(f"❌ CRITIQUE: Pôle '{pole_name}' - Champ 'bons_travail' n'est pas un array", "ERROR")
+                        all_poles_valid = False
+                    else:
+                        bons_count = len(pole['bons_travail'])
+                        self.log(f"✅ Pôle '{pole_name}' - bons_travail: array avec {bons_count} éléments")
+                        if pole_name in self.documents_count:
+                            self.documents_count[pole_name]['bons_travail'] = bons_count
+                        else:
+                            self.documents_count[pole_name] = {'bons_travail': bons_count}
+                    
+                    # Vérifier la structure des documents s'il y en a
+                    if pole.get('documents') and len(pole['documents']) > 0:
+                        first_doc = pole['documents'][0]
+                        required_doc_fields = ['id', 'pole_id', 'nom_fichier', 'type_fichier', 'taille']
+                        missing_doc_fields = [field for field in required_doc_fields if field not in first_doc]
+                        if missing_doc_fields:
+                            self.log(f"⚠️ Pôle '{pole_name}' - Document manque des champs: {missing_doc_fields}")
+                        else:
+                            self.log(f"✅ Pôle '{pole_name}' - Structure document valide")
+                
+                # Stocker les données pour les tests suivants
+                self.poles_data = data
+                
+                if all_poles_valid:
+                    self.log("✅ SUCCÈS CRITIQUE: Tous les pôles contiennent 'documents' et 'bons_travail' (arrays)")
+                    return True
                 else:
-                    self.log("❌ Structure de réponse incorrecte", "ERROR")
+                    self.log("❌ ÉCHEC CRITIQUE: Certains pôles n'ont pas la structure requise", "ERROR")
                     return False
                     
             else:
-                self.log(f"❌ Commande SSH échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Endpoint inaccessible - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
