@@ -223,21 +223,140 @@ class SSHAndDocumentationsTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_create_adv_item(self):
-        """TEST 2: Créer presqu'accident avec service ADV"""
-        return self.test_create_presqu_accident_item("ADV", "FAIBLE", "Bureau ADV", "ADV")
+    def test_get_bons_travail_list(self):
+        """TEST 5: Récupérer la liste des bons de travail"""
+        self.log("🧪 TEST 5: GET /api/documentations/bons-travail - Liste des bons")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/documentations/bons-travail",
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Liste des bons de travail récupérée - {len(data)} bons trouvés")
+                
+                if len(data) > 0:
+                    # Prendre le premier bon pour les tests suivants
+                    first_bon = data[0]
+                    bon_id = first_bon.get('id')
+                    if bon_id:
+                        self.test_bons['existing'] = bon_id
+                        self.log(f"✅ Premier bon ID: {bon_id}")
+                        self.log(f"✅ Titre: {first_bon.get('titre', 'N/A')}")
+                        self.log(f"✅ Entreprise: {first_bon.get('entreprise', 'N/A')}")
+                        self.log(f"✅ Created by: {first_bon.get('created_by', 'N/A')}")
+                        self.log(f"✅ Created at: {first_bon.get('created_at', 'N/A')}")
+                    
+                    # Vérifier la structure des données
+                    required_fields = ['id', 'titre', 'entreprise', 'created_by', 'created_at']
+                    missing_fields = [field for field in required_fields if field not in first_bon]
+                    if missing_fields:
+                        self.log(f"⚠️ Champs manquants dans la réponse: {missing_fields}")
+                    else:
+                        self.log("✅ Tous les champs requis sont présents")
+                    
+                    return True
+                else:
+                    self.log("⚠️ Aucun bon de travail trouvé - créer un bon pour les tests suivants")
+                    return True  # Still consider it working
+                    
+            else:
+                self.log(f"❌ Récupération liste échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
     
-    def test_create_logistique_item(self):
-        """TEST 3: Créer presqu'accident avec service LOGISTIQUE"""
-        return self.test_create_presqu_accident_item("LOGISTIQUE", "MOYEN", "Entrepôt principal", "LOGISTIQUE")
+    def test_get_bon_travail_details(self):
+        """TEST 6: Récupérer les détails d'un bon de travail spécifique"""
+        self.log("🧪 TEST 6: GET /api/documentations/bons-travail/{id} - Détails d'un bon")
+        
+        if not self.test_bons.get('existing'):
+            self.log("⚠️ Pas de bon de travail existant pour tester les détails", "WARNING")
+            return False
+        
+        try:
+            bon_id = self.test_bons['existing']
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/documentations/bons-travail/{bon_id}",
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Détails du bon de travail récupérés - ID: {data.get('id')}")
+                self.log(f"✅ Titre: {data.get('titre')}")
+                self.log(f"✅ Entreprise: {data.get('entreprise')}")
+                self.log(f"✅ Localisation/Ligne: {data.get('localisation_ligne')}")
+                self.log(f"✅ Description: {data.get('description_travaux', '')[:100]}...")
+                return True
+            else:
+                self.log(f"❌ Récupération détails échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
     
-    def test_create_production_item(self):
-        """TEST 4: Créer presqu'accident avec service PRODUCTION"""
-        return self.test_create_presqu_accident_item("PRODUCTION", "ELEVE", "Atelier de production", "PRODUCTION")
-    
-    def test_create_qhse_item(self):
-        """TEST 5: Créer presqu'accident avec service QHSE"""
-        return self.test_create_presqu_accident_item("QHSE", "CRITIQUE", "Zone de sécurité", "QHSE")
+    def test_create_bon_travail(self):
+        """TEST 7: Créer un nouveau bon de travail (si nécessaire pour les tests)"""
+        self.log("🧪 TEST 7: POST /api/documentations/bons-travail - Créer un bon")
+        
+        try:
+            bon_data = {
+                "titre": "Test Bon de Travail SSH",
+                "entreprise": "COSMEVA Test",
+                "localisation_ligne": "Ligne de production A - Zone test",
+                "description_travaux": "Travaux de test pour validation des endpoints SSH et documentations",
+                "nom_intervenants": "Jean DUPONT, Marie MARTIN",
+                "risques_materiel": ["Électricité", "Machines en mouvement"],
+                "risques_materiel_autre": "Risque spécifique test",
+                "risques_autorisation": ["Travail en hauteur"],
+                "risques_produits": ["Produits chimiques"],
+                "risques_environnement": ["Zone ATEX"],
+                "risques_environnement_autre": "Environnement test",
+                "precautions_materiel": ["Consignation électrique", "Arrêt machines"],
+                "precautions_materiel_autre": "Précaution spécifique test",
+                "precautions_epi": ["Casque", "Gants", "Chaussures de sécurité"],
+                "precautions_epi_autre": "EPI spécifique test",
+                "precautions_environnement": ["Détecteur de gaz"],
+                "precautions_environnement_autre": "Précaution environnement test",
+                "date_engagement": "2025-01-20",
+                "nom_agent_maitrise": "Paul LEFEBVRE",
+                "nom_representant": "Sophie BERNARD"
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/documentations/bons-travail",
+                json=bon_data,
+                timeout=15
+            )
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                bon_id = data.get("id")
+                self.created_bons.append(bon_id)
+                self.test_bons['created'] = bon_id
+                
+                self.log(f"✅ Bon de travail créé avec succès - ID: {bon_id}")
+                self.log(f"✅ Titre: {data.get('titre')}")
+                self.log(f"✅ Entreprise: {data.get('entreprise')}")
+                self.log(f"✅ Localisation: {data.get('localisation_ligne')}")
+                return True
+                    
+            else:
+                self.log(f"❌ Création bon de travail échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
     
     def test_presqu_accident_list_with_filters(self):
         """TEST 6: Tester GET /api/presqu-accident/items avec filtres"""
