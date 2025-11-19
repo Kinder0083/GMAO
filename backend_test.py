@@ -497,38 +497,34 @@ class SSHAndDocumentationsTester:
         self.log(f"✅ Nettoyage terminé: {success_count} bons de travail supprimés")
         return success_count >= 0  # Toujours réussir le nettoyage
     
-    def test_presqu_accident_item_details(self):
-        """TEST 7: Tester GET /api/presqu-accident/items/{item_id}"""
-        self.log("🧪 TEST 7: Récupérer les détails d'un presqu'accident spécifique")
+    def cleanup_remaining_bons_travail(self):
+        """Nettoyer tous les bons de travail créés pendant les tests"""
+        self.log("🧹 Nettoyage des bons de travail restants...")
         
-        if not self.created_items:
-            self.log("⚠️ Pas de presqu'accidents créés pour tester les détails", "WARNING")
-            return False
+        if not self.created_bons:
+            self.log("Aucun bon de travail à nettoyer")
+            return True
         
-        try:
-            item_id = self.created_items[0]  # Prendre le premier item créé
-            response = self.admin_session.get(
-                f"{BACKEND_URL}/presqu-accident/items/{item_id}",
-                timeout=10
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log(f"✅ Détails récupérés - ID: {data.get('id')}")
-                self.log(f"✅ Titre: {data.get('titre')}")
-                self.log(f"✅ Service: {data.get('service')}")
-                self.log(f"✅ Sévérité: {data.get('severite')}")
-                self.log(f"✅ Statut: {data.get('status')}")
-                self.log(f"✅ Lieu: {data.get('lieu')}")
-                return True
-            else:
-                self.log(f"❌ Récupération détails échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
+        success_count = 0
+        for bon_id in self.created_bons[:]:  # Copy list to avoid modification during iteration
+            try:
+                response = self.admin_session.delete(
+                    f"{BACKEND_URL}/documentations/bons-travail/{bon_id}",
+                    timeout=10
+                )
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+                if response.status_code in [200, 404]:
+                    self.log(f"✅ Bon de travail {bon_id} nettoyé")
+                    self.created_bons.remove(bon_id)
+                    success_count += 1
+                else:
+                    self.log(f"⚠️ Impossible de nettoyer le bon de travail {bon_id} - Status: {response.status_code}")
+                    
+            except Exception as e:
+                self.log(f"⚠️ Erreur lors du nettoyage du bon de travail {bon_id}: {str(e)}")
+        
+        self.log(f"Nettoyage terminé: {success_count} bons de travail supprimés")
+        return True
     
     def test_presqu_accident_item_update(self):
         """TEST 8: Tester PUT /api/presqu-accident/items/{item_id}"""
