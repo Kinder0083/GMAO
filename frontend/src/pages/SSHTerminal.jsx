@@ -42,32 +42,24 @@ function SSHTerminal() {
     if (!command.trim()) return;
 
     addOutput(`$ ${command}`, 'command');
+    const currentCommand = command;
     setCommand('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/ssh/execute`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        },
-        body: JSON.stringify({ command })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erreur lors de l\'exécution');
-      }
-
-      const data = await response.json();
+      const response = await api.post('/ssh/execute', { command: currentCommand });
       
-      if (data.stdout) {
-        addOutput(data.stdout, 'output');
+      if (response.data.stdout) {
+        addOutput(response.data.stdout, 'output');
       }
-      if (data.stderr) {
-        addOutput(data.stderr, 'error');
+      if (response.data.stderr) {
+        addOutput(response.data.stderr, 'error');
+      }
+      if (response.data.exit_code !== 0) {
+        addOutput(`⚠️ Code de sortie: ${response.data.exit_code}`, 'warning');
       }
     } catch (error) {
-      addOutput(`❌ Erreur: ${error.message}`, 'error');
+      const errorMsg = error.response?.data?.detail || error.message || 'Erreur lors de l\'exécution';
+      addOutput(`❌ Erreur: ${errorMsg}`, 'error');
     }
   };
 
