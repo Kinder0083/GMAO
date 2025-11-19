@@ -525,8 +525,6 @@ class SSHAndDocumentationsTester:
         
         self.log(f"Nettoyage terminé: {success_count} bons de travail supprimés")
         return True
-    
-    def test_presqu_accident_item_update(self):
         """TEST 8: Tester PUT /api/presqu-accident/items/{item_id}"""
         self.log("🧪 TEST 8: Mettre à jour un presqu'accident")
         
