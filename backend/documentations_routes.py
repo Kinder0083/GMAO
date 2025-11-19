@@ -443,10 +443,22 @@ async def upload_document_file(
 @router.get("/documents/{document_id}/view")
 async def view_document_file(
     document_id: str,
-    current_user: dict = Depends(get_current_user)
+    token: str = None,
+    current_user: dict = Depends(get_current_user_optional)
 ):
     """Visualiser le fichier d'un document dans le navigateur (inline)"""
     try:
+        # Si pas d'utilisateur via Bearer token, vérifier le token en query param
+        if not current_user and token:
+            # Vérifier le token passé en paramètre
+            try:
+                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+                # Token valide, on continue
+            except JWTError:
+                raise HTTPException(status_code=401, detail="Token invalide")
+        elif not current_user and not token:
+            raise HTTPException(status_code=401, detail="Not authenticated")
+        
         doc = await db.documents.find_one({"id": document_id})
         if not doc:
             raise HTTPException(status_code=404, detail="Document non trouvé")
