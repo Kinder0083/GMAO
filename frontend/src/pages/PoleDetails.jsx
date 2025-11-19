@@ -263,10 +263,29 @@ function PoleDetails() {
 
       {/* Bons de Travail List */}
       {bonsTravail.length > 0 && (
-        <div className="space-y-4">
+        <div className="space-y-6">
           <h2 className="text-xl font-semibold">Bons de Travail ({bonsTravail.length})</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bonsTravail.map((bon) => (
+          
+          {/* Grouper par entreprise */}
+          {Object.entries(
+            bonsTravail.reduce((acc, bon) => {
+              const entreprise = bon.entreprise || 'Non assignée';
+              if (!acc[entreprise]) acc[entreprise] = [];
+              acc[entreprise].push(bon);
+              return acc;
+            }, {})
+          ).map(([entreprise, bons]) => (
+            <div key={entreprise} className="space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex-1 h-px bg-gray-300"></div>
+                <h3 className="text-lg font-semibold text-gray-700 px-4 bg-gray-50 rounded-full">
+                  📁 {entreprise} ({bons.length})
+                </h3>
+                <div className="flex-1 h-px bg-gray-300"></div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {bons.map((bon) => (
               <Card key={bon.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-base">{bon.titre || "Sans titre"}</CardTitle>
