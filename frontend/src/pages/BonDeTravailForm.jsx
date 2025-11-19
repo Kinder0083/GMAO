@@ -154,11 +154,23 @@ function BonDeTravailForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Si c'est une création, ouvrir le dialogue d'entreprise
+    if (!bonId || bonId === 'new') {
+      setShowEntrepriseDialog(true);
+    } else {
+      // Si c'est une modification, sauvegarder directement
+      await saveBonTravail(formData.entreprise);
+    }
+  };
+
+  const saveBonTravail = async (entreprise) => {
     try {
       setLoading(true);
       const data = {
         ...formData,
-        pole_id: poleId
+        pole_id: poleId,
+        entreprise: entreprise || 'Non assignée'
       };
 
       if (bonId && bonId !== 'new') {
@@ -168,6 +180,7 @@ function BonDeTravailForm() {
         await documentationsAPI.createBonTravail(data);
         toast({ title: 'Succès', description: 'Bon de travail créé' });
       }
+      setShowEntrepriseDialog(false);
       navigate(`/documentations/${poleId}`);
     } catch (error) {
       toast({
