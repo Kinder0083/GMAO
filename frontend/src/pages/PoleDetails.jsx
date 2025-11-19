@@ -99,6 +99,14 @@ function PoleDetails() {
   const handleCreateBonTravail = () => {
     navigate(`/documentations/${poleId}/bon-de-travail`);
   };
+  
+  const canEditBonTravail = (bon) => {
+    if (!currentUser) return false;
+    // Admin peut tout modifier
+    if (currentUser.role === 'ADMIN') return true;
+    // Créateur peut modifier son propre bon
+    return bon.created_by === currentUser.id;
+  };
 
   const handleSubmitDocument = async (e) => {
     e.preventDefault();
