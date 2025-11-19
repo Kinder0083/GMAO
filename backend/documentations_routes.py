@@ -453,11 +453,9 @@ async def view_document_file(
         # Si pas d'utilisateur via Bearer token, vérifier le token en query param
         if not current_user and token:
             # Vérifier le token passé en paramètre
-            try:
-                payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-                # Token valide, on continue
-            except JWTError:
-                raise HTTPException(status_code=401, detail="Token invalide")
+            payload = decode_access_token(token)
+            if payload is None:
+                raise HTTPException(status_code=401, detail="Token invalide ou expiré")
         elif not current_user and not token:
             raise HTTPException(status_code=401, detail="Not authenticated")
         
