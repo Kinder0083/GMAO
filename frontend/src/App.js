@@ -115,6 +115,7 @@ function App() {
             <Route path="documentations" element={<Documentations />} />
             <Route path="documentations/:poleId" element={<PoleDetails />} />
             <Route path="documentations/:poleId/bon-de-travail" element={<BonDeTravailForm />} />
+            <Route path="ssh" element={<SSHTerminal />} />
           </Route>
         </Routes>
       </BrowserRouter>
