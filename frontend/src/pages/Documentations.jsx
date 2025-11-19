@@ -7,11 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Label } from '../components/ui/label';
 import { Textarea } from '../components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../components/ui/select';
-import { Plus, FolderOpen, Edit, Trash2, FileText, Search } from 'lucide-react';
+import { Plus, FolderOpen, Edit, Trash2, FileText, Search, Grid3x3, List, ChevronDown, ChevronRight, Eye, Download, FileSpreadsheet, FileImage, FileVideo } from 'lucide-react';
 import { documentationsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import { formatErrorMessage } from '../utils/errorFormatter';
+import { getBackendURL } from '../utils/config';
 
 const POLE_COLORS = {
   MAINTENANCE: '#f97316',
