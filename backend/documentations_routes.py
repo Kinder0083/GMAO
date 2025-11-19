@@ -919,45 +919,59 @@ async def generate_bon_pdf(
                 {('<div style="color: #999; padding: 3px 0;">Aucun risque environnemental particulier</div>' if not bon.get('risques_environnement') and not bon.get('risques_environnement_autre') else '')}
             </div>
 
+            <!-- SECTION 3: PRÉCAUTIONS À PRENDRE -->
             <div class="section">
-                <h2>3. Précautions à prendre</h2>
-                <div class="field">
-                    <div class="label">Matériel :</div>
-                    <div class="value">
-                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_materiel', [])]) or 'Aucune'}
-                        {f'<br>Autre: {bon.get("precautions_materiel_autre")}' if bon.get('precautions_materiel_autre') else ''}
-                    </div>
+                <div class="section-title">PRÉCAUTIONS À PRENDRE</div>
+                
+                <div class="subsection-title">Sur le matériel ou les infrastructures :</div>
+                {''.join([f'<div class="checkbox-item"><span class="checkbox checked"></span>{p}</div>' for p in bon.get('precautions_materiel', [])])}
+                {f'<div class="checkbox-item"><span class="checkbox checked"></span>Autre : {bon.get("precautions_materiel_autre")}</div>' if bon.get('precautions_materiel_autre') else ''}
+                {('<div style="color: #999; padding: 3px 0;">Aucune précaution matérielle spécifique</div>' if not bon.get('precautions_materiel') and not bon.get('precautions_materiel_autre') else '')}
+                
+                <div class="subsection-title">Sur les hommes, le matériel ou l'environnement :</div>
+                {''.join([f'<div class="checkbox-item"><span class="checkbox checked"></span>{p}</div>' for p in bon.get('precautions_epi', [])])}
+                {f'<div class="checkbox-item"><span class="checkbox checked"></span>Autre : {bon.get("precautions_epi_autre")}</div>' if bon.get('precautions_epi_autre') else ''}
+                {('<div style="color: #999; padding: 3px 0;">Aucun EPI spécifique requis</div>' if not bon.get('precautions_epi') and not bon.get('precautions_epi_autre') else '')}
+                
+                <div class="subsection-title">Sur l'environnement des travaux :</div>
+                {''.join([f'<div class="checkbox-item"><span class="checkbox checked"></span>{p}</div>' for p in bon.get('precautions_environnement', [])])}
+                {f'<div class="checkbox-item"><span class="checkbox checked"></span>Autre : {bon.get("precautions_environnement_autre")}</div>' if bon.get('precautions_environnement_autre') else ''}
+                {('<div style="color: #999; padding: 3px 0;">Aucune précaution environnementale spécifique</div>' if not bon.get('precautions_environnement') and not bon.get('precautions_environnement_autre') else '')}
+            </div>
+
+            <!-- SECTION 4: ENGAGEMENT -->
+            <div class="section">
+                <div class="section-title">ENGAGEMENT</div>
+                <div class="intro-text" style="margin-bottom: 15px; padding: 10px; background-color: #f9fafb;">
+                    Le représentant de l'entreprise intervenante reconnaît avoir pris connaissance des risques liés aux travaux 
+                    qui lui sont confiés et s'engage à appliquer et faire appliquer les mesures de précaution qui lui ont été notifiées.
                 </div>
-                <div class="field">
-                    <div class="label">EPI (Équipements de Protection Individuelle) :</div>
-                    <div class="value">
-                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_epi', [])]) or 'Aucun'}
-                        {f'<br>Autre: {bon.get("precautions_epi_autre")}' if bon.get('precautions_epi_autre') else ''}
+                
+                <table style="margin-top: 15px;">
+                    <tr>
+                        <th style="width: 30%;">Date</th>
+                        <td><strong>{bon.get('date_engagement', 'Non renseignée')}</strong></td>
+                    </tr>
+                </table>
+                
+                <div style="margin-top: 20px;">
+                    <div class="signature-box">
+                        <strong>Nom et visa de l'agent de maîtrise :</strong><br><br>
+                        {bon.get('nom_agent_maitrise', 'Non renseigné')}<br><br><br>
+                        <div style="border-top: 1px solid #003366; margin-top: 10px; padding-top: 5px;">Signature</div>
                     </div>
-                </div>
-                <div class="field">
-                    <div class="label">Environnement :</div>
-                    <div class="value">
-                        {''.join([f'<span class="badge">{p}</span>' for p in bon.get('precautions_environnement', [])]) or 'Aucune'}
-                        {f'<br>Autre: {bon.get("precautions_environnement_autre")}' if bon.get('precautions_environnement_autre') else ''}
+                    <div class="signature-box">
+                        <strong>Nom et visa du représentant de l'intervenant :</strong><br><br>
+                        {bon.get('nom_representant', 'Non renseigné')}<br><br><br>
+                        <div style="border-top: 1px solid #003366; margin-top: 10px; padding-top: 5px;">Signature</div>
                     </div>
                 </div>
             </div>
 
-            <div class="section">
-                <h2>4. Engagement</h2>
-                <div class="field">
-                    <div class="label">Date d'engagement :</div>
-                    <div class="value">{bon.get('date_engagement', 'Non renseignée')}</div>
-                </div>
-                <div class="field">
-                    <div class="label">Nom Agent de Maîtrise :</div>
-                    <div class="value">{bon.get('nom_agent_maitrise', 'Non renseigné')}</div>
-                </div>
-                <div class="field">
-                    <div class="label">Nom Représentant :</div>
-                    <div class="value">{bon.get('nom_representant', 'Non renseigné')}</div>
-                </div>
+            <!-- FOOTER -->
+            <div class="footer">
+                <div style="font-weight: bold; margin-bottom: 5px;">Remettre une copie à l'intervenant – Archivage</div>
+                <div style="text-align: right; font-style: italic;">Direction du site</div>
             </div>
         </body>
         </html>
