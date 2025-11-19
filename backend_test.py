@@ -795,14 +795,13 @@ class DocumentationPolesTester:
         return results
 
 if __name__ == "__main__":
-    tester = SSHAndDocumentationsTester()
-    results = tester.run_ssh_and_documentations_tests()
+    tester = DocumentationPolesTester()
+    results = tester.run_documentation_poles_tests()
     
     # Exit with appropriate code
     critical_tests = [
-        "admin_login", "ssh_execute_simple", "ssh_execute_list", "ssh_execute_echo", 
-        "ssh_execute_non_admin", "get_bons_travail_list", "get_bon_travail_details", 
-        "create_bon_travail", "generate_bon_pdf", "generate_bon_pdf_with_token"
+        "admin_login", "get_poles_with_documents", "get_pole_by_id", 
+        "compare_with_documents_endpoint"
     ]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
