@@ -693,17 +693,10 @@ class DocumentationPolesTester:
         
         results = {
             "admin_login": False,
-            "ssh_execute_simple": False,
-            "ssh_execute_list": False,
-            "ssh_execute_echo": False,
-            "ssh_execute_non_admin": False,
-            "get_bons_travail_list": False,
-            "get_bon_travail_details": False,
-            "create_bon_travail": False,
-            "generate_bon_pdf": False,
-            "generate_bon_pdf_with_token": False,
-            "cleanup_bons_travail": False,
-            "cleanup_remaining": False
+            "get_poles_with_documents": False,
+            "get_pole_by_id": False,
+            "compare_with_documents_endpoint": False,
+            "document_count_summary": False
         }
         
         # Test 1: Admin Login
@@ -713,35 +706,15 @@ class DocumentationPolesTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # PRIORITÉ 1: TERMINAL SSH (CRITIQUE)
+        # TESTS CRITIQUES DES ENDPOINTS DOCUMENTATIONS/POLES
         self.log("\n" + "=" * 60)
-        self.log("🔧 PRIORITÉ 1: TERMINAL SSH (CRITIQUE)")
+        self.log("📋 TESTS CRITIQUES - ENDPOINTS DOCUMENTATIONS/POLES")
         self.log("=" * 60)
         
-        results["ssh_execute_simple"] = self.test_ssh_execute_simple_command()
-        results["ssh_execute_list"] = self.test_ssh_execute_list_command()
-        results["ssh_execute_echo"] = self.test_ssh_execute_echo_command()
-        results["ssh_execute_non_admin"] = self.test_ssh_execute_non_admin_user()
-        
-        # PRIORITÉ 2: GÉNÉRATION PDF BON DE TRAVAIL (HAUTE)
-        self.log("\n" + "=" * 60)
-        self.log("📄 PRIORITÉ 2: GÉNÉRATION PDF BON DE TRAVAIL (HAUTE)")
-        self.log("=" * 60)
-        
-        results["get_bons_travail_list"] = self.test_get_bons_travail_list()
-        results["get_bon_travail_details"] = self.test_get_bon_travail_details()
-        results["create_bon_travail"] = self.test_create_bon_travail()
-        results["generate_bon_pdf"] = self.test_generate_bon_pdf()
-        results["generate_bon_pdf_with_token"] = self.test_generate_bon_pdf_with_token()
-        
-        # PRIORITÉ 3: CRUD BONS DE TRAVAIL (MOYENNE) - Déjà testé ci-dessus
-        self.log("\n" + "=" * 60)
-        self.log("📋 PRIORITÉ 3: CRUD BONS DE TRAVAIL (MOYENNE) - DÉJÀ TESTÉ")
-        self.log("=" * 60)
-        
-        # Cleanup
-        results["cleanup_bons_travail"] = self.test_cleanup_bons_travail()
-        results["cleanup_remaining"] = self.cleanup_remaining_bons_travail()
+        results["get_poles_with_documents"] = self.test_get_poles_with_documents()
+        results["get_pole_by_id"] = self.test_get_pole_by_id()
+        results["compare_with_documents_endpoint"] = self.test_compare_with_documents_endpoint()
+        results["document_count_summary"] = self.test_document_count_summary()
         
         # Summary
         self.log("=" * 80)
