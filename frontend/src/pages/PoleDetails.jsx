@@ -244,6 +244,51 @@ function PoleDetails() {
         </div>
       </div>
 
+      {/* Bons de Travail List */}
+      {bonsTravail.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Bons de Travail ({bonsTravail.length})</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {bonsTravail.map((bon) => (
+              <Card key={bon.id} className="hover:shadow-lg transition-shadow">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-base">{bon.titre}</CardTitle>
+                  <p className="text-sm text-gray-500">
+                    {new Date(bon.date_creation).toLocaleDateString('fr-FR')}
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {bon.description && (
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">{bon.description}</p>
+                  )}
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate(`/documentations/${poleId}/bon-de-travail?id=${bon.id}`)}
+                    >
+                      <Edit className="h-4 w-4 mr-1" />
+                      Modifier
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const token = localStorage.getItem('token');
+                        window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/bons-travail/${bon.id}/pdf?token=${token}`, '_blank');
+                      }}
+                    >
+                      <Download className="h-4 w-4 mr-1" />
+                      PDF
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Documents List */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {documents.length === 0 ? (
