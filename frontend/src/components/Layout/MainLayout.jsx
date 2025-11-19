@@ -26,7 +26,8 @@ import {
   Shield,
   Eye,
   AlertTriangle,
-  FolderOpen
+  FolderOpen,
+  Terminal
 } from 'lucide-react';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 import UpdateNotificationBadge from '../Common/UpdateNotificationBadge';
