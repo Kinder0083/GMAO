@@ -583,13 +583,13 @@ function Documentations() {
               <>
                 {previewDocument.type_fichier?.includes('pdf') ? (
                   <iframe
-                    src={`${getBackendURL()}/api/documentations/documents/${previewDocument.id}/view`}
+                    src={`${getBackendURL()}/api/documentations/documents/${previewDocument.id}/view?token=${localStorage.getItem('token')}`}
                     className="w-full h-full border-0"
                     title="PDF Preview"
                   />
                 ) : previewDocument.type_fichier?.includes('image') ? (
                   <img
-                    src={`${getBackendURL()}/api/documentations/documents/${previewDocument.id}/view`}
+                    src={`${getBackendURL()}/api/documentations/documents/${previewDocument.id}/view?token=${localStorage.getItem('token')}`}
                     alt={previewDocument.nom_fichier}
                     className="max-w-full h-auto mx-auto"
                   />
