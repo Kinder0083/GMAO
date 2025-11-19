@@ -233,40 +233,73 @@ class DocumentationPolesTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_ssh_execute_echo_command(self):
-        """TEST 3: Exécuter une commande SSH echo - echo 'Test SSH'"""
-        self.log("🧪 TEST 3: SSH Execute - Commande echo")
+    def test_compare_with_documents_endpoint(self):
+        """TEST 3: CRITIQUE - Comparer avec GET /api/documentations/documents?pole_id={pole_id}"""
+        self.log("🧪 TEST 3: CRITIQUE - Comparaison avec endpoint documents individuels")
+        
+        if not self.poles_data:
+            self.log("⚠️ Pas de données de pôles disponibles du test précédent", "WARNING")
+            return False
+        
+        # Prendre un pôle qui a des documents
+        test_pole = None
+        for pole in self.poles_data:
+            if pole.get('documents') and len(pole['documents']) > 0:
+                test_pole = pole
+                break
+        
+        if not test_pole:
+            self.log("⚠️ Aucun pôle avec des documents trouvé pour la comparaison")
+            return True  # Still consider it working if no documents exist
+        
+        pole_id = test_pole.get('id')
+        pole_name = test_pole.get('nom', 'Pôle inconnu')
+        pole_docs_count = len(test_pole.get('documents', []))
         
         try:
-            test_message = "Test SSH GMAO Iris"
-            command_data = {
-                "command": f"echo '{test_message}'"
-            }
-            
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/ssh/execute",
-                json=command_data,
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/documentations/documents?pole_id={pole_id}",
                 timeout=15
             )
             
             if response.status_code == 200:
-                data = response.json()
-                stdout = data.get('stdout', '').strip()
-                self.log(f"✅ Commande SSH exécutée avec succès")
-                self.log(f"✅ stdout: {stdout}")
-                self.log(f"✅ stderr: {data.get('stderr', '').strip()}")
-                self.log(f"✅ exit_code: {data.get('exit_code')}")
+                individual_docs = response.json()
+                individual_count = len(individual_docs)
                 
-                # Vérifier que l'echo retourne le bon message
-                if test_message in stdout:
-                    self.log("✅ Commande echo retourne le message attendu")
-                    return True
+                self.log(f"✅ Endpoint documents individuels accessible")
+                self.log(f"📊 Pôle '{pole_name}':")
+                self.log(f"   - Documents dans pole: {pole_docs_count}")
+                self.log(f"   - Documents endpoint individuel: {individual_count}")
+                
+                # Comparaison critique
+                if pole_docs_count == individual_count:
+                    self.log("✅ SUCCÈS CRITIQUE: Les nombres correspondent parfaitement")
+                    
+                    # Vérifier que les mêmes documents apparaissent
+                    if pole_docs_count > 0:
+                        pole_doc_ids = set(doc.get('id') for doc in test_pole['documents'])
+                        individual_doc_ids = set(doc.get('id') for doc in individual_docs)
+                        
+                        if pole_doc_ids == individual_doc_ids:
+                            self.log("✅ SUCCÈS CRITIQUE: Les mêmes documents apparaissent dans les deux endpoints")
+                            return True
+                        else:
+                            missing_in_pole = individual_doc_ids - pole_doc_ids
+                            missing_in_individual = pole_doc_ids - individual_doc_ids
+                            if missing_in_pole:
+                                self.log(f"⚠️ Documents manquants dans pole: {missing_in_pole}")
+                            if missing_in_individual:
+                                self.log(f"⚠️ Documents manquants dans endpoint individuel: {missing_in_individual}")
+                            return False
+                    else:
+                        return True
                 else:
-                    self.log(f"❌ Commande echo ne retourne pas le message attendu. Attendu: '{test_message}', Reçu: '{stdout}'", "ERROR")
+                    self.log(f"❌ ÉCHEC CRITIQUE: Les nombres ne correspondent pas", "ERROR")
+                    self.log(f"   Différence: {abs(pole_docs_count - individual_count)} documents")
                     return False
                     
             else:
-                self.log(f"❌ Commande SSH échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Endpoint documents individuels inaccessible - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
                 return False
                 
