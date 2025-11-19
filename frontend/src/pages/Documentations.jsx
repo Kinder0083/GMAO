@@ -330,7 +330,7 @@ function Documentations() {
             </Card>
           ))
         )}
-      </div>
+        </div>
       ) : (
         /* Vue en Liste avec Arborescence */
         <Card>
