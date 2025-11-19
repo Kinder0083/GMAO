@@ -309,13 +309,24 @@ function PoleDetails() {
                         />
                       </>
                     ) : (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleDownload(doc.id, doc.fichier_nom)}
-                      >
-                        <Download className="h-4 w-4" />
-                      </Button>
+                      <>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/documents/${doc.id}/view`, '_blank')}
+                          title="Ouvrir dans un nouvel onglet"
+                        >
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDownload(doc.id, doc.fichier_nom)}
+                          title="Télécharger"
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                     <Button size="sm" variant="outline" onClick={() => handleDelete(doc.id)}>
                       <Trash2 className="h-4 w-4" />
