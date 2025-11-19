@@ -331,6 +331,152 @@ function Documentations() {
           ))
         )}
       </div>
+      ) : (
+        /* Vue en Liste avec Arborescence */
+        <Card>
+          <CardContent className="p-0">
+            {filteredPoles.length === 0 ? (
+              <div className="text-center py-12">
+                <FolderOpen className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <p className="text-gray-500">Aucun pôle de service trouvé</p>
+                <Button onClick={handleCreate} className="mt-4">
+                  Créer le premier pôle
+                </Button>
+              </div>
+            ) : (
+              <div className="divide-y">
+                {filteredPoles.map((pole) => {
+                  const isExpanded = expandedPoles.has(pole.id);
+                  const Icon = getFileIcon();
+                  
+                  return (
+                    <div key={pole.id}>
+                      {/* Pôle Header */}
+                      <div className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
+                        <button
+                          onClick={() => togglePoleExpansion(pole.id)}
+                          className="p-1 hover:bg-gray-200 rounded"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="h-5 w-5" />
+                          ) : (
+                            <ChevronRight className="h-5 w-5" />
+                          )}
+                        </button>
+                        
+                        <div
+                          className="w-10 h-10 rounded-lg flex items-center justify-center text-xl flex-shrink-0"
+                          style={{ backgroundColor: `${pole.couleur || POLE_COLORS[pole.pole]}20` }}
+                        >
+                          {POLE_ICONS[pole.pole] || '📁'}
+                        </div>
+
+                        <div 
+                          className="flex-1 cursor-pointer"
+                          onClick={() => handlePoleClick(pole.id)}
+                        >
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-semibold">{pole.nom}</h3>
+                            <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
+                              {pole.pole}
+                            </span>
+                          </div>
+                          {pole.description && (
+                            <p className="text-sm text-gray-500 mt-1">{pole.description}</p>
+                          )}
+                          {pole.responsable && (
+                            <p className="text-xs text-gray-400 mt-1">
+                              Responsable : {pole.responsable}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2">
+                          <span className="text-sm text-gray-500">
+                            {pole.documents?.length || 0} doc(s)
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(pole);
+                            }}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(pole.id);
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Documents List (expanded) */}
+                      {isExpanded && (
+                        <div className="bg-gray-50 border-t">
+                          {pole.documents && pole.documents.length > 0 ? (
+                            <div className="divide-y divide-gray-200">
+                              {pole.documents.map((doc) => {
+                                const DocIcon = getFileIcon(doc.type_fichier);
+                                return (
+                                  <div
+                                    key={doc.id}
+                                    className="flex items-center gap-3 p-3 pl-16 hover:bg-gray-100 transition-colors"
+                                  >
+                                    <DocIcon className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-medium text-sm truncate">{doc.nom_fichier}</p>
+                                      <p className="text-xs text-gray-500">
+                                        {(doc.taille / 1024).toFixed(2)} KB
+                                      </p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleDocumentPreview(doc)}
+                                        title="Prévisualiser"
+                                      >
+                                        <Eye className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          window.open(`${getBackendURL()}${doc.fichier_url}`, '_blank');
+                                        }}
+                                        title="Télécharger"
+                                      >
+                                        <Download className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          ) : (
+                            <div className="p-6 text-center text-gray-500 text-sm">
+                              <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                              Aucun document dans ce pôle
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Form Dialog */}
       <Dialog open={openForm} onOpenChange={setOpenForm}>
