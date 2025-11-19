@@ -2431,7 +2431,10 @@ metadata:
   run_ui: false
 
 test_plan:
-  current_focus: []
+  current_focus:
+    - "Terminal SSH - Test correction erreur Response body already used"
+    - "Module Documentations - Visualisation Bon de Travail"
+    - "Module Documentations - Navigation de base"
   stuck_tasks: 
     - "Test FINAL - Vérifier si le downgrade de recharts a résolu le problème d'histogramme invisible"
   test_all: false
