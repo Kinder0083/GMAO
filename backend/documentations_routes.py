@@ -2,6 +2,7 @@
 Routes API pour le module Documentations - Pôles de Service et Documents
 """
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi.responses import HTMLResponse
 from fastapi.responses import StreamingResponse
 from typing import List, Optional
 from datetime import datetime, timezone
