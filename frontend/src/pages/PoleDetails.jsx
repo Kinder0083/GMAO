@@ -18,7 +18,7 @@ import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import { formatErrorMessage } from '../utils/errorFormatter';
 
 const FILE_ICONS = {
-  'application/pdf': FilePdf,
+  'application/pdf': FileText,
   'application/msword': FileText,
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document': FileText,
   'application/vnd.ms-excel': FileSpreadsheet,
