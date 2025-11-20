@@ -177,12 +177,14 @@ REACT_APP_BACKEND_URL=http://{tailscale_ip}
             "new_ip": tailscale_ip,
             "new_url": f"http://{tailscale_ip}",
             "steps_completed": [
-                "Sauvegarde effectuée",
+                "Sauvegarde effectuée (.env.backup)",
+                "Configuration nginx vérifiée",
                 "Fichier .env modifié",
                 "Frontend recompilé",
-                "Nginx redémarré",
-                "Backend redémarré"
-            ]
+                "Backend redémarré",
+                "Nginx redémarré"
+            ],
+            "important": "Si vous rencontrez des problèmes, restaurez avec : cp /opt/gmao-iris/frontend/.env.backup /opt/gmao-iris/frontend/.env && yarn build && systemctl restart nginx"
         }
         
     except HTTPException:
