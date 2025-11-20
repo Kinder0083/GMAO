@@ -229,12 +229,13 @@ async def get_surveillance_stats(current_user: dict = Depends(get_current_user))
         planifies = len([i for i in items if i.get("status") == SurveillanceItemStatus.PLANIFIE.value])
         a_planifier = len([i for i in items if i.get("status") == SurveillanceItemStatus.PLANIFIER.value])
         
-        # Par catégorie
+        # Par catégorie (dynamique - récupère toutes les catégories existantes)
         by_category = {}
-        for cat in SurveillanceCategory:
-            cat_items = [i for i in items if i.get("category") == cat.value]
+        categories = list(set([i.get("category") for i in items if i.get("category")]))
+        for cat in categories:
+            cat_items = [i for i in items if i.get("category") == cat]
             cat_realises = len([i for i in cat_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
-            by_category[cat.value] = {
+            by_category[cat] = {
                 "total": len(cat_items),
                 "realises": cat_realises,
                 "pourcentage": round((cat_realises / len(cat_items) * 100) if cat_items else 0, 1)
@@ -416,12 +417,13 @@ async def get_rapport_stats(current_user: dict = Depends(get_current_user)):
             if any(keyword in commentaire for keyword in ["anomalie", "problème", "défaut", "dysfonctionnement", "intervention", "réparation"]):
                 anomalies += 1
         
-        # Par catégorie
+        # Par catégorie (dynamique - récupère toutes les catégories existantes)
         by_category = {}
-        for cat in SurveillanceCategory:
-            cat_items = [i for i in items if i.get("category") == cat.value]
+        categories = list(set([i.get("category") for i in items if i.get("category")]))
+        for cat in categories:
+            cat_items = [i for i in items if i.get("category") == cat]
             cat_realises = len([i for i in cat_items if i.get("status") == SurveillanceItemStatus.REALISE.value])
-            by_category[cat.value] = {
+            by_category[cat] = {
                 "total": len(cat_items),
                 "realises": cat_realises,
                 "pourcentage": round((cat_realises / len(cat_items) * 100) if cat_items else 0, 1)
