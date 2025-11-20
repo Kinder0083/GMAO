@@ -726,24 +726,44 @@ const SpecialSettings = () => {
                   </div>
                 </div>
 
-                {/* Bouton Appliquer */}
-                <button
-                  onClick={handleSaveTailscaleConfig}
-                  disabled={savingTailscale || !tailscaleIP}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                >
-                  {savingTailscale ? (
-                    <>
-                      <RefreshCw className="h-5 w-5 animate-spin" />
-                      <span>Configuration en cours (1-2 min)...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="h-5 w-5" />
-                      <span>Appliquer la nouvelle IP</span>
-                    </>
-                  )}
-                </button>
+                {/* Boutons */}
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    onClick={handleRestoreTailscaleConfig}
+                    disabled={restoringTailscale || savingTailscale}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-orange-600 text-white rounded-lg hover:bg-orange-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {restoringTailscale ? (
+                      <>
+                        <RefreshCw className="h-5 w-5 animate-spin" />
+                        <span>Restauration...</span>
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-5 w-5" />
+                        <span>Restaurer l'ancienne IP</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={handleSaveTailscaleConfig}
+                    disabled={savingTailscale || restoringTailscale || !tailscaleIP}
+                    className="flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {savingTailscale ? (
+                      <>
+                        <RefreshCw className="h-5 w-5 animate-spin" />
+                        <span>Configuration en cours (1-2 min)...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-5 w-5" />
+                        <span>Appliquer la nouvelle IP</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}
