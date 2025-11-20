@@ -269,13 +269,18 @@ REACT_APP_BACKEND_URL=http://{tailscale_ip}
         with open(env_file_path, 'w') as f:
             f.write(new_env_content)
         
-        logger.info("[4/6] Recompilation du frontend (cela peut prendre 1-2 minutes)...")
+        logger.info("[4/6] Recompilation du frontend (cela peut prendre 2-3 minutes)...")
+        # Nettoyer le cache node_modules/.cache pour éviter les problèmes
+        cache_path = proxmox_frontend_path / "node_modules" / ".cache"
+        if cache_path.exists():
+            subprocess.run(['rm', '-rf', str(cache_path)], check=False)
+        
         result = subprocess.run(
             ['yarn', 'build'],
             cwd=str(proxmox_frontend_path),
             capture_output=True,
             text=True,
-            timeout=300  # 5 minutes max
+            timeout=600  # 10 minutes max pour être sûr
         )
         
         if result.returncode != 0:
