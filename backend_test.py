@@ -506,20 +506,27 @@ class SurveillanceCustomCategoryTester:
         success, test_item = self.test_create_custom_category_item()
         results["create_custom_category_item"] = success
         
-        # Test 3: Récupérer l'item créé
+        # Test 3: Créer un item avec catégorie existante pour comparaison
+        success_existing, test_item_existing = self.test_create_existing_category_item()
+        results["create_existing_category_item"] = success_existing
+        
+        # Test 4: Vérifier les logs backend
+        results["check_backend_logs"] = self.test_check_backend_logs()
+        
+        # Test 5: Récupérer l'item créé
         results["retrieve_created_item"] = self.test_retrieve_created_item()
         
-        # Test 4: Vérifier les statistiques
+        # Test 6: Vérifier les statistiques
         results["verify_stats_with_new_category"] = self.test_verify_stats_with_new_category()
         
-        # Test 5: Créer un deuxième item avec une autre catégorie
+        # Test 7: Créer un deuxième item avec une autre catégorie
         success2, test_item2 = self.test_create_second_custom_category_item()
         results["create_second_custom_category_item"] = success2
         
-        # Test 6: Vérifier que les deux catégories apparaissent dans les statistiques
+        # Test 8: Vérifier que les deux catégories apparaissent dans les statistiques
         results["verify_both_categories_in_stats"] = self.test_verify_both_categories_in_stats()
         
-        # Test 7: Nettoyage
+        # Test 9: Nettoyage
         results["delete_created_items"] = self.test_delete_created_items()
         
         # Summary
