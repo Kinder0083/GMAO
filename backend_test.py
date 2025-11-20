@@ -110,44 +110,53 @@ class SurveillanceCustomCategoryTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False, None
     
-    def test_check_due_dates_with_overdue_item(self):
-        """TEST 2: Vérifier l'endpoint check-due-dates avec un item en échéance"""
-        self.log("🧪 TEST 2: POST /api/surveillance/check-due-dates - Item en échéance")
+    def test_retrieve_created_item(self):
+        """TEST 2: Récupérer l'item créé et vérifier la catégorie"""
+        self.log("🧪 TEST 2: Récupérer l'item créé")
+        
+        if not self.test_items:
+            self.log("⚠️ Aucun item de test disponible", "WARNING")
+            return False
         
         try:
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/surveillance/check-due-dates",
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/items",
                 timeout=15
             )
             
             if response.status_code == 200:
-                data = response.json()
-                self.log(f"✅ Endpoint accessible - Status: 200 OK")
-                self.log(f"✅ Réponse structure: {data}")
+                items = response.json()
+                self.log(f"✅ Liste des items récupérée - {len(items)} items")
                 
-                # Vérifier la structure de la réponse
-                required_fields = ["success", "updated_count", "message"]
-                missing_fields = [field for field in required_fields if field not in data]
+                # Chercher notre item de test avec la catégorie personnalisée
+                test_item = None
+                for item in items:
+                    if item.get('id') in self.test_items and item.get('category') == 'MA_NOUVELLE_CATEGORIE':
+                        test_item = item
+                        break
                 
-                if missing_fields:
-                    self.log(f"❌ Champs manquants dans la réponse: {missing_fields}", "ERROR")
-                    return False
-                
-                self.log(f"✅ success: {data.get('success')}")
-                self.log(f"✅ updated_count: {data.get('updated_count')}")
-                self.log(f"✅ message: {data.get('message')}")
-                
-                # Si nous avons créé un item avec une date dépassée, il devrait être mis à jour
-                if data.get("updated_count", 0) > 0:
-                    self.log(f"✅ SUCCÈS: {data.get('updated_count')} item(s) mis à jour automatiquement")
-                    return True
+                if test_item:
+                    self.log(f"✅ Item avec catégorie personnalisée trouvé - ID: {test_item.get('id')}")
+                    self.log(f"✅ Classe: {test_item.get('classe_type')}")
+                    self.log(f"✅ Catégorie: {test_item.get('category')}")
+                    self.log(f"✅ Bâtiment: {test_item.get('batiment')}")
+                    self.log(f"✅ Exécutant: {test_item.get('executant')}")
+                    
+                    # Vérifier tous les champs
+                    if (test_item.get('category') == 'MA_NOUVELLE_CATEGORIE' and
+                        test_item.get('classe_type') == 'Test Catégorie Personnalisée' and
+                        test_item.get('batiment') == 'TEST BATIMENT'):
+                        self.log("✅ SUCCÈS: Tous les champs sont corrects")
+                        return True
+                    else:
+                        self.log("❌ ÉCHEC: Certains champs sont incorrects", "ERROR")
+                        return False
                 else:
-                    self.log("⚠️ Aucun item mis à jour - peut-être aucun item en échéance")
-                    return True  # Still consider it working
+                    self.log("❌ Item avec catégorie personnalisée non trouvé dans la liste", "ERROR")
+                    return False
                     
             else:
-                self.log(f"❌ Endpoint inaccessible - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
+                self.log(f"❌ Récupération des items échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
