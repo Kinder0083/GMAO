@@ -429,4 +429,13 @@ export const documentationsAPI = {
   sendEmail: (id, email) => api.post(`/documentations/bons-travail/${id}/email`, { email_to: email }).then(res => res.data)
 };
 
+// User Preferences API
+export const userPreferencesAPI = {
+  getAll: () => api.get('/user-preferences').then(res => res.data),
+  get: (key) => api.get(`/user-preferences/${key}`).then(res => res.data),
+  set: (key, value) => api.post('/user-preferences', { key, value }).then(res => res.data),
+  setBulk: (preferences) => api.put('/user-preferences/bulk', { preferences }).then(res => res.data),
+  delete: (key) => api.delete(`/user-preferences/${key}`).then(res => res.data)
+};
+
 export default api;
