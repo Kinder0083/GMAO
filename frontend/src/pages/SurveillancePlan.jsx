@@ -235,13 +235,31 @@ function SurveillancePlan() {
       </div>
 
       <Tabs defaultValue="list" className="w-full">
-        <TabsList>
-          <TabsTrigger value="list">Liste</TabsTrigger>
-          <TabsTrigger value="grid">Grille</TabsTrigger>
-          <TabsTrigger value="calendar">Calendrier</TabsTrigger>
-        </TabsList>
+        <div className="flex justify-between items-center mb-4">
+          <TabsList>
+            <TabsTrigger value="list">Liste</TabsTrigger>
+            <TabsTrigger value="grid">Grille</TabsTrigger>
+            <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+          </TabsList>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => setOpenCategoryDialog(true)}
+            disabled={categories.length === 0}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Ordre des catégories
+          </Button>
+        </div>
         <TabsContent value="list">
-          <ListView items={filteredItems} loading={loading} onEdit={handleEdit} onDelete={handleDelete} onRefresh={loadData} />
+          <ListViewGrouped 
+            items={filteredItems} 
+            loading={loading} 
+            onEdit={handleEdit} 
+            onDelete={handleDelete} 
+            onRefresh={loadData}
+            key={categoryOrderChanged}
+          />
         </TabsContent>
         <TabsContent value="grid">
           <GridView items={filteredItems} loading={loading} onEdit={handleEdit} onDelete={handleDelete} onRefresh={loadData} />
