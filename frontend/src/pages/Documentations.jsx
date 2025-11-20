@@ -550,8 +550,7 @@ function Documentations() {
                               })}
                             </div>
                           ) : (
-                            <div className="p-6 text-center text-gray-500 text-sm">
-                              <FileText className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                            <div className="p-4 pl-16 text-sm text-gray-500">
                               Aucun document dans ce pôle
                             </div>
                           )}
