@@ -481,6 +481,8 @@ class SurveillanceCustomCategoryTester:
         results = {
             "admin_login": False,
             "create_custom_category_item": False,
+            "create_existing_category_item": False,
+            "check_backend_logs": False,
             "retrieve_created_item": False,
             "verify_stats_with_new_category": False,
             "create_second_custom_category_item": False,
