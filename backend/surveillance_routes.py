@@ -13,7 +13,6 @@ from models import (
     SurveillanceItemCreate,
     SurveillanceItemUpdate,
     SurveillanceItemStatus,
-    SurveillanceCategory,
     SurveillanceResponsible,
     ActionType,
     EntityType
