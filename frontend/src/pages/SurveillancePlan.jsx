@@ -44,10 +44,22 @@ function SurveillancePlan() {
     loadData();
   }, []);
 
+  // Détecter si on vient du badge "contrôles en retard"
+  useEffect(() => {
+    if (location.state?.showOverdueOnly) {
+      setShowOverdueFilter(true);
+      // Afficher un message explicatif
+      toast({
+        title: 'Filtre activé',
+        description: 'Affichage des contrôles en retard uniquement',
+      });
+    }
+  }, [location.state]);
+
   useEffect(() => {
     applyFilters();
     extractCategories();
-  }, [items, filters]);
+  }, [items, filters, showOverdueFilter]);
 
   const loadData = async () => {
     try {
