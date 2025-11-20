@@ -33,6 +33,7 @@ function ListViewGrouped({ items, loading, onEdit, onDelete, onRefresh }) {
   const [completeDialog, setCompleteDialog] = useState({ open: false, item: null });
   const [groupedItems, setGroupedItems] = useState({});
   const [categoryOrder, setCategoryOrder] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState(new Set());
 
   useEffect(() => {
     loadCategoryOrder();
