@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Plan de Surveillance - Vérification automatique échéances
+Tests Plan de Surveillance - Création contrôle avec catégorie personnalisée
 """
 
 import requests
@@ -16,7 +16,7 @@ BACKEND_URL = "https://surveil-plan.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class SurveillanceTester:
+class SurveillanceCustomCategoryTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
