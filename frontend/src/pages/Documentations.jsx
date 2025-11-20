@@ -181,14 +181,24 @@ function Documentations() {
     navigate(`/documentations/${poleId}`);
   };
 
-  const togglePoleExpansion = (poleId) => {
-    const newExpanded = new Set(expandedPoles);
+  const toggleBonsExpansion = (poleId) => {
+    const newExpanded = new Set(expandedBonsPoles);
     if (newExpanded.has(poleId)) {
       newExpanded.delete(poleId);
     } else {
       newExpanded.add(poleId);
     }
-    setExpandedPoles(newExpanded);
+    setExpandedBonsPoles(newExpanded);
+  };
+
+  const toggleDocsExpansion = (poleId) => {
+    const newExpanded = new Set(expandedDocsPoles);
+    if (newExpanded.has(poleId)) {
+      newExpanded.delete(poleId);
+    } else {
+      newExpanded.add(poleId);
+    }
+    setExpandedDocsPoles(newExpanded);
   };
 
   const handleDocumentPreview = async (document) => {
