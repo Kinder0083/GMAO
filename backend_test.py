@@ -163,56 +163,50 @@ class SurveillanceCustomCategoryTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_verify_status_change(self):
-        """TEST 3: Vérifier que le statut a changé de REALISE à PLANIFIER"""
-        self.log("🧪 TEST 3: Vérification du changement de statut")
-        
-        if not self.test_items:
-            self.log("⚠️ Aucun item de test disponible", "WARNING")
-            return False
+    def test_verify_stats_with_new_category(self):
+        """TEST 3: Vérifier statistiques avec nouvelle catégorie"""
+        self.log("🧪 TEST 3: Vérifier que by_category contient maintenant 'MA_NOUVELLE_CATEGORIE'")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/surveillance/items",
+                f"{BACKEND_URL}/surveillance/stats",
                 timeout=15
             )
             
             if response.status_code == 200:
-                items = response.json()
-                self.log(f"✅ Liste des items récupérée - {len(items)} items")
+                stats = response.json()
+                self.log(f"✅ Statistiques récupérées - Status: 200 OK")
                 
-                # Chercher notre item de test
-                test_item = None
-                for item in items:
-                    if item.get('id') in self.test_items and item.get('classe_type') == 'Test Échéance Auto':
-                        test_item = item
-                        break
-                
-                if test_item:
-                    self.log(f"✅ Item de test trouvé - ID: {test_item.get('id')}")
-                    self.log(f"✅ Statut actuel: {test_item.get('status')}")
-                    self.log(f"✅ updated_by: {test_item.get('updated_by')}")
+                # Vérifier la structure de la réponse
+                if "by_category" in stats:
+                    by_category = stats["by_category"]
+                    self.log(f"✅ by_category trouvé avec {len(by_category)} catégories")
                     
-                    # Vérifier que le statut est maintenant PLANIFIER
-                    if test_item.get('status') == 'PLANIFIER':
-                        self.log("✅ SUCCÈS: Statut changé de REALISE à PLANIFIER")
+                    # Vérifier que notre nouvelle catégorie est présente
+                    if "MA_NOUVELLE_CATEGORIE" in by_category:
+                        category_stats = by_category["MA_NOUVELLE_CATEGORIE"]
+                        self.log(f"✅ SUCCÈS: Catégorie 'MA_NOUVELLE_CATEGORIE' trouvée dans les statistiques")
+                        self.log(f"✅ Total items: {category_stats.get('total')}")
+                        self.log(f"✅ Réalisés: {category_stats.get('realises')}")
+                        self.log(f"✅ Pourcentage: {category_stats.get('pourcentage')}%")
                         
-                        # Vérifier que updated_by est "system_auto_check"
-                        if test_item.get('updated_by') == 'system_auto_check':
-                            self.log("✅ SUCCÈS: updated_by = 'system_auto_check' (système automatique)")
+                        # Vérifier le comptage
+                        if category_stats.get('total', 0) >= 1:
+                            self.log("✅ SUCCÈS: Le comptage est correct (au moins 1 item)")
                             return True
                         else:
-                            self.log(f"⚠️ updated_by = '{test_item.get('updated_by')}' (attendu: 'system_auto_check')")
-                            return True  # Still consider it working
+                            self.log("❌ ÉCHEC: Comptage incorrect", "ERROR")
+                            return False
                     else:
-                        self.log(f"❌ ÉCHEC: Statut toujours '{test_item.get('status')}' (attendu: PLANIFIER)", "ERROR")
+                        self.log("❌ ÉCHEC: Catégorie 'MA_NOUVELLE_CATEGORIE' non trouvée dans les statistiques", "ERROR")
+                        self.log(f"Catégories disponibles: {list(by_category.keys())}")
                         return False
                 else:
-                    self.log("❌ Item de test non trouvé dans la liste", "ERROR")
+                    self.log("❌ ÉCHEC: 'by_category' non trouvé dans la réponse", "ERROR")
                     return False
                     
             else:
-                self.log(f"❌ Récupération des items échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération des statistiques échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
