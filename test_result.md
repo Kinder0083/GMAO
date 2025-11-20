@@ -1685,6 +1685,63 @@ backend:
           - Les calculs métier sont précis et fiables
           - Prêt pour utilisation en production
 
+  - task: "API Plan de Surveillance - Vérification automatique échéances et mise à jour statuts"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/surveillance_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ NOUVEL ENDPOINT - Vérification automatique des échéances (Janvier 2025)
+          
+          🎯 CONTEXTE:
+          Besoin d'un système automatique pour changer le statut des contrôles de "REALISE" à "PLANIFIER"
+          lorsque la date de prochain contrôle approche (selon la durée de rappel configurée).
+          
+          🔧 IMPLÉMENTATION:
+          
+          1. Nouvel endpoint POST /api/surveillance/check-due-dates (ligne 641-700):
+             - Accessible à tous les utilisateurs connectés
+             - Récupère tous les items avec statut "REALISE"
+             - Pour chaque item:
+               * Calcule date_rappel = prochain_controle - duree_rappel_echeance jours
+               * Si date_actuelle >= date_rappel: change statut vers "PLANIFIER"
+               * Met à jour le champ updated_by = "system_auto_check"
+             - Retourne le nombre d'items mis à jour
+          
+          2. Intégration frontend dans SurveillancePlan.jsx (ligne 49-66):
+             - Appel automatique de checkDueDates() dans loadData()
+             - S'exécute au chargement de la page
+             - Non bloquant (catch error si échec)
+          
+          3. Ajout dans services/api.js (ligne 347):
+             - checkDueDates: () => api.post('/surveillance/check-due-dates')
+          
+          📋 LOGIQUE MÉTIER:
+          Exemple avec duree_rappel_echeance = 30 jours:
+          - Item réalisé le 1er janvier, périodicité 6 mois
+          - Prochain contrôle: 1er juillet
+          - Date rappel: 1er juin (30 jours avant)
+          - À partir du 1er juin, statut change automatiquement vers "PLANIFIER"
+          
+          🧪 À TESTER:
+          1. Créer un item test avec statut REALISE
+          2. Définir prochain_controle = aujourd'hui - 10 jours
+          3. Définir duree_rappel_echeance = 30 jours
+          4. Appeler POST /api/surveillance/check-due-dates
+          5. Vérifier que le statut passe de REALISE à PLANIFIER
+          6. Vérifier le compteur updated_count dans la réponse
+          7. Tester que les items non concernés ne sont pas modifiés
+          
+          📌 FICHIERS MODIFIÉS:
+          - /app/backend/surveillance_routes.py (ajout endpoint)
+          - /app/frontend/src/pages/SurveillancePlan.jsx (appel automatique)
+          - /app/frontend/src/services/api.js (ajout fonction API)
+
 frontend:
   - task: "Plan de Surveillance - Interface complète avec 3 vues"
     implemented: true
