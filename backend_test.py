@@ -218,7 +218,7 @@ class SurveillanceTester:
         
         test_item_data = {
             "classe_type": "Test Non Échéance",
-            "category": "TEST",
+            "category": "AUTRE",
             "batiment": "TEST",
             "periodicite": "1 an",
             "responsable": "MAINT",
