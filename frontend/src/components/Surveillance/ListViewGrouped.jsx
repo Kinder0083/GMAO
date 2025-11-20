@@ -220,6 +220,7 @@ function ListViewGrouped({ items, loading, onEdit, onDelete, onRefresh }) {
                 ))}
               </TableBody>
             </Table>
+            )}
           </div>
         ))}
       </div>
@@ -232,6 +233,14 @@ function ListViewGrouped({ items, loading, onEdit, onDelete, onRefresh }) {
             setCompleteDialog({ open: false, item: null });
             if (refresh && onRefresh) onRefresh();
           }}
+        />
+      )}
+
+      {historyDialog.open && (
+        <HistoryDialog
+          open={historyDialog.open}
+          control={historyDialog.control}
+          onClose={() => setHistoryDialog({ open: false, control: null })}
         />
       )}
     </>
