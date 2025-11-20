@@ -143,9 +143,9 @@ class SurveillanceCustomCategoryTester:
                     self.log(f"✅ Exécutant: {test_item.get('executant')}")
                     
                     # Vérifier tous les champs
-                    if (test_item.get('category') == 'MA_NOUVELLE_CATEGORIE' and
-                        test_item.get('classe_type') == 'Test Catégorie Personnalisée' and
-                        test_item.get('batiment') == 'TEST BATIMENT'):
+                    if (test_item.get('category') == 'TEST_CATEGORIE_NOUVELLE' and
+                        test_item.get('classe_type') == 'Test Frontend Categorie' and
+                        test_item.get('batiment') == 'BATIMENT TEST'):
                         self.log("✅ SUCCÈS: Tous les champs sont corrects")
                         return True
                     else:
