@@ -19,6 +19,59 @@ class TailscaleConfigRequest(BaseModel):
     tailscale_ip: str
 
 
+@router.get("/diagnostics")
+async def get_tailscale_diagnostics(current_user: dict = Depends(get_current_user)):
+    """
+    Diagnostics Tailscale - Vérifier la configuration du système
+    """
+    try:
+        if current_user.get("role") != "ADMIN":
+            raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+        
+        diagnostics = {
+            "environment": "development",
+            "nginx_status": "unknown",
+            "backend_status": "unknown",
+            "current_ip": None
+        }
+        
+        # Déterminer l'environnement
+        proxmox_path = Path("/opt/gmao-iris/frontend")
+        if proxmox_path.exists():
+            diagnostics["environment"] = "proxmox"
+            
+            # Vérifier nginx
+            try:
+                result = subprocess.run(['systemctl', 'is-active', 'nginx'], 
+                                       capture_output=True, text=True)
+                diagnostics["nginx_status"] = "running" if result.returncode == 0 else "stopped"
+            except:
+                diagnostics["nginx_status"] = "error"
+            
+            # Vérifier backend
+            try:
+                result = subprocess.run(['supervisorctl', 'status', 'gmao-iris-backend'], 
+                                       capture_output=True, text=True)
+                diagnostics["backend_status"] = "running" if "RUNNING" in result.stdout else "stopped"
+            except:
+                diagnostics["backend_status"] = "error"
+            
+            # Lire l'IP actuelle
+            env_file = proxmox_path / ".env"
+            if env_file.exists():
+                with open(env_file, 'r') as f:
+                    for line in f:
+                        if line.startswith('REACT_APP_BACKEND_URL='):
+                            url = line.split('=', 1)[1].strip()
+                            if '://' in url:
+                                diagnostics["current_ip"] = url.split('://')[1].rstrip('/')
+        
+        return diagnostics
+    except Exception as e:
+        logger.error(f"Erreur diagnostics: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/config")
 async def get_tailscale_config(current_user: dict = Depends(get_current_user)):
     """
