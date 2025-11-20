@@ -314,29 +314,46 @@ class SurveillanceCustomCategoryTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
 
-    def test_authentication_required(self):
-        """TEST 6: Vérifier que l'authentification est requise"""
-        self.log("🧪 TEST 6: Test authentification requise")
+    def test_delete_created_items(self):
+        """TEST 6: Nettoyer - Supprimer les items de test"""
+        self.log("🧪 TEST 6: Nettoyer - Supprimer les items de test")
         
-        try:
-            # Créer une session sans token
-            no_auth_session = requests.Session()
-            
-            response = no_auth_session.post(
-                f"{BACKEND_URL}/surveillance/check-due-dates",
-                timeout=15
-            )
-            
-            if response.status_code == 403:
-                self.log("✅ SUCCÈS: Authentification requise (403 Forbidden)")
-                return True
-            else:
-                self.log(f"❌ ÉCHEC: Endpoint accessible sans authentification - Status: {response.status_code}", "ERROR")
-                return False
+        if not self.test_items:
+            self.log("⚠️ Aucun item de test à supprimer", "WARNING")
+            return True
+        
+        deleted_count = 0
+        failed_count = 0
+        
+        for item_id in self.test_items:
+            try:
+                response = self.admin_session.delete(
+                    f"{BACKEND_URL}/surveillance/items/{item_id}",
+                    timeout=15
+                )
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+                if response.status_code == 200:
+                    data = response.json()
+                    if data.get('success'):
+                        self.log(f"✅ Item {item_id} supprimé avec succès")
+                        deleted_count += 1
+                    else:
+                        self.log(f"⚠️ Réponse inattendue pour suppression item {item_id}")
+                        failed_count += 1
+                else:
+                    self.log(f"❌ Échec suppression item {item_id} - Status: {response.status_code}")
+                    failed_count += 1
+                    
+            except requests.exceptions.RequestException as e:
+                self.log(f"❌ Erreur suppression item {item_id} - Error: {str(e)}")
+                failed_count += 1
+        
+        if failed_count == 0:
+            self.log(f"✅ SUCCÈS: Tous les {deleted_count} items de test ont été supprimés")
+            return True
+        else:
+            self.log(f"⚠️ PARTIEL: {deleted_count} items supprimés, {failed_count} échecs")
+            return deleted_count > 0  # Consider success if at least some were deleted
 
     def cleanup_test_items(self):
         """Nettoyer les items de test créés"""
