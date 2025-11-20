@@ -88,6 +88,61 @@ function SurveillanceItemForm({ open, item, onClose }) {
     }
   };
 
+  // Fonction pour calculer le prochain contrôle automatiquement
+  const calculateNextControl = (lastVisitDate, periodicite) => {
+    if (!lastVisitDate || !periodicite) return null;
+
+    try {
+      const date = new Date(lastVisitDate);
+      const periodLower = periodicite.toLowerCase().trim();
+
+      // Parser la périodicité
+      if (periodLower.includes('jour')) {
+        // "journalier" ou "1 jour" ou "30 jours"
+        const match = periodLower.match(/(\d+)/);
+        const days = match ? parseInt(match[1]) : 1;
+        date.setDate(date.getDate() + days);
+      } else if (periodLower.includes('semaine')) {
+        // "1 semaine" ou "2 semaines"
+        const match = periodLower.match(/(\d+)/);
+        const weeks = match ? parseInt(match[1]) : 1;
+        date.setDate(date.getDate() + (weeks * 7));
+      } else if (periodLower.includes('mois')) {
+        // "6 mois" ou "1 mois"
+        const match = periodLower.match(/(\d+)/);
+        const months = match ? parseInt(match[1]) : 1;
+        date.setMonth(date.getMonth() + months);
+      } else if (periodLower.includes('an')) {
+        // "1 an" ou "3 ans"
+        const match = periodLower.match(/(\d+)/);
+        const years = match ? parseInt(match[1]) : 1;
+        date.setFullYear(date.getFullYear() + years);
+      } else {
+        // Format non reconnu, retourner null
+        return null;
+      }
+
+      // Formater la date en YYYY-MM-DD pour l'input date
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch (error) {
+      console.error('Erreur calcul prochain contrôle:', error);
+      return null;
+    }
+  };
+
+  // useEffect pour calculer automatiquement le prochain contrôle
+  useEffect(() => {
+    if (formData.derniere_visite && formData.periodicite) {
+      const nextDate = calculateNextControl(formData.derniere_visite, formData.periodicite);
+      if (nextDate && nextDate !== formData.prochain_controle) {
+        setFormData(prev => ({ ...prev, prochain_controle: nextDate }));
+      }
+    }
+  }, [formData.derniere_visite, formData.periodicite]);
+
   const handleSubmit = async () => {
     // Validation des champs obligatoires
     if (!formData.classe_type || !formData.category || !formData.batiment || !formData.periodicite || !formData.responsable || !formData.executant) {
