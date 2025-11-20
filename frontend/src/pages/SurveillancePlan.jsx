@@ -43,6 +43,7 @@ function SurveillancePlan() {
 
   useEffect(() => {
     applyFilters();
+    extractCategories();
   }, [items, filters]);
 
   const loadData = async () => {
