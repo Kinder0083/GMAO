@@ -15,7 +15,8 @@ class PreferenceUpdate(BaseModel):
 class BulkPreferenceUpdate(BaseModel):
     preferences: Dict[str, Any]
 
-@router.get("/")
+@router.get("/", status_code=200)
+@router.get("", status_code=200)
 async def get_user_preferences(current_user: dict = Depends(get_current_user)):
     """
     Récupérer toutes les préférences de l'utilisateur
