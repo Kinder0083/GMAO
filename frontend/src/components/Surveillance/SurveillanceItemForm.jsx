@@ -5,12 +5,14 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Combobox } from '../ui/combobox';
 import { surveillanceAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 
 function SurveillanceItemForm({ open, item, onClose }) {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [existingCategories, setExistingCategories] = useState([]);
   const [formData, setFormData] = useState({
     classe_type: '',
     category: '',
