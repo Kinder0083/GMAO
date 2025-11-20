@@ -6061,3 +6061,85 @@ agent_communication:
       - Les catégories personnalisées fonctionnent parfaitement
       - La fonctionnalité est prête pour utilisation en production
       - Tous les critères de succès du cahier des charges sont validés
+
+agent_communication:
+    - agent: "testing"
+      message: |
+        ✅ TEST COMPLET - CRÉATION CONTRÔLE AVEC NOUVELLE CATÉGORIE "TEST_CATEGORIE_NOUVELLE" - SUCCÈS TOTAL (9/9)
+        
+        🧪 CONTEXTE DU TEST (Novembre 2025):
+        L'utilisateur rapporte que le formulaire frontend ne peut PAS sauvegarder quand il crée un contrôle avec une nouvelle catégorie.
+        Test détaillé pour identifier le problème exact avec les données spécifiques demandées.
+        
+        🎯 TESTS DÉTAILLÉS EFFECTUÉS:
+        
+        📊 TEST 1: Créer un contrôle avec TOUS les champs requis et nouvelle catégorie ✅ RÉUSSI
+        - POST /api/surveillance/items avec:
+          * classe_type: "Test Frontend Categorie"
+          * category: "TEST_CATEGORIE_NOUVELLE"
+          * batiment: "BATIMENT TEST"
+          * periodicite: "1 mois"
+          * responsable: "MAINT"
+          * executant: "Executant Test"
+          * description: "Test depuis frontend"
+        - ✅ Réponse: 200 OK
+        - ✅ ID généré: UUID valide
+        - ✅ Catégorie "TEST_CATEGORIE_NOUVELLE" acceptée et enregistrée
+        
+        📊 TEST 2: Tester avec une catégorie existante pour comparaison ✅ RÉUSSI
+        - POST /api/surveillance/items avec category: "INCENDIE"
+        - ✅ Réponse: 200 OK
+        - ✅ Catégorie existante "INCENDIE" fonctionne parfaitement
+        - ✅ Aucune différence de comportement entre nouvelle et ancienne catégorie
+        
+        📊 TEST 3: Vérifier les logs backend pour erreurs ✅ RÉUSSI
+        - ✅ Aucune erreur de validation Pydantic détectée
+        - ✅ Aucune erreur de base de données
+        - ✅ Pas d'erreur critique liée aux catégories
+        - ✅ Logs montrent création réussie avec audit logging
+        
+        📊 TEST 4: Récupérer l'item créé et vérifier tous les champs ✅ RÉUSSI
+        - GET /api/surveillance/items: SUCCESS (200 OK)
+        - ✅ Item avec "TEST_CATEGORIE_NOUVELLE" trouvé dans la liste (14 items)
+        - ✅ Tous les champs corrects:
+          * classe_type: "Test Frontend Categorie"
+          * category: "TEST_CATEGORIE_NOUVELLE"
+          * batiment: "BATIMENT TEST"
+          * executant: "Executant Test"
+        
+        📊 TEST 5: Vérifier statistiques avec nouvelle catégorie ✅ RÉUSSI
+        - GET /api/surveillance/stats: SUCCESS (200 OK)
+        - ✅ by_category contient "TEST_CATEGORIE_NOUVELLE"
+        - ✅ Statistiques correctes: 1 item, 0 réalisés, 0.0%
+        - ✅ Comptage automatique fonctionnel
+        
+        📊 TEST 6: Créer un 2ème item avec une autre catégorie personnalisée ✅ RÉUSSI
+        - POST /api/surveillance/items avec category: "CATEGORIE_TEST_2"
+        - ✅ Deuxième catégorie personnalisée acceptée
+        
+        📊 TEST 7: Vérifier que les deux catégories apparaissent dans les statistiques ✅ RÉUSSI
+        - GET /api/surveillance/stats: SUCCESS (200 OK)
+        - ✅ Les deux catégories personnalisées présentes:
+          * "TEST_CATEGORIE_NOUVELLE": 1 item, 0 réalisés, 0.0%
+          * "CATEGORIE_TEST_2": 1 item, 0 réalisés, 0.0%
+        
+        📊 TEST 8: Nettoyer - Supprimer les items de test ✅ RÉUSSI
+        - DELETE /api/surveillance/items/{id}: SUCCESS (200 OK) pour les 3 items
+        - ✅ Tous les items de test supprimés avec succès
+        
+        🔐 VÉRIFICATIONS CRITIQUES:
+        - ✅ AUCUNE erreur "Erreur d'enregistrement"
+        - ✅ AUCUNE erreur de validation Pydantic
+        - ✅ AUCUNE erreur de sérialisation JSON
+        - ✅ Catégories dynamiques acceptées sans restriction
+        - ✅ Statistiques s'adaptent automatiquement
+        - ✅ Audit logging fonctionnel
+        
+        🎉 CONCLUSION FINALE: L'API BACKEND FONCTIONNE PARFAITEMENT
+        - ✅ POST /api/surveillance/items accepte les catégories personnalisées (200 OK)
+        - ✅ Aucune erreur EXACTE identifiée côté backend
+        - ✅ Toutes les opérations CRUD fonctionnent avec nouvelles catégories
+        - ✅ Le problème reporté par l'utilisateur N'EST PAS côté backend
+        - ✅ Si le frontend ne peut pas sauvegarder, le problème est côté frontend ou réseau
+        
+        ⚠️ RECOMMANDATION: Vérifier le frontend et la communication API pour identifier la cause exacte du problème de sauvegarde.
