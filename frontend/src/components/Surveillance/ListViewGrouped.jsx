@@ -1,0 +1,178 @@
+import React, { useState, useEffect } from 'react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
+import { Button } from '../ui/button';
+import { Badge } from '../ui/badge';
+import { Edit, Trash2, CheckCircle } from 'lucide-react';
+import CompleteSurveillanceDialog from './CompleteSurveillanceDialog';
+import { CATEGORY_ICONS } from './CategoryOrderDialog';
+import api from '../../services/api';
+
+const getStatusColor = (status) => {
+  switch (status) {
+    case 'REALISE': return 'bg-green-500';
+    case 'PLANIFIE': return 'bg-blue-500';
+    case 'PLANIFIER': return 'bg-orange-500';
+    default: return 'bg-gray-500';
+  }
+};
+
+const getStatusLabel = (status) => {
+  switch (status) {
+    case 'REALISE': return 'Réalisé';
+    case 'PLANIFIE': return 'Planifié';
+    case 'PLANIFIER': return 'À planifier';
+    default: return status;
+  }
+};
+
+const getCategoryIcon = (category) => {
+  return CATEGORY_ICONS[category] || CATEGORY_ICONS['default'];
+};
+
+function ListViewGrouped({ items, loading, onEdit, onDelete, onRefresh }) {
+  const [completeDialog, setCompleteDialog] = useState({ open: false, item: null });
+  const [groupedItems, setGroupedItems] = useState({});
+  const [categoryOrder, setCategoryOrder] = useState([]);
+
+  useEffect(() => {
+    loadCategoryOrder();
+  }, []);
+
+  useEffect(() => {
+    if (items && items.length > 0) {
+      groupItemsByCategory();
+    }
+  }, [items, categoryOrder]);
+
+  const loadCategoryOrder = async () => {
+    try {
+      const response = await api.get('/user-preferences/surveillance_category_order');
+      const savedOrder = response.data?.value;
+
+      if (savedOrder && Array.isArray(savedOrder)) {
+        setCategoryOrder(savedOrder);
+      }
+    } catch (error) {
+      console.error('Erreur chargement ordre catégories:', error);
+    }
+  };
+
+  const groupItemsByCategory = () => {
+    // Extraire toutes les catégories uniques
+    const categories = [...new Set(items.map(item => item.category))].filter(Boolean);
+    
+    // Appliquer l'ordre sauvegardé si disponible
+    let orderedCategories = [];
+    if (categoryOrder.length > 0) {
+      // Utiliser l'ordre sauvegardé, puis ajouter les nouvelles catégories à la fin
+      orderedCategories = [
+        ...categoryOrder.filter(cat => categories.includes(cat)),
+        ...categories.filter(cat => !categoryOrder.includes(cat)).sort()
+      ];
+    } else {
+      // Ordre alphabétique par défaut
+      orderedCategories = categories.sort();
+    }
+
+    // Grouper les items par catégorie
+    const grouped = {};
+    orderedCategories.forEach(category => {
+      grouped[category] = items.filter(item => item.category === category);
+    });
+
+    setGroupedItems(grouped);
+  };
+
+  if (loading) return <div className="text-center p-4">Chargement...</div>;
+
+  if (items.length === 0) {
+    return (
+      <div className="rounded-md border p-8 text-center text-gray-500">
+        Aucun contrôle trouvé
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="space-y-6">
+        {Object.entries(groupedItems).map(([category, categoryItems]) => (
+          <div key={category} className="rounded-lg border bg-white overflow-hidden">
+            {/* En-tête de catégorie */}
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border-b px-4 py-3 flex items-center gap-3">
+              <span className="text-3xl">{getCategoryIcon(category)}</span>
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg text-gray-800">{category}</h3>
+                <p className="text-sm text-gray-600">
+                  {categoryItems.length} contrôle{categoryItems.length > 1 ? 's' : ''}
+                </p>
+              </div>
+              <Badge variant="outline" className="bg-white">
+                {category}
+              </Badge>
+            </div>
+
+            {/* Tableau des items de la catégorie */}
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Type</TableHead>
+                  <TableHead>Bâtiment</TableHead>
+                  <TableHead>Périodicité</TableHead>
+                  <TableHead>Responsable</TableHead>
+                  <TableHead>Prochain contrôle</TableHead>
+                  <TableHead>Statut</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categoryItems.map((item) => (
+                  <TableRow key={item.id}>
+                    <TableCell className="font-medium">{item.classe_type}</TableCell>
+                    <TableCell>{item.batiment}</TableCell>
+                    <TableCell>{item.periodicite}</TableCell>
+                    <TableCell>{item.responsable}</TableCell>
+                    <TableCell>
+                      {item.prochain_controle ? new Date(item.prochain_controle).toLocaleDateString('fr-FR') : '-'}
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusColor(item.status)}>{getStatusLabel(item.status)}</Badge>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        {item.status !== 'REALISE' && (
+                          <Button size="sm" variant="ghost" onClick={() => setCompleteDialog({ open: true, item })}>
+                            <CheckCircle className="h-4 w-4" />
+                          </Button>
+                        )}
+                        <Button size="sm" variant="ghost" onClick={() => onEdit(item)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => onDelete(item.id)}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        ))}
+      </div>
+      
+      {completeDialog.open && (
+        <CompleteSurveillanceDialog
+          open={completeDialog.open}
+          item={completeDialog.item}
+          onClose={(refresh) => {
+            setCompleteDialog({ open: false, item: null });
+            if (refresh && onRefresh) onRefresh();
+          }}
+        />
+      )}
+    </>
+  );
+}
+
+export default ListViewGrouped;
