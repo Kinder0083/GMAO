@@ -51,7 +51,8 @@ function Documentations() {
   const [selectedPole, setSelectedPole] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('cards'); // 'cards' ou 'list'
-  const [expandedPoles, setExpandedPoles] = useState(new Set());
+  const [expandedBonsPoles, setExpandedBonsPoles] = useState(new Set()); // Pour les bons de travail
+  const [expandedDocsPoles, setExpandedDocsPoles] = useState(new Set()); // Pour les documents
   const [previewDocument, setPreviewDocument] = useState(null);
   const [openPreview, setOpenPreview] = useState(false);
 
