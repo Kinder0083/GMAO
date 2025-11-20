@@ -483,7 +483,7 @@ function Documentations() {
                                     <Button
                                       variant="ghost"
                                       size="sm"
-                                      onClick={() => navigate(`/pole/${pole.id}/bon-travail/${bon.id}`)}
+                                      onClick={() => navigate(`/documentations/${pole.id}/bon-de-travail/${bon.id}/view`)}
                                       title="Voir le bon"
                                     >
                                       <Eye className="h-4 w-4" />
