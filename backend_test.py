@@ -62,23 +62,18 @@ class SurveillanceCustomCategoryTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_create_surveillance_item(self):
-        """TEST 1: Créer un item de surveillance pour les tests"""
-        self.log("🧪 TEST 1: Création d'un item de surveillance de test")
-        
-        # Calculer une date d'échéance dépassée (5 jours dans le passé)
-        past_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
+    def test_create_custom_category_item(self):
+        """TEST 1: Créer un contrôle avec une nouvelle catégorie personnalisée"""
+        self.log("🧪 TEST 1: Créer un contrôle avec une nouvelle catégorie personnalisée")
         
         test_item_data = {
-            "classe_type": "Test Échéance Auto",
-            "category": "AUTRE",
-            "batiment": "TEST",
-            "periodicite": "6 mois",
+            "classe_type": "Test Catégorie Personnalisée",
+            "category": "MA_NOUVELLE_CATEGORIE",
+            "batiment": "TEST BATIMENT",
+            "periodicite": "1 mois",
             "responsable": "MAINT",
-            "executant": "TEST",
-            "status": "REALISE",
-            "prochain_controle": past_date,  # Date dans le passé pour déclencher l'échéance
-            "duree_rappel_echeance": 30
+            "executant": "Test Executant",
+            "description": "Test création avec catégorie dynamique"
         }
         
         try:
@@ -93,13 +88,19 @@ class SurveillanceCustomCategoryTester:
                 self.log(f"✅ Item de surveillance créé - Status: {response.status_code}")
                 self.log(f"✅ ID: {data.get('id')}")
                 self.log(f"✅ Classe: {data.get('classe_type')}")
-                self.log(f"✅ Statut: {data.get('status')}")
-                self.log(f"✅ Prochain contrôle: {data.get('prochain_controle')}")
-                self.log(f"✅ Durée rappel: {data.get('duree_rappel_echeance')} jours")
+                self.log(f"✅ Catégorie: {data.get('category')}")
+                self.log(f"✅ Bâtiment: {data.get('batiment')}")
+                self.log(f"✅ Exécutant: {data.get('executant')}")
                 
-                # Stocker pour nettoyage
-                self.test_items.append(data.get('id'))
-                return True, data
+                # Vérifier que la catégorie personnalisée est bien enregistrée
+                if data.get('category') == "MA_NOUVELLE_CATEGORIE":
+                    self.log("✅ SUCCÈS: Catégorie personnalisée 'MA_NOUVELLE_CATEGORIE' acceptée")
+                    # Stocker pour nettoyage
+                    self.test_items.append(data.get('id'))
+                    return True, data
+                else:
+                    self.log(f"❌ ÉCHEC: Catégorie incorrecte - Attendu: MA_NOUVELLE_CATEGORIE, Reçu: {data.get('category')}", "ERROR")
+                    return False, None
             else:
                 self.log(f"❌ Création échouée - Status: {response.status_code}", "ERROR")
                 self.log(f"Response: {response.text}", "ERROR")
