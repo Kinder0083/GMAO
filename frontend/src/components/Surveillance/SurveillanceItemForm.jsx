@@ -263,7 +263,17 @@ function SurveillanceItemForm({ open, item, onClose }) {
             </div>
             <div>
               <Label>Prochain contrôle</Label>
-              <Input type="date" value={formData.prochain_controle} onChange={(e) => setFormData({...formData, prochain_controle: e.target.value})} />
+              <Input 
+                type="date" 
+                value={formData.prochain_controle} 
+                onChange={(e) => setFormData({...formData, prochain_controle: e.target.value})} 
+                className={formData.derniere_visite && formData.periodicite ? "bg-blue-50 border-blue-200" : ""}
+              />
+              {formData.derniere_visite && formData.periodicite && (
+                <p className="text-xs text-blue-600 mt-1">
+                  ✨ Calculé automatiquement : Dernière visite + Périodicité
+                </p>
+              )}
             </div>
           </div>
 
