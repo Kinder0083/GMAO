@@ -260,68 +260,54 @@ class SurveillanceCustomCategoryTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False, None
     
-    def test_different_status_items(self):
-        """TEST 5: Vérifier que seuls les items REALISE sont traités"""
-        self.log("🧪 TEST 5: Items avec différents statuts - seuls REALISE doivent être traités")
-        
-        # Créer un item avec statut PLANIFIER (ne doit pas être modifié)
-        past_date = (datetime.now() - timedelta(days=5)).strftime("%Y-%m-%d")
-        
-        test_item_data = {
-            "classe_type": "Test Statut PLANIFIER",
-            "category": "AUTRE",
-            "batiment": "TEST",
-            "periodicite": "6 mois",
-            "responsable": "MAINT",
-            "executant": "TEST",
-            "status": "PLANIFIER",  # Déjà PLANIFIER
-            "prochain_controle": past_date,
-            "duree_rappel_echeance": 30
-        }
+    def test_verify_both_categories_in_stats(self):
+        """TEST 5: Vérifier que les deux catégories personnalisées apparaissent dans les statistiques"""
+        self.log("🧪 TEST 5: Vérifier que les deux catégories personnalisées apparaissent dans les statistiques")
         
         try:
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/surveillance/items",
-                json=test_item_data,
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/surveillance/stats",
                 timeout=15
             )
             
-            if response.status_code in [200, 201]:
-                data = response.json()
-                item_id = data.get('id')
-                self.test_items.append(item_id)
-                self.log(f"✅ Item PLANIFIER créé - ID: {item_id}")
+            if response.status_code == 200:
+                stats = response.json()
+                self.log(f"✅ Statistiques récupérées - Status: 200 OK")
                 
-                # Appeler check-due-dates
-                check_response = self.admin_session.post(
-                    f"{BACKEND_URL}/surveillance/check-due-dates",
-                    timeout=15
-                )
-                
-                if check_response.status_code == 200:
-                    # Vérifier que l'item reste PLANIFIER
-                    get_response = self.admin_session.get(
-                        f"{BACKEND_URL}/surveillance/items/{item_id}",
-                        timeout=15
-                    )
+                if "by_category" in stats:
+                    by_category = stats["by_category"]
+                    self.log(f"✅ by_category trouvé avec {len(by_category)} catégories")
                     
-                    if get_response.status_code == 200:
-                        updated_item = get_response.json()
+                    # Vérifier que les deux catégories personnalisées sont présentes
+                    categories_found = []
+                    if "MA_NOUVELLE_CATEGORIE" in by_category:
+                        categories_found.append("MA_NOUVELLE_CATEGORIE")
+                        self.log(f"✅ Catégorie 'MA_NOUVELLE_CATEGORIE' trouvée")
+                    
+                    if "CATEGORIE_TEST_2" in by_category:
+                        categories_found.append("CATEGORIE_TEST_2")
+                        self.log(f"✅ Catégorie 'CATEGORIE_TEST_2' trouvée")
+                    
+                    if len(categories_found) == 2:
+                        self.log("✅ SUCCÈS: Les deux catégories personnalisées sont présentes dans les statistiques")
                         
-                        if updated_item.get('status') == 'PLANIFIER':
-                            self.log("✅ SUCCÈS: Item PLANIFIER reste inchangé")
-                            return True
-                        else:
-                            self.log(f"❌ ÉCHEC: Item PLANIFIER modifié - Statut: {updated_item.get('status')}", "ERROR")
-                            return False
+                        # Afficher les détails
+                        for cat in categories_found:
+                            cat_stats = by_category[cat]
+                            self.log(f"✅ {cat}: {cat_stats.get('total')} items, {cat_stats.get('realises')} réalisés, {cat_stats.get('pourcentage')}%")
+                        
+                        return True
                     else:
-                        self.log("❌ Impossible de récupérer l'item", "ERROR")
+                        self.log(f"❌ ÉCHEC: Seulement {len(categories_found)} catégorie(s) trouvée(s) sur 2", "ERROR")
+                        self.log(f"Catégories trouvées: {categories_found}")
+                        self.log(f"Toutes les catégories: {list(by_category.keys())}")
                         return False
                 else:
-                    self.log("❌ Échec de l'appel check-due-dates", "ERROR")
+                    self.log("❌ ÉCHEC: 'by_category' non trouvé dans la réponse", "ERROR")
                     return False
+                    
             else:
-                self.log(f"❌ Création échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération des statistiques échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
