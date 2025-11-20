@@ -5513,6 +5513,7 @@ from documentations_routes import router as documentations_router, init_document
 from ssh_routes import router as ssh_router
 from user_preferences_routes import router as user_preferences_router
 from surveillance_history_routes import router as surveillance_history_router
+from tailscale_routes import router as tailscale_router
 
 # Initialize documentations routes with database and audit service
 init_documentations_routes(db, audit_service)
