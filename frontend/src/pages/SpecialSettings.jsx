@@ -719,9 +719,30 @@ const SpecialSettings = () => {
                       <ul className="list-disc list-inside space-y-1">
                         <li>Cette modification recompilera le frontend (1-2 minutes)</li>
                         <li>Les services backend et nginx seront redémarrés</li>
-                        <li>Vous devrez peut-être rafraîchir votre navigateur après</li>
+                        <li>Vous devrez rafraîchir votre navigateur après (F5)</li>
                         <li>Assurez-vous que l'IP est correcte avant de confirmer</li>
+                        <li><strong>ATTENDEZ 2 minutes complètes avant de tester</strong></li>
                       </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Guide de dépannage */}
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-red-800">
+                      <p className="font-semibold mb-1">🆘 Si vous voyez "Bad Gateway" après le changement :</p>
+                      <ol className="list-decimal list-inside space-y-1 ml-2">
+                        <li><strong>Attendez 2 minutes complètes</strong> - Le backend met du temps à démarrer</li>
+                        <li>Rafraîchissez votre navigateur (Ctrl+F5 ou Cmd+Shift+R)</li>
+                        <li>Utilisez le bouton <span className="font-semibold">"Restaurer l'ancienne IP"</span> (bouton orange)</li>
+                        <li>Si le problème persiste, connectez-vous en SSH et exécutez :
+                          <code className="block bg-red-100 p-2 mt-1 rounded text-xs">
+                            cd /opt/gmao-iris/frontend && cp .env.backup .env && yarn build && systemctl restart nginx
+                          </code>
+                        </li>
+                      </ol>
                     </div>
                   </div>
                 </div>
