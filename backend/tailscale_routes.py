@@ -115,14 +115,25 @@ async def configure_tailscale(
             }
         
         # === SUR PROXMOX ===
-        logger.info("[1/5] Sauvegarde de la configuration actuelle...")
+        logger.info("[1/6] Sauvegarde de la configuration actuelle...")
         env_file_path = proxmox_frontend_path / ".env"
         backup_path = proxmox_frontend_path / ".env.backup"
         
         if env_file_path.exists():
             subprocess.run(['cp', str(env_file_path), str(backup_path)], check=True)
         
-        logger.info("[2/5] Modification du fichier .env...")
+        logger.info("[2/6] Vérification de la configuration nginx...")
+        # Sur Proxmox, nginx doit être configuré pour accepter l'IP Tailscale
+        # Vérifier si nginx écoute sur toutes les interfaces
+        nginx_conf = Path("/etc/nginx/sites-enabled/gmao-iris")
+        if nginx_conf.exists():
+            logger.info("Configuration nginx trouvée")
+        else:
+            logger.warning("⚠️ Configuration nginx non trouvée - l'IP Tailscale pourrait ne pas fonctionner")
+        
+        logger.info("[3/6] Modification du fichier .env...")
+        # IMPORTANT : Garder l'URL locale pour les communications internes
+        # L'IP Tailscale est SEULEMENT pour l'accès externe
         new_env_content = f"""NODE_ENV=production
 REACT_APP_BACKEND_URL=http://{tailscale_ip}
 """
