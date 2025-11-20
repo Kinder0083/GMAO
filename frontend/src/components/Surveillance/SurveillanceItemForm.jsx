@@ -61,7 +61,16 @@ function SurveillanceItemForm({ open, item, onClose }) {
   };
 
   const handleSubmit = async () => {
+    // Validation des champs obligatoires
     if (!formData.classe_type || !formData.category || !formData.batiment || !formData.periodicite || !formData.responsable || !formData.executant) {
+      console.error('❌ Champs manquants:', {
+        classe_type: !!formData.classe_type,
+        category: !!formData.category,
+        batiment: !!formData.batiment,
+        periodicite: !!formData.periodicite,
+        responsable: !!formData.responsable,
+        executant: !!formData.executant
+      });
       toast({ title: 'Erreur', description: 'Champs obligatoires manquants', variant: 'destructive' });
       return;
     }
@@ -69,6 +78,8 @@ function SurveillanceItemForm({ open, item, onClose }) {
     setLoading(true);
     try {
       const apiData = { ...formData };
+      console.log('📤 Envoi données au backend:', apiData);
+      
       if (item) {
         await surveillanceAPI.updateItem(item.id, apiData);
         toast({ title: 'Succès', description: 'Item mis à jour' });
@@ -78,7 +89,13 @@ function SurveillanceItemForm({ open, item, onClose }) {
       }
       onClose(true);
     } catch (error) {
-      toast({ title: 'Erreur', description: 'Erreur enregistrement', variant: 'destructive' });
+      console.error('❌ Erreur API:', error);
+      console.error('❌ Détails erreur:', error.response?.data || error.message);
+      toast({ 
+        title: 'Erreur', 
+        description: error.response?.data?.detail || 'Erreur enregistrement', 
+        variant: 'destructive' 
+      });
     } finally {
       setLoading(false);
     }
