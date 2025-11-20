@@ -49,6 +49,13 @@ function SurveillancePlan() {
   const loadData = async () => {
     try {
       setLoading(true);
+      
+      // D'abord, vérifier et mettre à jour automatiquement les statuts selon les échéances
+      await surveillanceAPI.checkDueDates().catch(err => {
+        console.warn('Erreur vérification échéances (non bloquant):', err);
+      });
+      
+      // Ensuite, charger toutes les données
       const [itemsData, statsData, alertsData] = await Promise.all([
         surveillanceAPI.getItems(),
         surveillanceAPI.getStats(),
