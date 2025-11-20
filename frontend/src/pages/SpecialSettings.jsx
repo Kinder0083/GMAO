@@ -594,6 +594,120 @@ const SpecialSettings = () => {
         </div>
       </div>
 
+      {/* Section Configuration Tailscale */}
+      <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-gray-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Configuration Tailscale (IP)</h2>
+          </div>
+          <p className="text-sm text-gray-600 mt-1">
+            Modifier l'adresse IP Tailscale pour l'accès à distance (Proxmox uniquement)
+          </p>
+        </div>
+
+        <div className="p-6">
+          {loadingTailscale ? (
+            <div className="text-center py-8">
+              <RefreshCw className="h-8 w-8 animate-spin text-blue-600 mx-auto mb-2" />
+              <p className="text-gray-600">Chargement de la configuration...</p>
+            </div>
+          ) : (
+            <div className="max-w-2xl">
+              {/* Info Box */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-start gap-2">
+                  <Globe className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm text-blue-800">
+                    <p className="font-semibold mb-1">À propos de cette fonctionnalité :</p>
+                    <ul className="list-disc list-inside space-y-1">
+                      <li>Cette fonction remplace le script SSH "configure-tailscale.sh"</li>
+                      <li>Modifie automatiquement l'URL du backend pour Tailscale</li>
+                      <li>L'application sera recompilée (1-2 minutes)</li>
+                      <li><strong>Fonctionne uniquement sur le serveur Proxmox</strong></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Status actuel si disponible */}
+              {tailscaleStatus && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-green-800">Configuration actuelle</p>
+                      <p className="text-sm text-green-700 mt-1">
+                        IP Tailscale : <span className="font-mono font-semibold">{tailscaleStatus.current_ip || 'Non configuré'}</span>
+                      </p>
+                      {tailscaleStatus.backend_url && (
+                        <p className="text-xs text-green-600 mt-1">
+                          URL Backend : {tailscaleStatus.backend_url}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Formulaire */}
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Adresse IP Tailscale <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={tailscaleIP}
+                    onChange={(e) => setTailscaleIP(e.target.value)}
+                    placeholder="Ex: 100.105.2.113"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-lg"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Format : XXX.XXX.XXX.XXX (chaque partie entre 0 et 255)
+                  </p>
+                </div>
+
+                {/* Avertissement */}
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm text-amber-800">
+                      <p className="font-semibold mb-1">⚠️ Attention :</p>
+                      <ul className="list-disc list-inside space-y-1">
+                        <li>Cette modification recompilera le frontend (1-2 minutes)</li>
+                        <li>Les services backend et nginx seront redémarrés</li>
+                        <li>Vous devrez peut-être rafraîchir votre navigateur après</li>
+                        <li>Assurez-vous que l'IP est correcte avant de confirmer</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bouton Appliquer */}
+                <button
+                  onClick={handleSaveTailscaleConfig}
+                  disabled={savingTailscale || !tailscaleIP}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {savingTailscale ? (
+                    <>
+                      <RefreshCw className="h-5 w-5 animate-spin" />
+                      <span>Configuration en cours (1-2 min)...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="h-5 w-5" />
+                      <span>Appliquer la nouvelle IP</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Section Configuration SMTP */}
       <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200">
         <div className="border-b border-gray-200 px-6 py-4">
