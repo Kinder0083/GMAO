@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table';
 import { Button } from '../ui/button';
 import { Badge } from '../ui/badge';
-import { Edit, Trash2, CheckCircle } from 'lucide-react';
-import CompleteSurveillanceDialog from './CompleteSurveillanceDialog';
+import { Edit, Trash2, CheckCircle, Eye, ChevronRight } from 'lucide-react';
+import CompleteSurveillanceDialog from './CompleteSurveillanceDialogNew';
+import HistoryDialog from './HistoryDialog';
 import { CATEGORY_ICONS } from './CategoryOrderDialog';
 import api from '../../services/api';
 
