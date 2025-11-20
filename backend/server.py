@@ -46,6 +46,22 @@ audit_service = AuditService(db)
 # Create the main app
 app = FastAPI(title="GMAO Atlas API", version="1.0.0")
 
+# Gestionnaire d'erreur pour les erreurs de validation Pydantic
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Capturer et logger les erreurs de validation Pydantic"""
+    logger.error("=" * 80)
+    logger.error("❌ ERREUR DE VALIDATION PYDANTIC 422")
+    logger.error(f"📍 URL: {request.method} {request.url.path}")
+    logger.error(f"📦 Body reçu: {await request.body()}")
+    logger.error(f"🔍 Erreurs de validation: {exc.errors()}")
+    logger.error("=" * 80)
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors(), "body": str(await request.body())}
+    )
+
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")
 
