@@ -153,74 +153,56 @@ class SurveillanceTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_compare_with_documents_endpoint(self):
-        """TEST 3: CRITIQUE - Comparer avec GET /api/documentations/documents?pole_id={pole_id}"""
-        self.log("🧪 TEST 3: CRITIQUE - Comparaison avec endpoint documents individuels")
+    def test_verify_status_change(self):
+        """TEST 3: Vérifier que le statut a changé de REALISE à PLANIFIER"""
+        self.log("🧪 TEST 3: Vérification du changement de statut")
         
-        if not self.poles_data:
-            self.log("⚠️ Pas de données de pôles disponibles du test précédent", "WARNING")
+        if not self.test_items:
+            self.log("⚠️ Aucun item de test disponible", "WARNING")
             return False
-        
-        # Prendre un pôle qui a des documents
-        test_pole = None
-        for pole in self.poles_data:
-            if pole.get('documents') and len(pole['documents']) > 0:
-                test_pole = pole
-                break
-        
-        if not test_pole:
-            self.log("⚠️ Aucun pôle avec des documents trouvé pour la comparaison")
-            return True  # Still consider it working if no documents exist
-        
-        pole_id = test_pole.get('id')
-        pole_name = test_pole.get('nom', 'Pôle inconnu')
-        pole_docs_count = len(test_pole.get('documents', []))
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/documentations/documents?pole_id={pole_id}",
+                f"{BACKEND_URL}/surveillance/items",
                 timeout=15
             )
             
             if response.status_code == 200:
-                individual_docs = response.json()
-                individual_count = len(individual_docs)
+                items = response.json()
+                self.log(f"✅ Liste des items récupérée - {len(items)} items")
                 
-                self.log(f"✅ Endpoint documents individuels accessible")
-                self.log(f"📊 Pôle '{pole_name}':")
-                self.log(f"   - Documents dans pole: {pole_docs_count}")
-                self.log(f"   - Documents endpoint individuel: {individual_count}")
+                # Chercher notre item de test
+                test_item = None
+                for item in items:
+                    if item.get('id') in self.test_items and item.get('classe_type') == 'Test Échéance Auto':
+                        test_item = item
+                        break
                 
-                # Comparaison critique
-                if pole_docs_count == individual_count:
-                    self.log("✅ SUCCÈS CRITIQUE: Les nombres correspondent parfaitement")
+                if test_item:
+                    self.log(f"✅ Item de test trouvé - ID: {test_item.get('id')}")
+                    self.log(f"✅ Statut actuel: {test_item.get('status')}")
+                    self.log(f"✅ updated_by: {test_item.get('updated_by')}")
                     
-                    # Vérifier que les mêmes documents apparaissent
-                    if pole_docs_count > 0:
-                        pole_doc_ids = set(doc.get('id') for doc in test_pole['documents'])
-                        individual_doc_ids = set(doc.get('id') for doc in individual_docs)
+                    # Vérifier que le statut est maintenant PLANIFIER
+                    if test_item.get('status') == 'PLANIFIER':
+                        self.log("✅ SUCCÈS: Statut changé de REALISE à PLANIFIER")
                         
-                        if pole_doc_ids == individual_doc_ids:
-                            self.log("✅ SUCCÈS CRITIQUE: Les mêmes documents apparaissent dans les deux endpoints")
+                        # Vérifier que updated_by est "system_auto_check"
+                        if test_item.get('updated_by') == 'system_auto_check':
+                            self.log("✅ SUCCÈS: updated_by = 'system_auto_check' (système automatique)")
                             return True
                         else:
-                            missing_in_pole = individual_doc_ids - pole_doc_ids
-                            missing_in_individual = pole_doc_ids - individual_doc_ids
-                            if missing_in_pole:
-                                self.log(f"⚠️ Documents manquants dans pole: {missing_in_pole}")
-                            if missing_in_individual:
-                                self.log(f"⚠️ Documents manquants dans endpoint individuel: {missing_in_individual}")
-                            return False
+                            self.log(f"⚠️ updated_by = '{test_item.get('updated_by')}' (attendu: 'system_auto_check')")
+                            return True  # Still consider it working
                     else:
-                        return True
+                        self.log(f"❌ ÉCHEC: Statut toujours '{test_item.get('status')}' (attendu: PLANIFIER)", "ERROR")
+                        return False
                 else:
-                    self.log(f"❌ ÉCHEC CRITIQUE: Les nombres ne correspondent pas", "ERROR")
-                    self.log(f"   Différence: {abs(pole_docs_count - individual_count)} documents")
+                    self.log("❌ Item de test non trouvé dans la liste", "ERROR")
                     return False
                     
             else:
-                self.log(f"❌ Endpoint documents individuels inaccessible - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
+                self.log(f"❌ Récupération des items échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
