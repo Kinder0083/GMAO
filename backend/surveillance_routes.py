@@ -138,6 +138,9 @@ async def update_surveillance_item(
 ):
     """Mettre à jour un item de surveillance"""
     try:
+        logger.info(f"🔍 UPDATE REQUEST - Item ID: {item_id}")
+        logger.info(f"📦 Données reçues: {item_update.model_dump()}")
+        
         # Vérifier que l'item existe
         existing = await db.surveillance_items.find_one({"id": item_id})
         if not existing:
