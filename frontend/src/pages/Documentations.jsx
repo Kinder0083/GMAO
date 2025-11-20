@@ -544,9 +544,10 @@ function Documentations() {
                                   >
                                     <DocIcon className="h-5 w-5 text-green-600 flex-shrink-0" />
                                     <div className="flex-1 min-w-0">
-                                      <p className="font-medium text-sm truncate">{doc.nom_fichier}</p>
+                                      <p className="font-medium text-sm truncate">{doc.nom_fichier || 'Document sans nom'}</p>
                                       <p className="text-xs text-gray-600">
-                                        {(doc.taille / 1024).toFixed(2)} KB
+                                        {doc.taille ? `${(doc.taille / 1024).toFixed(2)} KB` : 'Taille inconnue'}
+                                        {doc.type_fichier && ` • ${doc.type_fichier}`}
                                       </p>
                                     </div>
                                     <div className="flex gap-2">
