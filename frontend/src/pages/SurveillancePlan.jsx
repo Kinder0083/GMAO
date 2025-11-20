@@ -273,6 +273,20 @@ function SurveillancePlan() {
         <SurveillanceItemForm open={openForm} item={selectedItem} onClose={handleFormClose} />
       )}
 
+      {openCategoryDialog && (
+        <CategoryOrderDialog
+          open={openCategoryDialog}
+          onClose={(shouldRefresh) => {
+            setOpenCategoryDialog(false);
+            if (shouldRefresh) {
+              handleCategoryOrderChanged();
+            }
+          }}
+          categories={categories}
+          onOrderChanged={handleCategoryOrderChanged}
+        />
+      )}
+
       {/* Confirm Dialog */}
       <ConfirmDialog />
     </div>
