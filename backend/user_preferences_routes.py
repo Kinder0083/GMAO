@@ -2,8 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from typing import Dict, List, Any, Optional
 import logging
-from dependencies import get_current_user
-from database import db
+from dependencies import get_current_user, db
 from datetime import datetime, timezone
 
 router = APIRouter(prefix="/user-preferences", tags=["User Preferences"])
