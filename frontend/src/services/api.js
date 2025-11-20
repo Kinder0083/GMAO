@@ -345,6 +345,9 @@ export const surveillanceAPI = {
   getBadgeStats: () => api.get('/surveillance/badge-stats').then(res => res.data),
   getRapportStats: () => api.get('/surveillance/rapport-stats').then(res => res.data),
   
+  // Vérification automatique des échéances
+  checkDueDates: () => api.post('/surveillance/check-due-dates').then(res => res.data),
+  
   // Import/Export
   importData: (formData) => api.post('/surveillance/import', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
