@@ -411,10 +411,12 @@ class SurveillanceTester:
         
         results = {
             "admin_login": False,
-            "get_poles_with_documents": False,
-            "get_pole_by_id": False,
-            "compare_with_documents_endpoint": False,
-            "document_count_summary": False
+            "create_surveillance_item": False,
+            "check_due_dates_with_overdue_item": False,
+            "verify_status_change": False,
+            "item_not_in_due_range": False,
+            "different_status_items": False,
+            "authentication_required": False
         }
         
         # Test 1: Admin Login
@@ -424,15 +426,29 @@ class SurveillanceTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # TESTS CRITIQUES DES ENDPOINTS DOCUMENTATIONS/POLES
+        # TESTS CRITIQUES DU PLAN DE SURVEILLANCE
         self.log("\n" + "=" * 60)
-        self.log("📋 TESTS CRITIQUES - ENDPOINTS DOCUMENTATIONS/POLES")
+        self.log("📋 TESTS CRITIQUES - PLAN DE SURVEILLANCE")
         self.log("=" * 60)
         
-        results["get_poles_with_documents"] = self.test_get_poles_with_documents()
-        results["get_pole_by_id"] = self.test_get_pole_by_id()
-        results["compare_with_documents_endpoint"] = self.test_compare_with_documents_endpoint()
-        results["document_count_summary"] = self.test_document_count_summary()
+        # Test 2: Créer un item de surveillance
+        success, test_item = self.test_create_surveillance_item()
+        results["create_surveillance_item"] = success
+        
+        # Test 3: Vérifier l'endpoint check-due-dates
+        results["check_due_dates_with_overdue_item"] = self.test_check_due_dates_with_overdue_item()
+        
+        # Test 4: Vérifier le changement de statut
+        results["verify_status_change"] = self.test_verify_status_change()
+        
+        # Test 5: Item NON en échéance
+        results["item_not_in_due_range"] = self.test_item_not_in_due_range()
+        
+        # Test 6: Items avec différents statuts
+        results["different_status_items"] = self.test_different_status_items()
+        
+        # Test 7: Authentification requise
+        results["authentication_required"] = self.test_authentication_required()
         
         # Summary
         self.log("=" * 80)
