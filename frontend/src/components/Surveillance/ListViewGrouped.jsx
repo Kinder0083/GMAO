@@ -183,9 +183,23 @@ function ListViewGrouped({ items, loading, onEdit, onDelete, onRefresh }) {
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {item.status !== 'REALISE' && (
-                          <Button size="sm" variant="ghost" onClick={() => setCompleteDialog({ open: true, item })}>
-                            <CheckCircle className="h-4 w-4" />
+                        {item.status === 'REALISE' ? (
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setHistoryDialog({ open: true, control: item })}
+                            title="Voir l'historique"
+                          >
+                            <Eye className="h-4 w-4 text-blue-600" />
+                          </Button>
+                        ) : (
+                          <Button 
+                            size="sm" 
+                            variant="ghost" 
+                            onClick={() => setCompleteDialog({ open: true, item })}
+                            title="Marquer comme réalisé"
+                          >
+                            <CheckCircle className="h-4 w-4 text-green-600" />
                           </Button>
                         )}
                         <Button size="sm" variant="ghost" onClick={() => onEdit(item)}>
