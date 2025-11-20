@@ -229,7 +229,7 @@ const SpecialSettings = () => {
     }
   };
 
-  const handleSaveTailscaleConfig = async () => {
+  const handleSaveTailscaleConfig = () => {
     // Validation de l'IP
     const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (!ipRegex.test(tailscaleIP)) {
@@ -251,48 +251,48 @@ const SpecialSettings = () => {
       return;
     }
 
-    const confirmed = await confirm({
+    // Utiliser le pattern confirm avec callback
+    confirm({
       title: 'Modifier l\'adresse IP Tailscale',
-      description: `Êtes-vous sûr de vouloir changer l'IP en ${tailscaleIP} ?\n\n⚠️ Cette action va :\n- Modifier le fichier .env du frontend\n- Recompiler l'application (1-2 minutes)\n- Redémarrer les services\n\nVous devrez peut-être rafraîchir votre navigateur après.`,
-      confirmText: 'Confirmer',
+      description: `Êtes-vous sûr de vouloir changer l'IP en ${tailscaleIP} ?\n\n⚠️ Cette action va :\n\n- Modifier le fichier .env du frontend\n- Recompiler l'application (1-2 minutes)\n- Redémarrer les services\n\nVous devrez peut-être rafraîchir votre navigateur après.`,
+      confirmText: 'Confirmer et Appliquer',
       cancelText: 'Annuler',
-      variant: 'default'
-    });
-
-    if (!confirmed) return;
-
-    try {
-      setSavingTailscale(true);
-      const response = await api.post('/tailscale/configure', {
-        tailscale_ip: tailscaleIP
-      });
-      
-      if (response.data.success) {
-        toast({
-          title: 'Configuration mise à jour',
-          description: `L'IP Tailscale a été changée en ${tailscaleIP}. Rechargement de la page dans 3 secondes...`,
-        });
-        
-        // Recharger la page après 3 secondes
-        setTimeout(() => {
-          window.location.reload();
-        }, 3000);
-      } else {
-        toast({
-          title: 'Erreur',
-          description: response.data.message || 'La configuration a échoué',
-          variant: 'destructive'
-        });
+      variant: 'default',
+      onConfirm: async () => {
+        try {
+          setSavingTailscale(true);
+          const response = await api.post('/tailscale/configure', {
+            tailscale_ip: tailscaleIP
+          });
+          
+          if (response.data.success) {
+            toast({
+              title: 'Configuration mise à jour',
+              description: `L'IP Tailscale a été changée en ${tailscaleIP}. Rechargement de la page dans 3 secondes...`,
+            });
+            
+            // Recharger la page après 3 secondes
+            setTimeout(() => {
+              window.location.reload();
+            }, 3000);
+          } else {
+            toast({
+              title: 'Erreur',
+              description: response.data.message || 'La configuration a échoué',
+              variant: 'destructive'
+            });
+          }
+        } catch (error) {
+          toast({
+            title: 'Erreur',
+            description: formatErrorMessage(error, 'Impossible de modifier la configuration Tailscale'),
+            variant: 'destructive'
+          });
+        } finally {
+          setSavingTailscale(false);
+        }
       }
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: formatErrorMessage(error, 'Impossible de modifier la configuration Tailscale'),
-        variant: 'destructive'
-      });
-    } finally {
-      setSavingTailscale(false);
-    }
+    });
   };
 
   const handleResetPassword = async (userId, userName) => {
