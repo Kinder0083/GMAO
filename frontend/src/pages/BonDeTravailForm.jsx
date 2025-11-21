@@ -13,13 +13,14 @@ import { documentationsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { formatErrorMessage } from '../utils/errorFormatter';
 
+// --- CONSTANTES MISES À JOUR POUR CORRESPONDRE AU DOCX ---
+
 const RISQUES_MATERIEL = [
-  'Chute plain pied',
-  'Chute en hauteur',
-  'Manutention',
-  'Matériel en rotation',
-  'Electricité',
-  'Circulation engin'
+  'Non décontaminé ou en charge avec des produits',
+  'Sous pression',
+  'Alimenté (électricité, air comprimé,...)',
+  'Présentant des pièces en mouvements',
+  'En hauteur (> 2 m)'
 ];
 
 const RISQUES_AUTORISATION = [
@@ -28,45 +29,39 @@ const RISQUES_AUTORISATION = [
 ];
 
 const RISQUES_PRODUITS = [
-  'Toxique',
-  'Inflammable',
-  'Corrosif',
-  'Irritant',
-  'CMR'
+  'Pour l’homme (Toxique, Corrosif, Irritant, ou sensibilisant)',
+  'Pour l’homme ou le matériel (inflammable, explosif)',
+  'Pour l’environnement'
 ];
 
 const RISQUES_ENVIRONNEMENT = [
-  'Co-activité',
-  'Passage chariot',
-  'Zone piétonne',
-  'Zone ATEX'
+  'Co-activité avec du personnel d’IRIS ou d’autres entreprises intervenantes',
+  'Passage de chariot à proximité',
+  'Tuyauterie ou ligne électrique à proximité',
+  'Poussières sensibles à l’explosion'
 ];
 
 const PRECAUTIONS_MATERIEL = [
-  'Echafaudage',
-  'Nacelle',
-  'Harnais',
-  'Ligne vie',
-  'Consignation',
-  'Déconsignation'
+  'Vidange / lavage / décontamination préalable',
+  'Pose d’un joint plein',
+  'Consignation électrique et/ou mécanique',
+  'Utilisation d’un échafaudage',
+  'Utilisation d’un chariot ou d’une nacelle'
 ];
 
 const PRECAUTIONS_EPI = [
-  'Casque',
-  'Lunettes',
-  'Gants',
-  'Chaussures S3',
-  'Masque',
-  'Bouchons oreilles',
-  'Gilet HV'
+  'Lunettes ou visière adaptée',
+  'Gants adaptés',
+  'Combinaison',
+  'Masque à gaz ou à poussière'
 ];
 
 const PRECAUTIONS_ENVIRONNEMENT = [
-  'Balisage',
-  'Signalisation',
-  'Permis feu',
-  'Ventilation'
+  'Balisage de la zone de travaux',
+  'Extincteurs adaptés ou RIA à proximité'
 ];
+// --- FIN DES CONSTANTES MISES À JOUR ---
+
 
 function BonDeTravailForm() {
   const { poleId, bonId } = useParams();
@@ -330,8 +325,8 @@ function BonDeTravailForm() {
           <CardContent className="space-y-6">
             {/* Risques matériels */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Risques matériels</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <Label className="text-base font-semibold mb-3 block">Intervention sur du matériel ou des infrastructures</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {RISQUES_MATERIEL.map((risque) => (
                   <div key={risque} className="flex items-center space-x-2">
                     <Checkbox
@@ -355,7 +350,7 @@ function BonDeTravailForm() {
 
             {/* Autorisation nécessaire */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Autorisation nécessaire</Label>
+              <Label className="text-base font-semibold mb-3 block">Travaux nécessitant une autorisation particulière</Label>
               <div className="grid grid-cols-2 gap-3">
                 {RISQUES_AUTORISATION.map((risque) => (
                   <div key={risque} className="flex items-center space-x-2">
@@ -374,8 +369,8 @@ function BonDeTravailForm() {
 
             {/* Risques produits */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Risques liés aux produits</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <Label className="text-base font-semibold mb-3 block">Produits dangereux</Label>
+              <div className="grid grid-cols-1 gap-3">
                 {RISQUES_PRODUITS.map((risque) => (
                   <div key={risque} className="flex items-center space-x-2">
                     <Checkbox
@@ -393,8 +388,8 @@ function BonDeTravailForm() {
 
             {/* Risques environnement */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Risques liés à l'environnement</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <Label className="text-base font-semibold mb-3 block">Environnement des travaux nécessitant une attention particulière</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {RISQUES_ENVIRONNEMENT.map((risque) => (
                   <div key={risque} className="flex items-center space-x-2">
                     <Checkbox
@@ -426,8 +421,8 @@ function BonDeTravailForm() {
           <CardContent className="space-y-6">
             {/* Précautions matériel */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Précautions matérielles</Label>
-              <div className="grid grid-cols-2 gap-3">
+              <Label className="text-base font-semibold mb-3 block">Sur le matériel ou les infrastructures</Label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {PRECAUTIONS_MATERIEL.map((precaution) => (
                   <div key={precaution} className="flex items-center space-x-2">
                     <Checkbox
@@ -447,11 +442,14 @@ function BonDeTravailForm() {
                 value={formData.precautions_materiel_autre}
                 onChange={(e) => setFormData({ ...formData, precautions_materiel_autre: e.target.value })}
               />
+              <p className="text-xs italic text-gray-600 mt-2">
+                L’utilisation d’un chariot ou d’une nacelle n’est possible qu’après que l’entreprise intervenante ait fourni à IRIS une autorisation nominative de conduite.
+              </p>
             </div>
 
             {/* EPI */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Équipements de Protection Individuelle (EPI)</Label>
+              <Label className="text-base font-semibold mb-3 block">Sur les hommes, le matériel ou l’environnement (EPI)</Label>
               <div className="grid grid-cols-2 gap-3">
                 {PRECAUTIONS_EPI.map((epi) => (
                   <div key={epi} className="flex items-center space-x-2">
@@ -476,7 +474,7 @@ function BonDeTravailForm() {
 
             {/* Précautions environnement */}
             <div>
-              <Label className="text-base font-semibold mb-3 block">Précautions environnementales</Label>
+              <Label className="text-base font-semibold mb-3 block">Sur l’environnement des travaux</Label>
               <div className="grid grid-cols-2 gap-3">
                 {PRECAUTIONS_ENVIRONNEMENT.map((precaution) => (
                   <div key={precaution} className="flex items-center space-x-2">
@@ -507,6 +505,9 @@ function BonDeTravailForm() {
             <CardTitle>4. Engagement</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-sm text-gray-700">
+              Le représentant de l’entreprise intervenante reconnaît avoir pris connaissance des risques liés aux travaux qui lui sont confiés et s’engage à appliquer et faire appliquer les mesures de précaution qui lui ont été notifiées.
+            </p>
             <div>
               <Label>Date d'engagement *</Label>
               <Input
@@ -519,7 +520,7 @@ function BonDeTravailForm() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Nom de l'agent de maîtrise *</Label>
+                <Label>Nom de l'agent de maîtrise (demandeur) *</Label>
                 <Input
                   value={formData.nom_agent_maitrise}
                   onChange={(e) => setFormData({ ...formData, nom_agent_maitrise: e.target.value })}
@@ -529,7 +530,7 @@ function BonDeTravailForm() {
               </div>
 
               <div>
-                <Label>Nom du représentant *</Label>
+                <Label>Nom du représentant (intervenant) *</Label>
                 <Input
                   value={formData.nom_representant}
                   onChange={(e) => setFormData({ ...formData, nom_representant: e.target.value })}
