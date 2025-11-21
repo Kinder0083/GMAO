@@ -48,10 +48,16 @@ function BonDeTravailView() {
 
   const handlePrint = () => {
     const token = localStorage.getItem('token');
+    // Note: L'URL du backend doit être configurée pour utiliser le prompt HTML/CSS que nous avons défini
     const printUrl = `${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/bons-travail/${bonId}/pdf?token=${token}`;
     const printWindow = window.open(printUrl, '_blank');
     if (printWindow) {
-      printWindow.onload = () => printWindow.print();
+      // Tenter de lancer l'impression sur la nouvelle fenêtre
+      printWindow.onload = () => {
+        setTimeout(() => {
+          printWindow.print();
+        }, 1000); // Un délai peut être nécessaire pour que le PDF charge
+      };
     }
   };
 
@@ -64,7 +70,7 @@ function BonDeTravailView() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 p-6 max-w-5xl mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -109,6 +115,13 @@ function BonDeTravailView() {
           </Button>
         </div>
       </div>
+      
+      {/* Introduction (Statique du DOCX) */}
+      <Card className="bg-gray-50 border-gray-300">
+        <CardContent className="pt-6 italic text-sm text-gray-700">
+          <p>Le bon de travail, permet d’identifier les risques liés aux travaux spécifiés ci-dessous ainsi que les précautions à prendre pour éviter tout accident, dégât matériel ou atteinte à l’environnement. Ce bon de travail tient lieu de plan de prévention. Sauf contre-indication particulière (ou modification des conditions d’intervention), le bon de travail est valable pour toute la durée du chantier (dans la limite de 24 heures).</p>
+        </CardContent>
+      </Card>
 
       {/* Travaux à réaliser */}
       <Card>
@@ -138,7 +151,7 @@ function BonDeTravailView() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Matériel</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Intervention sur du matériel ou des infrastructures</p>
             <div className="flex flex-wrap gap-2">
               {bon.risques_materiel?.length > 0 ? (
                 bon.risques_materiel.map((r, i) => (
@@ -154,7 +167,7 @@ function BonDeTravailView() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Autorisation</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Travaux nécessitant une autorisation particulière</p>
             <div className="flex flex-wrap gap-2">
               {bon.risques_autorisation?.length > 0 ? (
                 bon.risques_autorisation.map((r, i) => (
@@ -167,7 +180,7 @@ function BonDeTravailView() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Produits</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Produits dangereux</p>
             <div className="flex flex-wrap gap-2">
               {bon.risques_produits?.length > 0 ? (
                 bon.risques_produits.map((r, i) => (
@@ -180,7 +193,7 @@ function BonDeTravailView() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Environnement</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Environnement des travaux nécessitant une attention particulière</p>
             <div className="flex flex-wrap gap-2">
               {bon.risques_environnement?.length > 0 ? (
                 bon.risques_environnement.map((r, i) => (
@@ -204,7 +217,7 @@ function BonDeTravailView() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Matériel</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Sur le matériel ou les infrastructures</p>
             <div className="flex flex-wrap gap-2">
               {bon.precautions_materiel?.length > 0 ? (
                 bon.precautions_materiel.map((p, i) => (
@@ -217,10 +230,13 @@ function BonDeTravailView() {
             {bon.precautions_materiel_autre && (
               <p className="text-sm mt-2 text-gray-600">Autre: {bon.precautions_materiel_autre}</p>
             )}
+            <p className="text-xs italic text-gray-600 mt-2">
+              L’utilisation d’un chariot ou d’une nacelle n’est possible qu’après que l’entreprise intervenante ait fourni à IRIS une autorisation nominative de conduite.
+            </p>
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">EPI (Équipements de Protection Individuelle)</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Sur les hommes, le matériel ou l’environnement (EPI)</p>
             <div className="flex flex-wrap gap-2">
               {bon.precautions_epi?.length > 0 ? (
                 bon.precautions_epi.map((p, i) => (
@@ -236,7 +252,7 @@ function BonDeTravailView() {
           </div>
 
           <div>
-            <p className="text-sm font-semibold text-gray-600 mb-2">Environnement</p>
+            <p className="text-sm font-semibold text-gray-600 mb-2">Sur l’environnement des travaux</p>
             <div className="flex flex-wrap gap-2">
               {bon.precautions_environnement?.length > 0 ? (
                 bon.precautions_environnement.map((p, i) => (
@@ -259,22 +275,33 @@ function BonDeTravailView() {
           <CardTitle>4. Engagement</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <p className="text-sm font-semibold text-gray-600">Date d'engagement</p>
-            <p className="text-base">
-              {bon.date_engagement ? new Date(bon.date_engagement).toLocaleDateString('fr-FR') : 'Non renseignée'}
-            </p>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-600">Nom Agent de Maîtrise</p>
-            <p className="text-base">{bon.nom_agent_maitrise || 'Non renseigné'}</p>
-          </div>
-          <div>
-            <p className="text-sm font-semibold text-gray-600">Nom Représentant</p>
-            <p className="text-base">{bon.nom_representant || 'Non renseigné'}</p>
+          <p className="text-sm text-gray-700">
+            Le représentant de l’entreprise intervenante reconnaît avoir pris connaissance des risques liés aux travaux qui lui sont confiés et s’engage à appliquer et faire appliquer les mesures de précaution qui lui ont été notifiées.
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t pt-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Date d'engagement</p>
+              <p className="text-base">
+                {bon.date_engagement ? new Date(bon.date_engagement).toLocaleDateString('fr-FR') : 'Non renseignée'}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Nom Agent de Maîtrise (demandeur)</p>
+              <p className="text-base">{bon.nom_agent_maitrise || 'Non renseigné'}</p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-600">Nom Représentant (intervenant)</p>
+              <p className="text-base">{bon.nom_representant || 'Non renseigné'}</p>
+            </div>
           </div>
         </CardContent>
       </Card>
+      
+      {/* Footer (Statique du DOCX) */}
+      <div className="text-center text-xs text-gray-500 py-4">
+        Remettre une copie à l’intervenant – Archivage Direction du site
+      </div>
     </div>
   );
 }
