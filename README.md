@@ -370,6 +370,133 @@ supervisorctl restart gmao-iris-backend
 systemctl restart nginx
 ```
 
+## 🌐 Configuration Tailscale (Accès à Distance)
+
+### Interface Web de Configuration
+
+**GMAO Iris** inclut une interface web intégrée pour configurer facilement l'accès via Tailscale, **sans SSH**.
+
+#### Accès à l'interface
+
+1. Connectez-vous en tant qu'**Administrateur**
+2. Menu latéral → **Paramètres Spéciaux**
+3. Scroller vers la section **"Configuration Tailscale (IP)"**
+
+#### Fonctionnalités
+
+✅ **Configuration de l'IP Tailscale** depuis l'interface web  
+✅ **Recompilation automatique** du frontend  
+✅ **Redémarrage automatique** des services (nginx, backend)  
+✅ **Sauvegarde automatique** de l'ancienne configuration  
+✅ **Restauration en un clic** en cas de problème  
+✅ **Health checks** pour vérifier que le backend est prêt  
+
+#### Procédure de Configuration
+
+1. **Obtenir votre IP Tailscale** :
+   ```bash
+   # Sur votre serveur Proxmox
+   tailscale ip -4
+   # Exemple de résultat: 100.105.2.113
+   ```
+
+2. **Dans l'interface GMAO Iris** :
+   - Aller dans **Paramètres Spéciaux** → **Configuration Tailscale**
+   - Saisir votre IP Tailscale (ex: `100.105.2.113`)
+   - Cliquer sur **"Appliquer la nouvelle IP"**
+   - Confirmer l'action dans le dialogue
+
+3. **Attendre la reconfiguration** (⏰ **2-3 minutes**):
+   - ⏳ Toast de confirmation visible pendant 30 secondes
+   - 🔄 Page se recharge automatiquement vers la nouvelle IP
+   - ⏰ **IMPORTANT**: Attendez 2 minutes complètes avant de tester
+   - 🔃 Rafraîchissez avec **Ctrl+F5** (vider le cache)
+
+4. **Vérifier l'accès** :
+   - Depuis n'importe quel appareil connecté à Tailscale
+   - Accédez à `http://VOTRE_IP_TAILSCALE`
+   - Exemple: `http://100.105.2.113`
+
+#### 🆘 Dépannage - Erreur "Bad Gateway"
+
+Si vous voyez **"Bad Gateway"** après le changement d'IP :
+
+**Solution 1: Via l'interface web (Recommandé)**
+1. ⏰ **Attendez 2 minutes complètes** - Le backend met du temps à démarrer
+2. 🔃 Rafraîchissez votre navigateur (**Ctrl+F5**)
+3. Si le problème persiste, utilisez le bouton **"Restaurer l'ancienne IP"** (bouton orange)
+
+**Solution 2: Via SSH**
+```bash
+# Restaurer l'ancienne configuration
+cd /opt/gmao-iris/frontend
+cp .env.backup .env
+
+# Recompiler le frontend
+yarn build
+
+# Redémarrer les services
+systemctl restart nginx
+supervisorctl restart gmao-iris-backend
+
+# Attendre 2 minutes et tester
+```
+
+#### Sécurité
+
+- ✅ **Accès réservé aux ADMIN** uniquement
+- ✅ Validation stricte du format IP
+- ✅ Confirmation obligatoire avant modification
+- ✅ Sauvegarde automatique (`.env.backup`)
+- ✅ Restauration automatique en cas d'échec
+- ✅ Toutes les actions tracées dans les logs
+
+#### Configuration Manuelle (Alternative)
+
+Si vous préférez configurer manuellement sans l'interface web :
+
+```bash
+# 1. Sauvegarder la configuration actuelle
+cd /opt/gmao-iris/frontend
+cp .env .env.backup
+
+# 2. Modifier le fichier .env
+cat > .env << EOF
+NODE_ENV=production
+REACT_APP_BACKEND_URL=http://VOTRE_IP_TAILSCALE
+EOF
+
+# 3. Recompiler le frontend (1-2 minutes)
+yarn build
+
+# 4. Redémarrer les services
+supervisorctl restart gmao-iris-backend
+sleep 10
+systemctl restart nginx
+
+# 5. Attendre 2 minutes et tester
+```
+
+#### Points Importants
+
+⚠️ **L'IP Tailscale doit être accessible** :
+- Tailscale doit être installé et actif sur le serveur
+- L'appareil client doit être connecté au même réseau Tailscale
+
+⚠️ **Nginx doit être configuré** pour écouter sur toutes les interfaces :
+```nginx
+server {
+    listen 80;
+    server_name _;  # Accepte toutes les IPs
+    # ... reste de la configuration
+}
+```
+
+⚠️ **Délai de démarrage** :
+- Le backend peut mettre **30-60 secondes** à démarrer
+- Nginx redémarre après le backend
+- **Attendez toujours 2 minutes complètes** avant de considérer qu'il y a un problème
+
 ## 💾 Sauvegarde
 
 ### Docker
