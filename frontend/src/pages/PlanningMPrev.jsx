@@ -172,20 +172,20 @@ const PlanningMPrev = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Navigation mois */}
+          {/* Navigation année */}
           <div className="flex items-center justify-between mb-6">
-            <Button variant="outline" onClick={goToPreviousMonth}>
+            <Button variant="outline" onClick={goToPreviousYear}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-4">
               <h2 className="text-2xl font-bold">
-                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                Année {currentDate.getFullYear()}
               </h2>
-              <Button variant="ghost" size="sm" onClick={goToToday}>
-                Aujourd'hui
+              <Button variant="ghost" size="sm" onClick={goToCurrentYear}>
+                Année actuelle
               </Button>
             </div>
-            <Button variant="outline" onClick={goToNextMonth}>
+            <Button variant="outline" onClick={goToNextYear}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
