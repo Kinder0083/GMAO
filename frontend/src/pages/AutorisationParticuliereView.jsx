@@ -9,11 +9,15 @@ import { useToast } from '../hooks/use-toast';
 
 const AutorisationParticuliereView = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [autorisations, setAutorisations] = useState([]);
   const [filteredAutorisations, setFilteredAutorisations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Récupérer le poleId depuis le state de navigation
+  const fromPoleId = location.state?.fromPoleId;
 
   useEffect(() => {
     loadAutorisations();
