@@ -284,10 +284,10 @@ const DemandeArretDialog = ({ open, onOpenChange, onSuccess }) => {
                 <div>
                   <Label htmlFor="work_order">Ordre de Travail</Label>
                   <Select
-                    value={formData.work_order_id || ''}
+                    value={formData.work_order_id || 'none'}
                     onValueChange={(value) => setFormData(prev => ({
                       ...prev,
-                      work_order_id: value || null,
+                      work_order_id: value === 'none' ? null : value,
                       maintenance_preventive_id: null // Reset l'autre
                     }))}
                   >
@@ -295,7 +295,7 @@ const DemandeArretDialog = ({ open, onOpenChange, onSuccess }) => {
                       <SelectValue placeholder="Sélectionner un ordre de travail" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucun</SelectItem>
+                      <SelectItem value="none">Aucun</SelectItem>
                       {workOrders.map(wo => (
                         <SelectItem key={wo.id} value={wo.id}>
                           {wo.title || `Ordre ${wo.order_number}`}
