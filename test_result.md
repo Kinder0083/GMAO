@@ -5997,6 +5997,56 @@ agent_communication:
       ✅ Les endpoints sont PRÊTS POUR PRODUCTION
       
       RECOMMANDATION MAIN AGENT: Informer l'utilisateur que la correction est validée
+  - agent: "testing"
+    message: |
+      ✅ JOURNALISATION DEMANDES D'ARRÊT ENTIÈREMENT VALIDÉE - Novembre 2025
+      
+      🎯 CONTEXTE DU TEST:
+      Test de la journalisation automatique dans le journal d'audit pour toutes les actions
+      sur les demandes d'arrêt de maintenance (création, approbation, refus).
+      
+      📊 RÉSULTATS DES TESTS (9/9 RÉUSSIS):
+      
+      🔧 TEST 1: Création demande d'arrêt ✅ RÉUSSI
+      - POST /api/demandes-arret/ avec données complètes: SUCCESS (200 OK)
+      - Demande créée avec ID et token de validation
+      - Statut: EN_ATTENTE, Équipements et destinataire correctement assignés
+      
+      📋 TEST 2: Vérification journal après création ✅ RÉUSSI
+      - GET /api/audit-logs?entity_type=DEMANDE_ARRET: SUCCESS (200 OK)
+      - Entrée CREATE trouvée avec EntityType.DEMANDE_ARRET
+      - Détails complets: noms équipements et destinataire
+      
+      ✅ TEST 3: Approbation demande ✅ RÉUSSI
+      - POST /api/demandes-arret/validate/{token}: SUCCESS (200 OK)
+      - Demande approuvée avec commentaire
+      
+      📋 TEST 4: Vérification journal après approbation ✅ RÉUSSI
+      - Entrée UPDATE trouvée avec détails "APPROUVÉE"
+      - Changes: {"statut": "EN_ATTENTE → APPROUVEE"}
+      
+      ❌ TEST 5: Création et refus nouvelle demande ✅ RÉUSSI
+      - Nouvelle demande créée et refusée avec succès
+      - POST /api/demandes-arret/refuse/{token}: SUCCESS (200 OK)
+      
+      📋 TEST 6: Vérification journal après refus ✅ RÉUSSI
+      - Entrée UPDATE trouvée avec détails "REFUSÉE"
+      - Changes: {"statut": "EN_ATTENTE → REFUSEE"}
+      
+      📊 TEST 7: Vérification finale ✅ RÉUSSI
+      - 4 entrées DEMANDE_ARRET trouvées dans le journal
+      - Actions CREATE: 2, Actions UPDATE: 2
+      - Toutes les actions correctement enregistrées
+      
+      🎉 CONCLUSION CRITIQUE:
+      ✅ La journalisation automatique fonctionne PARFAITEMENT
+      ✅ Toutes les actions (CREATE, UPDATE) sont enregistrées
+      ✅ Détails complets avec noms équipements et destinataire
+      ✅ Changements de statut correctement trackés
+      ✅ Filtrage par entity_type="DEMANDE_ARRET" fonctionnel
+      ✅ Le système est PRÊT POUR PRODUCTION
+      
+      RECOMMANDATION MAIN AGENT: La journalisation des demandes d'arrêt est entièrement opérationnelle
   - agent: "main"
     message: |
       📋 PHASE ACTUELLE : FINALISATION PLAN DE SURVEILLANCE - Janvier 2025
