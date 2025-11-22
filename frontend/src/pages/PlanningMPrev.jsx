@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { Calendar, ChevronLeft, ChevronRight, Wrench, Plus } from 'lucide-react';
-import { assetsAPI, demandesArretAPI } from '../services/api';
+import { equipmentsAPI, demandesArretAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import DemandeArretDialog from '../components/PlanningMPrev/DemandeArretDialog';
