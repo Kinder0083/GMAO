@@ -504,7 +504,11 @@ const AutorisationParticuliereForm = () => {
 
           {/* Actions */}
           <div className="flex justify-end gap-3">
-            <Button type="button" variant="outline" onClick={() => navigate('/autorisations-particulieres')}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => fromPoleId ? navigate(`/documentations/${fromPoleId}`) : navigate('/documentations')}
+            >
               Annuler
             </Button>
             <Button type="submit" disabled={loading}>
