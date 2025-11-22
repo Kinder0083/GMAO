@@ -450,45 +450,46 @@ class AutorisationsParticulieresTester:
             self.log(f"⚠️ Erreur lecture logs: {str(e)}", "WARNING")
             return True  # Ne pas faire échouer le test pour ça
 
-    def test_delete_created_items(self):
-        """TEST 6: Nettoyer - Supprimer les items de test"""
-        self.log("🧪 TEST 6: Nettoyer - Supprimer les items de test")
+    def test_cleanup_remaining_autorisations(self):
+        """TEST 8: Nettoyer - Supprimer les autorisations de test restantes"""
+        self.log("🧪 TEST 8: Nettoyer - Supprimer les autorisations de test restantes")
         
-        if not self.test_items:
-            self.log("⚠️ Aucun item de test à supprimer", "WARNING")
+        if not self.test_autorisations:
+            self.log("✅ Aucune autorisation de test restante à supprimer")
             return True
         
         deleted_count = 0
         failed_count = 0
         
-        for item_id in self.test_items:
+        for autorisation_id in self.test_autorisations[:]:  # Copy to avoid modification during iteration
             try:
                 response = self.admin_session.delete(
-                    f"{BACKEND_URL}/surveillance/items/{item_id}",
+                    f"{BACKEND_URL}/autorisations/{autorisation_id}",
                     timeout=15
                 )
                 
                 if response.status_code == 200:
                     data = response.json()
                     if data.get('success'):
-                        self.log(f"✅ Item {item_id} supprimé avec succès")
+                        self.log(f"✅ Autorisation {autorisation_id} supprimée avec succès")
                         deleted_count += 1
+                        self.test_autorisations.remove(autorisation_id)
                     else:
-                        self.log(f"⚠️ Réponse inattendue pour suppression item {item_id}")
+                        self.log(f"⚠️ Réponse inattendue pour suppression autorisation {autorisation_id}")
                         failed_count += 1
                 else:
-                    self.log(f"❌ Échec suppression item {item_id} - Status: {response.status_code}")
+                    self.log(f"❌ Échec suppression autorisation {autorisation_id} - Status: {response.status_code}")
                     failed_count += 1
                     
             except requests.exceptions.RequestException as e:
-                self.log(f"❌ Erreur suppression item {item_id} - Error: {str(e)}")
+                self.log(f"❌ Erreur suppression autorisation {autorisation_id} - Error: {str(e)}")
                 failed_count += 1
         
         if failed_count == 0:
-            self.log(f"✅ SUCCÈS: Tous les {deleted_count} items de test ont été supprimés")
+            self.log(f"✅ SUCCÈS: Toutes les {deleted_count} autorisations de test ont été supprimées")
             return True
         else:
-            self.log(f"⚠️ PARTIEL: {deleted_count} items supprimés, {failed_count} échecs")
+            self.log(f"⚠️ PARTIEL: {deleted_count} autorisations supprimées, {failed_count} échecs")
             return deleted_count > 0  # Consider success if at least some were deleted
 
     def cleanup_test_items(self):
