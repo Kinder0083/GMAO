@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Demande d'Arrêt pour Maintenance - Module complet
+Tests Demande d'Arrêt pour Maintenance - Journalisation automatique
 """
 
 import requests
