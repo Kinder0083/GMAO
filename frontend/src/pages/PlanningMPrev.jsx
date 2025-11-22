@@ -223,6 +223,80 @@ const PlanningMPrev = () => {
             </Button>
           </div>
 
+          {/* Statistiques annuelles */}
+          <div className="grid grid-cols-4 gap-4 mb-6">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-blue-700">
+                      {annualStats.total}
+                    </div>
+                    <div className="text-sm text-blue-600 font-medium">Total jours-équipement</div>
+                  </div>
+                  <Calendar className="h-10 w-10 text-blue-400" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-green-700">
+                      {annualStats.operational}
+                    </div>
+                    <div className="text-sm text-green-600 font-medium">Jours opérationnels</div>
+                    {annualStats.total > 0 && (
+                      <div className="text-xs text-green-500 mt-1">
+                        {Math.round((annualStats.operational / annualStats.total) * 100)}% du temps
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-green-500"></div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-orange-700">
+                      {annualStats.maintenance}
+                    </div>
+                    <div className="text-sm text-orange-600 font-medium">Jours en maintenance</div>
+                    {annualStats.total > 0 && (
+                      <div className="text-xs text-orange-500 mt-1">
+                        {Math.round((annualStats.maintenance / annualStats.total) * 100)}% du temps
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-orange-500"></div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+              <CardContent className="pt-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-3xl font-bold text-red-700">
+                      {annualStats.outOfService}
+                    </div>
+                    <div className="text-sm text-red-600 font-medium">Jours hors service</div>
+                    {annualStats.total > 0 && (
+                      <div className="text-xs text-red-500 mt-1">
+                        {Math.round((annualStats.outOfService / annualStats.total) * 100)}% du temps
+                      </div>
+                    )}
+                  </div>
+                  <div className="h-10 w-10 rounded-full bg-red-500"></div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Légende */}
           <div className="flex items-center gap-6 mb-4 p-3 bg-gray-50 rounded">
             <span className="text-sm font-semibold">Légende :</span>
