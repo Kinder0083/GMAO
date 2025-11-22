@@ -65,18 +65,28 @@ async def get_autorisation(
 
 @router.post("/")
 async def create_autorisation(
-    autorisation: AutorisationParticuliere,
+    autorisation: AutorisationParticuliereCreate,
     current_user: dict = Depends(get_current_user)
 ):
     """Créer une nouvelle autorisation"""
     try:
+        # Générer le numéro d'autorisation (>= 8000)
+        last_autorisation = await db.autorisations_particulieres.find_one(
+            sort=[("numero", -1)]
+        )
+        next_numero = 8000 if not last_autorisation else last_autorisation.get("numero", 7999) + 1
+        
         data = autorisation.model_dump()
+        data["id"] = str(uuid.uuid4())
+        data["numero"] = next_numero
+        data["date_etablissement"] = datetime.now(timezone.utc).strftime("%d/%m/%Y")
         data["created_by"] = current_user.get("id")
         data["created_at"] = datetime.now(timezone.utc).isoformat()
         data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        data["statut"] = "BROUILLON"
         
         await db.autorisations_particulieres.insert_one(data)
-        logger.info(f"Autorisation créée: {data['id']}")
+        logger.info(f"Autorisation créée: {data['id']} (numéro: {next_numero})")
         return data
     except Exception as e:
         logger.error(f"Erreur création autorisation: {str(e)}")
