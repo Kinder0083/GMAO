@@ -436,10 +436,10 @@ export const documentationsAPI = {
 export const autorisationsAPI = {
   getAll: (poleId = null) => {
     const params = poleId ? { pole_id: poleId } : {};
-    return api.get('/autorisations', { params }).then(res => res.data);
+    return api.get('/autorisations/', { params }).then(res => res.data);
   },
   getById: (id) => api.get(`/autorisations/${id}`).then(res => res.data),
-  create: (data) => api.post('/autorisations', data).then(res => res.data),
+  create: (data) => api.post('/autorisations/', data).then(res => res.data),
   update: (id, data) => api.put(`/autorisations/${id}`, data).then(res => res.data),
   delete: (id) => api.delete(`/autorisations/${id}`).then(res => res.data),
   generatePDF: (id) => {
