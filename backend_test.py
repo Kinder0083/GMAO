@@ -235,58 +235,292 @@ class DemandeArretJournalisationTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_get_demande_by_id(self):
-        """TEST 5: Récupérer une demande spécifique par ID"""
-        self.log("🧪 TEST 5: Récupérer une demande spécifique par ID")
+    def test_verify_journal_creation(self):
+        """TEST 5: Vérifier l'entrée dans le journal après création"""
+        self.log("🧪 TEST 5: Vérifier l'entrée dans le journal après création")
         
-        if not self.test_demandes:
-            self.log("⚠️ Aucune demande de test disponible", "WARNING")
+        if not self.created_demande_id:
+            self.log("❌ Aucune demande créée pour vérifier le journal", "ERROR")
             return False
         
-        demande_id = self.test_demandes[0]
-        
         try:
+            # Récupérer les logs d'audit avec filtre sur DEMANDE_ARRET
             response = self.admin_session.get(
-                f"{BACKEND_URL}/demandes-arret/{demande_id}",
+                f"{BACKEND_URL}/audit-logs",
+                params={
+                    "entity_type": "DEMANDE_ARRET",
+                    "limit": 50
+                },
                 timeout=15
             )
             
             if response.status_code == 200:
-                demande = response.json()
-                self.log(f"✅ Demande récupérée - Status: 200 OK")
-                self.log(f"✅ ID: {demande.get('id')}")
-                self.log(f"✅ Statut: {demande.get('statut')}")
-                self.log(f"✅ Demandeur: {demande.get('demandeur_nom')}")
-                self.log(f"✅ Destinataire: {demande.get('destinataire_nom')}")
+                data = response.json()
+                logs = data.get('logs', [])
+                self.log(f"✅ Journal récupéré - {len(logs)} entrées trouvées")
                 
-                # Vérifier tous les champs présents et corrects
-                required_fields = ['id', 'statut', 'demandeur_id', 'demandeur_nom', 
-                                 'destinataire_id', 'destinataire_nom', 'equipement_ids', 
-                                 'equipement_noms', 'date_debut', 'date_fin']
+                # Chercher l'entrée de création de notre demande
+                creation_log = None
+                for log in logs:
+                    if (log.get('entity_id') == self.created_demande_id and 
+                        log.get('action') == 'CREATE' and
+                        log.get('entity_type') == 'DEMANDE_ARRET'):
+                        creation_log = log
+                        break
                 
-                missing_fields = []
-                for field in required_fields:
-                    if field not in demande or demande[field] is None:
-                        missing_fields.append(field)
-                
-                if not missing_fields:
-                    self.log("✅ SUCCÈS: Tous les champs requis sont présents")
+                if creation_log:
+                    self.log("✅ SUCCÈS: Entrée de création trouvée dans le journal")
+                    self.log(f"✅ Action: {creation_log.get('action')}")
+                    self.log(f"✅ Entity Type: {creation_log.get('entity_type')}")
+                    self.log(f"✅ Entity ID: {creation_log.get('entity_id')}")
+                    self.log(f"✅ Details: {creation_log.get('details')}")
                     
-                    # Vérifier que equipement_ids et equipement_noms sont des arrays
-                    equipement_ids = demande.get('equipement_ids', [])
-                    equipement_noms = demande.get('equipement_noms', [])
-                    if isinstance(equipement_ids, list) and isinstance(equipement_noms, list):
-                        self.log(f"✅ SUCCÈS: equipement_ids et equipement_noms sont des arrays")
+                    # Vérifier que les détails contiennent les noms des équipements et destinataire
+                    details = creation_log.get('details', '')
+                    if 'équipement' in details.lower() and 'destinataire' in details.lower():
+                        self.log("✅ SUCCÈS: Détails contiennent les noms des équipements et destinataire")
                         return True
                     else:
-                        self.log("❌ ÉCHEC: equipement_ids ou equipement_noms ne sont pas des arrays", "ERROR")
+                        self.log("❌ ÉCHEC: Détails incomplets dans le journal", "ERROR")
                         return False
                 else:
-                    self.log(f"❌ ÉCHEC: Champs manquants: {missing_fields}", "ERROR")
+                    self.log("❌ ÉCHEC: Entrée de création non trouvée dans le journal", "ERROR")
                     return False
-                    
             else:
-                self.log(f"❌ Récupération de la demande échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_approve_demande(self):
+        """TEST 6: Approuver une demande via le token"""
+        self.log("🧪 TEST 6: Approuver une demande via le token")
+        
+        if not self.validation_token:
+            self.log("❌ Aucun token de validation disponible", "ERROR")
+            return False
+        
+        try:
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/demandes-arret/validate/{self.validation_token}",
+                json={"commentaire": "Approuvé pour test de journalisation"},
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Demande approuvée - Status: 200 OK")
+                self.log(f"✅ Message: {data.get('message')}")
+                self.log(f"✅ Demande ID: {data.get('demande_id')}")
+                return True
+            else:
+                self.log(f"❌ Approbation échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_verify_journal_approval(self):
+        """TEST 7: Vérifier l'entrée dans le journal après approbation"""
+        self.log("🧪 TEST 7: Vérifier l'entrée dans le journal après approbation")
+        
+        if not self.created_demande_id:
+            self.log("❌ Aucune demande créée pour vérifier le journal", "ERROR")
+            return False
+        
+        try:
+            # Récupérer les logs d'audit avec filtre sur DEMANDE_ARRET
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/audit-logs",
+                params={
+                    "entity_type": "DEMANDE_ARRET",
+                    "limit": 50
+                },
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logs = data.get('logs', [])
+                self.log(f"✅ Journal récupéré - {len(logs)} entrées trouvées")
+                
+                # Chercher l'entrée d'approbation de notre demande
+                approval_log = None
+                for log in logs:
+                    if (log.get('entity_id') == self.created_demande_id and 
+                        log.get('action') == 'UPDATE' and
+                        log.get('entity_type') == 'DEMANDE_ARRET' and
+                        'APPROUVÉE' in log.get('details', '')):
+                        approval_log = log
+                        break
+                
+                if approval_log:
+                    self.log("✅ SUCCÈS: Entrée d'approbation trouvée dans le journal")
+                    self.log(f"✅ Action: {approval_log.get('action')}")
+                    self.log(f"✅ Details: {approval_log.get('details')}")
+                    
+                    # Vérifier les changements de statut
+                    changes = approval_log.get('changes', {})
+                    if changes.get('statut') == 'EN_ATTENTE → APPROUVEE':
+                        self.log("✅ SUCCÈS: Changement de statut correctement enregistré")
+                        return True
+                    else:
+                        self.log(f"❌ ÉCHEC: Changement de statut incorrect: {changes.get('statut')}", "ERROR")
+                        return False
+                else:
+                    self.log("❌ ÉCHEC: Entrée d'approbation non trouvée dans le journal", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_create_and_refuse_demande(self):
+        """TEST 8: Créer une nouvelle demande et la refuser pour tester le journal"""
+        self.log("🧪 TEST 8: Créer une nouvelle demande et la refuser")
+        
+        if not self.equipment_id or not self.rsp_prod_user_id:
+            self.log("❌ Prérequis manquants", "ERROR")
+            return False
+        
+        # Créer une nouvelle demande
+        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
+        day_after = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
+        
+        test_demande_data = {
+            "date_debut": tomorrow,
+            "date_fin": day_after,
+            "periode_debut": "JOURNEE_COMPLETE",
+            "periode_fin": "JOURNEE_COMPLETE",
+            "equipement_ids": [self.equipment_id],
+            "commentaire": "Test refus journalisation",
+            "destinataire_id": self.rsp_prod_user_id
+        }
+        
+        try:
+            # Créer la demande
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/demandes-arret/",
+                json=test_demande_data,
+                timeout=15
+            )
+            
+            if response.status_code not in [200, 201]:
+                self.log(f"❌ Création de la demande échouée - Status: {response.status_code}", "ERROR")
+                return False
+            
+            data = response.json()
+            demande_id = data.get('id')
+            validation_token = data.get('validation_token')
+            self.test_demandes.append(demande_id)
+            
+            self.log(f"✅ Nouvelle demande créée pour test de refus - ID: {demande_id}")
+            
+            # Refuser la demande
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/demandes-arret/refuse/{validation_token}",
+                json={"commentaire": "Refusé pour test de journalisation"},
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                self.log("✅ Demande refusée avec succès")
+                
+                # Vérifier le journal
+                response = self.admin_session.get(
+                    f"{BACKEND_URL}/audit-logs",
+                    params={
+                        "entity_type": "DEMANDE_ARRET",
+                        "limit": 50
+                    },
+                    timeout=15
+                )
+                
+                if response.status_code == 200:
+                    logs_data = response.json()
+                    logs = logs_data.get('logs', [])
+                    
+                    # Chercher l'entrée de refus
+                    refusal_log = None
+                    for log in logs:
+                        if (log.get('entity_id') == demande_id and 
+                            log.get('action') == 'UPDATE' and
+                            'REFUSÉE' in log.get('details', '')):
+                            refusal_log = log
+                            break
+                    
+                    if refusal_log:
+                        self.log("✅ SUCCÈS: Entrée de refus trouvée dans le journal")
+                        self.log(f"✅ Details: {refusal_log.get('details')}")
+                        
+                        # Vérifier les changements de statut
+                        changes = refusal_log.get('changes', {})
+                        if changes.get('statut') == 'EN_ATTENTE → REFUSEE':
+                            self.log("✅ SUCCÈS: Changement de statut de refus correctement enregistré")
+                            return True
+                        else:
+                            self.log(f"❌ ÉCHEC: Changement de statut incorrect: {changes.get('statut')}", "ERROR")
+                            return False
+                    else:
+                        self.log("❌ ÉCHEC: Entrée de refus non trouvée dans le journal", "ERROR")
+                        return False
+                else:
+                    self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Refus de la demande échoué - Status: {response.status_code}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def test_final_journal_verification(self):
+        """TEST 9: Vérification finale - Lister tous les logs DEMANDE_ARRET"""
+        self.log("🧪 TEST 9: Vérification finale - Lister tous les logs DEMANDE_ARRET")
+        
+        try:
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/audit-logs",
+                params={
+                    "entity_type": "DEMANDE_ARRET",
+                    "limit": 100
+                },
+                timeout=15
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                logs = data.get('logs', [])
+                self.log(f"✅ Journal récupéré - {len(logs)} entrées DEMANDE_ARRET trouvées")
+                
+                # Compter les différents types d'actions
+                create_count = sum(1 for log in logs if log.get('action') == 'CREATE')
+                update_count = sum(1 for log in logs if log.get('action') == 'UPDATE')
+                
+                self.log(f"✅ Actions CREATE: {create_count}")
+                self.log(f"✅ Actions UPDATE: {update_count}")
+                
+                # Afficher les dernières entrées pour vérification
+                self.log("📋 Dernières entrées du journal:")
+                for i, log in enumerate(logs[:5]):  # Afficher les 5 dernières
+                    self.log(f"  {i+1}. {log.get('timestamp')} - {log.get('action')} - {log.get('details')[:100]}...")
+                
+                if create_count >= 2 and update_count >= 2:
+                    self.log("✅ SUCCÈS: Toutes les actions sont bien enregistrées dans le journal")
+                    return True
+                else:
+                    self.log(f"❌ ÉCHEC: Nombre d'actions insuffisant (CREATE: {create_count}, UPDATE: {update_count})", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
