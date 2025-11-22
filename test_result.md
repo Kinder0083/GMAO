@@ -6143,3 +6143,290 @@ agent_communication:
         - ✅ Si le frontend ne peut pas sauvegarder, le problème est côté frontend ou réseau
         
         ⚠️ RECOMMANDATION: Vérifier le frontend et la communication API pour identifier la cause exacte du problème de sauvegarde.
+
+
+#====================================================================================================
+# PHASE 5: Module "Autorisations Particulières de Travaux" - IMPLÉMENTATION COMPLÈTE
+#====================================================================================================
+
+user_problem_statement: |
+  Le client a demandé l'implémentation d'un nouveau module complet pour gérer les "Autorisations Particulières de Travaux".
+  Ce module doit être identique au module "Bons de Travail" en termes de fonctionnalités, avec son propre formulaire, vue liste, et génération PDF.
+  
+  Le format PDF doit suivre strictement le document de référence MAINT_FE_003_V03 fourni par le client.
+  
+  Fonctionnalités requises:
+  - Formulaire de création/édition avec tous les champs du document
+  - Vue liste avec recherche et filtrage
+  - Génération PDF au format MAINT_FE_003_V03 (strictement identique à la ligne près)
+  - Numérotation automatique >= 8000
+  - Intégration dans la navigation de l'application
+  - Bouton d'accès à côté du bouton "Bon de Travail"
+
+backend:
+  - task: "Modèle de données AutorisationParticuliere"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/models.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Modèle complet créé selon le document MAINT_FE_003_V03
+          - AutorisationParticuliere: modèle principal avec tous les champs
+          - PersonnelAutorise: sous-modèle pour le personnel (nom, fonction)
+          - AutorisationParticuliereCreate: modèle de création
+          - AutorisationParticuliereUpdate: modèle de mise à jour partielle
+          
+          Champs inclus:
+          - numero: int (auto-généré >= 8000)
+          - date_etablissement: str
+          - service_demandeur, responsable: str
+          - personnel_autorise: List[PersonnelAutorise] (max 4)
+          - description_travaux: str
+          - horaire_debut, horaire_fin: str
+          - lieu_travaux: str
+          - risques_potentiels: str
+          - mesures_securite: str
+          - equipements_protection: str
+          - signatures (demandeur et responsable sécurité)
+          - statut: "BROUILLON" ou "VALIDE"
+          - métadonnées (created_at, updated_at, created_by)
+
+  - task: "Routes API CRUD pour Autorisations Particulières"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/autorisation_routes.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Toutes les routes CRUD créées
+          
+          Endpoints implémentés:
+          - GET /api/autorisations - Liste toutes les autorisations (avec filtre pole_id optionnel)
+          - GET /api/autorisations/{id} - Récupère une autorisation par ID
+          - POST /api/autorisations - Crée une nouvelle autorisation (numéro auto-généré >= 8000)
+          - PUT /api/autorisations/{id} - Met à jour une autorisation existante
+          - DELETE /api/autorisations/{id} - Supprime une autorisation
+          - GET /api/autorisations/{id}/pdf - Génère le PDF HTML (avec authentification par token)
+          
+          Fonctionnalités spéciales:
+          - Génération automatique du numéro (incrémental à partir de 8000)
+          - Date d'établissement auto-générée au format DD/MM/YYYY
+          - Authentification JWT pour toutes les routes
+          - Support de l'authentification par token pour le PDF (pour l'ouverture dans nouvel onglet)
+
+  - task: "Template HTML pour génération PDF MAINT_FE_003_V03"
+    implemented: true
+    working: "NA"
+    file: "/app/backend/autorisation_template.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Template HTML créé selon le document de référence
+          
+          Fonction: generate_autorisation_html(autorisation: dict) -> str
+          
+          Caractéristiques du template:
+          - Format strictement conforme au document MAINT_FE_003_V03
+          - En-tête avec logo placeholder et informations de référence
+          - Titre principal "AUTORISATION PARTICULIÈRE DE TRAVAUX"
+          - Boîte de référence avec numéro et date d'établissement
+          - Tableau des informations principales (service, responsable)
+          - Tableau du personnel autorisé (4 lignes fixes)
+          - Sections pour description, horaires/lieu, risques, mesures de sécurité, EPI
+          - Section signatures avec deux colonnes (Demandeur / Responsable Sécurité)
+          - Style CSS adapté pour impression A4
+          - Support des sauts de ligne convertis en <br> pour l'affichage HTML
+          
+          ⚠️ Note technique: Utilisation de variables intermédiaires pour éviter les backslashes dans f-strings
+
+frontend:
+  - task: "API Service pour Autorisations Particulières"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/services/api.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Fonctions API ajoutées dans api.js
+          
+          Export: autorisationsAPI avec les méthodes:
+          - getAll(poleId) - Liste avec filtre optionnel par pôle
+          - getById(id) - Récupération d'une autorisation
+          - create(data) - Création
+          - update(id, data) - Mise à jour
+          - delete(id) - Suppression
+          - generatePDF(id) - Retourne l'URL du PDF avec token d'authentification
+          
+          Configuration: Utilise l'instance axios configurée avec intercepteurs JWT
+
+  - task: "Formulaire AutorisationParticuliereForm.jsx"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AutorisationParticuliereForm.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Formulaire complet de création/édition
+          
+          Fonctionnalités:
+          - Mode création et édition (détecté via paramètre URL :id)
+          - Structure en Cards pour organisation visuelle
+          - Sections: Infos principales, Personnel autorisé (4 entrées), Description, Horaires/Lieu, Risques, Mesures sécurité, EPI, Signatures
+          - Inputs de type "time" pour horaires
+          - Textareas pour descriptions longues
+          - Validation des champs obligatoires (*)
+          - Nettoyage automatique des entrées personnel vides avant soumission
+          - Bouton de suppression en mode édition
+          - Navigation retour et annulation
+          - Toasts de succès/erreur
+          
+          Composants UI: Card, Button, Input, Label, Textarea, Toast
+
+  - task: "Vue liste AutorisationParticuliereView.jsx"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/AutorisationParticuliereView.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Page de liste complète avec statistiques
+          
+          Fonctionnalités:
+          - Affichage de toutes les autorisations triées par numéro décroissant
+          - Statistiques en haut: Total, En brouillon, Validées
+          - Barre de recherche (numéro, service, responsable, lieu)
+          - Cartes pour chaque autorisation avec informations principales
+          - Badges de statut colorés (BROUILLON: jaune, VALIDE: vert)
+          - Actions par autorisation: Imprimer PDF, Modifier, Supprimer
+          - Message vide state si aucune autorisation
+          - Bouton "Nouvelle Autorisation" en header et dans empty state
+          - Confirmation de suppression avec dialogue
+          - Navigation vers formulaire d'édition
+          - Ouverture PDF dans nouvel onglet
+
+  - task: "Intégration routing App.js"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/App.js"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Routes ajoutées dans le routing principal
+          
+          Imports ajoutés:
+          - AutorisationParticuliereForm
+          - AutorisationParticuliereView
+          
+          Routes ajoutées (dans le ProtectedRoute):
+          - /autorisations-particulieres - Vue liste
+          - /autorisations-particulieres/new - Formulaire création
+          - /autorisations-particulieres/edit/:id - Formulaire édition
+          
+          Les routes sont protégées par authentification JWT
+
+  - task: "Bouton d'accès dans PoleDetails.jsx"
+    implemented: true
+    working: "NA"
+    file: "/app/frontend/src/pages/PoleDetails.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+      - working: "NA"
+        agent: "main"
+        comment: |
+          ✅ IMPLÉMENTÉ - Bouton ajouté à côté du bouton "Bon de Travail"
+          
+          Import ajouté: Shield (icône Lucide)
+          Import API: autorisationsAPI
+          
+          Bouton:
+          - Texte: "Autorisation Particulière"
+          - Icône: Shield
+          - Variant: outline
+          - Navigation vers: /autorisations-particulieres/new
+          - Position: Entre "Nouveau Bon de Travail" et "Ajouter Document"
+          
+          Le bouton est visible dans la page de détails d'un pôle (vue Documentations)
+
+metadata:
+  created_by: "main_agent"
+  version: "5.0"
+  test_sequence: 0
+  run_ui: false
+
+test_plan:
+  current_focus:
+    - "Routes API CRUD pour Autorisations Particulières"
+    - "Template HTML pour génération PDF MAINT_FE_003_V03"
+    - "Formulaire AutorisationParticuliereForm.jsx"
+    - "Vue liste AutorisationParticuliereView.jsx"
+    - "Intégration routing et navigation"
+  stuck_tasks: []
+  test_all: true
+  test_priority: "sequential"
+
+agent_communication:
+  - agent: "main"
+    message: |
+      🎯 MODULE "AUTORISATIONS PARTICULIÈRES" COMPLÈTEMENT IMPLÉMENTÉ
+      
+      ✅ Backend complet:
+      - Modèles de données conformes au document MAINT_FE_003_V03
+      - Routes CRUD complètes avec authentification
+      - Template PDF HTML strictement conforme au document de référence
+      - Numérotation automatique >= 8000
+      - Collection MongoDB: autorisations_particulieres
+      
+      ✅ Frontend complet:
+      - Formulaire de création/édition avec validation
+      - Vue liste avec statistiques et recherche
+      - Actions: Créer, Modifier, Supprimer, Imprimer PDF
+      - Intégration complète dans le routing
+      - Bouton d'accès dans la page PoleDetails
+      
+      ✅ Backend redémarré avec succès, aucune erreur
+      
+      🧪 PRÊT POUR TEST BACKEND:
+      L'agent de test backend doit vérifier:
+      1. Création d'autorisation (POST /api/autorisations) - vérifier numéro >= 8000
+      2. Liste des autorisations (GET /api/autorisations)
+      3. Récupération d'une autorisation (GET /api/autorisations/{id})
+      4. Mise à jour (PUT /api/autorisations/{id})
+      5. Suppression (DELETE /api/autorisations/{id})
+      6. Génération PDF (GET /api/autorisations/{id}/pdf)
+      
+      ⏭️ PROCHAINE ÉTAPE:
+      - Test backend complet via deep_testing_backend_v2
+      - Demander confirmation utilisateur pour test frontend manuel ou automatisé
+      - Vérification visuelle du PDF (conformité stricte au document MAINT_FE_003_V03)
+
