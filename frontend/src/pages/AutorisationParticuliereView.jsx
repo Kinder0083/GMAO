@@ -4,7 +4,7 @@ import { autorisationsAPI } from '../services/api';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
-import { Plus, Search, FileText, Edit, Trash2, Eye, Printer } from 'lucide-react';
+import { Plus, Search, FileText, Edit, Trash2, Eye, Printer, ArrowLeft } from 'lucide-react';
 import { useToast } from '../hooks/use-toast';
 
 const AutorisationParticuliereView = () => {
