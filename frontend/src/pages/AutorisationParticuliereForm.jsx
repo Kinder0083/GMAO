@@ -230,28 +230,67 @@ const AutorisationParticuliereForm = () => {
             <CardHeader>
               <CardTitle>Bons de Travail Liés (optionnel)</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               {bonsTravail.length === 0 ? (
                 <p className="text-sm text-gray-500">Aucun bon de travail disponible</p>
               ) : (
-                <div className="space-y-2 max-h-60 overflow-y-auto">
-                  {bonsTravail.map((bon) => (
-                    <div key={bon.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
-                      <Checkbox
-                        id={`bon-${bon.id}`}
-                        checked={formData.bons_travail_ids.includes(bon.id)}
-                        onCheckedChange={() => handleBonTravailToggle(bon.id)}
-                      />
-                      <label
-                        htmlFor={`bon-${bon.id}`}
-                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
-                      >
-                        <span className="font-semibold">N° {bon.numero}</span> - {bon.titre || 'Sans titre'}
-                        {bon.equipement && <span className="text-gray-500"> • {bon.equipement}</span>}
-                      </label>
+                <>
+                  {/* Sélecteur */}
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <Select value={selectedBonId} onValueChange={setSelectedBonId}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Sélectionner un bon de travail" />
+                        </SelectTrigger>
+                        <SelectContent className="max-h-60">
+                          {bonsTravail
+                            .filter(bon => !formData.bons_travail_ids.includes(bon.id))
+                            .map((bon) => (
+                              <SelectItem key={bon.id} value={bon.id}>
+                                N° {bon.numero} - {bon.titre || 'Sans titre'}
+                                {bon.equipement && ` • ${bon.equipement}`}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  ))}
-                </div>
+                    <Button 
+                      type="button" 
+                      onClick={handleAddBonTravail} 
+                      disabled={!selectedBonId}
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  {/* Liste des bons sélectionnés */}
+                  {formData.bons_travail_ids.length > 0 && (
+                    <div className="space-y-2">
+                      <Label className="text-sm font-semibold">Bons sélectionnés :</Label>
+                      <div className="flex flex-wrap gap-2">
+                        {formData.bons_travail_ids.map((bonId) => {
+                          const bon = bonsTravail.find(b => b.id === bonId);
+                          if (!bon) return null;
+                          return (
+                            <Badge key={bonId} variant="secondary" className="flex items-center gap-1 px-3 py-1">
+                              <span className="text-sm">
+                                N° {bon.numero} - {bon.titre || 'Sans titre'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveBonTravail(bonId)}
+                                className="ml-1 hover:bg-gray-300 rounded-full p-0.5"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </CardContent>
           </Card>
