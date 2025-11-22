@@ -220,6 +220,37 @@ const AutorisationParticuliereForm = () => {
             </CardContent>
           </Card>
 
+          {/* Bons de travail liés */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Bons de Travail Liés (optionnel)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {bonsTravail.length === 0 ? (
+                <p className="text-sm text-gray-500">Aucun bon de travail disponible</p>
+              ) : (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {bonsTravail.map((bon) => (
+                    <div key={bon.id} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded">
+                      <Checkbox
+                        id={`bon-${bon.id}`}
+                        checked={formData.bons_travail_ids.includes(bon.id)}
+                        onCheckedChange={() => handleBonTravailToggle(bon.id)}
+                      />
+                      <label
+                        htmlFor={`bon-${bon.id}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1"
+                      >
+                        <span className="font-semibold">N° {bon.numero}</span> - {bon.titre || 'Sans titre'}
+                        {bon.equipement && <span className="text-gray-500"> • {bon.equipement}</span>}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Personnel autorisé */}
           <Card>
             <CardHeader>
