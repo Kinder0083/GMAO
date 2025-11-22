@@ -1422,76 +1422,87 @@ class BonDeTravail(BaseModel):
 
 # ==================== AUTORISATION PARTICULIERE ====================
 
+class PersonnelAutorise(BaseModel):
+    """Personnel autorisé pour l'autorisation particulière"""
+    nom: str
+    fonction: str
+
 class AutorisationParticuliere(BaseModel):
     """Autorisation Particulière de Travaux - Formulaire MAINT_FE_003_V03"""
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    numero: int  # N° d'autorisation (auto-généré, >= 8000)
     
-    # Type de travaux (checkboxes)
-    type_point_chaud: bool = False
-    type_espace_clos: bool = False
-    type_fouille: bool = False
-    type_autre: bool = False
-    type_autre_precision: Optional[str] = None
+    # Informations principales
+    date_etablissement: str  # Date d'établissement
+    service_demandeur: str
+    responsable: str
     
-    # Détails des travaux
-    detail_travaux: str  # Textarea
+    # Personnel autorisé (4 entrées max)
+    personnel_autorise: List[PersonnelAutorise] = []
     
-    # Lieu d'intervention
-    lieu_materiel_appareillage: Optional[str] = None
-    lieu_dernier_produit: Optional[str] = None
-    lieu_danger_avoisinant: Optional[str] = None
+    # Description des travaux
+    description_travaux: str
     
-    # Précautions à prendre (26 lignes avec 3 états : NON, OUI, FAIT)
-    # Format: {"non": False, "oui": False, "fait": False}
-    prec_consignation_materiel: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_consignation_electrique: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_debranchement_force: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_vidange_appareil: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_decontamination: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_degazage: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_pose_joint_plein: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_ventilation_forcee: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_zone_balisee: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_canalisations_electriques: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_souterraines_balisees: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_egouts_cables: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_taux_oxygene: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_taux_explosivite: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_explosimetre_continu: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_eclairage_surete: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_extincteur_type: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_extincteur_type_precision: Optional[str] = None
-    prec_autres_materielles: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_autres_materielles_precision: Optional[str] = None
-    prec_visiere: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_tenue_impermeable: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_cagoule_air: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_masque_type: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_masque_type_precision: Optional[str] = None
-    prec_gant_type: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_gant_type_precision: Optional[str] = None
-    prec_harnais_securite: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_outillage_anti_etincelle: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_presence_surveillant: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_autres_epi: dict = Field(default_factory=lambda: {"non": False, "oui": False, "fait": False})
-    prec_autres_epi_precision: Optional[str] = None
+    # Horaires et lieu
+    horaire_debut: str  # Format HH:MM
+    horaire_fin: str  # Format HH:MM
+    lieu_travaux: str
     
-    # Validation
-    etablie_par: str  # Nom et visa AM ou responsable
-    delivree_a: str  # Entreprise
-    date_delivrance: str  # Date de délivrance
+    # Risques potentiels (liste)
+    risques_potentiels: str
     
-    # Vérifications post-intervention (visas pour chaque délai)
-    verif_30min_visa: Optional[str] = None
-    verif_1h_visa: Optional[str] = None
-    verif_2h_visa: Optional[str] = None
+    # Mesures de sécurité (liste)
+    mesures_securite: str
+    
+    # Équipements de protection (liste)
+    equipements_protection: str
+    
+    # Signatures
+    signature_demandeur: Optional[str] = None
+    date_signature_demandeur: Optional[str] = None
+    signature_responsable_securite: Optional[str] = None
+    date_signature_responsable: Optional[str] = None
     
     # Métadonnées
-    pole_id: str  # Lié au pôle
     statut: str = "BROUILLON"  # BROUILLON, VALIDE
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     created_by: Optional[str] = None
+
+class AutorisationParticuliereCreate(BaseModel):
+    """Modèle pour la création d'une autorisation particulière"""
+    service_demandeur: str
+    responsable: str
+    personnel_autorise: List[PersonnelAutorise] = []
+    description_travaux: str
+    horaire_debut: str
+    horaire_fin: str
+    lieu_travaux: str
+    risques_potentiels: str
+    mesures_securite: str
+    equipements_protection: str
+    signature_demandeur: Optional[str] = None
+    date_signature_demandeur: Optional[str] = None
+    signature_responsable_securite: Optional[str] = None
+    date_signature_responsable: Optional[str] = None
+
+class AutorisationParticuliereUpdate(BaseModel):
+    """Modèle pour la mise à jour d'une autorisation particulière"""
+    service_demandeur: Optional[str] = None
+    responsable: Optional[str] = None
+    personnel_autorise: Optional[List[PersonnelAutorise]] = None
+    description_travaux: Optional[str] = None
+    horaire_debut: Optional[str] = None
+    horaire_fin: Optional[str] = None
+    lieu_travaux: Optional[str] = None
+    risques_potentiels: Optional[str] = None
+    mesures_securite: Optional[str] = None
+    equipements_protection: Optional[str] = None
+    signature_demandeur: Optional[str] = None
+    date_signature_demandeur: Optional[str] = None
+    signature_responsable_securite: Optional[str] = None
+    date_signature_responsable: Optional[str] = None
+    statut: Optional[str] = None
 
 # Models CRUD
 class PoleDeServiceCreate(BaseModel):
