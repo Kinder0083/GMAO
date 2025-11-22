@@ -199,48 +199,47 @@ class DemandeArretTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False, None
     
-    def test_get_all_autorisations(self):
-        """TEST 2: Récupérer toutes les autorisations"""
-        self.log("🧪 TEST 2: Récupérer toutes les autorisations")
+    def test_get_all_demandes_arret(self):
+        """TEST 4: Récupérer toutes les demandes d'arrêt"""
+        self.log("🧪 TEST 4: Récupérer toutes les demandes d'arrêt")
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/autorisations/",
+                f"{BACKEND_URL}/demandes-arret/",
                 timeout=15
             )
             
             if response.status_code == 200:
-                autorisations = response.json()
-                self.log(f"✅ Liste des autorisations récupérée - {len(autorisations)} autorisations")
+                demandes = response.json()
+                self.log(f"✅ Liste des demandes récupérée - {len(demandes)} demandes")
                 
-                # Chercher notre autorisation de test
-                test_autorisation = None
-                for autorisation in autorisations:
-                    if autorisation.get('id') in self.test_autorisations:
-                        test_autorisation = autorisation
+                # Chercher notre demande de test
+                test_demande = None
+                for demande in demandes:
+                    if demande.get('id') in self.test_demandes:
+                        test_demande = demande
                         break
                 
-                if test_autorisation:
-                    self.log(f"✅ Autorisation de test trouvée - ID: {test_autorisation.get('id')}")
-                    self.log(f"✅ Numéro: {test_autorisation.get('numero')}")
-                    self.log(f"✅ Service: {test_autorisation.get('service_demandeur')}")
-                    self.log(f"✅ Responsable: {test_autorisation.get('responsable')}")
-                    self.log(f"✅ Statut: {test_autorisation.get('statut')}")
+                if test_demande:
+                    self.log(f"✅ Demande de test trouvée - ID: {test_demande.get('id')}")
+                    self.log(f"✅ Statut: {test_demande.get('statut')}")
+                    self.log(f"✅ Demandeur: {test_demande.get('demandeur_nom')}")
+                    self.log(f"✅ Destinataire: {test_demande.get('destinataire_nom')}")
                     
-                    # Vérifier que l'autorisation créée est incluse
-                    if (test_autorisation.get('service_demandeur') == 'Service Test' and
-                        test_autorisation.get('responsable') == 'Jean Dupont'):
-                        self.log("✅ SUCCÈS: Autorisation créée trouvée dans la liste")
+                    # Vérifier que la demande créée est incluse
+                    if (test_demande.get('statut') == 'EN_ATTENTE' and
+                        test_demande.get('commentaire') == 'Test demande arrêt pour maintenance préventive'):
+                        self.log("✅ SUCCÈS: Demande créée trouvée dans la liste")
                         return True
                     else:
-                        self.log("❌ ÉCHEC: Données de l'autorisation incorrectes", "ERROR")
+                        self.log("❌ ÉCHEC: Données de la demande incorrectes", "ERROR")
                         return False
                 else:
-                    self.log("❌ Autorisation de test non trouvée dans la liste", "ERROR")
+                    self.log("❌ Demande de test non trouvée dans la liste", "ERROR")
                     return False
                     
             else:
-                self.log(f"❌ Récupération des autorisations échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération des demandes échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
