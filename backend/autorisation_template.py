@@ -1,97 +1,138 @@
 """
 Template HTML pour générer le PDF d'Autorisation Particulière de Travaux
-Format: MAINT_FE_003_V03 - Version compacte (1 page A4)
+Format: MAINT_FE_003_V03
 """
 
 def generate_autorisation_html(autorisation: dict) -> str:
-    """Génère le HTML pour l'autorisation particulière - Version compacte"""
+    """Génère le HTML pour l'autorisation particulière - Format avec colonnes pour sections spécifiques"""
     
-    # Données de base
+    # Données de l'autorisation
     numero = autorisation.get("numero", "")
     date_etablissement = autorisation.get("date_etablissement", "")
     service_demandeur = autorisation.get("service_demandeur", "")
     responsable = autorisation.get("responsable", "")
     
-    # Personnel autorisé - uniquement les entrées remplies
+    # Personnel autorisé (4 entrées)
     personnel_autorise = autorisation.get("personnel_autorise", [])
     personnel_rows = ""
-    count = 0
-    for person in personnel_autorise:
-        if person.get("nom") or person.get("fonction"):
-            count += 1
-            personnel_rows += f"""
-                <tr>
-                    <td style="border: 1px solid black; padding: 2px 4px; text-align: center;">{count}</td>
-                    <td style="border: 1px solid black; padding: 2px 4px;">{person.get('nom', '')}</td>
-                    <td style="border: 1px solid black; padding: 2px 4px;">{person.get('fonction', '')}</td>
-                </tr>
-            """
+    for i in range(4):
+        if i < len(personnel_autorise):
+            nom = personnel_autorise[i].get("nom", "")
+            fonction = personnel_autorise[i].get("fonction", "")
+        else:
+            nom = ""
+            fonction = ""
+        personnel_rows += f"""
+            <tr>
+                <td style="border: 1px solid black; padding: 4px; text-align: center; height: 25px;">{i+1}</td>
+                <td style="border: 1px solid black; padding: 4px; height: 25px;">{nom}</td>
+                <td style="border: 1px solid black; padding: 4px; height: 25px;">{fonction}</td>
+            </tr>
+        """
     
-    # Types de travaux - uniquement ceux sélectionnés
-    types_travaux = []
-    if autorisation.get("type_point_chaud"): types_travaux.append("Par point chaud")
-    if autorisation.get("type_fouille"): types_travaux.append("De fouille")
-    if autorisation.get("type_espace_clos"): types_travaux.append("En espace clos/confiné")
-    if autorisation.get("type_autre_cas"): types_travaux.append("Autre cas")
-    
-    types_display = " • ".join(types_travaux) if types_travaux else "Non spécifié"
+    # Types de travaux (checkboxes) - sur 2 colonnes
+    type_point_chaud = "☑" if autorisation.get("type_point_chaud") else "☐"
+    type_fouille = "☑" if autorisation.get("type_fouille") else "☐"
+    type_espace_clos = "☑" if autorisation.get("type_espace_clos") else "☐"
+    type_autre_cas = "☑" if autorisation.get("type_autre_cas") else "☐"
     
     newline = "\n"
     br_tag = "<br>"
-    description_travaux = autorisation.get("description_travaux", "")
-    
+    description_travaux = autorisation.get("description_travaux", "").replace(newline, br_tag)
     horaire_debut = autorisation.get("horaire_debut", "")
     horaire_fin = autorisation.get("horaire_fin", "")
     lieu_travaux = autorisation.get("lieu_travaux", "")
+    
     risques_potentiels = autorisation.get("risques_potentiels", "").replace(newline, br_tag)
     
-    # Mesures de sécurité - uniquement celles sélectionnées
-    mesures_fait = []
-    mesures_afaire = []
-    
-    mesures_map = {
-        "mesure_consignation_materiel": "Consignation mat.",
-        "mesure_consignation_electrique": "Consignation élec.",
-        "mesure_debranchement_force": "Débranch. force",
-        "mesure_vidange_appareil": "Vidange app.",
-        "mesure_decontamination": "Décontamination",
-        "mesure_degazage": "Dégazage",
-        "mesure_pose_joint": "Pose joint",
-        "mesure_ventilation": "Ventilation",
-        "mesure_zone_balisee": "Zone balisée",
-        "mesure_canalisations_electriques": "Canal. élec.",
-        "mesure_souterraines_balisees": "Souter. balisées",
-        "mesure_egouts_cables": "Égouts/câbles",
-        "mesure_taux_oxygene": "Taux O2",
-        "mesure_taux_explosivite": "Taux explo.",
-        "mesure_explosimetre": "Explosimètre",
-        "mesure_eclairage_surete": "Éclairage sûreté",
-        "mesure_extincteur": "Extincteur",
-        "mesure_autres": "Autres"
-    }
-    
-    for key, label in mesures_map.items():
+    # Fonction helper pour afficher les mesures de sécurité
+    def format_mesure(key):
         value = autorisation.get(key, "")
         if value == "FAIT":
-            mesures_fait.append(label)
+            return '<span style="color: green; font-weight: bold;">✓ FAIT</span>'
         elif value == "A_FAIRE":
-            mesures_afaire.append(label)
+            return '<span style="color: orange; font-weight: bold;">⚠ À FAIRE</span>'
+        else:
+            return '<span style="color: gray;">-</span>'
     
-    mesures_securite_texte = autorisation.get("mesures_securite_texte", "")
+    # Mesures de sécurité - tableau sur 2 colonnes
+    mesures_data = [
+        ("CONSIGNATION MAT. OU PIÈCE EN MOUV", "mesure_consignation_materiel"),
+        ("CONSIGNATION ÉLECTRIQUE", "mesure_consignation_electrique"),
+        ("DÉBRANCHEMENT FORCE MOTRICE", "mesure_debranchement_force"),
+        ("VIDANGE APPAREIL/TUYAUTERIE", "mesure_vidange_appareil"),
+        ("DÉCONTAMINATION/LAVAGE", "mesure_decontamination"),
+        ("DÉGAZAGE", "mesure_degazage"),
+        ("POSE JOINT PLEIN", "mesure_pose_joint"),
+        ("VENTILATION FORCÉE", "mesure_ventilation"),
+        ("ZONE BALISÉE", "mesure_zone_balisee"),
+        ("CANALISATIONS ÉLECTRIQUES", "mesure_canalisations_electriques"),
+        ("SOUTERRAINES BALISÉES", "mesure_souterraines_balisees"),
+        ("ÉGOUTS ET CÂBLES PROTÉGÉS", "mesure_egouts_cables"),
+        ("TAUX D'OXYGÈNE", "mesure_taux_oxygene"),
+        ("TAUX D'EXPLOSIVITÉ", "mesure_taux_explosivite"),
+        ("EXPLOSIMÈTRE EN CONTINU", "mesure_explosimetre"),
+        ("ÉCLAIRAGE DE SÛRETÉ", "mesure_eclairage_surete"),
+        ("EXTINCTEUR TYPE", "mesure_extincteur"),
+        ("AUTRES", "mesure_autres")
+    ]
     
-    # EPI - uniquement ceux sélectionnés
-    epi_list = []
-    if autorisation.get("epi_visiere"): epi_list.append("Visière")
-    if autorisation.get("epi_tenue_impermeable"): epi_list.append("Tenue imperm.")
-    if autorisation.get("epi_cagoule_air"): epi_list.append("Cagoule air")
-    if autorisation.get("epi_masque"): epi_list.append("Masque")
-    if autorisation.get("epi_gant"): epi_list.append("Gants")
-    if autorisation.get("epi_harnais"): epi_list.append("Harnais")
-    if autorisation.get("epi_outillage_anti_etincelle"): epi_list.append("Out. anti-étincelle")
-    if autorisation.get("epi_presence_surveillant"): epi_list.append("Surveillant")
-    if autorisation.get("epi_autres"): epi_list.append("Autres")
+    # Diviser en 2 colonnes
+    mid = (len(mesures_data) + 1) // 2
+    mesures_col1 = mesures_data[:mid]
+    mesures_col2 = mesures_data[mid:]
     
-    equipements_protection_texte = autorisation.get("equipements_protection_texte", "")
+    mesures_rows = ""
+    for i in range(max(len(mesures_col1), len(mesures_col2))):
+        row = "<tr>"
+        # Colonne 1
+        if i < len(mesures_col1):
+            label1, key1 = mesures_col1[i]
+            row += f'<td style="border: 1px solid black; padding: 3px; font-size: 8pt;">{label1}</td>'
+            row += f'<td style="border: 1px solid black; padding: 3px; text-align: center; font-size: 8pt; width: 80px;">{format_mesure(key1)}</td>'
+        else:
+            row += '<td style="border: 1px solid black;"></td><td style="border: 1px solid black;"></td>'
+        
+        # Colonne 2
+        if i < len(mesures_col2):
+            label2, key2 = mesures_col2[i]
+            row += f'<td style="border: 1px solid black; padding: 3px; font-size: 8pt;">{label2}</td>'
+            row += f'<td style="border: 1px solid black; padding: 3px; text-align: center; font-size: 8pt; width: 80px;">{format_mesure(key2)}</td>'
+        else:
+            row += '<td style="border: 1px solid black;"></td><td style="border: 1px solid black;"></td>'
+        
+        row += "</tr>"
+        mesures_rows += row
+    
+    mesures_securite_texte = autorisation.get("mesures_securite_texte", "").replace(newline, br_tag)
+    
+    # EPI (checkboxes) - sur 3 colonnes
+    epi_data = [
+        ("epi_visiere", "VISIÈRE"),
+        ("epi_tenue_impermeable", "TENUE IMPERMÉABLE, BOTTES"),
+        ("epi_cagoule_air", "CAGOULE AIR RESPIRABLE/ART"),
+        ("epi_masque", "MASQUE TYPE"),
+        ("epi_gant", "GANT TYPE"),
+        ("epi_harnais", "HARNAIS DE SÉCURITÉ"),
+        ("epi_outillage_anti_etincelle", "OUTILLAGE ANTI-ÉTINCELLE"),
+        ("epi_presence_surveillant", "PRÉSENCE D'UN SURVEILLANT"),
+        ("epi_autres", "AUTRES")
+    ]
+    
+    epi_rows = ""
+    for i in range(0, len(epi_data), 3):
+        row = "<tr>"
+        for j in range(3):
+            if i + j < len(epi_data):
+                key, label = epi_data[i + j]
+                checked = "☑" if autorisation.get(key) else "☐"
+                row += f'<td style="border: 1px solid black; padding: 4px; font-size: 9pt;"><span style="font-size: 11pt;">{checked}</span> {label}</td>'
+            else:
+                row += '<td style="border: 1px solid black;"></td>'
+        row += "</tr>"
+        epi_rows += row
+    
+    equipements_protection_texte = autorisation.get("equipements_protection_texte", "").replace(newline, br_tag)
     
     signature_demandeur = autorisation.get("signature_demandeur", "")
     date_signature_demandeur = autorisation.get("date_signature_demandeur", "")
@@ -103,102 +144,235 @@ def generate_autorisation_html(autorisation: dict) -> str:
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <title>Autorisation N°{numero}</title>
+    <title>Autorisation Particulière N°{numero}</title>
     <style>
-        @page {{ size: A4; margin: 10mm; }}
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        body {{ font-family: Arial, sans-serif; font-size: 8pt; line-height: 1.2; color: #000; }}
-        .container {{ width: 100%; }}
-        .header {{ display: flex; justify-content: space-between; border-bottom: 2px solid #000; padding-bottom: 4px; margin-bottom: 4px; }}
-        .header-right {{ text-align: right; font-size: 7pt; }}
-        h1 {{ text-align: center; font-size: 12pt; font-weight: bold; margin: 4px 0; text-transform: uppercase; }}
-        .ref-box {{ display: flex; justify-content: space-between; border: 1px solid #000; padding: 3px; background: #f0f0f0; margin-bottom: 4px; font-size: 7pt; font-weight: bold; }}
-        table {{ width: 100%; border-collapse: collapse; margin-bottom: 3px; }}
-        th {{ background-color: #e0e0e0; border: 1px solid #000; padding: 2px; font-weight: bold; text-align: left; font-size: 7pt; }}
-        td {{ border: 1px solid #000; padding: 2px; font-size: 7pt; }}
-        .section-title {{ background-color: #c0c0c0; border: 1px solid #000; padding: 2px 4px; font-weight: bold; margin-top: 3px; font-size: 8pt; }}
-        .compact-list {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; padding: 3px; font-size: 7pt; }}
-        .compact-item {{ padding: 1px 3px; }}
-        .inline-text {{ padding: 3px; border: 1px solid #ddd; background: #fafafa; font-size: 7pt; margin-top: 2px; }}
-        .signature-section {{ display: flex; justify-content: space-between; margin-top: 4px; }}
-        .signature-box {{ width: 48%; border: 1px solid #000; padding: 4px; font-size: 7pt; }}
-        .signature-title {{ font-weight: bold; margin-bottom: 3px; text-align: center; font-size: 8pt; }}
-        .signature-line {{ margin-top: 15px; border-top: 1px solid #000; padding-top: 2px; font-size: 6pt; }}
+        @page {{
+            size: A4;
+            margin: 12mm;
+        }}
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        body {{
+            font-family: Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 1.2;
+            color: #000;
+        }}
+        .container {{
+            width: 100%;
+            max-width: 210mm;
+            margin: 0 auto;
+        }}
+        .header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 8px;
+        }}
+        .header-right {{
+            text-align: right;
+            font-size: 8pt;
+        }}
+        h1 {{
+            text-align: center;
+            font-size: 13pt;
+            font-weight: bold;
+            margin: 8px 0;
+            text-transform: uppercase;
+        }}
+        .ref-box {{
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            border: 2px solid #000;
+            padding: 5px;
+            background: #f0f0f0;
+        }}
+        .ref-item {{
+            font-size: 9pt;
+            font-weight: bold;
+        }}
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }}
+        th {{
+            background-color: #e0e0e0;
+            border: 1px solid #000;
+            padding: 4px;
+            font-weight: bold;
+            text-align: left;
+            font-size: 9pt;
+        }}
+        td {{
+            border: 1px solid #000;
+            padding: 4px;
+            font-size: 9pt;
+        }}
+        .section-title {{
+            background-color: #c0c0c0;
+            border: 1px solid #000;
+            padding: 4px;
+            font-weight: bold;
+            margin-top: 6px;
+            font-size: 10pt;
+        }}
+        .textarea-field {{
+            min-height: 50px;
+            vertical-align: top;
+        }}
+        .signature-section {{
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }}
+        .signature-box {{
+            width: 48%;
+            border: 1px solid #000;
+            padding: 8px;
+        }}
+        .signature-title {{
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-align: center;
+        }}
+        .signature-line {{
+            margin-top: 30px;
+            border-top: 1px solid #000;
+            padding-top: 4px;
+            font-size: 8pt;
+        }}
     </style>
 </head>
 <body>
     <div class="container">
         <!-- En-tête -->
         <div class="header">
-            <div style="width: 80px; height: 40px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 7pt; color: #666;">LOGO</div>
+            <div>
+                <div style="width: 100px; height: 50px; border: 1px solid #ccc; display: flex; align-items: center; justify-content: center; font-size: 8pt; color: #666;">
+                    LOGO
+                </div>
+            </div>
             <div class="header-right">
-                <div><strong>Réf:</strong> MAINT_FE_003</div>
-                <div><strong>Rév:</strong> V03</div>
-                <div><strong>Date:</strong> {date_etablissement}</div>
+                <div><strong>Référence :</strong> MAINT_FE_003</div>
+                <div><strong>Révision :</strong> V03</div>
+                <div><strong>Date :</strong> {date_etablissement}</div>
             </div>
         </div>
 
         <h1>AUTORISATION PARTICULIÈRE DE TRAVAUX</h1>
 
         <div class="ref-box">
-            <span>N° AUTORISATION: {numero}</span>
-            <span>DATE: {date_etablissement}</span>
+            <span class="ref-item">N° D'AUTORISATION : {numero}</span>
+            <span class="ref-item">DATE D'ÉTABLISSEMENT : {date_etablissement}</span>
         </div>
 
-        <!-- Infos principales -->
+        <!-- Informations principales -->
         <table>
-            <tr><th style="width: 25%;">Service</th><td>{service_demandeur}</td><th style="width: 25%;">Responsable</th><td>{responsable}</td></tr>
-        </table>
-
-        <!-- Personnel (si rempli) -->
-        {f'''<div class="section-title">PERSONNEL AUTORISÉ</div>
-        <table>
-            <thead><tr><th style="width: 5%;">N°</th><th>Nom et Prénom</th><th>Fonction</th></tr></thead>
-            <tbody>{personnel_rows}</tbody>
-        </table>''' if personnel_rows else ''}
-
-        <!-- Type de travaux -->
-        <div class="section-title">TYPE DE TRAVAUX</div>
-        <div style="padding: 3px; font-size: 7pt;">{types_display}</div>
-        {f'<div class="inline-text"><strong>Précisions:</strong> {description_travaux}</div>' if description_travaux else ''}
-
-        <!-- Horaires et lieu -->
-        <table style="margin-top: 3px;">
             <tr>
-                <th style="width: 15%;">Début</th><td style="width: 15%;">{horaire_debut}</td>
-                <th style="width: 15%;">Fin</th><td style="width: 15%;">{horaire_fin}</td>
-                <th style="width: 15%;">Lieu</th><td>{lieu_travaux}</td>
+                <th style="width: 30%;">SERVICE DEMANDEUR</th>
+                <td>{service_demandeur}</td>
+            </tr>
+            <tr>
+                <th>RESPONSABLE</th>
+                <td>{responsable}</td>
             </tr>
         </table>
 
-        <!-- Risques (si rempli) -->
-        {f'''<div class="section-title">RISQUES POTENTIELS</div>
-        <div class="inline-text">{risques_potentiels}</div>''' if risques_potentiels else ''}
+        <!-- Personnel autorisé -->
+        <div class="section-title">PERSONNEL AUTORISÉ</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 8%; text-align: center;">N°</th>
+                    <th style="width: 46%;">NOM ET PRÉNOM</th>
+                    <th style="width: 46%;">FONCTION</th>
+                </tr>
+            </thead>
+            <tbody>
+                {personnel_rows}
+            </tbody>
+        </table>
 
-        <!-- Mesures de sécurité (si rempli) -->
-        {f'''<div class="section-title">MESURES DE SÉCURITÉ</div>
-        {f'<div style="padding: 3px;"><strong style="color: green;">✓ FAIT:</strong> {" • ".join(mesures_fait)}</div>' if mesures_fait else ''}
-        {f'<div style="padding: 3px;"><strong style="color: orange;">⚠ À FAIRE:</strong> {" • ".join(mesures_afaire)}</div>' if mesures_afaire else ''}
-        {f'<div class="inline-text"><strong>Précisions:</strong> {mesures_securite_texte}</div>' if mesures_securite_texte else ''}''' if mesures_fait or mesures_afaire or mesures_securite_texte else ''}
+        <!-- Type de travaux - SUR 2 COLONNES -->
+        <div class="section-title">TYPE DE TRAVAUX</div>
+        <table>
+            <tr>
+                <td style="width: 50%; padding: 6px; font-size: 9pt;">
+                    <span style="font-size: 11pt;">{type_point_chaud}</span> Par point chaud
+                </td>
+                <td style="width: 50%; padding: 6px; font-size: 9pt;">
+                    <span style="font-size: 11pt;">{type_fouille}</span> De fouille
+                </td>
+            </tr>
+            <tr>
+                <td style="padding: 6px; font-size: 9pt;">
+                    <span style="font-size: 11pt;">{type_espace_clos}</span> En espace clos ou confiné
+                </td>
+                <td style="padding: 6px; font-size: 9pt;">
+                    <span style="font-size: 11pt;">{type_autre_cas}</span> Autre cas
+                </td>
+            </tr>
+        </table>
+        {f'<table><tr><td style="padding: 4px;"><strong>Précisions:</strong> {description_travaux}</td></tr></table>' if description_travaux else ''}
 
-        <!-- EPI (si rempli) -->
-        {f'''<div class="section-title">ÉQUIPEMENTS DE PROTECTION (EPI)</div>
-        <div class="compact-list">
-            {"".join([f'<div class="compact-item">• {epi}</div>' for epi in epi_list])}
-        </div>
-        {f'<div class="inline-text"><strong>Précisions:</strong> {equipements_protection_texte}</div>' if equipements_protection_texte else ''}''' if epi_list or equipements_protection_texte else ''}
+        <!-- Horaires et lieu -->
+        <table style="margin-top: 6px;">
+            <tr>
+                <th style="width: 25%;">HORAIRE DÉBUT</th>
+                <td style="width: 25%;">{horaire_debut}</td>
+                <th style="width: 25%;">HORAIRE FIN</th>
+                <td style="width: 25%;">{horaire_fin}</td>
+            </tr>
+            <tr>
+                <th>LIEU DES TRAVAUX</th>
+                <td colspan="3">{lieu_travaux}</td>
+            </tr>
+        </table>
+
+        <!-- Risques potentiels -->
+        <div class="section-title">RISQUES POTENTIELS</div>
+        <table>
+            <tr>
+                <td class="textarea-field">{risques_potentiels if risques_potentiels else ""}</td>
+            </tr>
+        </table>
+
+        <!-- Mesures de sécurité - SUR 2 COLONNES -->
+        <div class="section-title">MESURES DE SÉCURITÉ</div>
+        <table>
+            <tbody>
+                {mesures_rows}
+            </tbody>
+        </table>
+        {f'<table><tr><td style="padding: 4px;"><strong>Précisions:</strong> {mesures_securite_texte}</td></tr></table>' if mesures_securite_texte else ''}
+
+        <!-- EPI - SUR 3 COLONNES -->
+        <div class="section-title">ÉQUIPEMENTS DE PROTECTION INDIVIDUELLE (EPI)</div>
+        <table>
+            <tbody>
+                {epi_rows}
+            </tbody>
+        </table>
+        {f'<table><tr><td style="padding: 4px;"><strong>Précisions:</strong> {equipements_protection_texte}</td></tr></table>' if equipements_protection_texte else ''}
 
         <!-- Signatures -->
         <div class="signature-section">
             <div class="signature-box">
                 <div class="signature-title">DEMANDEUR</div>
-                <div><strong>Nom:</strong> {signature_demandeur}</div>
-                <div class="signature-line">Date: {date_signature_demandeur}</div>
+                <div><strong>Nom :</strong> {signature_demandeur}</div>
+                <div class="signature-line">Date : {date_signature_demandeur}</div>
             </div>
             <div class="signature-box">
                 <div class="signature-title">RESPONSABLE SÉCURITÉ</div>
-                <div><strong>Nom:</strong> {signature_responsable_securite}</div>
-                <div class="signature-line">Date: {date_signature_responsable}</div>
+                <div><strong>Nom :</strong> {signature_responsable_securite}</div>
+                <div class="signature-line">Date : {date_signature_responsable}</div>
             </div>
         </div>
     </div>
