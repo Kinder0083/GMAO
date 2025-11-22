@@ -20,6 +20,7 @@ import Reports from "./pages/Reports";
 import People from "./pages/People";
 import Planning from "./pages/Planning";
 import PlanningMPrev from "./pages/PlanningMPrev";
+import ValidateDemandeArret from "./pages/ValidateDemandeArret";
 import Vendors from "./pages/Vendors";
 import Settings from "./pages/Settings";
 import SpecialSettings from "./pages/SpecialSettings";
