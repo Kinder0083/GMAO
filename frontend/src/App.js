@@ -82,6 +82,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/validate-demande-arret" element={<ValidateDemandeArret />} />
           <Route path="/inscription" element={<Inscription />} />
           <Route
             path="/"
