@@ -70,7 +70,7 @@ class DemandeArretTester:
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/equipment",
+                f"{BACKEND_URL}/equipments",
                 timeout=15
             )
             
