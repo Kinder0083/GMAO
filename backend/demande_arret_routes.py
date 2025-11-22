@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 import logging
 import uuid
 
-from auth import get_current_user
+from dependencies import get_current_user
 from models import (
     DemandeArretMaintenance, DemandeArretMaintenanceCreate, DemandeArretMaintenanceUpdate,
     DemandeArretStatus, PlanningEquipementEntry, EquipmentStatus, UserRole
