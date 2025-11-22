@@ -280,9 +280,13 @@ function PoleDetails() {
               <FileText className="mr-2 h-4 w-4" />
               Nouveau Bon de Travail
             </Button>
+            <Button onClick={() => navigate('/autorisations-particulieres')} variant="outline">
+              <Shield className="mr-2 h-4 w-4" />
+              Voir Autorisations
+            </Button>
             <Button onClick={() => navigate('/autorisations-particulieres/new')} variant="outline">
               <Shield className="mr-2 h-4 w-4" />
-              Autorisation Particulière
+              Nouvelle Autorisation
             </Button>
             <Button onClick={handleCreateDocument}>
               <Plus className="mr-2 h-4 w-4" />
