@@ -96,6 +96,7 @@ async def create_autorisation(
         data["created_at"] = datetime.now(timezone.utc).isoformat()
         data["updated_at"] = datetime.now(timezone.utc).isoformat()
         data["statut"] = "BROUILLON"
+        data["_id"] = ObjectId()
         
         await db.autorisations_particulieres.insert_one(data)
         logger.info(f"Autorisation créée: {data['id']} (numéro: {next_numero})")
