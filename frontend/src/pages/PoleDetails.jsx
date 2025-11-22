@@ -338,13 +338,30 @@ function PoleDetails() {
                 {bons.map((bon) => (
               <Card key={bon.id} className="hover:shadow-lg transition-shadow cursor-pointer">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-base">{bon.titre || "Sans titre"}</CardTitle>
-                  <p className="text-sm text-gray-500">
-                    {bon.created_at ? new Date(bon.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
-                  </p>
-                  {bon.entreprise && (
-                    <p className="text-xs text-gray-400">Entreprise: {bon.entreprise}</p>
-                  )}
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <CardTitle className="text-base">{bon.titre || "Sans titre"}</CardTitle>
+                      <p className="text-sm text-gray-500">
+                        {bon.created_at ? new Date(bon.created_at).toLocaleDateString('fr-FR') : 'Date inconnue'}
+                      </p>
+                      {bon.entreprise && (
+                        <p className="text-xs text-gray-400">Entreprise: {bon.entreprise}</p>
+                      )}
+                    </div>
+                    {bonAutorisationsMap[bon.id] && bonAutorisationsMap[bon.id].length > 0 && (
+                      <div 
+                        className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full cursor-pointer hover:bg-yellow-200 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/autorisations-particulieres/edit/${bonAutorisationsMap[bon.id][0].id}`);
+                        }}
+                        title={`${bonAutorisationsMap[bon.id].length} autorisation(s) particulière(s) liée(s)`}
+                      >
+                        <AlertTriangle className="h-4 w-4" />
+                        <span className="text-xs font-semibold">{bonAutorisationsMap[bon.id].length}</span>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
                 <CardContent>
                   {bon.description && (
