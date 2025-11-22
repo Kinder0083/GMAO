@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Plan de Surveillance - Création contrôle avec catégorie personnalisée
+Tests Autorisations Particulières de Travaux - Module complet MAINT_FE_003_V03
 """
 
 import requests
