@@ -42,7 +42,7 @@ async def create_demande_arret(
         # Récupérer les informations des équipements
         equipement_noms = []
         for eq_id in demande.equipement_ids:
-            equipement = await db.equipment.find_one({"id": eq_id})
+            equipement = await db.equipments.find_one({"id": eq_id})
             if equipement:
                 equipement_noms.append(equipement.get("nom", ""))
         
