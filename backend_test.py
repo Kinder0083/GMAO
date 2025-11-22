@@ -156,6 +156,7 @@ class DemandeArretTester:
         }
         
         try:
+            self.log(f"🔍 Debug - Sending demande data: {test_demande_data}")
             response = self.admin_session.post(
                 f"{BACKEND_URL}/demandes-arret/",
                 json=test_demande_data,
