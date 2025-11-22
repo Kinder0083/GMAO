@@ -439,6 +439,7 @@ export const autorisationsAPI = {
     return api.get('/autorisations/', { params }).then(res => res.data);
   },
   getById: (id) => api.get(`/autorisations/${id}`).then(res => res.data),
+  getByBonTravail: (bonTravailId) => api.get(`/autorisations/by-bon-travail/${bonTravailId}`).then(res => res.data),
   create: (data) => api.post('/autorisations/', data).then(res => res.data),
   update: (id, data) => api.put(`/autorisations/${id}`, data).then(res => res.data),
   delete: (id) => api.delete(`/autorisations/${id}`).then(res => res.data),
