@@ -296,9 +296,9 @@ const DemandeArretDialog = ({ open, onOpenChange, onSuccess }) => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">Aucun</SelectItem>
-                      {workOrders.map(wo => (
+                      {workOrders.filter(wo => wo.id && wo.id !== '').map(wo => (
                         <SelectItem key={wo.id} value={wo.id}>
-                          {wo.title || `Ordre ${wo.order_number}`}
+                          {wo.title || wo.titre || `Ordre ${wo.order_number || wo.numero}`}
                         </SelectItem>
                       ))}
                     </SelectContent>
