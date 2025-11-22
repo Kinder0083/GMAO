@@ -5527,6 +5527,10 @@ api_router.include_router(surveillance_history_router)
 api_router.include_router(tailscale_router)
 api_router.include_router(autorisation_router)
 
+# Demandes d'arrêt pour maintenance
+from demande_arret_routes import router as demande_arret_router
+api_router.include_router(demande_arret_router)
+
 # Include the router in the main app (MUST be after all endpoint definitions)
 app.include_router(api_router)
 
