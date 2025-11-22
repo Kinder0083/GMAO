@@ -17,7 +17,7 @@ const PlanningMPrev = () => {
 
   const loadEquipments = async () => {
     try {
-      const response = await assetsAPI.getAll();
+      const response = await equipmentsAPI.getAll();
       setEquipments(response.data || []);
     } catch (error) {
       console.error('Erreur chargement équipements:', error);
