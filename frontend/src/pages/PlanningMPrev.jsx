@@ -128,15 +128,15 @@ const PlanningMPrev = () => {
     }
   };
 
-  const goToPreviousMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
+  const goToPreviousYear = () => {
+    setCurrentDate(new Date(currentDate.getFullYear() - 1, 0, 1));
   };
 
-  const goToNextMonth = () => {
-    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
+  const goToNextYear = () => {
+    setCurrentDate(new Date(currentDate.getFullYear() + 1, 0, 1));
   };
 
-  const goToToday = () => {
+  const goToCurrentYear = () => {
     setCurrentDate(new Date());
   };
 
