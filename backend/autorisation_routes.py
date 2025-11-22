@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import uuid
 import logging
 
-from models import AutorisationParticuliere
+from models import AutorisationParticuliere, AutorisationParticuliereCreate, AutorisationParticuliereUpdate
 from dependencies import get_current_user, get_current_user_optional
 from auth import decode_access_token
 from autorisation_template import generate_autorisation_html
