@@ -1440,8 +1440,12 @@ class AutorisationParticuliere(BaseModel):
     # Personnel autorisé (4 entrées max)
     personnel_autorise: List[PersonnelAutorise] = []
     
-    # Description des travaux
-    description_travaux: str
+    # Description des travaux (type de travaux)
+    type_point_chaud: bool = False
+    type_fouille: bool = False
+    type_espace_clos: bool = False
+    type_autre_cas: bool = False
+    description_travaux: str = ""  # Champ texte libre
     
     # Horaires et lieu
     horaire_debut: str  # Format HH:MM
@@ -1451,11 +1455,38 @@ class AutorisationParticuliere(BaseModel):
     # Risques potentiels (liste)
     risques_potentiels: str
     
-    # Mesures de sécurité (liste)
-    mesures_securite: str
+    # Mesures de sécurité (checkboxes avec FAIT/A FAIRE)
+    mesure_consignation_materiel: str = ""  # "" ou "FAIT" ou "A_FAIRE"
+    mesure_consignation_electrique: str = ""
+    mesure_debranchement_force: str = ""
+    mesure_vidange_appareil: str = ""
+    mesure_decontamination: str = ""
+    mesure_degazage: str = ""
+    mesure_pose_joint: str = ""
+    mesure_ventilation: str = ""
+    mesure_zone_balisee: str = ""
+    mesure_canalisations_electriques: str = ""
+    mesure_souterraines_balisees: str = ""
+    mesure_egouts_cables: str = ""
+    mesure_taux_oxygene: str = ""
+    mesure_taux_explosivite: str = ""
+    mesure_explosimetre: str = ""
+    mesure_eclairage_surete: str = ""
+    mesure_extincteur: str = ""
+    mesure_autres: str = ""
+    mesures_securite_texte: str = ""  # Champ texte libre
     
-    # Équipements de protection (liste)
-    equipements_protection: str
+    # Équipements de protection (checkboxes)
+    epi_visiere: bool = False
+    epi_tenue_impermeable: bool = False
+    epi_cagoule_air: bool = False
+    epi_masque: bool = False
+    epi_gant: bool = False
+    epi_harnais: bool = False
+    epi_outillage_anti_etincelle: bool = False
+    epi_presence_surveillant: bool = False
+    epi_autres: bool = False
+    equipements_protection_texte: str = ""  # Champ texte libre
     
     # Signatures
     signature_demandeur: Optional[str] = None
