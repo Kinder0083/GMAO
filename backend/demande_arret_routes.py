@@ -146,10 +146,7 @@ async def get_demande_by_id(
         if not demande:
             raise HTTPException(status_code=404, detail="Demande non trouvée")
         
-        if "_id" in demande:
-            del demande["_id"]
-        
-        return demande
+        return serialize_doc(demande)
     except HTTPException:
         raise
     except Exception as e:
