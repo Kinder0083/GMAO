@@ -92,14 +92,24 @@ const AutorisationParticuliereForm = () => {
 
       if (isEdit) {
         await autorisationsAPI.update(id, cleanedData);
-        toast.success('Autorisation mise à jour avec succès');
+        toast({
+          title: 'Succès',
+          description: 'Autorisation mise à jour avec succès'
+        });
       } else {
         await autorisationsAPI.create(cleanedData);
-        toast.success('Autorisation créée avec succès');
+        toast({
+          title: 'Succès',
+          description: 'Autorisation créée avec succès'
+        });
       }
       navigate('/autorisations-particulieres');
     } catch (error) {
-      toast.error('Erreur lors de l\'enregistrement');
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'enregistrement',
+        variant: 'destructive'
+      });
       console.error(error);
     } finally {
       setLoading(false);
