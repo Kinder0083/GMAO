@@ -591,9 +591,20 @@ const MainLayout = () => {
       {/* Sidebar */}
       <div
         className={`fixed top-16 left-0 bottom-0 bg-gray-900 text-white transition-all duration-300 z-20 ${
-          sidebarOpen ? 'w-64' : 'w-0'
-        } overflow-hidden`}
+          sidebarOpen ? 'w-64' : 'w-20'
+        }`}
       >
+        {/* Bouton toggle dans la sidebar */}
+        <div className="p-4 flex justify-end border-b border-gray-700">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            title={sidebarOpen ? "Minimiser" : "Agrandir"}
+          >
+            {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
+          </button>
+        </div>
+
         <div className="p-4 space-y-2 h-full overflow-y-auto">
           {menuItems
             .filter(item => !item.adminOnly || user.role === 'ADMIN')
@@ -608,10 +619,11 @@ const MainLayout = () => {
                     isActive
                       ? 'bg-blue-600 text-white'
                       : 'hover:bg-gray-800 text-gray-300'
-                  }`}
+                  } ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title={!sidebarOpen ? item.label : ''}
                 >
-                  <Icon size={20} />
-                  <span className="text-sm font-medium">{item.label}</span>
+                  <Icon size={20} className="flex-shrink-0" />
+                  {sidebarOpen && <span className="text-sm font-medium">{item.label}</span>}
                 </button>
               );
             })}
@@ -619,49 +631,55 @@ const MainLayout = () => {
           <div className="pt-4 mt-4 border-t border-gray-700">
             <button
               onClick={() => navigate('/settings')}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+              title={!sidebarOpen ? 'Paramètres' : ''}
             >
-              <Settings size={20} />
-              <span className="text-sm font-medium">Paramètres</span>
+              <Settings size={20} className="flex-shrink-0" />
+              {sidebarOpen && <span className="text-sm font-medium">Paramètres</span>}
             </button>
             {user.role === 'ADMIN' && (
               <>
                 <button
                   onClick={() => navigate('/special-settings')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title={!sidebarOpen ? 'Paramètres Spéciaux' : ''}
                 >
-                  <Shield size={20} />
-                  <span className="text-sm font-medium">Paramètres Spéciaux</span>
+                  <Shield size={20} className="flex-shrink-0" />
+                  {sidebarOpen && <span className="text-sm font-medium">Paramètres Spéciaux</span>}
                 </button>
                 <button
                   onClick={() => navigate('/updates')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title={!sidebarOpen ? 'Mise à jour' : ''}
                 >
-                  <RefreshCw size={20} />
-                  <span className="text-sm font-medium">Mise à jour</span>
+                  <RefreshCw size={20} className="flex-shrink-0" />
+                  {sidebarOpen && <span className="text-sm font-medium">Mise à jour</span>}
                 </button>
                 <button
                   onClick={() => navigate('/journal')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title={!sidebarOpen ? 'Journal' : ''}
                 >
-                  <FileText size={20} />
-                  <span className="text-sm font-medium">Journal</span>
+                  <FileText size={20} className="flex-shrink-0" />
+                  {sidebarOpen && <span className="text-sm font-medium">Journal</span>}
                 </button>
                 <button
                   onClick={() => navigate('/ssh')}
-                  className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all"
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-gray-800 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+                  title={!sidebarOpen ? 'SSH' : ''}
                 >
-                  <Terminal size={20} />
-                  <span className="text-sm font-medium">SSH</span>
+                  <Terminal size={20} className="flex-shrink-0" />
+                  {sidebarOpen && <span className="text-sm font-medium">SSH</span>}
                 </button>
               </>
             )}
             <button
               onClick={handleLogout}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 text-gray-300 transition-all"
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center' : ''}`}
+              title={!sidebarOpen ? 'Déconnexion' : ''}
             >
-              <LogOut size={20} />
-              <span className="text-sm font-medium">Déconnexion</span>
+              <LogOut size={20} className="flex-shrink-0" />
+              {sidebarOpen && <span className="text-sm font-medium">Déconnexion</span>}
             </button>
           </div>
         </div>
