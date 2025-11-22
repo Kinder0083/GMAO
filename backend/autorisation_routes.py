@@ -44,7 +44,9 @@ async def get_autorisations(
         serialized_autorisations = []
         for autorisation in autorisations:
             if "_id" in autorisation:
-                autorisation["id"] = str(autorisation["_id"])
+                # Only set id from _id if id field doesn't exist
+                if "id" not in autorisation:
+                    autorisation["id"] = str(autorisation["_id"])
                 del autorisation["_id"]
             serialized_autorisations.append(autorisation)
         return serialized_autorisations
