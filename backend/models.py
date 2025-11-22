@@ -1488,6 +1488,7 @@ class AutorisationParticuliereCreate(BaseModel):
     date_signature_demandeur: Optional[str] = None
     signature_responsable_securite: Optional[str] = None
     date_signature_responsable: Optional[str] = None
+    bons_travail_ids: List[str] = []
 
 class AutorisationParticuliereUpdate(BaseModel):
     """Modèle pour la mise à jour d'une autorisation particulière"""
