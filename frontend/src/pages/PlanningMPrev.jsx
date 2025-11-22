@@ -61,18 +61,20 @@ const PlanningMPrev = () => {
     loadPlanningEntries();
   }, [currentDate]);
 
-  const getDaysInMonth = () => {
+  const getMonthsInYear = () => {
     const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
-    const days = [];
-
-    for (let d = 1; d <= lastDay.getDate(); d++) {
-      days.push(new Date(year, month, d));
+    const months = [];
+    
+    for (let m = 0; m < 12; m++) {
+      months.push({
+        month: m,
+        year: year,
+        name: monthNames[m],
+        daysInMonth: new Date(year, m + 1, 0).getDate()
+      });
     }
-
-    return days;
+    
+    return months;
   };
 
   // Obtenir le statut de l'équipement pour une demi-journée spécifique
