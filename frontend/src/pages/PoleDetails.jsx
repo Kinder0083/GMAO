@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Badge } from '../components/ui/badge';
 import {
   ArrowLeft, Plus, Upload, FileText, Download, Trash2, Edit, File,
-  FileSpreadsheet, FileImage, FileVideo, Mail, Printer, Eye
+  FileSpreadsheet, FileImage, FileVideo, Mail, Printer, Eye, Shield
 } from 'lucide-react';
-import { documentationsAPI } from '../services/api';
+import { documentationsAPI, autorisationsAPI } from '../services/api';
 import { useToast } from '../hooks/use-toast';
 import { useConfirmDialog } from '../components/ui/confirm-dialog';
 import { formatErrorMessage } from '../utils/errorFormatter';
