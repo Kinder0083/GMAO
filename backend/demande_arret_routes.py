@@ -291,6 +291,20 @@ async def refuse_demande_by_token(
         # Envoyer email de refus au demandeur
         await send_confirmation_email(demande, approved=False, commentaire=commentaire, date_proposee=date_proposee)
         
+        # Enregistrer dans le journal d'audit
+        date_prop_text = f" Date proposée: {date_proposee}." if date_proposee else ""
+        await audit_service.log_action(
+            user_id=demande["destinataire_id"],
+            user_name=demande["destinataire_nom"],
+            user_email=demande["destinataire_email"],
+            action=ActionType.UPDATE,
+            entity_type=EntityType.DEMANDE_ARRET,
+            entity_id=demande["id"],
+            entity_name=f"Demande d'arrêt du {demande['date_debut']} au {demande['date_fin']}",
+            details=f"Demande d'arrêt REFUSÉE pour {len(demande['equipement_ids'])} équipement(s). Commentaire: {commentaire or 'Aucun'}.{date_prop_text}",
+            changes={"statut": "EN_ATTENTE → REFUSEE"}
+        )
+        
         return {"message": "Demande refusée", "demande_id": demande["id"]}
     except HTTPException:
         raise
