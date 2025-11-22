@@ -54,8 +54,8 @@ async def create_demande_arret(
         data = demande.model_dump()
         data["id"] = str(uuid.uuid4())
         data["demandeur_id"] = current_user.get("id")
-        data["demandeur_nom"] = f"{current_user.get('first_name', '')} {current_user.get('last_name', '')}"
-        data["destinataire_nom"] = f"{destinataire.get('first_name', '')} {destinataire.get('last_name', '')}"
+        data["demandeur_nom"] = f"{current_user.get('prenom', '')} {current_user.get('nom', '')}"
+        data["destinataire_nom"] = f"{destinataire.get('prenom', '')} {destinataire.get('nom', '')}"
         data["destinataire_email"] = destinataire.get("email")
         data["equipement_noms"] = equipement_noms
         data["statut"] = DemandeArretStatus.EN_ATTENTE
