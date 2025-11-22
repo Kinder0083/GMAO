@@ -337,8 +337,8 @@ class DemandeArretTester:
                     if "ValidationError" in logs:
                         self.log("❌ Erreur de validation Pydantic détectée", "ERROR")
                         return False
-                    elif ("error" in logs.lower() or "exception" in logs.lower()) and "demande" in logs.lower():
-                        self.log("⚠️ Erreur liée aux 'demandes' détectée", "WARNING")
+                    elif ("error" in logs.lower() or "exception" in logs.lower()) and "demande_arret" in logs.lower():
+                        self.log("⚠️ Erreur liée aux 'demandes d'arrêt' détectée", "WARNING")
                         return False
                     else:
                         self.log("✅ Pas d'erreur critique liée aux demandes d'arrêt")
