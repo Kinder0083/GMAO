@@ -694,8 +694,8 @@ class DemandeArretJournalisationTester:
         self.log(f"\n📊 Overall: {passed}/{total} tests passed")
         
         # Analyse détaillée des tests critiques
-        critical_tests = ["get_equipment", "get_rsp_prod_user", "create_demande_arret", 
-                         "get_all_demandes_arret", "get_demande_by_id"]
+        critical_tests = ["create_demande_arret", "verify_journal_creation", "approve_demande", 
+                         "verify_journal_approval", "create_and_refuse_demande", "final_journal_verification"]
         critical_passed = sum(results.get(test, False) for test in critical_tests)
         
         self.log("\n" + "=" * 60)
