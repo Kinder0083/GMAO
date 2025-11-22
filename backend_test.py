@@ -159,10 +159,6 @@ class AutorisationsParticulieresTester:
                         test_autorisation = autorisation
                         break
                 
-                # Debug: Log all autorisation IDs to understand the issue
-                self.log(f"🔍 DEBUG: Test autorisation IDs: {self.test_autorisations}")
-                self.log(f"🔍 DEBUG: Found autorisation IDs: {[a.get('id') for a in autorisations]}")
-                
                 if test_autorisation:
                     self.log(f"✅ Autorisation de test trouvée - ID: {test_autorisation.get('id')}")
                     self.log(f"✅ Numéro: {test_autorisation.get('numero')}")
