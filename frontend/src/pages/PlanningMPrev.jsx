@@ -10,7 +10,7 @@ import DemandeArretDialog from '../components/PlanningMPrev/DemandeArretDialog';
 const PlanningMPrev = () => {
   const { toast } = useToast();
   const [equipments, setEquipments] = useState([]);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [planningEntries, setPlanningEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -32,8 +32,10 @@ const PlanningMPrev = () => {
   const loadPlanningEntries = async () => {
     try {
       setLoading(true);
-      const startDate = new Date(currentYear, 0, 1).toISOString().split('T')[0];
-      const endDate = new Date(currentYear, 11, 31).toISOString().split('T')[0];
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      const startDate = new Date(year, month, 1).toISOString().split('T')[0];
+      const endDate = new Date(year, month + 1, 0).toISOString().split('T')[0];
       
       const entries = await demandesArretAPI.getPlanningEquipements({
         date_debut: startDate,
@@ -51,85 +53,100 @@ const PlanningMPrev = () => {
   useEffect(() => {
     loadEquipments();
     loadPlanningEntries();
-  }, [currentYear]);
+  }, [currentDate]);
 
   // Rafraîchissement automatique toutes les 30 secondes
   useAutoRefresh(() => {
     loadEquipments();
     loadPlanningEntries();
-  }, [currentYear]);
+  }, [currentDate]);
 
-  const getMonths = () => {
-    return [
-      'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
-      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
-    ];
-  };
+  const getDaysInMonth = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const days = [];
 
-  const getEquipmentStatusForMonth = (equipmentId, monthIndex) => {
-    // Vérifier s'il y a des entrées de planning pour cet équipement ce mois-ci
-    const monthStart = new Date(currentYear, monthIndex, 1);
-    const monthEnd = new Date(currentYear, monthIndex + 1, 0);
-
-    const entriesInMonth = planningEntries.filter(entry => {
-      if (entry.equipement_id !== equipmentId) return false;
-      
-      const entryStart = new Date(entry.date_debut);
-      const entryEnd = new Date(entry.date_fin);
-      
-      // Vérifier si l'entrée chevauche ce mois
-      return entryStart <= monthEnd && entryEnd >= monthStart;
-    });
-
-    if (entriesInMonth.length === 0) {
-      // Utiliser le statut de l'équipement
-      const equipment = equipments.find(e => e.id === equipmentId);
-      return equipment?.status || 'OPERATIONAL';
+    for (let d = 1; d <= lastDay.getDate(); d++) {
+      days.push(new Date(year, month, d));
     }
 
-    // S'il y a une entrée de maintenance, retourner EN_MAINTENANCE
-    return 'EN_MAINTENANCE';
+    return days;
+  };
+
+  // Obtenir le statut de l'équipement pour une demi-journée spécifique
+  const getEquipmentStatusForHalfDay = (equipmentId, date, isAM) => {
+    const dateStr = date.toISOString().split('T')[0];
+    
+    // Chercher une entrée de planning pour cette date et cet équipement
+    const entry = planningEntries.find(e => {
+      if (e.equipement_id !== equipmentId) return false;
+      
+      const entryStart = new Date(e.date_debut);
+      const entryEnd = new Date(e.date_fin);
+      const currentDate = new Date(dateStr);
+      
+      // Vérifier si la date est dans la plage
+      if (currentDate < entryStart || currentDate > entryEnd) return false;
+      
+      // Vérifier la demi-journée
+      if (currentDate.toISOString().split('T')[0] === e.date_debut) {
+        // Premier jour
+        if (e.periode_debut === 'APRES_MIDI' && isAM) return false;
+      }
+      
+      if (currentDate.toISOString().split('T')[0] === e.date_fin) {
+        // Dernier jour
+        if (e.periode_fin === 'MATIN' && !isAM) return false;
+      }
+      
+      return true;
+    });
+
+    if (entry) {
+      return entry.statut || 'EN_MAINTENANCE';
+    }
+
+    // Utiliser le statut de l'équipement
+    const equipment = equipments.find(e => e.id === equipmentId);
+    return equipment?.status || 'OPERATIONAL';
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'OPERATIONAL':
-        return 'bg-green-500';
+        return '#10b981'; // Vert
       case 'EN_MAINTENANCE':
-        return 'bg-orange-500';
+        return '#f59e0b'; // Orange
       case 'HORS_SERVICE':
-        return 'bg-red-500';
+        return '#ef4444'; // Rouge
       default:
-        return 'bg-gray-300';
+        return '#9ca3af'; // Gris
     }
   };
 
-  const getStatusLabel = (status) => {
-    switch (status) {
-      case 'OPERATIONAL':
-        return 'Opérationnel';
-      case 'EN_MAINTENANCE':
-        return 'En Maintenance';
-      case 'HORS_SERVICE':
-        return 'Hors Service';
-      default:
-        return 'Inconnu';
-    }
+  const goToPreviousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1));
   };
 
-  const goToPreviousYear = () => {
-    setCurrentYear(prev => prev - 1);
+  const goToNextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1));
   };
 
-  const goToNextYear = () => {
-    setCurrentYear(prev => prev + 1);
+  const goToToday = () => {
+    setCurrentDate(new Date());
   };
 
-  const goToCurrentYear = () => {
-    setCurrentYear(new Date().getFullYear());
-  };
+  const monthNames = [
+    'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+    'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'
+  ];
 
-  if (loading) {
+  const days = getDaysInMonth();
+  const today = new Date().toISOString().split('T')[0];
+
+  if (loading && equipments.length === 0) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-lg">Chargement du planning...</div>
@@ -144,7 +161,7 @@ const PlanningMPrev = () => {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
-              Planning Maintenance Préventive Annuel
+              Planning Maintenance Préventive
             </CardTitle>
             <Button onClick={() => setDialogOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -153,24 +170,26 @@ const PlanningMPrev = () => {
           </div>
         </CardHeader>
         <CardContent>
-          {/* Navigation année */}
+          {/* Navigation mois */}
           <div className="flex items-center justify-between mb-6">
-            <Button variant="outline" onClick={goToPreviousYear}>
+            <Button variant="outline" onClick={goToPreviousMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold">{currentYear}</h2>
-              <Button variant="ghost" size="sm" onClick={goToCurrentYear}>
+              <h2 className="text-2xl font-bold">
+                {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+              </h2>
+              <Button variant="ghost" size="sm" onClick={goToToday}>
                 Aujourd'hui
               </Button>
             </div>
-            <Button variant="outline" onClick={goToNextYear}>
+            <Button variant="outline" onClick={goToNextMonth}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
 
           {/* Légende */}
-          <div className="flex items-center gap-4 mb-4 p-3 bg-gray-50 rounded">
+          <div className="flex items-center gap-6 mb-4 p-3 bg-gray-50 rounded">
             <span className="text-sm font-semibold">Légende :</span>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 bg-green-500 rounded"></div>
@@ -184,6 +203,7 @@ const PlanningMPrev = () => {
               <div className="w-4 h-4 bg-red-500 rounded"></div>
               <span className="text-sm">Hors Service</span>
             </div>
+            <span className="text-xs text-gray-500 ml-4">• Triangle gauche = Matin (8h-12h) • Triangle droit = Après-midi (13h-17h)</span>
           </div>
 
           {/* Table planning */}
@@ -197,17 +217,35 @@ const PlanningMPrev = () => {
                       Équipement
                     </div>
                   </th>
-                  {getMonths().map((month, index) => (
-                    <th key={index} className="border p-2 bg-gray-100 text-sm">
-                      {month.substring(0, 3)}
-                    </th>
-                  ))}
+                  {days.map((day, index) => {
+                    const isToday = day.toISOString().split('T')[0] === today;
+                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                    return (
+                      <th
+                        key={index}
+                        className={`border p-1 text-xs ${
+                          isToday
+                            ? 'bg-blue-100 font-bold'
+                            : isWeekend
+                            ? 'bg-gray-200'
+                            : 'bg-gray-100'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div>{day.getDate()}</div>
+                          <div className="text-[10px] text-gray-600">
+                            {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][day.getDay()]}
+                          </div>
+                        </div>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
                 {equipments.length === 0 ? (
                   <tr>
-                    <td colSpan={13} className="text-center p-8 text-gray-500">
+                    <td colSpan={days.length + 1} className="text-center p-8 text-gray-500">
                       Aucun équipement enregistré
                     </td>
                   </tr>
@@ -216,18 +254,51 @@ const PlanningMPrev = () => {
                     <tr key={equipment.id}>
                       <td className="border p-2 font-medium sticky left-0 bg-white z-10">
                         <div>
-                          <div className="font-semibold">{equipment.name}</div>
-                          <div className="text-xs text-gray-500">{equipment.category}</div>
+                          <div className="font-semibold text-sm">{equipment.name}</div>
+                          {equipment.category && (
+                            <div className="text-xs text-gray-500">{equipment.category}</div>
+                          )}
                         </div>
                       </td>
-                      {getMonths().map((_, monthIndex) => {
-                        const status = getEquipmentStatusForMonth(equipment.id, monthIndex);
+                      {days.map((day, dayIndex) => {
+                        const statusAM = getEquipmentStatusForHalfDay(equipment.id, day, true);
+                        const statusPM = getEquipmentStatusForHalfDay(equipment.id, day, false);
+                        const isToday = day.toISOString().split('T')[0] === today;
+                        
                         return (
-                          <td key={monthIndex} className="border p-1">
-                            <div
-                              className={`h-8 rounded ${getStatusColor(status)} transition-colors cursor-pointer hover:opacity-80`}
-                              title={`${equipment.name} - ${getStatusLabel(status)}`}
-                            />
+                          <td
+                            key={dayIndex}
+                            className={`border p-0 relative ${
+                              isToday ? 'bg-blue-50' : ''
+                            }`}
+                            style={{ height: '50px', width: '40px' }}
+                          >
+                            <div className="relative w-full h-full">
+                              {/* Triangle gauche (Matin) */}
+                              <svg
+                                className="absolute inset-0 w-full h-full"
+                                viewBox="0 0 100 100"
+                                preserveAspectRatio="none"
+                              >
+                                <polygon
+                                  points="0,0 0,100 100,100"
+                                  fill={getStatusColor(statusAM)}
+                                  opacity="0.9"
+                                />
+                              </svg>
+                              {/* Triangle droit (Après-midi) */}
+                              <svg
+                                className="absolute inset-0 w-full h-full"
+                                viewBox="0 0 100 100"
+                                preserveAspectRatio="none"
+                              >
+                                <polygon
+                                  points="0,0 100,0 100,100"
+                                  fill={getStatusColor(statusPM)}
+                                  opacity="0.9"
+                                />
+                              </svg>
+                            </div>
                           </td>
                         );
                       })}
