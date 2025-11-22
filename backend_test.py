@@ -558,13 +558,13 @@ class DemandeArretTester:
         return results
 
 if __name__ == "__main__":
-    tester = AutorisationsParticulieresTester()
-    results = tester.run_autorisations_particulieres_tests()
+    tester = DemandeArretTester()
+    results = tester.run_demande_arret_tests()
     
     # Exit with appropriate code
     critical_tests = [
-        "admin_login", "create_autorisation", "get_all_autorisations", 
-        "get_autorisation_by_id", "update_autorisation", "generate_pdf", "delete_autorisation"
+        "admin_login", "get_equipment", "get_rsp_prod_user", 
+        "create_demande_arret", "get_all_demandes_arret", "get_demande_by_id"
     ]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
