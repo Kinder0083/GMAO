@@ -426,35 +426,32 @@ class DemandeArretTester:
             self.log("❌ Cannot proceed with other tests - Admin login failed", "ERROR")
             return results
         
-        # TESTS CRITIQUES DES AUTORISATIONS PARTICULIÈRES
+        # TESTS CRITIQUES DES DEMANDES D'ARRÊT
         self.log("\n" + "=" * 60)
-        self.log("📋 TESTS CRITIQUES - AUTORISATIONS PARTICULIÈRES")
+        self.log("📋 TESTS CRITIQUES - DEMANDES D'ARRÊT POUR MAINTENANCE")
         self.log("=" * 60)
         
-        # Test 2: Créer une autorisation
-        success, test_autorisation = self.test_create_autorisation()
-        results["create_autorisation"] = success
+        # Test 2: Récupérer un équipement
+        results["get_equipment"] = self.test_get_equipment()
         
-        # Test 3: Récupérer toutes les autorisations
-        results["get_all_autorisations"] = self.test_get_all_autorisations()
+        # Test 3: Récupérer un utilisateur RSP_PROD
+        results["get_rsp_prod_user"] = self.test_get_rsp_prod_user()
         
-        # Test 4: Récupérer une autorisation par ID
-        results["get_autorisation_by_id"] = self.test_get_autorisation_by_id()
+        # Test 4: Créer une demande d'arrêt
+        success, test_demande = self.test_create_demande_arret()
+        results["create_demande_arret"] = success
         
-        # Test 5: Mettre à jour une autorisation
-        results["update_autorisation"] = self.test_update_autorisation()
+        # Test 5: Récupérer toutes les demandes
+        results["get_all_demandes_arret"] = self.test_get_all_demandes_arret()
         
-        # Test 6: Générer le PDF
-        results["generate_pdf"] = self.test_generate_pdf()
+        # Test 6: Récupérer une demande par ID
+        results["get_demande_by_id"] = self.test_get_demande_by_id()
         
-        # Test 7: Supprimer une autorisation
-        results["delete_autorisation"] = self.test_delete_autorisation()
-        
-        # Test 8: Vérifier les logs backend
+        # Test 7: Vérifier les logs backend
         results["check_backend_logs"] = self.test_check_backend_logs()
         
-        # Test 9: Nettoyage
-        results["cleanup_remaining_autorisations"] = self.test_cleanup_remaining_autorisations()
+        # Test 8: Nettoyage
+        results["cleanup_remaining_demandes"] = self.test_cleanup_remaining_demandes()
         
         # Summary
         self.log("=" * 80)
