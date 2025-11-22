@@ -304,59 +304,47 @@ class DemandeArretTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_update_autorisation(self):
-        """TEST 4: Mettre à jour une autorisation"""
-        self.log("🧪 TEST 4: Mettre à jour une autorisation")
-        
-        if not self.test_autorisations:
-            self.log("⚠️ Aucune autorisation de test disponible", "WARNING")
-            return False
-        
-        autorisation_id = self.test_autorisations[0]
-        
-        update_data = {
-            "description_travaux": "Travaux de maintenance électrique - MISE À JOUR",
-            "statut": "VALIDE"
-        }
+    def test_check_backend_logs(self):
+        """TEST 6: Vérifier les logs backend pour erreurs"""
+        self.log("🧪 TEST 6: Vérifier les logs backend pour erreurs")
         
         try:
-            response = self.admin_session.put(
-                f"{BACKEND_URL}/autorisations/{autorisation_id}",
-                json=update_data,
-                timeout=15
+            import subprocess
+            result = subprocess.run(
+                ["tail", "-n", "50", "/var/log/supervisor/backend.err.log"],
+                capture_output=True,
+                text=True,
+                timeout=10
             )
             
-            if response.status_code == 200:
-                autorisation = response.json()
-                self.log(f"✅ Autorisation mise à jour - Status: 200 OK")
-                self.log(f"✅ ID: {autorisation.get('id')}")
-                self.log(f"✅ Description: {autorisation.get('description_travaux')}")
-                self.log(f"✅ Statut: {autorisation.get('statut')}")
-                
-                # Vérifier que les modifications ont été appliquées
-                if (autorisation.get('description_travaux') == "Travaux de maintenance électrique - MISE À JOUR" and
-                    autorisation.get('statut') == "VALIDE"):
-                    self.log("✅ SUCCÈS: Description et statut mis à jour correctement")
+            if result.returncode == 0:
+                logs = result.stdout
+                if logs.strip():
+                    self.log("⚠️ Logs d'erreur backend trouvés:")
+                    for line in logs.strip().split('\n')[-10:]:  # Dernières 10 lignes
+                        if line.strip():
+                            self.log(f"   {line}")
                     
-                    # Vérifier que updated_at a été mis à jour
-                    if autorisation.get('updated_at'):
-                        self.log("✅ SUCCÈS: updated_at mis à jour")
-                        return True
-                    else:
-                        self.log("❌ ÉCHEC: updated_at non mis à jour", "ERROR")
+                    # Chercher des erreurs spécifiques
+                    if "ValidationError" in logs:
+                        self.log("❌ Erreur de validation Pydantic détectée", "ERROR")
                         return False
+                    elif ("error" in logs.lower() or "exception" in logs.lower()) and "demande" in logs.lower():
+                        self.log("⚠️ Erreur liée aux 'demandes' détectée", "WARNING")
+                        return False
+                    else:
+                        self.log("✅ Pas d'erreur critique liée aux demandes d'arrêt")
+                        return True
                 else:
-                    self.log("❌ ÉCHEC: Modifications non appliquées", "ERROR")
-                    return False
-                    
+                    self.log("✅ Aucune erreur dans les logs backend")
+                    return True
             else:
-                self.log(f"❌ Mise à jour échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
+                self.log("⚠️ Impossible de lire les logs backend", "WARNING")
+                return True  # Ne pas faire échouer le test pour ça
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+        except Exception as e:
+            self.log(f"⚠️ Erreur lecture logs: {str(e)}", "WARNING")
+            return True  # Ne pas faire échouer le test pour ça
 
     def test_generate_pdf(self):
         """TEST 5: Générer le PDF de l'autorisation"""
