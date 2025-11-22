@@ -208,7 +208,7 @@ const PlanningMPrev = () => {
             <span className="text-xs text-gray-500 ml-4">• Triangle gauche = Matin (8h-12h) • Triangle droit = Après-midi (13h-17h)</span>
           </div>
 
-          {/* Table planning */}
+          {/* Table planning - Vue annuelle par mois */}
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
@@ -219,25 +219,18 @@ const PlanningMPrev = () => {
                       Équipement
                     </div>
                   </th>
-                  {days.map((day, index) => {
-                    const isToday = day.toISOString().split('T')[0] === today;
-                    const isWeekend = day.getDay() === 0 || day.getDay() === 6;
+                  {months.map((monthData, index) => {
+                    const isCurrentMonth = monthData.month === new Date().getMonth() && monthData.year === new Date().getFullYear();
                     return (
                       <th
                         key={index}
-                        className={`border p-1 text-xs ${
-                          isToday
-                            ? 'bg-blue-100 font-bold'
-                            : isWeekend
-                            ? 'bg-gray-200'
-                            : 'bg-gray-100'
+                        className={`border p-2 text-xs ${
+                          isCurrentMonth ? 'bg-blue-100 font-bold' : 'bg-gray-100'
                         }`}
                       >
                         <div className="text-center">
-                          <div>{day.getDate()}</div>
-                          <div className="text-[10px] text-gray-600">
-                            {['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'][day.getDay()]}
-                          </div>
+                          <div className="font-semibold">{monthData.name}</div>
+                          <div className="text-[10px] text-gray-600">{monthData.year}</div>
                         </div>
                       </th>
                     );
@@ -247,7 +240,7 @@ const PlanningMPrev = () => {
               <tbody>
                 {equipments.length === 0 ? (
                   <tr>
-                    <td colSpan={days.length + 1} className="text-center p-8 text-gray-500">
+                    <td colSpan={months.length + 1} className="text-center p-8 text-gray-500">
                       Aucun équipement enregistré
                     </td>
                   </tr>
@@ -262,44 +255,58 @@ const PlanningMPrev = () => {
                           )}
                         </div>
                       </td>
-                      {days.map((day, dayIndex) => {
-                        const statusAM = getEquipmentStatusForHalfDay(equipment.id, day, true);
-                        const statusPM = getEquipmentStatusForHalfDay(equipment.id, day, false);
-                        const isToday = day.toISOString().split('T')[0] === today;
+                      {months.map((monthData, monthIndex) => {
+                        // Pour chaque mois, on affiche un résumé visuel
+                        // On va afficher une moyenne des statuts du mois
+                        const daysInMonth = monthData.daysInMonth;
+                        let operationalDays = 0;
+                        let maintenanceDays = 0;
+                        let outOfServiceDays = 0;
+                        
+                        // Compter les jours selon leur statut
+                        for (let d = 1; d <= daysInMonth; d++) {
+                          const date = new Date(monthData.year, monthData.month, d);
+                          const statusAM = getEquipmentStatusForHalfDay(equipment.id, date, true);
+                          const statusPM = getEquipmentStatusForHalfDay(equipment.id, date, false);
+                          
+                          if (statusAM === 'OPERATIONAL' && statusPM === 'OPERATIONAL') {
+                            operationalDays++;
+                          } else if (statusAM === 'EN_MAINTENANCE' || statusPM === 'EN_MAINTENANCE') {
+                            maintenanceDays++;
+                          } else if (statusAM === 'HORS_SERVICE' || statusPM === 'HORS_SERVICE') {
+                            outOfServiceDays++;
+                          } else {
+                            operationalDays++;
+                          }
+                        }
+                        
+                        // Déterminer la couleur dominante
+                        let dominantColor = getStatusColor('OPERATIONAL');
+                        if (maintenanceDays > operationalDays && maintenanceDays > outOfServiceDays) {
+                          dominantColor = getStatusColor('EN_MAINTENANCE');
+                        } else if (outOfServiceDays > operationalDays && outOfServiceDays > maintenanceDays) {
+                          dominantColor = getStatusColor('HORS_SERVICE');
+                        }
+                        
+                        const isCurrentMonth = monthData.month === new Date().getMonth() && monthData.year === new Date().getFullYear();
                         
                         return (
                           <td
-                            key={dayIndex}
-                            className={`border p-0 relative ${
-                              isToday ? 'bg-blue-50' : ''
+                            key={monthIndex}
+                            className={`border p-1 relative ${
+                              isCurrentMonth ? 'bg-blue-50' : ''
                             }`}
-                            style={{ height: '50px', width: '40px' }}
+                            style={{ height: '60px', minWidth: '80px' }}
                           >
-                            <div className="relative w-full h-full">
-                              {/* Triangle gauche (Matin) */}
-                              <svg
-                                className="absolute inset-0 w-full h-full"
-                                viewBox="0 0 100 100"
-                                preserveAspectRatio="none"
-                              >
-                                <polygon
-                                  points="0,0 0,100 100,100"
-                                  fill={getStatusColor(statusAM)}
-                                  opacity="0.9"
-                                />
-                              </svg>
-                              {/* Triangle droit (Après-midi) */}
-                              <svg
-                                className="absolute inset-0 w-full h-full"
-                                viewBox="0 0 100 100"
-                                preserveAspectRatio="none"
-                              >
-                                <polygon
-                                  points="0,0 100,0 100,100"
-                                  fill={getStatusColor(statusPM)}
-                                  opacity="0.9"
-                                />
-                              </svg>
+                            <div 
+                              className="w-full h-full rounded flex flex-col items-center justify-center"
+                              style={{ backgroundColor: dominantColor, opacity: 0.8 }}
+                            >
+                              {maintenanceDays > 0 && (
+                                <div className="text-xs text-white font-semibold">
+                                  {maintenanceDays}j
+                                </div>
+                              )}
                             </div>
                           </td>
                         );
