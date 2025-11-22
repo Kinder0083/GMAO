@@ -590,22 +590,30 @@ const MainLayout = () => {
 
       {/* Sidebar */}
       <div
-        className={`fixed top-16 left-0 bottom-0 bg-gray-900 text-white transition-all duration-300 z-20 ${
+        className={`fixed top-0 left-0 bottom-0 bg-white border-r border-gray-200 transition-all duration-300 z-20 ${
           sidebarOpen ? 'w-64' : 'w-20'
         }`}
       >
-        {/* Bouton toggle dans la sidebar */}
-        <div className="p-4 flex justify-end border-b border-gray-700">
+        {/* Entête de la sidebar - alignée avec le header principal */}
+        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 bg-white">
+          {sidebarOpen && (
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">G</span>
+              </div>
+              <span className="font-semibold text-gray-800 text-lg">GMAO</span>
+            </div>
+          )}
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-600"
             title={sidebarOpen ? "Minimiser" : "Agrandir"}
           >
             {sidebarOpen ? <ChevronLeft size={20} /> : <ChevronRight size={20} />}
           </button>
         </div>
 
-        <div className="p-4 space-y-2 h-full overflow-y-auto">
+        <div className="p-4 space-y-1 h-[calc(100vh-4rem)] overflow-y-auto bg-gradient-to-b from-gray-50 to-white">
           {menuItems
             .filter(item => !item.adminOnly || user.role === 'ADMIN')
             .map((item, index) => {
