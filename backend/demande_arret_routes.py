@@ -46,7 +46,7 @@ async def create_demande_arret(
         equipement_noms = []
         for eq_id in demande.equipement_ids:
             logger.info(f"🔍 Recherche équipement avec ID: {eq_id}")
-            equipement = await db.equipments.find_one({"id": eq_id})
+            equipement = await db.equipments.find_one({"_id": ObjectId(eq_id)})
             logger.info(f"🔍 Équipement trouvé: {equipement is not None}")
             if equipement:
                 equipement_noms.append(equipement.get("nom", ""))
