@@ -67,7 +67,9 @@ async def get_autorisation(
             raise HTTPException(status_code=404, detail="Autorisation non trouvée")
         # Serialize document to handle ObjectId and other MongoDB types
         if "_id" in autorisation:
-            autorisation["id"] = str(autorisation["_id"])
+            # Only set id from _id if id field doesn't exist
+            if "id" not in autorisation:
+                autorisation["id"] = str(autorisation["_id"])
             del autorisation["_id"]
         return autorisation
     except HTTPException:
