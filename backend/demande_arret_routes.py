@@ -407,3 +407,14 @@ async def send_expiration_email(demande: dict):
     """Envoyer email d'expiration"""
     # À implémenter
     pass
+
+# ==================== FONCTION CRON ====================
+
+async def check_expired_demandes_cron():
+    """Fonction appelée par le cron pour vérifier les demandes expirées"""
+    try:
+        logger.info("🕐 Début vérification demandes expirées...")
+        result = await check_expired_demandes()
+        logger.info(f"✅ Vérification terminée: {result['expired_count']} demande(s) expirée(s)")
+    except Exception as e:
+        logger.error(f"❌ Erreur vérification cron: {str(e)}")
