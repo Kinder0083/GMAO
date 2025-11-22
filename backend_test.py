@@ -356,47 +356,57 @@ class AutorisationsParticulieresTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_check_backend_logs(self):
-        """TEST 3: Vérifier les logs backend pour erreurs"""
-        self.log("🧪 TEST 3: Vérifier les logs backend pour erreurs")
+    def test_delete_autorisation(self):
+        """TEST 6: Supprimer une autorisation"""
+        self.log("🧪 TEST 6: Supprimer une autorisation")
+        
+        if not self.test_autorisations:
+            self.log("⚠️ Aucune autorisation de test disponible", "WARNING")
+            return False
+        
+        autorisation_id = self.test_autorisations[0]
         
         try:
-            import subprocess
-            result = subprocess.run(
-                ["tail", "-n", "50", "/var/log/supervisor/backend.err.log"],
-                capture_output=True,
-                text=True,
-                timeout=10
+            response = self.admin_session.delete(
+                f"{BACKEND_URL}/autorisations/{autorisation_id}",
+                timeout=15
             )
             
-            if result.returncode == 0:
-                logs = result.stdout
-                if logs.strip():
-                    self.log("⚠️ Logs d'erreur backend trouvés:")
-                    for line in logs.strip().split('\n')[-10:]:  # Dernières 10 lignes
-                        if line.strip():
-                            self.log(f"   {line}")
-                    
-                    # Chercher des erreurs spécifiques
-                    if "ValidationError" in logs:
-                        self.log("❌ Erreur de validation Pydantic détectée", "ERROR")
-                        return False
-                    elif "category" in logs.lower():
-                        self.log("⚠️ Erreur liée à 'category' détectée", "WARNING")
-                        return False
-                    else:
-                        self.log("✅ Pas d'erreur critique liée aux catégories")
-                        return True
-                else:
-                    self.log("✅ Aucune erreur dans les logs backend")
-                    return True
-            else:
-                self.log("⚠️ Impossible de lire les logs backend", "WARNING")
-                return True  # Ne pas faire échouer le test pour ça
+            if response.status_code == 200:
+                data = response.json()
+                self.log(f"✅ Autorisation supprimée - Status: 200 OK")
+                self.log(f"✅ Message: {data.get('message')}")
                 
-        except Exception as e:
-            self.log(f"⚠️ Erreur lecture logs: {str(e)}", "WARNING")
-            return True  # Ne pas faire échouer le test pour ça
+                # Vérifier que la réponse contient le message de succès
+                if data.get('success') and data.get('message'):
+                    self.log("✅ SUCCÈS: Message de succès reçu")
+                    
+                    # Vérifier que l'autorisation n'existe plus
+                    verify_response = self.admin_session.get(
+                        f"{BACKEND_URL}/autorisations/{autorisation_id}",
+                        timeout=10
+                    )
+                    
+                    if verify_response.status_code == 404:
+                        self.log("✅ SUCCÈS: GET suivant retourne 404 (autorisation supprimée)")
+                        # Retirer de la liste pour éviter les erreurs de nettoyage
+                        self.test_autorisations.remove(autorisation_id)
+                        return True
+                    else:
+                        self.log(f"❌ ÉCHEC: GET suivant retourne {verify_response.status_code} au lieu de 404", "ERROR")
+                        return False
+                else:
+                    self.log("❌ ÉCHEC: Message de succès manquant", "ERROR")
+                    return False
+                    
+            else:
+                self.log(f"❌ Suppression échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"Response: {response.text}", "ERROR")
+                return False
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
 
     def test_verify_both_categories_in_stats(self):
         """TEST 5: Vérifier que les deux catégories personnalisées apparaissent dans les statistiques"""
