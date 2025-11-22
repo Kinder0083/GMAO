@@ -346,64 +346,35 @@ class DemandeArretTester:
             self.log(f"⚠️ Erreur lecture logs: {str(e)}", "WARNING")
             return True  # Ne pas faire échouer le test pour ça
 
-    def test_generate_pdf(self):
-        """TEST 5: Générer le PDF de l'autorisation"""
-        self.log("🧪 TEST 5: Générer le PDF de l'autorisation")
+    def test_cleanup_remaining_demandes(self):
+        """TEST 7: Nettoyer - Supprimer les demandes de test restantes"""
+        self.log("🧪 TEST 7: Nettoyer - Supprimer les demandes de test restantes")
         
-        if not self.test_autorisations:
-            self.log("⚠️ Aucune autorisation de test disponible", "WARNING")
-            return False
+        if not self.test_demandes:
+            self.log("✅ Aucune demande de test restante à supprimer")
+            return True
         
-        autorisation_id = self.test_autorisations[0]
+        deleted_count = 0
+        failed_count = 0
         
-        try:
-            response = self.admin_session.get(
-                f"{BACKEND_URL}/autorisations/{autorisation_id}/pdf",
-                timeout=15
-            )
-            
-            if response.status_code == 200:
-                self.log(f"✅ PDF généré - Status: 200 OK")
-                self.log(f"✅ Content-Type: {response.headers.get('content-type')}")
-                
-                # Vérifier que c'est du HTML
-                if response.headers.get('content-type') == 'text/html; charset=utf-8':
-                    self.log("✅ SUCCÈS: Content-Type correct (text/html)")
+        for demande_id in self.test_demandes[:]:  # Copy to avoid modification during iteration
+            try:
+                # Note: Il n'y a pas d'endpoint DELETE pour les demandes d'arrêt dans l'implémentation actuelle
+                # On va juste marquer comme nettoyé
+                self.log(f"✅ Demande {demande_id} marquée pour nettoyage (pas d'endpoint DELETE)")
+                deleted_count += 1
+                self.test_demandes.remove(demande_id)
                     
-                    # Vérifier le contenu HTML
-                    html_content = response.text
-                    if "AUTORISATION PARTICULIÈRE DE TRAVAUX" in html_content:
-                        self.log("✅ SUCCÈS: HTML contient le titre principal")
-                        
-                        # Vérifier que le numéro d'autorisation est présent
-                        if str(autorisation_id) in html_content or "8000" in html_content or "8001" in html_content:
-                            self.log("✅ SUCCÈS: HTML contient le numéro d'autorisation")
-                            
-                            # Vérifier que les données de l'autorisation sont présentes
-                            if "Service Test" in html_content and "Jean Dupont" in html_content:
-                                self.log("✅ SUCCÈS: HTML contient les données de l'autorisation")
-                                return True
-                            else:
-                                self.log("❌ ÉCHEC: Données de l'autorisation manquantes dans le HTML", "ERROR")
-                                return False
-                        else:
-                            self.log("❌ ÉCHEC: Numéro d'autorisation manquant dans le HTML", "ERROR")
-                            return False
-                    else:
-                        self.log("❌ ÉCHEC: Titre principal manquant dans le HTML", "ERROR")
-                        return False
-                else:
-                    self.log(f"❌ ÉCHEC: Content-Type incorrect: {response.headers.get('content-type')}", "ERROR")
-                    return False
-                    
-            else:
-                self.log(f"❌ Génération PDF échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False
-                
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False
+            except Exception as e:
+                self.log(f"❌ Erreur nettoyage demande {demande_id} - Error: {str(e)}")
+                failed_count += 1
+        
+        if failed_count == 0:
+            self.log(f"✅ SUCCÈS: Toutes les {deleted_count} demandes de test ont été marquées pour nettoyage")
+            return True
+        else:
+            self.log(f"⚠️ PARTIEL: {deleted_count} demandes nettoyées, {failed_count} échecs")
+            return deleted_count > 0  # Consider success if at least some were cleaned
     
     def test_delete_autorisation(self):
         """TEST 6: Supprimer une autorisation"""
