@@ -118,6 +118,7 @@ class DemandeArretTester:
                         self.rsp_prod_user_id = admin_users[0].get('id')
                         self.log(f"⚠️ Aucun RSP_PROD trouvé, utilisation d'un ADMIN - ID: {self.rsp_prod_user_id}")
                         self.log(f"✅ Nom: {admin_users[0].get('prenom', '')} {admin_users[0].get('nom', '')}")
+                        self.log(f"🔍 Debug - User data: {admin_users[0]}")
                         return True
                     else:
                         self.log("❌ Aucun utilisateur RSP_PROD ou ADMIN trouvé", "ERROR")
