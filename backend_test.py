@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Autorisations Particulières de Travaux - Module complet MAINT_FE_003_V03
+Tests Demande d'Arrêt pour Maintenance - Module complet
 """
 
 import requests
