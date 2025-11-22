@@ -144,7 +144,7 @@ class AutorisationsParticulieresTester:
         
         try:
             response = self.admin_session.get(
-                f"{BACKEND_URL}/autorisations",
+                f"{BACKEND_URL}/autorisations/",
                 timeout=15
             )
             
