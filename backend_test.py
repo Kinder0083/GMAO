@@ -529,26 +529,27 @@ class DemandeArretTester:
         if results.get("check_backend_logs", False):
             self.log("✅ VALIDATION: Pas d'erreur critique dans les logs backend")
         
-        if results.get("cleanup_remaining_autorisations", False):
-            self.log("✅ NETTOYAGE: Autorisations de test supprimées avec succès")
+        if results.get("cleanup_remaining_demandes", False):
+            self.log("✅ NETTOYAGE: Demandes de test marquées pour nettoyage")
         
         # Conclusion finale
         self.log("\n" + "=" * 80)
-        self.log("CONCLUSION FINALE - AUTORISATIONS PARTICULIÈRES")
+        self.log("CONCLUSION FINALE - DEMANDES D'ARRÊT POUR MAINTENANCE")
         self.log("=" * 80)
         
         if critical_passed == len(critical_tests):
-            self.log("🎉 MODULE AUTORISATIONS PARTICULIÈRES ENTIÈREMENT OPÉRATIONNEL!")
-            self.log("✅ Toutes les routes CRUD fonctionnent correctement")
-            self.log("✅ Numérotation automatique >= 8000 fonctionnelle")
-            self.log("✅ Date d'établissement auto-générée (format DD/MM/YYYY)")
+            self.log("🎉 MODULE DEMANDES D'ARRÊT POUR MAINTENANCE ENTIÈREMENT OPÉRATIONNEL!")
+            self.log("✅ Toutes les routes principales fonctionnent correctement")
+            self.log("✅ POST /api/demandes-arret/ - Création de demande fonctionnelle")
+            self.log("✅ GET /api/equipment - Récupération équipements fonctionnelle")
+            self.log("✅ GET /api/users - Récupération utilisateurs RSP_PROD fonctionnelle")
+            self.log("✅ Correction equipement.get('nom') appliquée avec succès")
+            self.log("✅ Correction prenom/nom pour utilisateurs appliquée avec succès")
             self.log("✅ Authentification JWT requise pour toutes les routes")
             self.log("✅ Validation des champs obligatoires")
-            self.log("✅ Gestion correcte du personnel_autorise (array)")
-            self.log("✅ Génération PDF HTML conforme au format MAINT_FE_003_V03")
             self.log("✅ Le module est PRÊT POUR PRODUCTION")
         else:
-            self.log("⚠️ MODULE AUTORISATIONS PARTICULIÈRES INCOMPLET - PROBLÈMES DÉTECTÉS")
+            self.log("⚠️ MODULE DEMANDES D'ARRÊT INCOMPLET - PROBLÈMES DÉTECTÉS")
             failed_critical = [test for test in critical_tests if not results.get(test, False)]
             self.log(f"❌ Tests critiques échoués: {', '.join(failed_critical)}")
             self.log("❌ Le module ne fonctionne pas correctement")
