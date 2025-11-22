@@ -1,0 +1,165 @@
+"""
+Routes API pour les Autorisations Particulières de Travaux
+Format: MAINT_FE_003_V03
+"""
+from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import HTMLResponse
+from typing import List, Optional
+from datetime import datetime, timezone
+import uuid
+import logging
+
+from models import AutorisationParticuliere
+from dependencies import get_current_user, get_current_user_optional
+from auth import decode_access_token
+from autorisation_template import generate_autorisation_html
+
+logger = logging.getLogger(__name__)
+router = APIRouter(prefix="/autorisations", tags=["autorisations"])
+
+# Collection MongoDB
+from motor.motor_asyncio import AsyncIOMotorClient
+import os
+
+client = AsyncIOMotorClient(os.environ.get("MONGO_URL", "mongodb://localhost:27017"))
+db = client.gmao_iris
+
+
+# ==================== CRUD ====================
+
+@router.get("/")
+async def get_autorisations(
+    pole_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupérer toutes les autorisations (filtrées par pôle optionnellement)"""
+    try:
+        query = {}
+        if pole_id:
+            query["pole_id"] = pole_id
+        
+        autorisations = await db.autorisations_particulieres.find(query).to_list(length=None)
+        return autorisations
+    except Exception as e:
+        logger.error(f"Erreur récupération autorisations: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/{autorisation_id}")
+async def get_autorisation(
+    autorisation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Récupérer une autorisation spécifique"""
+    try:
+        autorisation = await db.autorisations_particulieres.find_one({"id": autorisation_id})
+        if not autorisation:
+            raise HTTPException(status_code=404, detail="Autorisation non trouvée")
+        return autorisation
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur récupération autorisation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/")
+async def create_autorisation(
+    autorisation: AutorisationParticuliere,
+    current_user: dict = Depends(get_current_user)
+):
+    """Créer une nouvelle autorisation"""
+    try:
+        data = autorisation.model_dump()
+        data["created_by"] = current_user.get("id")
+        data["created_at"] = datetime.now(timezone.utc).isoformat()
+        data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.autorisations_particulieres.insert_one(data)
+        logger.info(f"Autorisation créée: {data['id']}")
+        return data
+    except Exception as e:
+        logger.error(f"Erreur création autorisation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.put("/{autorisation_id}")
+async def update_autorisation(
+    autorisation_id: str,
+    autorisation: AutorisationParticuliere,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mettre à jour une autorisation"""
+    try:
+        existing = await db.autorisations_particulieres.find_one({"id": autorisation_id})
+        if not existing:
+            raise HTTPException(status_code=404, detail="Autorisation non trouvée")
+        
+        data = autorisation.model_dump()
+        data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        await db.autorisations_particulieres.update_one(
+            {"id": autorisation_id},
+            {"$set": data}
+        )
+        
+        logger.info(f"Autorisation mise à jour: {autorisation_id}")
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur mise à jour autorisation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.delete("/{autorisation_id}")
+async def delete_autorisation(
+    autorisation_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """Supprimer une autorisation"""
+    try:
+        result = await db.autorisations_particulieres.delete_one({"id": autorisation_id})
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Autorisation non trouvée")
+        
+        logger.info(f"Autorisation supprimée: {autorisation_id}")
+        return {"success": True, "message": "Autorisation supprimée"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur suppression autorisation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== PDF GENERATION ====================
+
+@router.get("/{autorisation_id}/pdf")
+async def generate_autorisation_pdf(
+    autorisation_id: str,
+    token: str = None,
+    current_user: dict = Depends(get_current_user_optional)
+):
+    """Générer le PDF de l'autorisation particulière - Format MAINT_FE_003_V03"""
+    try:
+        # Vérifier l'authentification
+        if not current_user and token:
+            payload = decode_access_token(token)
+            if payload is None:
+                raise HTTPException(status_code=401, detail="Token invalide")
+        elif not current_user and not token:
+            raise HTTPException(status_code=401, detail="Non authentifié")
+        
+        autorisation = await db.autorisations_particulieres.find_one({"id": autorisation_id})
+        if not autorisation:
+            raise HTTPException(status_code=404, detail="Autorisation non trouvée")
+        
+        # Générer le HTML avec le template
+        html_content = generate_autorisation_html(autorisation)
+        
+        return HTMLResponse(content=html_content)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur génération PDF autorisation: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
