@@ -39,6 +39,7 @@ function PoleDetails() {
   const [bonsTravail, setBonsTravail] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
+  const [bonAutorisationsMap, setBonAutorisationsMap] = useState({}); // Map bon_id -> [autorisations]
   
   // Charger l'utilisateur actuel
   useEffect(() => {
