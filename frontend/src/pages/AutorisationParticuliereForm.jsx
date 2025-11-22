@@ -565,15 +565,42 @@ const AutorisationParticuliereForm = () => {
             <CardHeader>
               <CardTitle>Équipements de Protection Individuelle (EPI) *</CardTitle>
             </CardHeader>
-            <CardContent>
-              <Textarea
-                name="equipements_protection"
-                value={formData.equipements_protection}
-                onChange={handleChange}
-                rows={4}
-                placeholder="Liste des EPI requis (un par ligne)"
-                required
-              />
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { key: 'epi_visiere', label: 'VISIÈRE' },
+                  { key: 'epi_tenue_impermeable', label: 'TENUE IMPERMÉABLE, BOTTES' },
+                  { key: 'epi_cagoule_air', label: 'CAGOULE AIR RESPIRABLE/ART' },
+                  { key: 'epi_masque', label: 'MASQUE TYPE' },
+                  { key: 'epi_gant', label: 'GANT TYPE' },
+                  { key: 'epi_harnais', label: 'HARNAIS DE SÉCURITÉ' },
+                  { key: 'epi_outillage_anti_etincelle', label: 'OUTILLAGE ANTI-ÉTINCELLE' },
+                  { key: 'epi_presence_surveillant', label: 'PRÉSENCE D\'UN SURVEILLANT' },
+                  { key: 'epi_autres', label: 'AUTRES' }
+                ].map((epi) => (
+                  <div key={epi.key} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={epi.key}
+                      checked={formData[epi.key]}
+                      onCheckedChange={(checked) => setFormData(prev => ({ ...prev, [epi.key]: checked }))}
+                    />
+                    <label htmlFor={epi.key} className="text-sm font-medium cursor-pointer">
+                      {epi.label}
+                    </label>
+                  </div>
+                ))}
+              </div>
+              <div>
+                <Label htmlFor="equipements_protection_texte">Précisions supplémentaires</Label>
+                <Textarea
+                  id="equipements_protection_texte"
+                  name="equipements_protection_texte"
+                  value={formData.equipements_protection_texte}
+                  onChange={handleChange}
+                  rows={3}
+                  placeholder="Détails supplémentaires sur les EPI..."
+                />
+              </div>
             </CardContent>
           </Card>
 
