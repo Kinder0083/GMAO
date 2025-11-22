@@ -239,37 +239,23 @@ const PlanningMPrev = () => {
             </Button>
           </div>
 
-          {/* Statistiques annuelles */}
-          <div className="grid grid-cols-4 gap-4 mb-6">
-            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-              <CardContent className="pt-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-3xl font-bold text-blue-700">
-                      {annualStats.total}
-                    </div>
-                    <div className="text-sm text-blue-600 font-medium">Total jours-équipement</div>
-                  </div>
-                  <Calendar className="h-10 w-10 text-blue-400" />
-                </div>
-              </CardContent>
-            </Card>
-            
+          {/* Statistiques annuelles (hors weekends) */}
+          <div className="grid grid-cols-3 gap-4 mb-6">
             <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-3xl font-bold text-green-700">
-                      {annualStats.operational}
+                    <div className="text-5xl font-bold text-green-700">
+                      {annualStats.operationalPercent}%
                     </div>
-                    <div className="text-sm text-green-600 font-medium">Jours opérationnels</div>
-                    {annualStats.total > 0 && (
-                      <div className="text-xs text-green-500 mt-1">
-                        {Math.round((annualStats.operational / annualStats.total) * 100)}% du temps
-                      </div>
-                    )}
+                    <div className="text-sm text-green-600 font-medium mt-1">Opérationnel</div>
+                    <div className="text-xs text-green-500 mt-1">
+                      {annualStats.operational} demi-journées
+                    </div>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-green-500"></div>
+                  <div className="h-12 w-12 rounded-full bg-green-500 flex items-center justify-center">
+                    <span className="text-white text-xl">✓</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -278,17 +264,17 @@ const PlanningMPrev = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-3xl font-bold text-orange-700">
-                      {annualStats.maintenance}
+                    <div className="text-5xl font-bold text-orange-700">
+                      {annualStats.maintenancePercent}%
                     </div>
-                    <div className="text-sm text-orange-600 font-medium">Jours en maintenance</div>
-                    {annualStats.total > 0 && (
-                      <div className="text-xs text-orange-500 mt-1">
-                        {Math.round((annualStats.maintenance / annualStats.total) * 100)}% du temps
-                      </div>
-                    )}
+                    <div className="text-sm text-orange-600 font-medium mt-1">En Maintenance</div>
+                    <div className="text-xs text-orange-500 mt-1">
+                      {annualStats.maintenance} demi-journées
+                    </div>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-orange-500"></div>
+                  <div className="h-12 w-12 rounded-full bg-orange-500 flex items-center justify-center">
+                    <Wrench className="h-6 w-6 text-white" />
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -297,20 +283,28 @@ const PlanningMPrev = () => {
               <CardContent className="pt-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="text-3xl font-bold text-red-700">
-                      {annualStats.outOfService}
+                    <div className="text-5xl font-bold text-red-700">
+                      {annualStats.outOfServicePercent}%
                     </div>
-                    <div className="text-sm text-red-600 font-medium">Jours hors service</div>
-                    {annualStats.total > 0 && (
-                      <div className="text-xs text-red-500 mt-1">
-                        {Math.round((annualStats.outOfService / annualStats.total) * 100)}% du temps
-                      </div>
-                    )}
+                    <div className="text-sm text-red-600 font-medium mt-1">Hors Service</div>
+                    <div className="text-xs text-red-500 mt-1">
+                      {annualStats.outOfService} demi-journées
+                    </div>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-red-500"></div>
+                  <div className="h-12 w-12 rounded-full bg-red-500 flex items-center justify-center">
+                    <span className="text-white text-xl">✕</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
+          </div>
+          
+          {/* Info sur le calcul */}
+          <div className="mb-4 p-2 bg-blue-50 border border-blue-200 rounded text-xs text-blue-700 flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            <span>
+              Statistiques calculées sur <strong>{annualStats.total} demi-journées</strong> (hors weekends) pour <strong>{equipments.length} équipement(s)</strong>
+            </span>
           </div>
 
           {/* Légende */}
