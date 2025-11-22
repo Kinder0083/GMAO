@@ -42,10 +42,20 @@ const AutorisationParticuliereForm = () => {
   });
 
   useEffect(() => {
+    loadBonsTravail();
     if (isEdit) {
       loadAutorisation();
     }
   }, [id]);
+
+  const loadBonsTravail = async () => {
+    try {
+      const data = await documentationsAPI.getBonsTravail();
+      setBonsTravail(data);
+    } catch (error) {
+      console.error('Erreur chargement bons de travail:', error);
+    }
+  };
 
   const loadAutorisation = async () => {
     try {
