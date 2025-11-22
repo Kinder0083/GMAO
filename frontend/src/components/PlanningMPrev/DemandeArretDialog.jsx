@@ -308,10 +308,10 @@ const DemandeArretDialog = ({ open, onOpenChange, onSuccess }) => {
                 <div>
                   <Label htmlFor="maintenance_preventive">Maintenance Préventive</Label>
                   <Select
-                    value={formData.maintenance_preventive_id || ''}
+                    value={formData.maintenance_preventive_id || 'none'}
                     onValueChange={(value) => setFormData(prev => ({
                       ...prev,
-                      maintenance_preventive_id: value || null,
+                      maintenance_preventive_id: value === 'none' ? null : value,
                       work_order_id: null // Reset l'autre
                     }))}
                   >
@@ -319,7 +319,7 @@ const DemandeArretDialog = ({ open, onOpenChange, onSuccess }) => {
                       <SelectValue placeholder="Sélectionner une maintenance préventive" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Aucune</SelectItem>
+                      <SelectItem value="none">Aucune</SelectItem>
                       {preventiveMaintenances.map(pm => (
                         <SelectItem key={pm.id} value={pm.id}>
                           {pm.title || pm.name}
