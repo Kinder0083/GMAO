@@ -74,6 +74,20 @@ function PoleDetails() {
       setPole(poleData);
       setDocuments(documentsData);
       setBonsTravail(bonsTravailData);
+      
+      // Charger les autorisations pour chaque bon de travail
+      const autorisationsMap = {};
+      for (const bon of bonsTravailData) {
+        try {
+          const autorisations = await autorisationsAPI.getByBonTravail(bon.id);
+          if (autorisations.length > 0) {
+            autorisationsMap[bon.id] = autorisations;
+          }
+        } catch (error) {
+          console.error(`Erreur chargement autorisations pour bon ${bon.id}:`, error);
+        }
+      }
+      setBonAutorisationsMap(autorisationsMap);
     } catch (error) {
       console.error('Erreur chargement:', error);
       toast({
