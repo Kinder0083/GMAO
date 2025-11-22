@@ -139,11 +139,12 @@ const PlanningMPrev = () => {
   const today = new Date().toISOString().split('T')[0];
   const year = currentDate.getFullYear();
 
-  // Calculer les statistiques annuelles
+  // Calculer les statistiques annuelles (en excluant les weekends)
   const calculateAnnualStats = () => {
     let totalOperational = 0;
     let totalMaintenance = 0;
     let totalOutOfService = 0;
+    let totalHalfDays = 0; // Total des demi-journées (hors weekends)
     
     // Pour chaque équipement
     equipments.forEach(equipment => {
@@ -153,29 +154,44 @@ const PlanningMPrev = () => {
         for (let day = 1; day <= daysInMonth; day++) {
           const date = new Date(year, month, day);
           
+          // Exclure les weekends (0 = Dimanche, 6 = Samedi)
+          const dayOfWeek = date.getDay();
+          if (dayOfWeek === 0 || dayOfWeek === 6) {
+            continue; // Ignorer les weekends
+          }
+          
           // Vérifier les deux demi-journées
           const statusAM = getEquipmentStatusForHalfDay(equipment.id, date, true);
           const statusPM = getEquipmentStatusForHalfDay(equipment.id, date, false);
           
           // Compter les demi-journées
           [statusAM, statusPM].forEach(status => {
+            totalHalfDays++;
             if (status === 'OPERATIONNEL' || status === 'OPERATIONAL') {
-              totalOperational += 0.5;
+              totalOperational++;
             } else if (status === 'EN_MAINTENANCE') {
-              totalMaintenance += 0.5;
+              totalMaintenance++;
             } else if (status === 'HORS_SERVICE') {
-              totalOutOfService += 0.5;
+              totalOutOfService++;
             }
           });
         }
       }
     });
     
+    // Calculer les pourcentages
+    const operationalPercent = totalHalfDays > 0 ? Math.round((totalOperational / totalHalfDays) * 100) : 0;
+    const maintenancePercent = totalHalfDays > 0 ? Math.round((totalMaintenance / totalHalfDays) * 100) : 0;
+    const outOfServicePercent = totalHalfDays > 0 ? Math.round((totalOutOfService / totalHalfDays) * 100) : 0;
+    
     return {
-      operational: Math.round(totalOperational),
-      maintenance: Math.round(totalMaintenance),
-      outOfService: Math.round(totalOutOfService),
-      total: Math.round(totalOperational + totalMaintenance + totalOutOfService)
+      operational: totalOperational,
+      maintenance: totalMaintenance,
+      outOfService: totalOutOfService,
+      total: totalHalfDays,
+      operationalPercent,
+      maintenancePercent,
+      outOfServicePercent
     };
   };
 
