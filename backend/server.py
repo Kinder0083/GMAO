@@ -844,7 +844,7 @@ async def get_work_orders(
     return [WorkOrder(**wo) for wo in work_orders]
 
 @api_router.get("/work-orders/{wo_id}", response_model=WorkOrder)
-async def get_work_order(wo_id: str, current_user: dict = Depends(get_current_user)):
+async def get_work_order(wo_id: str, current_user: dict = Depends(require_permission("workOrders", "view"))):
     """Détails d'un ordre de travail"""
     try:
         # Chercher par le champ id (UUID) au lieu de _id
