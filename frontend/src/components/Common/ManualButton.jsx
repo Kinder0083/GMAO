@@ -419,11 +419,79 @@ const ManualButton = () => {
           <span>{selectedSection.title}</span>
         </div>
         
-        {/* Titre de la section */}
-        <h1>{selectedSection.title}</h1>
-        
-        {/* Contenu avec formatage préservé */}
-        <div className="whitespace-pre-wrap">{selectedSection.content}</div>
+        {/* Mode édition ou affichage */}
+        {adminMode && editingSection === selectedSection.id ? (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Titre</label>
+              <Input 
+                value={editTitle}
+                onChange={(e) => setEditTitle(e.target.value)}
+                className="w-full"
+              />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Niveau</label>
+              <select 
+                value={editLevel}
+                onChange={(e) => setEditLevel(e.target.value)}
+                className="px-3 py-2 border border-gray-300 rounded text-sm bg-white w-full"
+              >
+                <option value="beginner">Débutant</option>
+                <option value="advanced">Avancé</option>
+                <option value="both">Les deux</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">Contenu (Markdown)</label>
+              <textarea 
+                value={editContent}
+                onChange={(e) => setEditContent(e.target.value)}
+                className="w-full h-96 p-3 border border-gray-300 rounded font-mono text-sm"
+              />
+            </div>
+            
+            <div className="flex gap-2">
+              <Button onClick={saveSection} className="bg-green-600 hover:bg-green-700">
+                Sauvegarder
+              </Button>
+              <Button onClick={cancelEdit} variant="outline">
+                Annuler
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Titre de la section */}
+            <div className="flex items-center justify-between">
+              <h1>{selectedSection.title}</h1>
+              {adminMode && isAdmin && (
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={() => startEditSection(selectedSection)}
+                    variant="outline"
+                    size="sm"
+                  >
+                    ✏️ Modifier
+                  </Button>
+                  <Button 
+                    onClick={() => deleteSection(selectedSection.id)}
+                    variant="outline"
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  >
+                    🗑️ Supprimer
+                  </Button>
+                </div>
+              )}
+            </div>
+            
+            {/* Contenu avec formatage préservé */}
+            <div className="whitespace-pre-wrap">{selectedSection.content}</div>
+          </>
+        )}
         
         {/* Images si présentes */}
         {selectedSection.images && selectedSection.images.length > 0 && (
