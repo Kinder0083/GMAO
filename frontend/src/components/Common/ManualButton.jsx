@@ -121,11 +121,68 @@ const ManualButton = () => {
   };
 
   const exportPDF = async () => {
-    toast({
-      title: 'Information',
-      description: 'L\'export PDF sera disponible prochainement. Pour l\'instant, vous pouvez imprimer cette page (Ctrl+P) pour générer un PDF.',
-      duration: 5000
-    });
+    try {
+      setLoading(true);
+      toast({
+        title: 'Génération en cours...',
+        description: 'Veuillez patienter pendant la génération du PDF'
+      });
+      
+      const token = localStorage.getItem('token');
+      const backend_url = getBackendURL();
+      
+      // Construire l'URL avec le filtre de niveau actuel
+      const params = new URLSearchParams();
+      if (levelFilter !== 'both') {
+        params.append('level_filter', levelFilter);
+      }
+      
+      // Télécharger le PDF
+      const response = await fetch(
+        `${backend_url}/api/manual/export-pdf?${params.toString()}`,
+        {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération du PDF');
+      }
+      
+      // Créer un blob à partir de la réponse
+      const blob = await response.blob();
+      
+      // Créer un lien de téléchargement temporaire
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `manuel_gmao_iris_${new Date().toISOString().split('T')[0]}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      
+      // Nettoyer
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({
+        title: 'Succès',
+        description: 'Le PDF a été téléchargé avec succès',
+        variant: 'default'
+      });
+      
+    } catch (error) {
+      console.error('Erreur export PDF:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de générer le PDF. Veuillez réessayer.',
+        variant: 'destructive'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const searchManual = async () => {
