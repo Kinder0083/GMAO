@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { getBackendURL } from '../../utils/config';
+import './ManualButton.css';
 
 const ManualButton = () => {
   const [open, setOpen] = useState(false);
