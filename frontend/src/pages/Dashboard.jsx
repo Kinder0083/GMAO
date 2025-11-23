@@ -135,13 +135,14 @@ const Dashboard = () => {
   // Rafraîchissement automatique toutes les 5 secondes (invisible)
   useAutoRefresh(loadData, []);
 
-  // Calculer les stats dynamiquement
+  // Calculer les stats dynamiquement selon les widgets activés
   const stats = React.useMemo(() => {
-    const baseStats = [];
+    const allStats = [];
     
-    // Toujours afficher les stats basées sur les données disponibles
-    if (workOrders) {
-      baseStats.push({
+    // Widget: Ordres de travail actifs
+    if (isWidgetEnabled('work_orders_active') && workOrders) {
+      allStats.push({
+        id: 'work_orders_active',
         title: 'Ordres de travail actifs',
         value: workOrders.filter(wo => wo.statut !== 'TERMINE').length,
         icon: ClipboardList,
@@ -150,8 +151,10 @@ const Dashboard = () => {
       });
     }
     
-    if (equipments) {
-      baseStats.push({
+    // Widget: Équipements en maintenance
+    if (isWidgetEnabled('equipment_maintenance') && equipments) {
+      allStats.push({
+        id: 'equipment_maintenance',
         title: 'Équipements en maintenance',
         value: equipments.filter(e => e.statut === 'EN_MAINTENANCE').length,
         icon: Wrench,
@@ -160,28 +163,98 @@ const Dashboard = () => {
       });
     }
     
-    // Ajouter les stats analytics seulement si disponibles
-    if (analytics) {
-      baseStats.push(
-        {
-          title: 'Taux de réalisation',
-          value: `${analytics.tauxRealisation}%`,
-          icon: TrendingUp,
-          color: 'bg-green-500',
-          change: '+8%'
-        },
-        {
-          title: 'Temps de réponse moyen',
-          value: `${analytics.tempsReponse.moyen}h`,
-          icon: Clock,
-          color: 'bg-purple-500',
-          change: '-15%'
-        }
-      );
+    // Widget: Tâches en retard
+    if (isWidgetEnabled('overdue_tasks') && workOrders) {
+      const overdueTasks = workOrders.filter(wo => {
+        if (!wo.dateEcheance || wo.statut === 'TERMINE') return false;
+        const echeance = new Date(wo.dateEcheance);
+        return echeance < new Date();
+      }).length;
+      
+      allStats.push({
+        id: 'overdue_tasks',
+        title: 'Tâches en retard',
+        value: overdueTasks,
+        icon: Clock,
+        color: 'bg-red-500',
+        change: overdueTasks > 0 ? '+3%' : '0%'
+      });
     }
     
-    return baseStats;
-  }, [analytics, workOrders, equipments]);
+    // Widget: Stock bas (simulé pour l'instant)
+    if (isWidgetEnabled('low_stock')) {
+      allStats.push({
+        id: 'low_stock',
+        title: 'Articles en rupture',
+        value: 2, // Valeur simulée - pourrait être récupérée via API
+        icon: Package,
+        color: 'bg-orange-600',
+        change: '-1 article'
+      });
+    }
+    
+    // Widget: Incidents récents (simulé)
+    if (isWidgetEnabled('recent_incidents')) {
+      allStats.push({
+        id: 'recent_incidents',
+        title: 'Incidents récents',
+        value: 3, // Valeur simulée
+        icon: AlertCircle,
+        color: 'bg-yellow-500',
+        change: '+2 cette semaine'
+      });
+    }
+    
+    // Widget: Statistiques de maintenance
+    if (isWidgetEnabled('maintenance_stats') && analytics) {
+      allStats.push({
+        id: 'maintenance_stats',
+        title: 'Taux de réalisation',
+        value: `${analytics.tauxRealisation}%`,
+        icon: BarChart3,
+        color: 'bg-green-500',
+        change: '+8%'
+      });
+    }
+    
+    // Widget: Maintenances à venir (simulé)
+    if (isWidgetEnabled('upcoming_maintenance')) {
+      allStats.push({
+        id: 'upcoming_maintenance',
+        title: 'Maintenances à venir',
+        value: 5, // Valeur simulée
+        icon: Calendar,
+        color: 'bg-purple-500',
+        change: '7 jours'
+      });
+    }
+    
+    // Widget: Métriques de performance
+    if (isWidgetEnabled('performance_metrics') && analytics) {
+      allStats.push({
+        id: 'performance_metrics',
+        title: 'Temps de réponse moyen',
+        value: `${analytics.tempsReponse?.moyen || 0}h`,
+        icon: TrendingUp,
+        color: 'bg-indigo-500',
+        change: '-15%'
+      });
+    }
+    
+    // Widget: Activité d'équipe (simulé)
+    if (isWidgetEnabled('team_activity')) {
+      allStats.push({
+        id: 'team_activity',
+        title: 'Techniciens actifs',
+        value: 8, // Valeur simulée
+        icon: Users,
+        color: 'bg-cyan-500',
+        change: '12 tâches'
+      });
+    }
+    
+    return allStats;
+  }, [analytics, workOrders, equipments, enabledWidgets]);
 
   if (loading) {
     return (
