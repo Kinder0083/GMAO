@@ -4099,11 +4099,16 @@ async def add_work_order_comment(
                 "inventory_item_name": part.inventory_item_name,
                 "custom_part_name": part.custom_part_name,
                 "quantity": part.quantity,
-                "source_equipment_id": part.source_equipment_id,
-                "source_equipment_name": part.source_equipment_name,
-                "custom_source": part.custom_source,
                 "timestamp": datetime.now(timezone.utc)
             }
+            
+            # N'ajouter les champs "Prélevé Sur" que s'ils sont fournis
+            if hasattr(part, 'source_equipment_id') and part.source_equipment_id:
+                part_data["source_equipment_id"] = part.source_equipment_id
+                part_data["source_equipment_name"] = part.source_equipment_name
+            if hasattr(part, 'custom_source') and part.custom_source:
+                part_data["custom_source"] = part.custom_source
+            
             parts_used_list.append(part_data)
             
             # Si c'est une pièce d'inventaire, déduire du stock
