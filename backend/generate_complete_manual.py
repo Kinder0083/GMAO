@@ -1381,7 +1381,16 @@ Stratégie de maintenance adaptée à chaque classe
 • Pannes récurrentes
 • Causes profondes
 • Diagramme Ishikawa
-• Plan d'actions correcti
+• Plan d'actions correctives
+
+💡 **Objectif**
+Passer de données à décisions""",
+        "level": "advanced",
+        "target_roles": ["ADMIN", "DIRECTEUR", "QHSE"],
+        "target_modules": ["reports"],
+        "keywords": ["analyse", "RCA", "fiabilité", "ABC"]
+    }
+}
 
 async def generate_manual():
     client = AsyncIOMotorClient(mongo_url)
