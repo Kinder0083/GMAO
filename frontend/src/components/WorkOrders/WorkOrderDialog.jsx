@@ -200,6 +200,19 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
 
   const handleStatusChange = async (newStatus, hours = 0, minutes = 0) => {
     try {
+      // Soumettre les pièces utilisées si présentes (AVANT le changement de statut)
+      if (partsUsed.length > 0) {
+        await commentsAPI.addWorkOrderComment(workOrder.id, {
+          text: "Pièces utilisées lors de la fermeture de l'ordre",
+          parts_used: partsUsed
+        });
+        toast({
+          title: 'Pièces enregistrées',
+          description: `${partsUsed.length} pièce(s) utilisée(s) enregistrée(s)`
+        });
+        setPartsUsed([]); // Réinitialiser
+      }
+
       // Ajouter le temps si renseigné
       if (hours > 0 || minutes > 0) {
         await workOrdersAPI.addTimeSpent(workOrder.id, hours, minutes);
