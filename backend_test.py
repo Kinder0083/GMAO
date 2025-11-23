@@ -21,11 +21,12 @@ class PartsUsedSystemTester:
         self.admin_session = requests.Session()
         self.admin_token = None
         self.admin_data = None
-        self.test_demandes = []  # Store created test demandes for cleanup
-        self.equipment_id = None
-        self.rsp_prod_user_id = None
-        self.validation_token = None
-        self.created_demande_id = None
+        self.test_work_order_id = None
+        self.test_inventory_item_id = None
+        self.test_equipment_id = None
+        self.initial_inventory_quantity = None
+        self.inventory_item_name = None
+        self.equipment_name = None
         
     def log(self, message, level="INFO"):
         """Log test messages with timestamp"""
