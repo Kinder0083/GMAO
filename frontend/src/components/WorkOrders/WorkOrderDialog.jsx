@@ -433,6 +433,141 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
             <p className="text-xs text-gray-500 mt-1">Ctrl+Entrée pour envoyer</p>
           </div>
 
+          {/* Pièces utilisées */}
+          <Separator className="my-6" />
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Package size={20} className="text-gray-600" />
+                <h3 className="text-lg font-semibold text-gray-900">Pièces utilisées</h3>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={addPartUsed}
+                className="text-sm"
+              >
+                <Plus size={16} className="mr-1" />
+                Ajouter une pièce
+              </Button>
+            </div>
+
+            {partsUsed.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg">
+                Aucune pièce ajoutée. Cliquez sur "Ajouter une pièce" pour commencer.
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {partsUsed.map((part) => (
+                  <div key={part.id} className="border rounded-lg p-4 bg-gray-50 relative">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePartUsed(part.id)}
+                      className="absolute top-2 right-2 h-6 w-6 p-0 hover:bg-red-100"
+                    >
+                      <X size={14} />
+                    </Button>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Pièce */}
+                      <div className="space-y-2">
+                        <Label>Pièce *</Label>
+                        <Select
+                          value={part.inventory_item_id || 'custom'}
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              updatePartUsed(part.id, 'inventory_item_id', null);
+                              updatePartUsed(part.id, 'inventory_item_name', null);
+                            } else {
+                              const item = inventoryItems.find(i => i.id === value);
+                              updatePartUsed(part.id, 'inventory_item_id', value);
+                              updatePartUsed(part.id, 'inventory_item_name', item?.nom || '');
+                              updatePartUsed(part.id, 'custom_part_name', '');
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner une pièce" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="custom">Texte libre (pièce externe)</SelectItem>
+                            {inventoryItems.map(item => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.nom} ({item.reference})
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        
+                        {!part.inventory_item_id && (
+                          <Input
+                            placeholder="Nom de la pièce externe"
+                            value={part.custom_part_name}
+                            onChange={(e) => updatePartUsed(part.id, 'custom_part_name', e.target.value)}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+
+                      {/* Quantité */}
+                      <div className="space-y-2">
+                        <Label>Quantité utilisée *</Label>
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.1"
+                          value={part.quantity}
+                          onChange={(e) => updatePartUsed(part.id, 'quantity', parseFloat(e.target.value) || 0)}
+                        />
+                      </div>
+
+                      {/* Prélevée Sur */}
+                      <div className="space-y-2 md:col-span-2">
+                        <Label>Prélevée Sur</Label>
+                        <Select
+                          value={part.source_equipment_id || 'custom'}
+                          onValueChange={(value) => {
+                            if (value === 'custom') {
+                              updatePartUsed(part.id, 'source_equipment_id', null);
+                              updatePartUsed(part.id, 'source_equipment_name', null);
+                            } else {
+                              const equip = equipmentsList.find(e => e.id === value);
+                              updatePartUsed(part.id, 'source_equipment_id', value);
+                              updatePartUsed(part.id, 'source_equipment_name', equip?.nom || '');
+                              updatePartUsed(part.id, 'custom_source', '');
+                            }
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un équipement" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="custom">Texte libre (équipement non enregistré)</SelectItem>
+                            {equipmentsList.map(equip => (
+                              <SelectItem key={equip.id} value={equip.id}>
+                                {equip.nom}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+
+                        {!part.source_equipment_id && (
+                          <Input
+                            placeholder="Source personnalisée"
+                            value={part.custom_source}
+                            onChange={(e) => updatePartUsed(part.id, 'custom_source', e.target.value)}
+                            className="mt-2"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Temps Passé */}
           <Separator className="my-6" />
           <div>
