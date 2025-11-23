@@ -730,6 +730,19 @@ const MainLayout = () => {
                 </button>
               </>
             )}
+            
+            {/* Personnalisation */}
+            <button
+              onClick={() => navigate('/personnalisation')}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg ${
+                location.pathname === '/personnalisation' ? 'bg-gray-800 text-white' : 'hover:bg-gray-800 text-gray-300'
+              } transition-all ${!sidebarOpen ? 'justify-center px-2' : ''}`}
+              title={!sidebarOpen ? 'Personnalisation' : ''}
+            >
+              <Palette size={20} className="flex-shrink-0" />
+              {sidebarOpen && <span className="text-sm font-medium">Personnalisation</span>}
+            </button>
+            
             <button
               onClick={handleLogout}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-red-600 text-gray-300 transition-all ${!sidebarOpen ? 'justify-center px-2' : ''}`}
