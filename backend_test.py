@@ -159,65 +159,64 @@ class InventoryStatsTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_add_parts_with_comment(self):
-        """TEST 2: Test d'ajout de pièces avec commentaire"""
-        self.log("🧪 TEST 2: Test d'ajout de pièces avec déduction stock")
+    def test_validate_calculations(self):
+        """TEST 3: Valider les calculs en comparant avec les données d'inventaire"""
+        self.log("🧪 TEST 3: Validation des calculs de statistiques")
         
-        if not self.test_work_order_id or not self.test_inventory_item_id or not self.test_equipment_id:
-            self.log("❌ Prérequis manquants pour le test", "ERROR")
+        if not self.inventory_data or not self.stats_data:
+            self.log("❌ Données d'inventaire ou de stats manquantes", "ERROR")
             return False
         
         try:
-            # POST /api/work-orders/{id}/comments avec parts_used
-            comment_data = {
-                "text": "Test ajout pièce avec déduction stock",
-                "parts_used": [
-                    {
-                        "inventory_item_id": self.test_inventory_item_id,
-                        "inventory_item_name": self.inventory_item_name,
-                        "quantity": 2,
-                        "source_equipment_id": self.test_equipment_id,
-                        "source_equipment_name": self.equipment_name
-                    }
-                ]
-            }
+            # Calculer manuellement les statistiques à partir des données d'inventaire
+            expected_rupture = 0
+            expected_niveau_bas = 0
             
-            self.log(f"📤 Envoi du commentaire avec pièce utilisée...")
-            self.log(f"   Pièce: {self.inventory_item_name} (Quantité: 2)")
-            self.log(f"   Source: {self.equipment_name}")
-            
-            # Use ObjectId for comments endpoint
-            comments_id = self.test_work_order_object_id or self.test_work_order_id
-            self.log(f"🔍 Debug - Using ID for comments: {comments_id}")
-            
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/work-orders/{comments_id}/comments",
-                json=comment_data,
-                timeout=15
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self.log("✅ Commentaire avec pièce ajouté avec succès")
-                self.log(f"✅ Commentaire ID: {data.get('comment', {}).get('id')}")
-                self.log(f"✅ Pièces utilisées: {len(data.get('parts_used', []))}")
+            for item in self.inventory_data:
+                quantite = item.get('quantite', 0)
+                quantite_min = item.get('quantiteMin', 0)
                 
-                # Vérifier que la pièce est dans la réponse
-                parts_used = data.get('parts_used', [])
-                if parts_used and len(parts_used) > 0:
-                    part = parts_used[0]
-                    self.log(f"✅ Pièce ajoutée: {part.get('inventory_item_name')} (Quantité: {part.get('quantity')})")
-                    return True
-                else:
-                    self.log("❌ Aucune pièce utilisée dans la réponse", "ERROR")
-                    return False
+                if quantite <= 0:
+                    expected_rupture += 1
+                elif quantite <= quantite_min:
+                    expected_niveau_bas += 1
+            
+            # Comparer avec les résultats de l'endpoint
+            actual_rupture = self.stats_data.get('rupture')
+            actual_niveau_bas = self.stats_data.get('niveau_bas')
+            
+            self.log("📊 Comparaison des calculs:")
+            self.log(f"   Rupture - Attendu: {expected_rupture}, Reçu: {actual_rupture}")
+            self.log(f"   Niveau bas - Attendu: {expected_niveau_bas}, Reçu: {actual_niveau_bas}")
+            
+            # Vérifier la correspondance
+            if actual_rupture == expected_rupture:
+                self.log("✅ Calcul 'rupture' correct")
             else:
-                self.log(f"❌ Ajout commentaire échoué - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
+                self.log(f"❌ Calcul 'rupture' incorrect - Attendu: {expected_rupture}, Reçu: {actual_rupture}", "ERROR")
+                return False
+            
+            if actual_niveau_bas == expected_niveau_bas:
+                self.log("✅ Calcul 'niveau_bas' correct")
+            else:
+                self.log(f"❌ Calcul 'niveau_bas' incorrect - Attendu: {expected_niveau_bas}, Reçu: {actual_niveau_bas}", "ERROR")
+                return False
+            
+            # Vérifier le total des alertes
+            total_expected = expected_rupture + expected_niveau_bas
+            total_actual = actual_rupture + actual_niveau_bas
+            
+            self.log(f"📊 Total alertes - Attendu: {total_expected}, Reçu: {total_actual}")
+            
+            if total_actual == total_expected:
+                self.log("✅ Total des alertes correct")
+                return True
+            else:
+                self.log(f"❌ Total des alertes incorrect", "ERROR")
                 return False
                 
-        except requests.exceptions.RequestException as e:
-            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+        except Exception as e:
+            self.log(f"❌ Erreur lors de la validation - Error: {str(e)}", "ERROR")
             return False
 
     def test_verify_inventory_deduction(self):
