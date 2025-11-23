@@ -35,6 +35,7 @@ import {
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 import UpdateNotificationBadge from '../Common/UpdateNotificationBadge';
 import HelpButton from '../Common/HelpButton';
+import ManualButton from '../Common/ManualButton';
 import RecentUpdatePopup from '../Common/RecentUpdatePopup';
 import InactivityHandler from '../Common/InactivityHandler';
 import TokenValidator from '../Common/TokenValidator';
