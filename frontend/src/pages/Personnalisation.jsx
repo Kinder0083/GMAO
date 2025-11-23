@@ -194,6 +194,22 @@ const Personnalisation = () => {
 
           <Button
             variant="outline"
+            onClick={handleExport}
+            className="gap-2"
+          >
+            <Download size={16} />
+            Exporter
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleImport}
+            className="gap-2"
+          >
+            <Upload size={16} />
+            Importer
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleReset}
             className="gap-2"
           >
