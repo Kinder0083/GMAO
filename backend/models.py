@@ -621,6 +621,7 @@ class WorkOrder(WorkOrderBase):
     emplacement: Optional[dict] = None
     attachments: List[dict] = []
     comments: List[Comment] = []
+    parts_used: List[PartUsed] = []  # Pièces utilisées
     createdByName: Optional[str] = None
 
     class Config:
