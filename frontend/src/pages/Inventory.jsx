@@ -239,7 +239,29 @@ const Inventory = () => {
                         <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.reference}</td>
                         <td className="py-3 px-4 text-sm text-gray-900 font-medium">{item.nom}</td>
                         <td className="py-3 px-4 text-sm text-gray-700">{item.categorie}</td>
-                        <td className="py-3 px-4 text-sm text-gray-900 font-bold">{item.quantite}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => adjustQuantity(item, -1)}
+                              className="h-7 w-7 p-0 hover:bg-red-50 hover:border-red-300"
+                            >
+                              <Minus size={14} />
+                            </Button>
+                            <span className="text-sm text-gray-900 font-bold min-w-[40px] text-center">
+                              {item.quantite}
+                            </span>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => adjustQuantity(item, 1)}
+                              className="h-7 w-7 p-0 hover:bg-green-50 hover:border-green-300"
+                            >
+                              <Plus size={14} />
+                            </Button>
+                          </div>
+                        </td>
                         <td className="py-3 px-4 text-sm text-gray-600">{item.quantiteMin}</td>
                         <td className="py-3 px-4 text-sm text-gray-700">{item.prixUnitaire.toFixed(2)} €</td>
                         <td className="py-3 px-4 text-sm text-gray-900 font-medium">
