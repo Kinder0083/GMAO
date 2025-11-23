@@ -5688,7 +5688,7 @@ async def add_improvement_comment(
     return comment
 
 @api_router.get("/improvements/{imp_id}/comments")
-async def get_improvement_comments(imp_id: str, current_user: dict = Depends(get_current_user)):
+async def get_improvement_comments(imp_id: str, current_user: dict = Depends(require_permission("improvements", "view"))):
     """Récupérer les commentaires d'une amélioration"""
     imp = await db.improvements.find_one({"id": imp_id})
     if not imp:
