@@ -17,20 +17,38 @@ const HelpButton = () => {
 
   const captureScreenshot = async () => {
     try {
-      // Capturer l'écran (sans la modale)
+      // Fermer temporairement la modale pour la capture
+      setOpen(false);
+      
+      // Attendre que la modale se ferme complètement
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Capturer uniquement la zone visible (viewport)
       const canvas = await html2canvas(document.body, {
-        ignoreElements: (element) => {
-          // Ignorer la modale de demande d'aide
-          return element.getAttribute('role') === 'dialog';
-        },
+        // Capturer uniquement la zone visible
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        x: window.scrollX,
+        y: window.scrollY,
+        scrollX: 0,
+        scrollY: 0,
         useCORS: true,
         allowTaint: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        scale: 1, // Réduire la résolution pour diminuer la taille du fichier
+        logging: false,
+        imageTimeout: 0
       });
       
-      return canvas.toDataURL('image/png');
+      // Rouvrir la modale après la capture
+      setOpen(true);
+      
+      return canvas.toDataURL('image/png', 0.8); // Compression à 80% de qualité
     } catch (error) {
       console.error('Erreur lors de la capture d\'écran:', error);
+      setOpen(true); // Rouvrir la modale même en cas d'erreur
       return null;
     }
   };
