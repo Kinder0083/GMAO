@@ -2209,7 +2209,7 @@ async def invite_user(user_invite: UserInvite, current_user: dict = Depends(get_
     return User(**serialize_doc(user_dict))
 
 @api_router.get("/users/{user_id}/permissions", response_model=UserPermissions)
-async def get_user_permissions(user_id: str, current_user: dict = Depends(get_current_user)):
+async def get_user_permissions(user_id: str, current_user: dict = Depends(get_current_admin_user)):
     """Obtenir les permissions d'un utilisateur"""
     try:
         user = await db.users.find_one({"_id": ObjectId(user_id)})
