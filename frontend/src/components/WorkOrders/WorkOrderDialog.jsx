@@ -269,16 +269,41 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     try {
       // Soumettre les pièces utilisées si présentes (même si on skip le changement de statut)
       if (partsUsed.length > 0) {
-        await commentsAPI.addWorkOrderComment(workOrder.id, {
-          text: "Pièces utilisées lors de la consultation de l'ordre",
-          parts_used: partsUsed
-        });
-        toast({
-          title: 'Pièces enregistrées',
-          description: `${partsUsed.length} pièce(s) utilisée(s) enregistrée(s)`
-        });
+        // Filtrer pour ne garder que les pièces valides
+        const validParts = partsUsed.filter(part => 
+          part.inventory_item_id || (part.custom_part_name && part.custom_part_name.trim() !== '')
+        );
+        
+        if (validParts.length > 0) {
+          const cleanedParts = validParts.map(part => {
+            const cleanPart = {
+              inventory_item_id: part.inventory_item_id || null,
+              inventory_item_name: part.inventory_item_name || null,
+              custom_part_name: part.custom_part_name || null,
+              quantity: part.quantity || 0
+            };
+            
+            // N'ajouter les champs "Prélevé Sur" que s'ils sont remplis
+            if (part.source_equipment_id || (part.custom_source && part.custom_source.trim() !== '')) {
+              cleanPart.source_equipment_id = part.source_equipment_id || null;
+              cleanPart.source_equipment_name = part.source_equipment_name || null;
+              cleanPart.custom_source = part.custom_source || null;
+            }
+            
+            return cleanPart;
+          });
+          
+          await commentsAPI.addWorkOrderComment(workOrder.id, {
+            text: "Pièces utilisées lors de la consultation de l'ordre",
+            parts_used: cleanedParts
+          });
+          toast({
+            title: 'Pièces enregistrées',
+            description: `${cleanedParts.length} pièce(s) utilisée(s) enregistrée(s)`
+          });
+          if (onSuccess) onSuccess(); // Rafraîchir les données
+        }
         setPartsUsed([]); // Réinitialiser
-        if (onSuccess) onSuccess(); // Rafraîchir les données
       }
       
       setShowStatusDialog(false);
