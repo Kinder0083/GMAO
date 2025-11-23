@@ -5633,7 +5633,7 @@ async def add_improvement_request_comment(
     return comment
 
 @api_router.get("/improvement-requests/{request_id}/comments")
-async def get_improvement_request_comments(request_id: str, current_user: dict = Depends(get_current_user)):
+async def get_improvement_request_comments(request_id: str, current_user: dict = Depends(require_permission("improvementRequests", "view"))):
     """Récupérer les commentaires d'une demande d'amélioration"""
     req = await db.improvement_requests.find_one({"id": request_id})
     if not req:
