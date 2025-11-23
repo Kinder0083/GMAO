@@ -680,10 +680,22 @@ const MainLayout = () => {
                   key={index}
                   onClick={() => navigate(item.path)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'hover:bg-gray-800 text-gray-300'
-                  } ${!sidebarOpen ? 'justify-center px-2' : ''}`}
+                    !sidebarOpen ? 'justify-center px-2' : ''
+                  }`}
+                  style={{
+                    backgroundColor: isActive ? (preferences?.primary_color || '#2563eb') : 'transparent',
+                    color: preferences?.sidebar_icon_color || '#ffffff'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.backgroundColor = 'transparent';
+                    }
+                  }}
                   title={!sidebarOpen ? item.label : ''}
                 >
                   <Icon size={20} className="flex-shrink-0" />
