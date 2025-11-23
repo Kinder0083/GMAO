@@ -3207,7 +3207,7 @@ async def get_purchase_history(current_user: dict = Depends(require_permission("
 async def get_purchase_stats(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("purchaseHistory", "view"))
 ):
     """Statistiques complètes des achats"""
     
