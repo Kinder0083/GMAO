@@ -8,10 +8,16 @@ import {
   Clock,
   AlertCircle,
   CheckCircle2,
-  Activity
+  Activity,
+  Package,
+  Calendar,
+  BarChart3,
+  Users,
+  Zap
 } from 'lucide-react';
 import { useAutoRefresh } from '../hooks/useAutoRefresh';
 import { usePermissions } from '../hooks/usePermissions';
+import { usePreferences } from '../contexts/PreferencesContext';
 
 const Dashboard = () => {
   const [loading, setLoading] = useState(true);
@@ -20,6 +26,22 @@ const Dashboard = () => {
   const [equipments, setEquipments] = useState([]);
   const [analytics, setAnalytics] = useState(null);
   const { canView } = usePermissions();
+  const { preferences } = usePreferences();
+
+  // Déterminer quels widgets afficher
+  const enabledWidgets = preferences?.dashboard_widgets || [
+    'work_orders_active',
+    'equipment_maintenance',
+    'overdue_tasks',
+    'low_stock',
+    'recent_incidents',
+    'maintenance_stats',
+    'upcoming_maintenance',
+    'quick_actions'
+  ];
+
+  // Fonction helper pour vérifier si un widget est activé
+  const isWidgetEnabled = (widgetId) => enabledWidgets.includes(widgetId);
 
   const loadData = async () => {
     try {
