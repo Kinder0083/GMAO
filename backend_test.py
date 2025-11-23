@@ -231,60 +231,55 @@ class PartsUsedSystemTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
 
-    def test_create_demande_arret(self):
-        """TEST 3: Créer une nouvelle demande d'arrêt pour maintenance"""
-        self.log("🧪 TEST 3: Créer une nouvelle demande d'arrêt pour maintenance")
+    def test_verify_inventory_deduction(self):
+        """TEST 3: Vérifications après ajout - Déduction inventaire et mise à jour ordre de travail"""
+        self.log("🧪 TEST 3: Vérifier la déduction automatique du stock")
         
-        if not self.equipment_id or not self.rsp_prod_user_id:
-            self.log("❌ Prérequis manquants (équipement ou utilisateur RSP_PROD)", "ERROR")
-            return False, None
-        
-        # Dates pour la demande (demain et après-demain)
-        tomorrow = (datetime.now() + timedelta(days=1)).strftime("%Y-%m-%d")
-        day_after = (datetime.now() + timedelta(days=2)).strftime("%Y-%m-%d")
-        
-        test_demande_data = {
-            "date_debut": tomorrow,
-            "date_fin": day_after,
-            "periode_debut": "JOURNEE_COMPLETE",
-            "periode_fin": "JOURNEE_COMPLETE",
-            "equipement_ids": [self.equipment_id],
-            "commentaire": "Test journalisation",
-            "destinataire_id": self.rsp_prod_user_id
-        }
+        if not self.test_inventory_item_id:
+            self.log("❌ ID pièce d'inventaire manquant", "ERROR")
+            return False
         
         try:
-            self.log(f"🔍 Debug - Sending demande data: {test_demande_data}")
-            response = self.admin_session.post(
-                f"{BACKEND_URL}/demandes-arret/",
-                json=test_demande_data,
+            # GET /api/inventory/{id} - Vérifier que la quantité a été déduite de 2 unités
+            self.log("📦 Vérification de la déduction du stock...")
+            response = self.admin_session.get(
+                f"{BACKEND_URL}/inventory",
                 timeout=15
             )
             
-            if response.status_code in [200, 201]:
-                data = response.json()
-                self.log(f"✅ Demande d'arrêt créée - Status: {response.status_code}")
-                self.log(f"✅ ID: {data.get('id')}")
-                self.log(f"✅ Statut: {data.get('statut')}")
-                self.log(f"✅ Demandeur: {data.get('demandeur_nom')}")
-                self.log(f"✅ Destinataire: {data.get('destinataire_nom')}")
-                self.log(f"✅ Équipements: {data.get('equipement_noms')}")
-                self.log(f"✅ Token de validation: {data.get('validation_token')}")
+            if response.status_code == 200:
+                inventory_items = response.json()
+                # Trouver notre pièce
+                test_item = None
+                for item in inventory_items:
+                    if item.get('id') == self.test_inventory_item_id:
+                        test_item = item
+                        break
                 
-                # Stocker les informations importantes pour les tests suivants
-                self.created_demande_id = data.get('id')
-                self.validation_token = data.get('validation_token')
-                self.test_demandes.append(data.get('id'))
-                
-                return True, data
+                if test_item:
+                    current_quantity = test_item.get('quantite', 0)
+                    expected_quantity = self.initial_inventory_quantity - 2
+                    
+                    self.log(f"📊 Quantité initiale: {self.initial_inventory_quantity}")
+                    self.log(f"📊 Quantité actuelle: {current_quantity}")
+                    self.log(f"📊 Quantité attendue: {expected_quantity}")
+                    
+                    if current_quantity == expected_quantity:
+                        self.log("✅ SUCCÈS: Déduction automatique du stock confirmée (-2 unités)")
+                        return True
+                    else:
+                        self.log(f"❌ ÉCHEC: Déduction incorrecte. Attendu: {expected_quantity}, Trouvé: {current_quantity}", "ERROR")
+                        return False
+                else:
+                    self.log("❌ Pièce d'inventaire non trouvée", "ERROR")
+                    return False
             else:
-                self.log(f"❌ Création échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
-                return False, None
+                self.log(f"❌ Récupération inventaire échouée - Status: {response.status_code}", "ERROR")
+                return False
                 
         except requests.exceptions.RequestException as e:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
-            return False, None
+            return False
     
     def test_get_all_demandes_arret(self):
         """TEST 4: Récupérer toutes les demandes d'arrêt"""
