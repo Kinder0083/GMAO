@@ -182,9 +182,14 @@ const MenuOrganizationSection = () => {
         <CardContent className="pt-6">
           <div className="flex justify-between items-center mb-4">
             <Label className="text-base font-semibold">Organiser les éléments du menu</Label>
-            <Button variant="outline" size="sm" onClick={resetOrder}>
-              Réinitialiser l'ordre
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={migrateMenus}>
+                Ajouter les menus manquants
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetOrder}>
+                Réinitialiser l'ordre
+              </Button>
+            </div>
           </div>
           <p className="text-sm text-gray-500 mb-4">
             Glissez-déposez pour réorganiser, utilisez les icônes pour masquer/favoriser
