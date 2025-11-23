@@ -2394,7 +2394,7 @@ async def reset_password_admin(
 
 # ==================== SETTINGS ROUTES ====================
 @api_router.get("/settings")
-async def get_system_settings(current_user: dict = Depends(get_current_user)):
+async def get_system_settings(current_user: dict = Depends(get_current_admin_user)):
     """Récupérer les paramètres système"""
     try:
         settings = await db.system_settings.find_one({"_id": "default"})
