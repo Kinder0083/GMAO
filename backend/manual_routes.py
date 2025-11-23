@@ -81,9 +81,21 @@ async def get_manual_content(
                 del section["_id"]
             filtered_sections.append(section)
         
+        # Filtrer les chapitres qui n'ont plus de sections après filtrage
+        section_ids = {s["id"] for s in filtered_sections}
+        final_chapters = []
+        for chapter in filtered_chapters:
+            # Vérifier si le chapitre a au moins une section visible
+            chapter_has_sections = any(
+                sec_id in section_ids 
+                for sec_id in chapter.get("sections", [])
+            )
+            if chapter_has_sections:
+                final_chapters.append(chapter)
+        
         return {
             "version": current_version.get("version"),
-            "chapters": filtered_chapters,
+            "chapters": final_chapters,
             "sections": filtered_sections,
             "last_updated": current_version.get("release_date")
         }
