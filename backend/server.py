@@ -2807,7 +2807,7 @@ async def request_help(
 ):
     """
     Envoyer une demande d'aide aux administrateurs
-    Limitation : 5 demandes par heure par utilisateur
+    Limitation : 15 demandes par heure par utilisateur
     """
     try:
         user_id = current_user.get("id")
