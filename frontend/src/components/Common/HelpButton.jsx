@@ -17,21 +17,39 @@ const HelpButton = () => {
 
   const captureScreenshot = async () => {
     try {
+      // Sauvegarder l'URL actuelle avant toute manipulation
+      const currentUrl = window.location.href;
+      console.log('📸 Capture de la page:', currentUrl);
+      
       // Fermer temporairement la modale pour la capture
       setOpen(false);
       
-      // Attendre que la modale se ferme complètement
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Attendre que la modale se ferme complètement et que le DOM se stabilise
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Capturer uniquement la zone visible (viewport)
-      const canvas = await html2canvas(document.body, {
+      // Vérifier qu'on est toujours sur la même page
+      if (window.location.href !== currentUrl) {
+        console.warn('⚠️ Navigation détectée pendant la capture, annulation...');
+        setOpen(true);
+        return null;
+      }
+      
+      // Capturer l'élément root de React au lieu de document.body
+      const rootElement = document.getElementById('root');
+      
+      if (!rootElement) {
+        throw new Error('Élément root introuvable');
+      }
+      
+      // Capturer uniquement la zone visible (viewport) du root element
+      const canvas = await html2canvas(rootElement, {
         // Capturer uniquement la zone visible
         windowWidth: window.innerWidth,
         windowHeight: window.innerHeight,
         width: window.innerWidth,
         height: window.innerHeight,
-        x: window.scrollX,
-        y: window.scrollY,
+        x: 0,
+        y: 0,
         scrollX: 0,
         scrollY: 0,
         useCORS: true,
@@ -39,8 +57,16 @@ const HelpButton = () => {
         backgroundColor: '#ffffff',
         scale: 1, // Réduire la résolution pour diminuer la taille du fichier
         logging: false,
-        imageTimeout: 0
+        imageTimeout: 0,
+        // Ignorer les éléments avec ces attributs pour éviter de capturer des éléments cachés
+        ignoreElements: (element) => {
+          // Ignorer les éléments avec display:none ou visibility:hidden
+          const style = window.getComputedStyle(element);
+          return style.display === 'none' || style.visibility === 'hidden';
+        }
       });
+      
+      console.log('✅ Capture réussie pour:', currentUrl);
       
       // Rouvrir la modale après la capture
       setOpen(true);
