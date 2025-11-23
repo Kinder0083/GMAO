@@ -2673,6 +2673,103 @@ async def reset_user_preferences(current_user: dict = Depends(get_current_user))
         logger.error(f"Erreur lors de la réinitialisation des préférences : {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
+
+@api_router.post("/user-preferences/migrate-menus")
+async def migrate_menu_preferences(current_user: dict = Depends(get_current_user)):
+    """Mettre à jour automatiquement les préférences pour ajouter les menus manquants"""
+    try:
+        user_id = current_user.get("id")
+        
+        # Liste complète des menus par défaut
+        complete_menu_items = [
+            { "id": "dashboard", "label": "Tableau de bord", "path": "/dashboard", "icon": "LayoutDashboard", "module": "dashboard", "visible": True, "favorite": False, "order": 0 },
+            { "id": "intervention-requests", "label": "Demandes d'inter.", "path": "/intervention-requests", "icon": "MessageSquare", "module": "interventionRequests", "visible": True, "favorite": False, "order": 1 },
+            { "id": "work-orders", "label": "Ordres de travail", "path": "/work-orders", "icon": "ClipboardList", "module": "workOrders", "visible": True, "favorite": False, "order": 2 },
+            { "id": "improvement-requests", "label": "Demandes d'amél.", "path": "/improvement-requests", "icon": "Lightbulb", "module": "improvementRequests", "visible": True, "favorite": False, "order": 3 },
+            { "id": "improvements", "label": "Améliorations", "path": "/improvements", "icon": "Sparkles", "module": "improvements", "visible": True, "favorite": False, "order": 4 },
+            { "id": "preventive-maintenance", "label": "Maintenance prev.", "path": "/preventive-maintenance", "icon": "Calendar", "module": "preventiveMaintenance", "visible": True, "favorite": False, "order": 5 },
+            { "id": "planning-mprev", "label": "Planning M.Prev.", "path": "/planning-mprev", "icon": "Calendar", "module": "preventiveMaintenance", "visible": True, "favorite": False, "order": 6 },
+            { "id": "assets", "label": "Équipements", "path": "/assets", "icon": "Wrench", "module": "assets", "visible": True, "favorite": False, "order": 7 },
+            { "id": "inventory", "label": "Inventaire", "path": "/inventory", "icon": "Package", "module": "inventory", "visible": True, "favorite": False, "order": 8 },
+            { "id": "locations", "label": "Zones", "path": "/locations", "icon": "MapPin", "module": "locations", "visible": True, "favorite": False, "order": 9 },
+            { "id": "meters", "label": "Compteurs", "path": "/meters", "icon": "Gauge", "module": "meters", "visible": True, "favorite": False, "order": 10 },
+            { "id": "surveillance-plan", "label": "Plan de Surveillance", "path": "/surveillance-plan", "icon": "Eye", "module": "surveillance", "visible": True, "favorite": False, "order": 11 },
+            { "id": "surveillance-rapport", "label": "Rapport Surveillance", "path": "/surveillance-rapport", "icon": "FileText", "module": "surveillance", "visible": True, "favorite": False, "order": 12 },
+            { "id": "presqu-accident", "label": "Presqu'accident", "path": "/presqu-accident", "icon": "AlertTriangle", "module": "presquaccident", "visible": True, "favorite": False, "order": 13 },
+            { "id": "presqu-accident-rapport", "label": "Rapport P.accident", "path": "/presqu-accident-rapport", "icon": "FileText", "module": "presquaccident", "visible": True, "favorite": False, "order": 14 },
+            { "id": "documentations", "label": "Documentations", "path": "/documentations", "icon": "FolderOpen", "module": "documentations", "visible": True, "favorite": False, "order": 15 },
+            { "id": "reports", "label": "Rapports", "path": "/reports", "icon": "BarChart3", "module": "reports", "visible": True, "favorite": False, "order": 16 },
+            { "id": "people", "label": "Équipes", "path": "/people", "icon": "Users", "module": "people", "visible": True, "favorite": False, "order": 17 },
+            { "id": "planning", "label": "Planning", "path": "/planning", "icon": "Calendar", "module": "planning", "visible": True, "favorite": False, "order": 18 },
+            { "id": "vendors", "label": "Fournisseurs", "path": "/vendors", "icon": "ShoppingCart", "module": "vendors", "visible": True, "favorite": False, "order": 19 },
+            { "id": "purchase-history", "label": "Historique Achat", "path": "/purchase-history", "icon": "ShoppingBag", "module": "purchaseHistory", "visible": True, "favorite": False, "order": 20 },
+            { "id": "import-export", "label": "Import / Export", "path": "/import-export", "icon": "Database", "module": "importExport", "visible": True, "favorite": False, "order": 21 }
+        ]
+        
+        # Récupérer les préférences actuelles
+        preferences = await db.user_preferences.find_one({"user_id": user_id})
+        
+        if not preferences:
+            # Si aucune préférence, utiliser la liste complète
+            update_data = {
+                "menu_items": complete_menu_items,
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            await db.user_preferences.insert_one({
+                "user_id": user_id,
+                **update_data
+            })
+            return {"message": "Préférences créées avec tous les menus", "added_count": len(complete_menu_items)}
+        
+        # Récupérer les menus actuels
+        current_menus = preferences.get("menu_items", [])
+        current_menu_ids = {menu["id"] for menu in current_menus}
+        
+        # Trouver les menus manquants
+        missing_menus = [menu for menu in complete_menu_items if menu["id"] not in current_menu_ids]
+        
+        if not missing_menus:
+            return {"message": "Aucun menu manquant", "added_count": 0}
+        
+        # Ajouter les menus manquants en préservant l'ordre
+        updated_menus = current_menus + missing_menus
+        
+        # Réordonner tous les menus
+        for idx, menu in enumerate(updated_menus):
+            menu["order"] = idx
+        
+        # Mettre à jour dans la base de données
+        await db.user_preferences.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "menu_items": updated_menus,
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }
+            }
+        )
+        
+        # Journaliser l'action
+        await audit_service.log_action(
+            user_id=user_id,
+            user_name=current_user.get("name", ""),
+            user_email=current_user.get("email", ""),
+            action=ActionType.UPDATE,
+            entity_type=EntityType.SETTINGS,
+            entity_id=user_id,
+            details=f"Migration des menus - {len(missing_menus)} menu(s) ajouté(s)"
+        )
+        
+        return {
+            "message": f"{len(missing_menus)} menu(s) ajouté(s) avec succès",
+            "added_count": len(missing_menus),
+            "added_menus": [menu["label"] for menu in missing_menus]
+        }
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de la migration des menus : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
 # ==================== SMTP CONFIGURATION ROUTES ====================
 @api_router.get("/smtp/config")
 async def get_smtp_config(current_user: dict = Depends(get_current_admin_user)):
