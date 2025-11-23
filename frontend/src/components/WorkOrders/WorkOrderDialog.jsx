@@ -32,6 +32,11 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
   const [timeHours, setTimeHours] = useState('');
   const [timeMinutes, setTimeMinutes] = useState('');
   const [addingTime, setAddingTime] = useState(false);
+  
+  // États pour les pièces utilisées
+  const [partsUsed, setPartsUsed] = useState([]);
+  const [inventoryItems, setInventoryItems] = useState([]);
+  const [equipmentsList, setEquipmentsList] = useState([]);
 
   const loadComments = async () => {
     if (!workOrder) return;
