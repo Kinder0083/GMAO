@@ -378,3 +378,194 @@ Cliquez sur un badge pour voir les détails.""",
     except Exception as e:
         logger.error(f"Erreur lors de l'initialisation du manuel: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+
+@router.get("/manual/export-pdf")
+async def export_manual_pdf(
+    level_filter: Optional[str] = None,
+    current_user: dict = Depends(get_current_user)
+):
+    """Exporter le manuel en PDF"""
+    try:
+        from reportlab.lib.pagesizes import A4
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import cm
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, PageBreak, Table, TableStyle
+        from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
+        from reportlab.lib import colors
+        from reportlab.pdfbase import pdfmetrics
+        from reportlab.pdfbase.ttfonts import TTFont
+        from io import BytesIO
+        from fastapi.responses import StreamingResponse
+        
+        # Récupérer le contenu du manuel
+        manual_content = await get_manual_content(
+            role_filter=None,
+            module_filter=None,
+            level_filter=level_filter,
+            current_user=current_user
+        )
+        
+        # Créer le buffer PDF en mémoire
+        buffer = BytesIO()
+        
+        # Créer le document PDF
+        doc = SimpleDocTemplate(
+            buffer,
+            pagesize=A4,
+            rightMargin=2*cm,
+            leftMargin=2*cm,
+            topMargin=2*cm,
+            bottomMargin=2*cm,
+            title="Manuel Utilisateur GMAO Iris",
+            author="GMAO Iris"
+        )
+        
+        # Styles
+        styles = getSampleStyleSheet()
+        
+        # Style pour le titre principal
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=24,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=30,
+            alignment=TA_CENTER,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Style pour les chapitres
+        chapter_style = ParagraphStyle(
+            'ChapterTitle',
+            parent=styles['Heading1'],
+            fontSize=18,
+            textColor=colors.HexColor('#1e40af'),
+            spaceAfter=12,
+            spaceBefore=12,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Style pour les sections
+        section_style = ParagraphStyle(
+            'SectionTitle',
+            parent=styles['Heading2'],
+            fontSize=14,
+            textColor=colors.HexColor('#2563eb'),
+            spaceAfter=8,
+            spaceBefore=10,
+            fontName='Helvetica-Bold'
+        )
+        
+        # Style pour le contenu
+        content_style = ParagraphStyle(
+            'ContentText',
+            parent=styles['BodyText'],
+            fontSize=10,
+            leading=14,
+            alignment=TA_JUSTIFY,
+            spaceAfter=6,
+            fontName='Helvetica'
+        )
+        
+        # Construire le contenu du PDF
+        story = []
+        
+        # Page de garde
+        story.append(Spacer(1, 3*cm))
+        story.append(Paragraph("Manuel Utilisateur", title_style))
+        story.append(Paragraph("GMAO Iris", title_style))
+        story.append(Spacer(1, 1*cm))
+        story.append(Paragraph(f"Version {manual_content['version']}", styles['Normal']))
+        story.append(Paragraph(f"Généré le {datetime.now(timezone.utc).strftime('%d/%m/%Y à %H:%M')}", styles['Normal']))
+        story.append(PageBreak())
+        
+        # Table des matières
+        story.append(Paragraph("Table des Matières", chapter_style))
+        story.append(Spacer(1, 0.5*cm))
+        
+        for chapter in manual_content['chapters']:
+            chapter_sections = [s for s in manual_content['sections'] if s['id'] in chapter.get('sections', [])]
+            if chapter_sections:
+                story.append(Paragraph(f"<b>{chapter['title']}</b>", styles['Normal']))
+                for section in chapter_sections:
+                    level_badge = ""
+                    if section.get('level') == 'beginner':
+                        level_badge = " 🎓"
+                    elif section.get('level') == 'advanced':
+                        level_badge = " ⚡"
+                    story.append(Paragraph(f"  • {section['title']}{level_badge}", styles['Normal']))
+                story.append(Spacer(1, 0.3*cm))
+        
+        story.append(PageBreak())
+        
+        # Contenu de chaque chapitre et section
+        for chapter in manual_content['chapters']:
+            # Titre du chapitre
+            story.append(Paragraph(chapter['title'], chapter_style))
+            story.append(Paragraph(chapter.get('description', ''), styles['Italic']))
+            story.append(Spacer(1, 0.5*cm))
+            
+            # Sections du chapitre
+            chapter_sections = [s for s in manual_content['sections'] if s['id'] in chapter.get('sections', [])]
+            
+            for section in chapter_sections:
+                # Titre de section avec badge niveau
+                section_title = section['title']
+                if section.get('level') == 'beginner':
+                    section_title += " 🎓 Débutant"
+                elif section.get('level') == 'advanced':
+                    section_title += " ⚡ Avancé"
+                
+                story.append(Paragraph(section_title, section_style))
+                
+                # Contenu de la section (formatage simple)
+                content = section.get('content', '')
+                
+                # Remplacer les caractères spéciaux pour PDF
+                content = content.replace('&', '&amp;')
+                content = content.replace('<', '&lt;')
+                content = content.replace('>', '&gt;')
+                
+                # Diviser en paragraphes
+                paragraphs = content.split('\n\n')
+                for para in paragraphs:
+                    if para.strip():
+                        # Traiter les listes à puces
+                        if para.strip().startswith('•'):
+                            lines = para.split('\n')
+                            for line in lines:
+                                if line.strip():
+                                    story.append(Paragraph(line.strip(), content_style))
+                        else:
+                            # Convertir markdown gras
+                            para = para.replace('**', '<b>').replace('**', '</b>')
+                            story.append(Paragraph(para.strip(), content_style))
+                        story.append(Spacer(1, 0.2*cm))
+                
+                story.append(Spacer(1, 0.5*cm))
+            
+            # Saut de page entre chapitres
+            story.append(PageBreak())
+        
+        # Générer le PDF
+        doc.build(story)
+        
+        # Préparer la réponse
+        buffer.seek(0)
+        
+        filename = f"manuel_gmao_iris_{datetime.now(timezone.utc).strftime('%Y%m%d')}.pdf"
+        
+        return StreamingResponse(
+            buffer,
+            media_type="application/pdf",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de l'export PDF: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la génération du PDF: {str(e)}")
+
