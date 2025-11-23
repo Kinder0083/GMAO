@@ -1,0 +1,171 @@
+{
+  "version": "1.1",
+  "changes": [
+    "Ajout de tous les chapitres et sections du manuel",
+    "Contenu détaillé pour chaque module",
+    "Workflows complets et pas-à-pas",
+    "FAQ et résolution de problèmes"
+  ],
+  "chapters": [
+    {
+      "id": "ch-001",
+      "title": "🚀 Guide de Démarrage",
+      "description": "Premiers pas avec GMAO Iris - Pour tous les utilisateurs",
+      "icon": "Rocket",
+      "order": 1,
+      "sections": ["sec-001-01", "sec-001-02", "sec-001-03", "sec-001-04"],
+      "target_roles": [],
+      "target_modules": []
+    },
+    {
+      "id": "ch-002",
+      "title": "👤 Gestion des Utilisateurs",
+      "description": "Créer, gérer les utilisateurs et leurs permissions",
+      "icon": "Users",
+      "order": 2,
+      "sections": ["sec-002-01", "sec-002-02", "sec-002-03", "sec-002-04"],
+      "target_roles": ["ADMIN"],
+      "target_modules": ["people"]
+    },
+    {
+      "id": "ch-003",
+      "title": "📋 Ordres de Travail",
+      "description": "Créer, gérer et suivre les ordres de travail",
+      "icon": "ClipboardList",
+      "order": 3,
+      "sections": ["sec-003-01", "sec-003-02", "sec-003-03", "sec-003-04", "sec-003-05", "sec-003-06"],
+      "target_roles": [],
+      "target_modules": ["workOrders"]
+    },
+    {
+      "id": "ch-004",
+      "title": "🔧 Gestion des Équipements",
+      "description": "Ajouter et gérer les équipements et leurs hiérarchies",
+      "icon": "Wrench",
+      "order": 4,
+      "sections": ["sec-004-01", "sec-004-02", "sec-004-03", "sec-004-04", "sec-004-05"],
+      "target_roles": [],
+      "target_modules": ["assets"]
+    },
+    {
+      "id": "ch-005",
+      "title": "📦 Inventaire et Pièces",
+      "description": "Gérer le stock, ajouter des pièces et suivre les quantités",
+      "icon": "Package",
+      "order": 5,
+      "sections": ["sec-005-01", "sec-005-02", "sec-005-03", "sec-005-04"],
+      "target_roles": [],
+      "target_modules": ["inventory"]
+    },
+    {
+      "id": "ch-006",
+      "title": "🗓️ Maintenance Préventive",
+      "description": "Planifier et gérer les maintenances préventives",
+      "icon": "Calendar",
+      "order": 6,
+      "sections": ["sec-006-01", "sec-006-02", "sec-006-03", "sec-006-04"],
+      "target_roles": [],
+      "target_modules": ["preventiveMaintenance"]
+    },
+    {
+      "id": "ch-007",
+      "title": "💡 Demandes et Améliorations",
+      "description": "Gérer les demandes d'intervention et d'amélioration",
+      "icon": "Lightbulb",
+      "order": 7,
+      "sections": ["sec-007-01", "sec-007-02", "sec-007-03", "sec-007-04"],
+      "target_roles": [],
+      "target_modules": ["interventionRequests", "improvementRequests"]
+    },
+    {
+      "id": "ch-008",
+      "title": "🛡️ QHSE - Sécurité",
+      "description": "Plan de surveillance et gestion des presqu'accidents",
+      "icon": "Shield",
+      "order": 8,
+      "sections": ["sec-008-01", "sec-008-02", "sec-008-03"],
+      "target_roles": ["ADMIN", "QHSE"],
+      "target_modules": ["surveillance", "presquaccident"]
+    },
+    {
+      "id": "ch-009",
+      "title": "📊 Rapports et Analyses",
+      "description": "Générer des rapports et analyser les données",
+      "icon": "BarChart3",
+      "order": 9,
+      "sections": ["sec-009-01", "sec-009-02", "sec-009-03"],
+      "target_roles": [],
+      "target_modules": ["reports"]
+    },
+    {
+      "id": "ch-010",
+      "title": "⚙️ Personnalisation",
+      "description": "Personnaliser l'interface selon vos préférences",
+      "icon": "Settings",
+      "order": 10,
+      "sections": ["sec-010-01", "sec-010-02", "sec-010-03", "sec-010-04"],
+      "target_roles": [],
+      "target_modules": []
+    },
+    {
+      "id": "ch-011",
+      "title": "❓ FAQ et Résolution",
+      "description": "Questions fréquentes et solutions aux problèmes courants",
+      "icon": "HelpCircle",
+      "order": 11,
+      "sections": ["sec-011-01", "sec-011-02", "sec-011-03", "sec-011-04", "sec-011-05"],
+      "target_roles": [],
+      "target_modules": []
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec-001-01",
+      "title": "Bienvenue dans GMAO Iris",
+      "content": "GMAO Iris est votre solution complète de gestion de maintenance assistée par ordinateur.\n\n📌 **Qu'est-ce qu'une GMAO ?**\n\nUne GMAO (Gestion de Maintenance Assistée par Ordinateur) est un logiciel qui permet de gérer l'ensemble des activités de maintenance d'une entreprise :\n\n• Planification des interventions\n• Suivi des équipements\n• Gestion des stocks de pièces\n• Traçabilité des actions\n• Analyse des performances\n\n🎯 **Objectifs de GMAO Iris :**\n\n1. **Optimiser** la maintenance préventive et curative\n2. **Réduire** les temps d'arrêt des équipements\n3. **Suivre** l'historique complet de vos installations\n4. **Analyser** les performances avec des rapports détaillés\n5. **Collaborer** efficacement entre les équipes\n\n✅ **Premiers pas recommandés :**\n\n1. Consultez la section \"Connexion et Navigation\"\n2. Familiarisez-vous avec votre rôle et vos permissions\n3. Explorez les différents modules selon vos besoins\n4. N'hésitez pas à utiliser la fonction de recherche dans ce manuel\n\n💡 **Astuce :** Utilisez le bouton \"Aide\" en haut à droite pour signaler un problème ou demander de l'assistance à tout moment.",
+      "order": 1,
+      "parent_id": null,
+      "target_roles": [],
+      "target_modules": [],
+      "level": "beginner",
+      "images": [],
+      "keywords": ["bienvenue", "introduction", "gmao", "objectifs"]
+    },
+    {
+      "id": "sec-001-02",
+      "title": "Connexion et Navigation",
+      "content": "📱 **Se Connecter à GMAO Iris**\n\n1. **Accéder à l'application**\n   • Ouvrez votre navigateur web (Chrome, Firefox, Edge, Safari)\n   • Saisissez l'URL de GMAO Iris\n   • Bookmark la page pour un accès rapide\n\n2. **Première Connexion**\n   • Email : Votre adresse email professionnelle\n   • Mot de passe : Mot de passe fourni par l'administrateur\n   • ⚠️ Changez votre mot de passe lors de la première connexion\n\n3. **Changer votre mot de passe**\n   • Minimum 8 caractères\n   • Au moins une majuscule, une minuscule et un chiffre\n\n🗺️ **Navigation dans l'Interface**\n\n**Sidebar (Barre latérale)**\n• Contient tous les modules principaux\n• Cliquez sur un élément pour accéder au module\n• Utilisez l'icône ☰ pour réduire/agrandir la sidebar\n\n**Header (En-tête)**\n• Logo et nom de l'application à gauche\n• Boutons \"Manuel\" et \"Aide\" au centre\n• Badges de notifications\n• Votre profil à droite\n\n🔔 **Notifications**\n\n• Badge ROUGE : Maintenances préventives dues\n• Badge BLEU : Maintenances bientôt dues\n• Badge ORANGE : Ordres de travail en retard\n• Badge VERT : Alertes stock faible\n\nCliquez sur un badge pour voir les détails.",
+      "order": 2,
+      "parent_id": null,
+      "target_roles": [],
+      "target_modules": [],
+      "level": "beginner",
+      "images": [],
+      "keywords": ["connexion", "navigation", "interface", "notifications"]
+    },
+    {
+      "id": "sec-001-03",
+      "title": "Comprendre les Rôles et Permissions",
+      "content": "🎭 **Les Différents Rôles dans GMAO Iris**\n\nGMAO Iris utilise un système de rôles pour contrôler l'accès aux fonctionnalités :\n\n**1. ADMIN (Administrateur)**\n✅ Accès complet à toutes les fonctionnalités\n✅ Gestion des utilisateurs et permissions\n✅ Configuration du système\n✅ Accès aux données sensibles\n\n**2. DIRECTEUR**\n✅ Vision globale et rapports\n✅ Validation des demandes importantes\n✅ Suivi budgétaire\n❌ Pas d'accès à la configuration système\n\n**3. QHSE (Qualité, Hygiène, Sécurité, Environnement)**\n✅ Plan de surveillance\n✅ Gestion des presqu'accidents\n✅ Audits et conformité\n✅ Rapports QHSE\n\n**4. TECHNICIEN**\n✅ Création et exécution d'ordres de travail\n✅ Gestion des équipements\n✅ Consultation de l'inventaire\n❌ Modification limitée des paramétrages\n\n**5. ADV (Administration Des Ventes)**\n✅ Gestion des fournisseurs\n✅ Historique d'achat\n✅ Import/Export de données\n\n**6. LABO (Laboratoire)**\n✅ Gestion des compteurs\n✅ Saisie des relevés\n✅ Rapports d'analyse\n\n**7. VISUALISEUR**\n✅ Consultation uniquement\n❌ Aucune modification possible\n\n🔐 **Comment Connaître Mon Rôle ?**\n\n1. Cliquez sur votre nom en haut à droite\n2. Votre rôle est affiché sous votre nom\n3. Les modules accessibles varient selon votre rôle\n\n💡 **Besoin de Plus d'Accès ?**\nContactez votre administrateur pour demander une modification de vos permissions.",
+      "order": 3,
+      "parent_id": null,
+      "target_roles": [],
+      "target_modules": [],
+      "level": "beginner",
+      "images": [],
+      "keywords": ["rôles", "permissions", "accès", "droits", "admin", "technicien"]
+    },
+    {
+      "id": "sec-001-04",
+      "title": "Raccourcis Clavier et Astuces",
+      "content": "⌨️ **Raccourcis Clavier Utiles**\n\n**Navigation Générale**\n• **Ctrl + K** : Ouvre la barre de recherche globale\n• **Échap** : Ferme les modales/dialogues\n• **Ctrl + /** : Ouvre ce manuel\n\n**Dans les Tableaux**\n• **↑ ↓** : Naviguer entre les lignes\n• **Entrée** : Ouvrir la ligne sélectionnée\n• **Suppr** : Supprimer la ligne (si autorisé)\n\n**Dans les Formulaires**\n• **Tab** : Passer au champ suivant\n• **Shift + Tab** : Revenir au champ précédent\n• **Ctrl + S** : Sauvegarder (si disponible)\n\n💡 **Astuces de Productivité**\n\n**1. Utilisez les Filtres**\nDans tous les tableaux, utilisez les filtres pour affiner les résultats :\n• Statut, Date, Assigné, etc.\n• Combinez plusieurs filtres\n• Sauvegardez vos filtres favoris\n\n**2. Badges de Notification**\nCliquez sur les badges colorés pour :\n• Voir rapidement les éléments urgents\n• Accéder directement aux items concernés\n• Prendre action immédiatement\n\n**3. Recherche Globale**\n• Utilisez la barre de recherche en haut\n• Recherchez par : numéro d'OT, équipement, pièce\n• Gain de temps considérable !\n\n**4. Export de Données**\nDans la plupart des modules :\n• Bouton \"Exporter\" disponible\n• Format Excel ou PDF\n• Pratique pour les rapports\n\n**5. Commentaires et Historique**\n• Ajoutez des commentaires sur chaque OT\n• Consultez l'historique complet\n• Traçabilité totale\n\n🎯 **Conseil d'Expert**\nPersonnalisez votre interface via le module \"Personnalisation\" :\n• Choisissez vos couleurs préférées\n• Organisez votre menu\n• Sélectionnez votre page d'accueil\n• Configurez vos widgets de tableau de bord",
+      "order": 4,
+      "parent_id": null,
+      "target_roles": [],
+      "target_modules": [],
+      "level": "both",
+      "images": [],
+      "keywords": ["raccourcis", "clavier", "astuces", "productivité", "conseils"]
+    }
+  ]
+}
