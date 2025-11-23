@@ -3420,7 +3420,7 @@ async def get_purchase_stats(
     }
 
 @api_router.post("/purchase-history", response_model=PurchaseHistory)
-async def create_purchase(purchase: PurchaseHistoryCreate, current_user: dict = Depends(get_current_user)):
+async def create_purchase(purchase: PurchaseHistoryCreate, current_user: dict = Depends(require_permission("purchaseHistory", "edit"))):
     """Créer un nouvel achat"""
     purchase_dict = purchase.model_dump()
     
