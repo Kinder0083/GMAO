@@ -631,13 +631,25 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
                           value={part.source_equipment_id || 'custom'}
                           onValueChange={(value) => {
                             if (value === 'custom') {
-                              updatePartUsed(part.id, 'source_equipment_id', null);
-                              updatePartUsed(part.id, 'source_equipment_name', null);
+                              // Texte libre
+                              setPartsUsed(partsUsed.map(p => 
+                                p.id === part.id 
+                                  ? { ...p, source_equipment_id: null, source_equipment_name: null } 
+                                  : p
+                              ));
                             } else {
+                              // Équipement sélectionné
                               const equip = equipmentsList.find(e => e.id === value);
-                              updatePartUsed(part.id, 'source_equipment_id', value);
-                              updatePartUsed(part.id, 'source_equipment_name', equip?.nom || '');
-                              updatePartUsed(part.id, 'custom_source', '');
+                              setPartsUsed(partsUsed.map(p => 
+                                p.id === part.id 
+                                  ? { 
+                                      ...p, 
+                                      source_equipment_id: value,
+                                      source_equipment_name: equip?.nom || '',
+                                      custom_source: ''
+                                    } 
+                                  : p
+                              ));
                             }
                           }}
                         >
