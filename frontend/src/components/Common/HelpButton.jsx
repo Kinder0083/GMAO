@@ -46,25 +46,47 @@ const HelpButton = () => {
       
       console.log('🎯 Début de la capture avec html-to-image...');
       
-      // Obtenir les dimensions du viewport
-      const viewportWidth = window.innerWidth;
-      const viewportHeight = window.innerHeight;
+      // Obtenir les dimensions réelles du viewport
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+      const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+      const scrollX = window.pageXOffset || document.documentElement.scrollLeft;
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
       
-      console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+      console.log(`📐 Viewport: ${viewportWidth}x${viewportHeight}, Scroll: ${scrollX}x${scrollY}`);
       
-      // Capturer document.body avec dimensions explicites du viewport
-      const dataUrl = await toPng(document.body, {
+      // Créer un wrapper temporaire pour capturer exactement la zone visible
+      const captureWrapper = document.createElement('div');
+      captureWrapper.style.position = 'fixed';
+      captureWrapper.style.top = '0';
+      captureWrapper.style.left = '0';
+      captureWrapper.style.width = `${viewportWidth}px`;
+      captureWrapper.style.height = `${viewportHeight}px`;
+      captureWrapper.style.overflow = 'hidden';
+      captureWrapper.style.zIndex = '-1';
+      
+      // Cloner le body et l'ajouter au wrapper
+      const bodyClone = document.body.cloneNode(true);
+      bodyClone.style.position = 'absolute';
+      bodyClone.style.top = `-${scrollY}px`;
+      bodyClone.style.left = `-${scrollX}px`;
+      bodyClone.style.width = `${document.body.scrollWidth}px`;
+      bodyClone.style.height = `${document.body.scrollHeight}px`;
+      
+      captureWrapper.appendChild(bodyClone);
+      document.body.appendChild(captureWrapper);
+      
+      // Capturer le wrapper
+      const dataUrl = await toPng(captureWrapper, {
         quality: 0.8,
         pixelRatio: 1,
         cacheBust: true,
         backgroundColor: '#ffffff',
         width: viewportWidth,
-        height: viewportHeight,
-        style: {
-          width: `${viewportWidth}px`,
-          height: `${viewportHeight}px`
-        }
+        height: viewportHeight
       });
+      
+      // Nettoyer
+      document.body.removeChild(captureWrapper);
       
       console.log('✅ Capture réussie pour:', currentUrl, '- Taille:', dataUrl.length);
       
