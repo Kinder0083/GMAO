@@ -1200,7 +1200,7 @@ async def get_attachments(wo_id: str, current_user: dict = Depends(require_permi
 async def download_attachment(
     wo_id: str,
     attachment_id: str,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("workOrders", "view"))
 ):
     """Télécharger une pièce jointe"""
     try:
