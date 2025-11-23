@@ -1170,7 +1170,7 @@ async def upload_attachment(
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/work-orders/{wo_id}/attachments")
-async def get_attachments(wo_id: str, current_user: dict = Depends(get_current_user)):
+async def get_attachments(wo_id: str, current_user: dict = Depends(require_permission("workOrders", "view"))):
     """Lister les pièces jointes d'un ordre de travail"""
     try:
         wo = await db.work_orders.find_one({"_id": ObjectId(wo_id)})
