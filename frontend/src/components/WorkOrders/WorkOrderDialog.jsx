@@ -131,9 +131,23 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     return `${day}/${month}/${year}`;
   };
 
+  const loadInventoryAndEquipments = async () => {
+    try {
+      const [inventoryResponse, equipmentsResponse] = await Promise.all([
+        inventoryAPI.getAll(),
+        equipmentsAPI.getAll()
+      ]);
+      setInventoryItems(inventoryResponse.data || []);
+      setEquipmentsList(equipmentsResponse.data || []);
+    } catch (error) {
+      console.error('Erreur lors du chargement des données:', error);
+    }
+  };
+
   useEffect(() => {
     if (open && workOrder) {
       loadComments();
+      loadInventoryAndEquipments();
       setIsClosing(false);
     }
   }, [open, workOrder]);
