@@ -56,6 +56,7 @@ const MenuOrganizationSection = () => {
   const { preferences, updatePreferences } = usePreferences();
   const { toast } = useToast();
   const [menuItems, setMenuItems] = useState(preferences?.menu_items || DEFAULT_MENU_ITEMS);
+  const [draggedIndex, setDraggedIndex] = useState(null);
 
   useEffect(() => {
     if (preferences?.menu_items && preferences.menu_items.length > 0) {
@@ -65,16 +66,25 @@ const MenuOrganizationSection = () => {
     }
   }, [preferences]);
 
-  const handleDragEnd = async (result) => {
-    if (!result.destination) return;
+  const handleDragStart = (index) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = async (dropIndex) => {
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
 
     const items = Array.from(menuItems);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const [draggedItem] = items.splice(draggedIndex, 1);
+    items.splice(dropIndex, 0, draggedItem);
 
     // Mettre à jour les ordres
     const updatedItems = items.map((item, index) => ({ ...item, order: index }));
     setMenuItems(updatedItems);
+    setDraggedIndex(null);
 
     try {
       await updatePreferences({ menu_items: updatedItems });
@@ -82,6 +92,10 @@ const MenuOrganizationSection = () => {
     } catch (error) {
       toast({ title: 'Erreur', description: 'Erreur de mise à jour', variant: 'destructive' });
     }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
   };
 
   const toggleVisibility = async (itemId) => {
