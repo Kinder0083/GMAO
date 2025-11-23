@@ -2233,11 +2233,16 @@ async def generate_manual():
         now = datetime.now(timezone.utc)
         version = {
             "id": str(uuid.uuid4()),
-            "version": "1.1",
+            "version": "2.0",
             "release_date": now.isoformat(),
-            "changes": ["Manuel complet avec 30+ sections"],
+            "changes": [
+                "Manuel complet avec 12 chapitres",
+                "49 sections détaillées couvrant tous les modules",
+                "Guide complet de A à Z",
+                "FAQ et dépannage inclus"
+            ],
             "author_id": "system",
-            "author_name": "Système",
+            "author_name": "Système GMAO Iris",
             "is_current": True
         }
         await db.manual_versions.insert_one(version)
