@@ -4677,7 +4677,7 @@ async def add_work_order_comment(
 async def add_work_order_parts(
     work_order_id: str,
     parts: List[PartUsedCreate],
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("workOrders", "edit"))
 ):
     """Ajoute des pièces utilisées à un ordre de travail SANS créer de commentaire"""
     try:
