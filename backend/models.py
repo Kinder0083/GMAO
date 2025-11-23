@@ -399,6 +399,7 @@ class PartUsed(BaseModel):
     source_equipment_id: Optional[str] = None  # ID équipement (si sélectionné)
     source_equipment_name: Optional[str] = None  # Nom équipement
     custom_source: Optional[str] = None  # Source personnalisée (texte libre)
+    user_name: Optional[str] = None  # Nom de l'utilisateur qui a ajouté la pièce
     timestamp: datetime
 
 class PartUsedCreate(BaseModel):
