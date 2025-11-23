@@ -32,12 +32,15 @@ const PermissionsGrid = ({ role, permissions, onChange }) => {
     { key: 'improvementRequests', label: 'Demandes d\'amél.' },
     { key: 'improvements', label: 'Améliorations' },
     { key: 'preventiveMaintenance', label: 'Maintenance prev.' },
+    { key: 'planningMprev', label: 'Planning M.Prev.' },
     { key: 'assets', label: 'Équipements' },
     { key: 'inventory', label: 'Inventaire' },
     { key: 'locations', label: 'Zones' },
     { key: 'meters', label: 'Compteurs' },
     { key: 'surveillance', label: 'Plan de Surveillance' },
+    { key: 'surveillanceRapport', label: 'Rapport Surveillance' },
     { key: 'presquaccident', label: 'Presqu\'accident' },
+    { key: 'presquaccidentRapport', label: 'Rapport P.accident' },
     { key: 'documentations', label: 'Documentations' },
     { key: 'vendors', label: 'Fournisseurs' },
     { key: 'reports', label: 'Rapports' },
@@ -45,7 +48,9 @@ const PermissionsGrid = ({ role, permissions, onChange }) => {
     { key: 'planning', label: 'Planning' },
     { key: 'purchaseHistory', label: 'Historique Achat' },
     { key: 'importExport', label: 'Import / Export' },
-    { key: 'journal', label: 'Journal' }
+    { key: 'journal', label: 'Journal d\'audit' },
+    { key: 'settings', label: 'Paramètres' },
+    { key: 'personalization', label: 'Personnalisation' }
   ];
 
   const handlePermissionChange = (moduleKey, permissionType, checked) => {
