@@ -6424,10 +6424,11 @@ async def initialize_default_manual(current_user: dict):
         logger.info("📚 Initialisation du manuel avec contenu par défaut...")
         
         # Créer la version initiale
+        now = datetime.now(timezone.utc)
         version = {
             "id": str(uuid.uuid4()),
             "version": "1.0",
-            "release_date": datetime.now(timezone.utc),
+            "release_date": now.isoformat(),
             "changes": ["Création initiale du manuel"],
             "author_id": current_user.get("id", "system"),
             "author_name": current_user.get("nom", "Système") + " " + current_user.get("prenom", ""),
