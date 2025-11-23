@@ -899,6 +899,7 @@ async def create_work_order(wo_create: WorkOrderCreate, current_user: dict = Dep
     wo_dict["dateTermine"] = None
     wo_dict["attachments"] = []
     wo_dict["comments"] = []  # Initialiser les commentaires
+    wo_dict["parts_used"] = []  # Initialiser les pièces utilisées
     wo_dict["createdBy"] = current_user.get("id")  # Ajouter le créateur
     wo_dict["_id"] = ObjectId()
     
