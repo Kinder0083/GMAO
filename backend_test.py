@@ -774,14 +774,14 @@ class PartsUsedSystemTester:
         return results
 
 if __name__ == "__main__":
-    tester = DemandeArretJournalisationTester()
-    results = tester.run_demande_arret_journalisation_tests()
+    tester = PartsUsedSystemTester()
+    results = tester.run_parts_used_system_tests()
     
     # Exit with appropriate code
     critical_tests = [
-        "admin_login", "create_demande_arret", "verify_journal_creation", 
-        "approve_demande", "verify_journal_approval", "create_and_refuse_demande", 
-        "final_journal_verification"
+        "admin_login", "get_initial_state", "add_parts_with_comment", 
+        "verify_inventory_deduction", "verify_work_order_update", "external_parts", 
+        "multiple_parts_addition", "verify_audit_journal"
     ]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
