@@ -45,6 +45,8 @@ const ManualButton = () => {
       if (levelFilter !== 'both') params.append('level_filter', levelFilter);
       if (moduleFilter !== 'all') params.append('module_filter', moduleFilter);
       
+      console.log('📚 Chargement du manuel depuis:', `${backend_url}/api/manual/content`);
+      
       const response = await axios.get(
         `${backend_url}/api/manual/content?${params.toString()}`,
         {
@@ -52,6 +54,7 @@ const ManualButton = () => {
         }
       );
       
+      console.log('📚 Manuel chargé:', response.data);
       setManualData(response.data);
       
       // Sélectionner le premier chapitre par défaut
