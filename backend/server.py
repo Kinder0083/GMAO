@@ -2468,6 +2468,205 @@ async def update_system_settings(
         raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
 
 
+
+# ==================== USER PREFERENCES ROUTES ====================
+@api_router.get("/user-preferences", response_model=UserPreferences)
+async def get_user_preferences(current_user: dict = Depends(get_current_user)):
+    """Récupérer les préférences de l'utilisateur connecté"""
+    try:
+        user_id = current_user.get("id")
+        preferences = await db.user_preferences.find_one({"user_id": user_id})
+        
+        if not preferences:
+            # Créer des préférences par défaut
+            default_prefs = {
+                "user_id": user_id,
+                "theme_mode": "light",
+                "primary_color": "#2563eb",
+                "secondary_color": "#64748b",
+                "sidebar_bg_color": "#1f2937",
+                "sidebar_position": "left",
+                "sidebar_behavior": "minimizable",
+                "sidebar_width": 256,
+                "sidebar_icon_color": "#ffffff",
+                "display_density": "normal",
+                "font_size": "normal",
+                "menu_categories": [],
+                "menu_items": [],
+                "default_home_page": "/dashboard",
+                "date_format": "DD/MM/YYYY",
+                "time_format": "24h",
+                "currency": "€",
+                "language": "fr",
+                "dashboard_widgets": [],
+                "dashboard_layout": {},
+                "notifications_enabled": True,
+                "email_notifications": True,
+                "push_notifications": True,
+                "sound_enabled": True,
+                "stock_alert_threshold": 5,
+                "customization_view_mode": "tabs",
+                "preset_theme": None,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            preferences_obj = UserPreferences(**default_prefs)
+            prefs_dict = preferences_obj.model_dump()
+            await db.user_preferences.insert_one(prefs_dict)
+            return preferences_obj
+        
+        return UserPreferences(**serialize_doc(preferences))
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des préférences : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
+@api_router.put("/user-preferences", response_model=UserPreferences)
+async def update_user_preferences(
+    preferences_update: UserPreferencesUpdate,
+    current_user: dict = Depends(get_current_user)
+):
+    """Mettre à jour les préférences de l'utilisateur connecté"""
+    try:
+        user_id = current_user.get("id")
+        
+        # Préparer les données de mise à jour
+        update_data = {k: v for k, v in preferences_update.model_dump().items() if v is not None}
+        update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
+        
+        # Vérifier si les préférences existent
+        existing = await db.user_preferences.find_one({"user_id": user_id})
+        
+        if not existing:
+            # Créer les préférences si elles n'existent pas
+            default_prefs = {
+                "user_id": user_id,
+                "theme_mode": "light",
+                "primary_color": "#2563eb",
+                "secondary_color": "#64748b",
+                "sidebar_bg_color": "#1f2937",
+                "sidebar_position": "left",
+                "sidebar_behavior": "minimizable",
+                "sidebar_width": 256,
+                "sidebar_icon_color": "#ffffff",
+                "display_density": "normal",
+                "font_size": "normal",
+                "menu_categories": [],
+                "menu_items": [],
+                "default_home_page": "/dashboard",
+                "date_format": "DD/MM/YYYY",
+                "time_format": "24h",
+                "currency": "€",
+                "language": "fr",
+                "dashboard_widgets": [],
+                "dashboard_layout": {},
+                "notifications_enabled": True,
+                "email_notifications": True,
+                "push_notifications": True,
+                "sound_enabled": True,
+                "stock_alert_threshold": 5,
+                "customization_view_mode": "tabs",
+                "preset_theme": None,
+                "created_at": datetime.now(timezone.utc).isoformat(),
+                "updated_at": datetime.now(timezone.utc).isoformat()
+            }
+            default_prefs.update(update_data)
+            preferences_obj = UserPreferences(**default_prefs)
+            prefs_dict = preferences_obj.model_dump()
+            await db.user_preferences.insert_one(prefs_dict)
+            
+            # Journaliser l'action
+            await audit_service.log_action(
+                user_id=user_id,
+                action=ActionType.UPDATE,
+                entity_type=EntityType.SETTINGS,
+                entity_id=user_id,
+                description=f"Préférences utilisateur créées"
+            )
+            
+            return preferences_obj
+        else:
+            # Mettre à jour les préférences existantes
+            await db.user_preferences.update_one(
+                {"user_id": user_id},
+                {"$set": update_data}
+            )
+            
+            # Récupérer les préférences mises à jour
+            updated_prefs = await db.user_preferences.find_one({"user_id": user_id})
+            
+            # Journaliser l'action
+            await audit_service.log_action(
+                user_id=user_id,
+                action=ActionType.UPDATE,
+                entity_type=EntityType.SETTINGS,
+                entity_id=user_id,
+                description=f"Préférences utilisateur mises à jour"
+            )
+            
+            return UserPreferences(**serialize_doc(updated_prefs))
+    except Exception as e:
+        logger.error(f"Erreur lors de la mise à jour des préférences : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
+@api_router.post("/user-preferences/reset")
+async def reset_user_preferences(current_user: dict = Depends(get_current_user)):
+    """Réinitialiser les préférences aux valeurs par défaut"""
+    try:
+        user_id = current_user.get("id")
+        
+        # Supprimer les préférences existantes
+        await db.user_preferences.delete_one({"user_id": user_id})
+        
+        # Créer des préférences par défaut
+        default_prefs = {
+            "user_id": user_id,
+            "theme_mode": "light",
+            "primary_color": "#2563eb",
+            "secondary_color": "#64748b",
+            "sidebar_bg_color": "#1f2937",
+            "sidebar_position": "left",
+            "sidebar_behavior": "minimizable",
+            "sidebar_width": 256,
+            "sidebar_icon_color": "#ffffff",
+            "display_density": "normal",
+            "font_size": "normal",
+            "menu_categories": [],
+            "menu_items": [],
+            "default_home_page": "/dashboard",
+            "date_format": "DD/MM/YYYY",
+            "time_format": "24h",
+            "currency": "€",
+            "language": "fr",
+            "dashboard_widgets": [],
+            "dashboard_layout": {},
+            "notifications_enabled": True,
+            "email_notifications": True,
+            "push_notifications": True,
+            "sound_enabled": True,
+            "stock_alert_threshold": 5,
+            "customization_view_mode": "tabs",
+            "preset_theme": None,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }
+        preferences_obj = UserPreferences(**default_prefs)
+        prefs_dict = preferences_obj.model_dump()
+        await db.user_preferences.insert_one(prefs_dict)
+        
+        # Journaliser l'action
+        await audit_service.log_action(
+            user_id=user_id,
+            action=ActionType.UPDATE,
+            entity_type=EntityType.SETTINGS,
+            entity_id=user_id,
+            description=f"Préférences utilisateur réinitialisées"
+        )
+        
+        return {"message": "Préférences réinitialisées avec succès", "preferences": preferences_obj}
+    except Exception as e:
+        logger.error(f"Erreur lors de la réinitialisation des préférences : {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur serveur: {str(e)}")
+
 # ==================== SMTP CONFIGURATION ROUTES ====================
 @api_router.get("/smtp/config")
 async def get_smtp_config(current_user: dict = Depends(get_current_admin_user)):
