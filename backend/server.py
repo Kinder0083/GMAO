@@ -1860,7 +1860,7 @@ async def create_inventory_item(inv_create: InventoryCreate, current_user: dict 
     return Inventory(**serialize_doc(inv_dict))
 
 @api_router.put("/inventory/{inv_id}", response_model=Inventory)
-async def update_inventory_item(inv_id: str, inv_update: InventoryUpdate, current_user: dict = Depends(get_current_user)):
+async def update_inventory_item(inv_id: str, inv_update: InventoryUpdate, current_user: dict = Depends(require_permission("inventory", "edit"))):
     """Modifier un article de l'inventaire"""
     try:
         update_data = {k: v for k, v in inv_update.model_dump().items() if v is not None}
