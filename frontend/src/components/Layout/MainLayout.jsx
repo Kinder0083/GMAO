@@ -458,6 +458,24 @@ const MainLayout = () => {
     }
   };
 
+  // Helper pour obtenir les styles de boutons sidebar
+  const getSidebarButtonStyle = (isActive = false) => ({
+    backgroundColor: isActive ? (preferences?.primary_color || '#2563eb') : 'transparent',
+    color: preferences?.sidebar_icon_color || '#ffffff'
+  });
+
+  const handleSidebarButtonHover = (e, isActive) => {
+    if (!isActive) {
+      e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
+    }
+  };
+
+  const handleSidebarButtonLeave = (e, isActive) => {
+    if (!isActive) {
+      e.currentTarget.style.backgroundColor = 'transparent';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Top Navigation */}
