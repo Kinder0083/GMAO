@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Système de Pièces Utilisées dans les Ordres de Travail
+Tests GET /api/inventory/stats endpoint
 """
 
 import requests
@@ -16,7 +16,7 @@ BACKEND_URL = "https://maintenance-pro-23.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class PartsUsedSystemTester:
+class InventoryStatsTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
