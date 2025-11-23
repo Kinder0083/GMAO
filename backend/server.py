@@ -1877,7 +1877,7 @@ async def update_inventory_item(inv_id: str, inv_update: InventoryUpdate, curren
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.delete("/inventory/{inv_id}")
-async def delete_inventory_item(inv_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_inventory_item(inv_id: str, current_user: dict = Depends(require_permission("inventory", "delete"))):
     """Supprimer un article de l'inventaire"""
     try:
         result = await db.inventory.delete_one({"_id": ObjectId(inv_id)})
