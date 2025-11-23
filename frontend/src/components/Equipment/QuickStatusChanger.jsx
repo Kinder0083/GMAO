@@ -88,6 +88,12 @@ const QuickStatusChanger = ({ equipment, onStatusChange }) => {
             En maintenance
           </span>
         </SelectItem>
+        <SelectItem value="EN_CT">
+          <span className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+            En C.T
+          </span>
+        </SelectItem>
         <SelectItem value="HORS_SERVICE">
           <span className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-red-600"></span>
