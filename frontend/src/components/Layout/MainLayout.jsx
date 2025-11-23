@@ -60,6 +60,39 @@ const MainLayout = () => {
   const [inventoryStats, setInventoryStats] = useState({ rupture: 0, niveau_bas: 0 }); // Stats inventaire
   const { canView, isAdmin } = usePermissions();
 
+  // Gérer le comportement auto-collapse de la sidebar
+  useEffect(() => {
+    if (preferences?.sidebar_behavior === 'auto_collapse') {
+      // En mode auto-collapse, fermer la sidebar après chaque navigation
+      setSidebarOpen(false);
+    } else if (preferences?.sidebar_behavior === 'always_open') {
+      // En mode always_open, toujours ouvrir la sidebar
+      setSidebarOpen(true);
+    }
+    // En mode minimizable, on laisse l'utilisateur gérer manuellement
+  }, [location.pathname, preferences?.sidebar_behavior]);
+
+  // Gérer le clic en dehors de la sidebar en mode auto-collapse
+  useEffect(() => {
+    if (preferences?.sidebar_behavior !== 'auto_collapse' || !sidebarOpen) {
+      return;
+    }
+
+    const handleClickOutside = (event) => {
+      const sidebar = document.getElementById('main-sidebar');
+      const toggleButton = document.getElementById('sidebar-toggle');
+      
+      if (sidebar && !sidebar.contains(event.target) && toggleButton && !toggleButton.contains(event.target)) {
+        setSidebarOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [preferences?.sidebar_behavior, sidebarOpen]);
+
   useEffect(() => {
     // Récupérer les informations de l'utilisateur depuis localStorage
     const userInfo = localStorage.getItem('user');
