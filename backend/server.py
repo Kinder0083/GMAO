@@ -5700,7 +5700,7 @@ async def get_improvement_comments(imp_id: str, current_user: dict = Depends(req
 
 @api_router.get("/improvements", response_model=List[Improvement])
 async def get_improvements(
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_permission("improvements", "view")),
     statut: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
