@@ -1706,7 +1706,7 @@ async def get_locations(current_user: dict = Depends(require_permission("locatio
     return result
 
 @api_router.get("/locations/{loc_id}/children", response_model=List[Location])
-async def get_location_children(loc_id: str, current_user: dict = Depends(get_current_user)):
+async def get_location_children(loc_id: str, current_user: dict = Depends(require_permission("locations", "view"))):
     """Récupérer les sous-zones d'une zone"""
     children = await db.locations.find({"parent_id": loc_id}).to_list(100)
     result = []
