@@ -4812,7 +4812,7 @@ async def create_meter(meter: MeterCreate, current_user: dict = Depends(require_
         raise HTTPException(status_code=500, detail=str(e))
 
 @api_router.get("/meters", response_model=List[Meter])
-async def get_all_meters(current_user: dict = Depends(get_current_user)):
+async def get_all_meters(current_user: dict = Depends(require_permission("meters", "view"))):
     """Récupérer tous les compteurs"""
     try:
         meters = []
