@@ -12,7 +12,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import { Calendar, Clock, User, MapPin, Wrench, FileText, MessageSquare, Send, Plus } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, Wrench, FileText, MessageSquare, Send, Plus, Package, X } from 'lucide-react';
 import AttachmentsList from './AttachmentsList';
 import AttachmentUploader from './AttachmentUploader';
 import StatusChangeDialog from './StatusChangeDialog';
