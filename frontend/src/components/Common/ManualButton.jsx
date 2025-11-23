@@ -340,10 +340,7 @@ const ManualButton = () => {
               {/* Filtres */}
               <select
                 value={levelFilter}
-                onChange={(e) => {
-                  setLevelFilter(e.target.value);
-                  setManualData(null); // Forcer le rechargement
-                }}
+                onChange={(e) => setLevelFilter(e.target.value)}
                 className="px-3 py-2 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="both">Tous niveaux</option>
