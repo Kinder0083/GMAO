@@ -72,7 +72,9 @@ async def get_manual_content(
             if level_filter and section.get("level") != level_filter and section.get("level") != "both":
                 continue
             
-            section["id"] = str(section.get("_id", section.get("id")))
+            # Garder l'ID original (sec-001-01) et non l'ID MongoDB
+            if "id" not in section or not section["id"]:
+                section["id"] = str(section.get("_id"))
             if "_id" in section:
                 del section["_id"]
             filtered_sections.append(section)
