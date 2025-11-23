@@ -6,7 +6,6 @@ import { Input } from '../ui/input';
 import { Switch } from '../ui/switch';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import { useToast } from '../../hooks/use-toast';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import {
   GripVertical,
   Eye,
