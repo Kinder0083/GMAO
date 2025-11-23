@@ -27,7 +27,16 @@ const ManualButton = () => {
   const [expandedChapters, setExpandedChapters] = useState(new Set());
   const [levelFilter, setLevelFilter] = useState('both'); // 'beginner', 'advanced', 'both'
   const [moduleFilter, setModuleFilter] = useState('all');
+  const [adminMode, setAdminMode] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editLevel, setEditLevel] = useState('beginner');
   const { toast } = useToast();
+  
+  // Vérifier si l'utilisateur est ADMIN
+  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  const isAdmin = currentUser.role === 'ADMIN';
 
   // Charger le manuel quand la modale s'ouvre ou quand les filtres changent
   useEffect(() => {
