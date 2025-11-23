@@ -88,6 +88,17 @@ const ManualButton = () => {
       newExpanded.delete(chapterId);
     } else {
       newExpanded.add(chapterId);
+      
+      // Auto-sélectionner la première section du chapitre si aucune section n'est sélectionnée
+      if (!selectedSection) {
+        const chapter = manualData.chapters.find(c => c.id === chapterId);
+        if (chapter && chapter.sections && chapter.sections.length > 0) {
+          const firstSection = manualData.sections.find(s => chapter.sections.includes(s.id));
+          if (firstSection) {
+            selectSection(firstSection, chapter);
+          }
+        }
+      }
     }
     setExpandedChapters(newExpanded);
   };
