@@ -6165,6 +6165,10 @@ api_router.include_router(autorisation_router)
 from demande_arret_routes import router as demande_arret_router
 api_router.include_router(demande_arret_router)
 
+# Manuel utilisateur
+from manual_routes import router as manual_router
+api_router.include_router(manual_router)
+
 # Include the router in the main app (MUST be after all endpoint definitions)
 app.include_router(api_router)
 
