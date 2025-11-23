@@ -48,10 +48,15 @@ const SidebarSection = () => {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="always_open">Toujours ouvert</SelectItem>
-                <SelectItem value="minimizable">Minimisable</SelectItem>
+                <SelectItem value="minimizable">Minimisable (manuel)</SelectItem>
                 <SelectItem value="auto_collapse">Auto-collapse</SelectItem>
               </SelectContent>
             </Select>
+            <p className="text-xs text-gray-500 mt-2">
+              {localPrefs.sidebar_behavior === 'always_open' && '📌 La sidebar reste toujours ouverte'}
+              {localPrefs.sidebar_behavior === 'minimizable' && '👆 Contrôle manuel via le bouton'}
+              {localPrefs.sidebar_behavior === 'auto_collapse' && '⚡ Se ferme automatiquement après navigation et clic en dehors'}
+            </p>
           </div>
           <div>
             <Label>Largeur (px): {localPrefs.sidebar_width}</Label>
