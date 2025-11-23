@@ -215,8 +215,10 @@ export const auditAPI = {
 
 // ==================== WORK ORDER COMMENTS ====================
 export const commentsAPI = {
-  addWorkOrderComment: async (workOrderId, text) => {
-    const response = await api.post(`/work-orders/${workOrderId}/comments`, { text });
+  addWorkOrderComment: async (workOrderId, data) => {
+    // Accepte soit un string (ancien format) soit un objet (nouveau format avec parts_used)
+    const payload = typeof data === 'string' ? { text: data, parts_used: [] } : data;
+    const response = await api.post(`/work-orders/${workOrderId}/comments`, payload);
     return response.data;
   },
   getWorkOrderComments: async (workOrderId) => {
