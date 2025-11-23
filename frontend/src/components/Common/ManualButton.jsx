@@ -55,16 +55,27 @@ const ManualButton = () => {
       );
       
       console.log('📚 Manuel chargé:', response.data);
+      console.log('📚 Chapitres:', response.data.chapters);
+      console.log('📚 Sections:', response.data.sections);
       setManualData(response.data);
       
       // Sélectionner le premier chapitre par défaut
       if (response.data.chapters && response.data.chapters.length > 0) {
-        setSelectedChapter(response.data.chapters[0]);
+        const firstChapter = response.data.chapters[0];
+        setSelectedChapter(firstChapter);
+        
+        console.log('📚 Premier chapitre:', firstChapter);
+        console.log('📚 Sections du chapitre:', firstChapter.sections);
+        
+        // Ouvrir automatiquement le premier chapitre
+        setExpandedChapters(new Set([firstChapter.id]));
         
         // Sélectionner la première section du premier chapitre
         const firstSection = response.data.sections.find(
-          s => response.data.chapters[0].sections.includes(s.id)
+          s => firstChapter.sections && firstChapter.sections.includes(s.id)
         );
+        console.log('📚 Première section trouvée:', firstSection);
+        
         if (firstSection) {
           setSelectedSection(firstSection);
         }
