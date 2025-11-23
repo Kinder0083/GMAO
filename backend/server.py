@@ -5343,7 +5343,7 @@ app.add_middleware(
 @api_router.post("/improvement-requests", response_model=ImprovementRequest, status_code=201)
 async def create_improvement_request(
     request: ImprovementRequestCreate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("improvementRequests", "edit"))
 ):
     """Créer une nouvelle demande d'amélioration"""
     try:
