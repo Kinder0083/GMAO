@@ -150,56 +150,49 @@ const MenuOrganizationSection = () => {
             Glissez-déposez pour réorganiser, utilisez les icônes pour masquer/favoriser
           </p>
 
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="menu-items">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef} className="space-y-2">
-                  {menuItems.map((item, index) => (
-                    <Draggable key={item.id} draggableId={item.id} index={index}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className={`flex items-center gap-3 p-3 rounded-lg border ${
-                            snapshot.isDragging ? 'bg-blue-50 border-blue-300' : 'bg-white border-gray-200'
-                          } ${!item.visible ? 'opacity-50' : ''}`}
-                        >
-                          <div {...provided.dragHandleProps} className="cursor-grab active:cursor-grabbing">
-                            <GripVertical size={20} className="text-gray-400" />
-                          </div>
-
-                          <div className="flex-1 flex items-center gap-2">
-                            <span className="text-sm font-medium">{item.label}</span>
-                            {item.favorite && <Star size={14} className="text-yellow-500 fill-yellow-500" />}
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleFavorite(item.id)}
-                              title={item.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
-                            >
-                              <Star size={16} className={item.favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleVisibility(item.id)}
-                              title={item.visible ? 'Masquer' : 'Afficher'}
-                            >
-                              {item.visible ? <Eye size={16} /> : <EyeOff size={16} />}
-                            </Button>
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+          <div className="space-y-2">
+            {menuItems.map((item, index) => (
+              <div
+                key={item.id}
+                draggable
+                onDragStart={() => handleDragStart(index)}
+                onDragOver={handleDragOver}
+                onDrop={() => handleDrop(index)}
+                onDragEnd={handleDragEnd}
+                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  draggedIndex === index ? 'bg-blue-50 border-blue-300 opacity-50' : 'bg-white border-gray-200'
+                } ${!item.visible ? 'opacity-50' : ''} cursor-move hover:border-blue-200`}
+              >
+                <div className="cursor-grab active:cursor-grabbing">
+                  <GripVertical size={20} className="text-gray-400" />
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+
+                <div className="flex-1 flex items-center gap-2">
+                  <span className="text-sm font-medium">{item.label}</span>
+                  {item.favorite && <Star size={14} className="text-yellow-500 fill-yellow-500" />}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleFavorite(item.id)}
+                    title={item.favorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+                  >
+                    <Star size={16} className={item.favorite ? 'text-yellow-500 fill-yellow-500' : 'text-gray-400'} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => toggleVisibility(item.id)}
+                    title={item.visible ? 'Masquer' : 'Afficher'}
+                  >
+                    {item.visible ? <Eye size={16} /> : <EyeOff size={16} />}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </CardContent>
       </Card>
     </div>
