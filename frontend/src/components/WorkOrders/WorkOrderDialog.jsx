@@ -57,14 +57,52 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     
     try {
       setSendingComment(true);
-      await commentsAPI.addWorkOrderComment(workOrder.id, newComment);
+      // Envoyer commentaire avec les pièces utilisées
+      await commentsAPI.addWorkOrderComment(workOrder.id, {
+        text: newComment,
+        parts_used: partsUsed
+      });
       setNewComment('');
+      setPartsUsed([]); // Réinitialiser les pièces
       await loadComments();
+      
+      toast({
+        title: 'Succès',
+        description: 'Commentaire ajouté avec succès'
+      });
     } catch (error) {
       console.error('Erreur lors de l\'ajout du commentaire:', error);
+      toast({
+        title: 'Erreur',
+        description: 'Erreur lors de l\'ajout du commentaire',
+        variant: 'destructive'
+      });
     } finally {
       setSendingComment(false);
     }
+  };
+
+  const addPartUsed = () => {
+    setPartsUsed([...partsUsed, {
+      id: Date.now().toString(),
+      inventory_item_id: null,
+      inventory_item_name: null,
+      custom_part_name: '',
+      quantity: 1,
+      source_equipment_id: null,
+      source_equipment_name: null,
+      custom_source: ''
+    }]);
+  };
+
+  const removePartUsed = (id) => {
+    setPartsUsed(partsUsed.filter(p => p.id !== id));
+  };
+
+  const updatePartUsed = (id, field, value) => {
+    setPartsUsed(partsUsed.map(part => 
+      part.id === id ? { ...part, [field]: value } : part
+    ));
   };
 
   const handleAddTime = async () => {
