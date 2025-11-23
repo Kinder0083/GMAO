@@ -345,59 +345,101 @@ class PartsUsedSystemTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_verify_journal_creation(self):
-        """TEST 5: Vérifier l'entrée dans le journal après création"""
-        self.log("🧪 TEST 5: Vérifier l'entrée dans le journal après création")
+    def test_external_parts(self):
+        """TEST 5: Test avec pièce externe (texte libre)"""
+        self.log("🧪 TEST 5: Test avec pièce externe (texte libre)")
         
-        if not self.created_demande_id:
-            self.log("❌ Aucune demande créée pour vérifier le journal", "ERROR")
+        if not self.test_work_order_id:
+            self.log("❌ ID ordre de travail manquant", "ERROR")
             return False
         
         try:
-            # Récupérer les logs d'audit avec filtre sur DEMANDE_ARRET
-            response = self.admin_session.get(
-                f"{BACKEND_URL}/audit-logs",
-                params={
-                    "entity_type": "DEMANDE_ARRET",
-                    "limit": 50
-                },
+            # Sauvegarder la quantité actuelle pour vérifier qu'elle ne change pas
+            response = self.admin_session.get(f"{BACKEND_URL}/inventory", timeout=15)
+            if response.status_code != 200:
+                self.log("❌ Impossible de récupérer l'inventaire pour comparaison", "ERROR")
+                return False
+            
+            inventory_before = response.json()
+            test_item_before = None
+            for item in inventory_before:
+                if item.get('id') == self.test_inventory_item_id:
+                    test_item_before = item
+                    break
+            
+            if not test_item_before:
+                self.log("❌ Pièce d'inventaire non trouvée pour comparaison", "ERROR")
+                return False
+            
+            quantity_before = test_item_before.get('quantite', 0)
+            
+            # POST /api/work-orders/{id}/comments avec pièce externe
+            comment_data = {
+                "text": "Test pièce externe",
+                "parts_used": [
+                    {
+                        "inventory_item_id": None,
+                        "custom_part_name": "Pièce externe test",
+                        "quantity": 1,
+                        "custom_source": "Fournisseur externe"
+                    }
+                ]
+            }
+            
+            self.log("📤 Envoi du commentaire avec pièce externe...")
+            self.log("   Pièce: Pièce externe test (Quantité: 1)")
+            self.log("   Source: Fournisseur externe")
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/comments",
+                json=comment_data,
                 timeout=15
             )
             
             if response.status_code == 200:
                 data = response.json()
-                logs = data.get('logs', [])
-                self.log(f"✅ Journal récupéré - {len(logs)} entrées trouvées")
+                self.log("✅ Commentaire avec pièce externe ajouté avec succès")
                 
-                # Chercher l'entrée de création de notre demande
-                creation_log = None
-                for log in logs:
-                    if (log.get('entity_id') == self.created_demande_id and 
-                        log.get('action') == 'CREATE' and
-                        log.get('entity_type') == 'DEMANDE_ARRET'):
-                        creation_log = log
-                        break
-                
-                if creation_log:
-                    self.log("✅ SUCCÈS: Entrée de création trouvée dans le journal")
-                    self.log(f"✅ Action: {creation_log.get('action')}")
-                    self.log(f"✅ Entity Type: {creation_log.get('entity_type')}")
-                    self.log(f"✅ Entity ID: {creation_log.get('entity_id')}")
-                    self.log(f"✅ Details: {creation_log.get('details')}")
-                    
-                    # Vérifier que les détails contiennent les noms des équipements et destinataire
-                    details = creation_log.get('details', '')
-                    if 'équipement' in details.lower() and 'destinataire' in details.lower():
-                        self.log("✅ SUCCÈS: Détails contiennent les noms des équipements et destinataire")
-                        return True
+                # Vérifier que la pièce externe est dans la réponse
+                parts_used = data.get('parts_used', [])
+                if parts_used and len(parts_used) > 0:
+                    part = parts_used[0]
+                    if (part.get('custom_part_name') == 'Pièce externe test' and 
+                        part.get('inventory_item_id') is None):
+                        self.log("✅ Pièce externe correctement enregistrée")
+                        
+                        # Vérifier que l'inventaire n'a PAS été déduit
+                        response = self.admin_session.get(f"{BACKEND_URL}/inventory", timeout=15)
+                        if response.status_code == 200:
+                            inventory_after = response.json()
+                            test_item_after = None
+                            for item in inventory_after:
+                                if item.get('id') == self.test_inventory_item_id:
+                                    test_item_after = item
+                                    break
+                            
+                            if test_item_after:
+                                quantity_after = test_item_after.get('quantite', 0)
+                                if quantity_after == quantity_before:
+                                    self.log("✅ SUCCÈS: Aucune déduction d'inventaire pour pièce externe")
+                                    return True
+                                else:
+                                    self.log(f"❌ ÉCHEC: Déduction incorrecte pour pièce externe. Avant: {quantity_before}, Après: {quantity_after}", "ERROR")
+                                    return False
+                            else:
+                                self.log("❌ Pièce d'inventaire non trouvée après test", "ERROR")
+                                return False
+                        else:
+                            self.log("❌ Impossible de vérifier l'inventaire après test", "ERROR")
+                            return False
                     else:
-                        self.log("❌ ÉCHEC: Détails incomplets dans le journal", "ERROR")
+                        self.log("❌ Pièce externe incorrecte dans la réponse", "ERROR")
                         return False
                 else:
-                    self.log("❌ ÉCHEC: Entrée de création non trouvée dans le journal", "ERROR")
+                    self.log("❌ Aucune pièce utilisée dans la réponse", "ERROR")
                     return False
             else:
-                self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Ajout commentaire avec pièce externe échoué - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
