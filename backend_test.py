@@ -446,30 +446,83 @@ class PartsUsedSystemTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_approve_demande(self):
-        """TEST 6: Approuver une demande via le token"""
-        self.log("🧪 TEST 6: Approuver une demande via le token")
+    def test_multiple_parts_addition(self):
+        """TEST 6: Test d'ajout multiple de pièces"""
+        self.log("🧪 TEST 6: Test d'ajout multiple de pièces")
         
-        if not self.validation_token:
-            self.log("❌ Aucun token de validation disponible", "ERROR")
+        if not self.test_work_order_id:
+            self.log("❌ ID ordre de travail manquant", "ERROR")
             return False
         
         try:
+            # POST /api/work-orders/{id}/comments avec 3 pièces différentes
+            comment_data = {
+                "text": "Test ajout multiple de pièces",
+                "parts_used": [
+                    {
+                        "inventory_item_id": self.test_inventory_item_id,
+                        "inventory_item_name": self.inventory_item_name,
+                        "quantity": 1,
+                        "source_equipment_id": self.test_equipment_id,
+                        "source_equipment_name": self.equipment_name
+                    },
+                    {
+                        "inventory_item_id": None,
+                        "custom_part_name": "Pièce externe 1",
+                        "quantity": 2,
+                        "custom_source": "Fournisseur A"
+                    },
+                    {
+                        "inventory_item_id": None,
+                        "custom_part_name": "Pièce externe 2",
+                        "quantity": 1,
+                        "custom_source": "Fournisseur B"
+                    }
+                ]
+            }
+            
+            self.log("📤 Envoi du commentaire avec 3 pièces différentes...")
+            self.log("   1. Pièce d'inventaire (Quantité: 1)")
+            self.log("   2. Pièce externe 1 (Quantité: 2)")
+            self.log("   3. Pièce externe 2 (Quantité: 1)")
+            
             response = self.admin_session.post(
-                f"{BACKEND_URL}/demandes-arret/validate/{self.validation_token}",
-                json={"commentaire": "Approuvé pour test de journalisation"},
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/comments",
+                json=comment_data,
                 timeout=15
             )
             
             if response.status_code == 200:
                 data = response.json()
-                self.log(f"✅ Demande approuvée - Status: 200 OK")
-                self.log(f"✅ Message: {data.get('message')}")
-                self.log(f"✅ Demande ID: {data.get('demande_id')}")
-                return True
+                parts_used = data.get('parts_used', [])
+                
+                if len(parts_used) == 3:
+                    self.log("✅ SUCCÈS: 3 pièces ajoutées correctement")
+                    
+                    # Vérifier chaque pièce
+                    inventory_part = None
+                    external_parts = []
+                    
+                    for part in parts_used:
+                        if part.get('inventory_item_id'):
+                            inventory_part = part
+                        else:
+                            external_parts.append(part)
+                    
+                    if inventory_part and len(external_parts) == 2:
+                        self.log("✅ 1 pièce d'inventaire et 2 pièces externes identifiées")
+                        self.log(f"✅ Pièce inventaire: {inventory_part.get('inventory_item_name')}")
+                        self.log(f"✅ Pièce externe 1: {external_parts[0].get('custom_part_name')}")
+                        self.log(f"✅ Pièce externe 2: {external_parts[1].get('custom_part_name')}")
+                        return True
+                    else:
+                        self.log("❌ ÉCHEC: Répartition incorrecte des pièces", "ERROR")
+                        return False
+                else:
+                    self.log(f"❌ ÉCHEC: Nombre incorrect de pièces. Attendu: 3, Trouvé: {len(parts_used)}", "ERROR")
+                    return False
             else:
-                self.log(f"❌ Approbation échouée - Status: {response.status_code}", "ERROR")
-                self.log(f"Response: {response.text}", "ERROR")
+                self.log(f"❌ Ajout multiple échoué - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
