@@ -44,6 +44,7 @@ import BonDeTravailForm from "./pages/BonDeTravailForm";
 import BonDeTravailView from "./pages/BonDeTravailView";
 import AutorisationParticuliereForm from "./pages/AutorisationParticuliereForm";
 import AutorisationParticuliereView from "./pages/AutorisationParticuliereView";
+import Personnalisation from "./pages/Personnalisation";
 
 // Protected Route Component with Token Validation
 const ProtectedRoute = ({ children }) => {
