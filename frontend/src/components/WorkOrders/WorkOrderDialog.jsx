@@ -202,27 +202,42 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     try {
       // Soumettre les pièces utilisées si présentes (AVANT le changement de statut)
       if (partsUsed.length > 0) {
-        // Nettoyer les données avant envoi (retirer l'id temporaire)
-        const cleanedParts = partsUsed.map(part => ({
-          inventory_item_id: part.inventory_item_id,
-          inventory_item_name: part.inventory_item_name,
-          custom_part_name: part.custom_part_name,
-          quantity: part.quantity,
-          source_equipment_id: part.source_equipment_id,
-          source_equipment_name: part.source_equipment_name,
-          custom_source: part.custom_source
-        }));
+        // Filtrer pour ne garder que les pièces qui ont une sélection ou un nom personnalisé
+        const validParts = partsUsed.filter(part => 
+          part.inventory_item_id || (part.custom_part_name && part.custom_part_name.trim() !== '')
+        );
         
-        console.log('Envoi des pièces:', cleanedParts); // Debug
-        
-        await commentsAPI.addWorkOrderComment(workOrder.id, {
-          text: "Pièces utilisées lors de la fermeture de l'ordre",
-          parts_used: cleanedParts
-        });
-        toast({
-          title: 'Pièces enregistrées',
-          description: `${partsUsed.length} pièce(s) utilisée(s) enregistrée(s)`
-        });
+        if (validParts.length > 0) {
+          // Nettoyer les données avant envoi
+          const cleanedParts = validParts.map(part => {
+            const cleanPart = {
+              inventory_item_id: part.inventory_item_id || null,
+              inventory_item_name: part.inventory_item_name || null,
+              custom_part_name: part.custom_part_name || null,
+              quantity: part.quantity || 0
+            };
+            
+            // N'ajouter les champs "Prélevé Sur" que s'ils sont remplis
+            if (part.source_equipment_id || (part.custom_source && part.custom_source.trim() !== '')) {
+              cleanPart.source_equipment_id = part.source_equipment_id || null;
+              cleanPart.source_equipment_name = part.source_equipment_name || null;
+              cleanPart.custom_source = part.custom_source || null;
+            }
+            
+            return cleanPart;
+          });
+          
+          console.log('Envoi des pièces:', cleanedParts); // Debug
+          
+          await commentsAPI.addWorkOrderComment(workOrder.id, {
+            text: "Pièces utilisées lors de la fermeture de l'ordre",
+            parts_used: cleanedParts
+          });
+          toast({
+            title: 'Pièces enregistrées',
+            description: `${cleanedParts.length} pièce(s) utilisée(s) enregistrée(s)`
+          });
+        }
         setPartsUsed([]); // Réinitialiser
       }
 
