@@ -281,47 +281,64 @@ class PartsUsedSystemTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_get_all_demandes_arret(self):
-        """TEST 4: Récupérer toutes les demandes d'arrêt"""
-        self.log("🧪 TEST 4: Récupérer toutes les demandes d'arrêt")
+    def test_verify_work_order_update(self):
+        """TEST 4: Vérifier que l'ordre de travail contient les pièces utilisées"""
+        self.log("🧪 TEST 4: Vérifier la mise à jour de l'ordre de travail")
+        
+        if not self.test_work_order_id:
+            self.log("❌ ID ordre de travail manquant", "ERROR")
+            return False
         
         try:
+            # GET /api/work-orders/{id} - Vérifier que les pièces sont dans l'historique
+            self.log("📋 Vérification de l'ordre de travail mis à jour...")
             response = self.admin_session.get(
-                f"{BACKEND_URL}/demandes-arret/",
+                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}",
                 timeout=15
             )
             
             if response.status_code == 200:
-                demandes = response.json()
-                self.log(f"✅ Liste des demandes récupérée - {len(demandes)} demandes")
+                work_order = response.json()
+                self.log(f"✅ Ordre de travail récupéré - ID: {work_order.get('id')}")
                 
-                # Chercher notre demande de test
-                test_demande = None
-                for demande in demandes:
-                    if demande.get('id') in self.test_demandes:
-                        test_demande = demande
-                        break
+                # Vérifier les commentaires
+                comments = work_order.get('comments', [])
+                if comments:
+                    latest_comment = comments[-1]  # Dernier commentaire
+                    self.log(f"✅ Commentaire présent: {latest_comment.get('text')}")
+                    self.log(f"✅ Timestamp: {latest_comment.get('timestamp')}")
+                else:
+                    self.log("❌ Aucun commentaire trouvé", "ERROR")
+                    return False
                 
-                if test_demande:
-                    self.log(f"✅ Demande de test trouvée - ID: {test_demande.get('id')}")
-                    self.log(f"✅ Statut: {test_demande.get('statut')}")
-                    self.log(f"✅ Demandeur: {test_demande.get('demandeur_nom')}")
-                    self.log(f"✅ Destinataire: {test_demande.get('destinataire_nom')}")
+                # Vérifier les pièces utilisées
+                parts_used = work_order.get('parts_used', [])
+                if parts_used:
+                    self.log(f"✅ Pièces utilisées trouvées: {len(parts_used)} pièce(s)")
                     
-                    # Vérifier que la demande créée est incluse
-                    if (test_demande.get('statut') == 'EN_ATTENTE' and
-                        test_demande.get('commentaire') == 'Test demande arrêt pour maintenance préventive'):
-                        self.log("✅ SUCCÈS: Demande créée trouvée dans la liste")
+                    # Vérifier la première pièce
+                    part = parts_used[-1]  # Dernière pièce ajoutée
+                    self.log(f"✅ Pièce: {part.get('inventory_item_name')}")
+                    self.log(f"✅ Quantité: {part.get('quantity')}")
+                    self.log(f"✅ Source: {part.get('source_equipment_name')}")
+                    self.log(f"✅ Timestamp: {part.get('timestamp')}")
+                    
+                    # Vérifier tous les champs requis
+                    required_fields = ['id', 'inventory_item_id', 'inventory_item_name', 'quantity', 
+                                     'source_equipment_id', 'source_equipment_name', 'timestamp']
+                    missing_fields = [field for field in required_fields if not part.get(field)]
+                    
+                    if not missing_fields:
+                        self.log("✅ SUCCÈS: Tous les champs requis sont présents")
                         return True
                     else:
-                        self.log("❌ ÉCHEC: Données de la demande incorrectes", "ERROR")
+                        self.log(f"❌ ÉCHEC: Champs manquants: {missing_fields}", "ERROR")
                         return False
                 else:
-                    self.log("❌ Demande de test non trouvée dans la liste", "ERROR")
+                    self.log("❌ ÉCHEC: Aucune pièce utilisée trouvée dans l'ordre de travail", "ERROR")
                     return False
-                    
             else:
-                self.log(f"❌ Récupération des demandes échouée - Status: {response.status_code}", "ERROR")
+                self.log(f"❌ Récupération ordre de travail échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
