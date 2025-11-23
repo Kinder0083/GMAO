@@ -447,14 +447,13 @@ class InventoryStatsTester:
         return results
 
 if __name__ == "__main__":
-    tester = PartsUsedSystemTester()
-    results = tester.run_parts_used_system_tests()
+    tester = InventoryStatsTester()
+    results = tester.run_inventory_stats_tests()
     
     # Exit with appropriate code
     critical_tests = [
-        "admin_login", "get_initial_state", "add_parts_with_comment", 
-        "verify_inventory_deduction", "verify_work_order_update", "external_parts", 
-        "multiple_parts_addition", "verify_audit_journal"
+        "admin_login", "get_inventory_data", "inventory_stats_endpoint", 
+        "validate_calculations", "detailed_analysis"
     ]
     
     critical_passed = sum(results.get(test, False) for test in critical_tests)
