@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Backend API Testing Script for GMAO Application
-Tests Demande d'Arrêt pour Maintenance - Journalisation automatique
+Tests Système de Pièces Utilisées dans les Ordres de Travail
 """
 
 import requests
@@ -16,7 +16,7 @@ BACKEND_URL = "https://maint-dashboard-7.preview.emergentagent.com/api"
 ADMIN_EMAIL = "admin@gmao-iris.local"
 ADMIN_PASSWORD = "Admin123!"
 
-class DemandeArretJournalisationTester:
+class PartsUsedSystemTester:
     def __init__(self):
         self.admin_session = requests.Session()
         self.admin_token = None
