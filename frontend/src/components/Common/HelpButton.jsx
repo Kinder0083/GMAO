@@ -46,13 +46,12 @@ const HelpButton = () => {
       
       console.log('🎯 Début de la capture avec html-to-image...');
       
-      // Capturer avec html-to-image (meilleure gestion CSS)
-      const rootElement = document.getElementById('root') || document.body;
-      
-      const dataUrl = await toPng(rootElement, {
+      // Capturer document.body pour une capture complète du viewport
+      const dataUrl = await toPng(document.body, {
         quality: 0.8,
         pixelRatio: 1,
-        cacheBust: true
+        cacheBust: true,
+        backgroundColor: '#ffffff'
       });
       
       console.log('✅ Capture réussie pour:', currentUrl, '- Taille:', dataUrl.length);
