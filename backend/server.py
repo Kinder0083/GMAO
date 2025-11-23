@@ -4099,6 +4099,7 @@ async def add_work_order_comment(
                 "inventory_item_name": part.inventory_item_name,
                 "custom_part_name": part.custom_part_name,
                 "quantity": part.quantity,
+                "user_name": f"{current_user['prenom']} {current_user['nom']}",
                 "timestamp": datetime.now(timezone.utc)
             }
             
