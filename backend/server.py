@@ -1357,7 +1357,7 @@ async def get_equipment_detail(eq_id: str, current_user: dict = Depends(require_
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.get("/equipments/{eq_id}/children", response_model=List[Equipment])
-async def get_equipment_children(eq_id: str, current_user: dict = Depends(get_current_user)):
+async def get_equipment_children(eq_id: str, current_user: dict = Depends(require_permission("assets", "view"))):
     """Récupérer tous les sous-équipements d'un équipement"""
     try:
         # Vérifier que le parent existe
