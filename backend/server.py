@@ -4574,7 +4574,7 @@ async def export_audit_logs(
 async def add_work_order_comment(
     work_order_id: str,
     comment: CommentWithPartsCreate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("workOrders", "edit"))
 ):
     """Ajoute un commentaire et des pièces utilisées à un ordre de travail"""
     try:
