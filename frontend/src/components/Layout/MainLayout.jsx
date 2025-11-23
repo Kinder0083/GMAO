@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 import UpdateNotificationBadge from '../Common/UpdateNotificationBadge';
+import HelpButton from '../Common/HelpButton';
 import RecentUpdatePopup from '../Common/RecentUpdatePopup';
 import InactivityHandler from '../Common/InactivityHandler';
 import TokenValidator from '../Common/TokenValidator';
