@@ -70,10 +70,11 @@ const ManualButton = () => {
         }
       }
     } catch (error) {
-      console.error('Erreur chargement manuel:', error);
+      console.error('❌ Erreur chargement manuel:', error);
+      console.error('❌ Détails:', error.response?.data || error.message);
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger le manuel',
+        description: error.response?.data?.detail || 'Impossible de charger le manuel',
         variant: 'destructive'
       });
     } finally {
