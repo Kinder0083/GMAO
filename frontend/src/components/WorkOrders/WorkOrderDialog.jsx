@@ -57,10 +57,34 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
     
     try {
       setSendingComment(true);
-      // Envoyer commentaire avec les pièces utilisées
+      
+      // Filtrer pour ne garder que les pièces valides
+      const validParts = partsUsed.filter(part => 
+        part.inventory_item_id || (part.custom_part_name && part.custom_part_name.trim() !== '')
+      );
+      
+      const cleanedParts = validParts.map(part => {
+        const cleanPart = {
+          inventory_item_id: part.inventory_item_id || null,
+          inventory_item_name: part.inventory_item_name || null,
+          custom_part_name: part.custom_part_name || null,
+          quantity: part.quantity || 0
+        };
+        
+        // N'ajouter les champs "Prélevé Sur" que s'ils sont remplis
+        if (part.source_equipment_id || (part.custom_source && part.custom_source.trim() !== '')) {
+          cleanPart.source_equipment_id = part.source_equipment_id || null;
+          cleanPart.source_equipment_name = part.source_equipment_name || null;
+          cleanPart.custom_source = part.custom_source || null;
+        }
+        
+        return cleanPart;
+      });
+      
+      // Envoyer commentaire avec les pièces utilisées valides
       await commentsAPI.addWorkOrderComment(workOrder.id, {
         text: newComment,
-        parts_used: partsUsed
+        parts_used: cleanedParts
       });
       setNewComment('');
       setPartsUsed([]); // Réinitialiser les pièces
