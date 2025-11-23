@@ -438,37 +438,76 @@ const MainLayout = () => {
 
 
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Tableau de bord', path: '/dashboard', module: 'dashboard' },
-    { icon: MessageSquare, label: 'Demandes d\'inter.', path: '/intervention-requests', module: 'interventionRequests' },
-    { icon: ClipboardList, label: 'Ordres de travail', path: '/work-orders', module: 'workOrders' },
-    { icon: Lightbulb, label: 'Demandes d\'amél.', path: '/improvement-requests', module: 'improvementRequests' },
-    { icon: Sparkles, label: 'Améliorations', path: '/improvements', module: 'improvements' },
-    { icon: Calendar, label: 'Maintenance prev.', path: '/preventive-maintenance', module: 'preventiveMaintenance' },
-    { icon: Calendar, label: 'Planning M.Prev.', path: '/planning-mprev', module: 'preventiveMaintenance' },
-    { icon: Wrench, label: 'Équipements', path: '/assets', module: 'assets' },
-    { icon: Package, label: 'Inventaire', path: '/inventory', module: 'inventory' },
-    { icon: MapPin, label: 'Zones', path: '/locations', module: 'locations' },
-    { icon: Gauge, label: 'Compteurs', path: '/meters', module: 'meters' },
-    { icon: Eye, label: 'Plan de Surveillance', path: '/surveillance-plan', module: 'surveillance' },
-    { icon: FileText, label: 'Rapport Surveillance', path: '/surveillance-rapport', module: 'surveillance' },
-    { icon: AlertTriangle, label: 'Presqu\'accident', path: '/presqu-accident', module: 'presquaccident' },
-    { icon: FileText, label: 'Rapport P.accident', path: '/presqu-accident-rapport', module: 'presquaccident' },
-    { icon: FolderOpen, label: 'Documentations', path: '/documentations', module: 'documentations' },
-    { icon: BarChart3, label: 'Rapports', path: '/reports', module: 'reports' },
-    { icon: Users, label: 'Équipes', path: '/people', module: 'people' },
-    { icon: Calendar, label: 'Planning', path: '/planning', module: 'planning' },
-    { icon: ShoppingCart, label: 'Fournisseurs', path: '/vendors', module: 'vendors' },
-    { icon: ShoppingBag, label: 'Historique Achat', path: '/purchase-history', module: 'purchaseHistory' },
-    { icon: Database, label: 'Import / Export', path: '/import-export', module: 'importExport' }
-  ].filter(item => {
-    // Si le menu item a un module défini, vérifier la permission view
-    if (item.module) {
-      return canView(item.module);
-    }
-    // Si pas de module (ancien système), afficher par défaut
-    return true;
-  });
+  // Mapping des icônes
+  const iconMap = {
+    'LayoutDashboard': LayoutDashboard,
+    'MessageSquare': MessageSquare,
+    'ClipboardList': ClipboardList,
+    'Lightbulb': Lightbulb,
+    'Sparkles': Sparkles,
+    'Calendar': Calendar,
+    'Wrench': Wrench,
+    'Package': Package,
+    'MapPin': MapPin,
+    'Gauge': Gauge,
+    'Eye': Eye,
+    'FileText': FileText,
+    'AlertTriangle': AlertTriangle,
+    'FolderOpen': FolderOpen,
+    'BarChart3': BarChart3,
+    'Users': Users,
+    'ShoppingCart': ShoppingCart,
+    'ShoppingBag': ShoppingBag,
+    'Database': Database
+  };
+
+  // Liste par défaut des menus
+  const defaultMenuItems = [
+    { id: 'dashboard', icon: 'LayoutDashboard', label: 'Tableau de bord', path: '/dashboard', module: 'dashboard', visible: true, order: 0 },
+    { id: 'intervention-requests', icon: 'MessageSquare', label: 'Demandes d\'inter.', path: '/intervention-requests', module: 'interventionRequests', visible: true, order: 1 },
+    { id: 'work-orders', icon: 'ClipboardList', label: 'Ordres de travail', path: '/work-orders', module: 'workOrders', visible: true, order: 2 },
+    { id: 'improvement-requests', icon: 'Lightbulb', label: 'Demandes d\'amél.', path: '/improvement-requests', module: 'improvementRequests', visible: true, order: 3 },
+    { id: 'improvements', icon: 'Sparkles', label: 'Améliorations', path: '/improvements', module: 'improvements', visible: true, order: 4 },
+    { id: 'preventive-maintenance', icon: 'Calendar', label: 'Maintenance prev.', path: '/preventive-maintenance', module: 'preventiveMaintenance', visible: true, order: 5 },
+    { id: 'planning-mprev', icon: 'Calendar', label: 'Planning M.Prev.', path: '/planning-mprev', module: 'preventiveMaintenance', visible: true, order: 6 },
+    { id: 'assets', icon: 'Wrench', label: 'Équipements', path: '/assets', module: 'assets', visible: true, order: 7 },
+    { id: 'inventory', icon: 'Package', label: 'Inventaire', path: '/inventory', module: 'inventory', visible: true, order: 8 },
+    { id: 'locations', icon: 'MapPin', label: 'Zones', path: '/locations', module: 'locations', visible: true, order: 9 },
+    { id: 'meters', icon: 'Gauge', label: 'Compteurs', path: '/meters', module: 'meters', visible: true, order: 10 },
+    { id: 'surveillance-plan', icon: 'Eye', label: 'Plan de Surveillance', path: '/surveillance-plan', module: 'surveillance', visible: true, order: 11 },
+    { id: 'surveillance-rapport', icon: 'FileText', label: 'Rapport Surveillance', path: '/surveillance-rapport', module: 'surveillance', visible: true, order: 12 },
+    { id: 'presqu-accident', icon: 'AlertTriangle', label: 'Presqu\'accident', path: '/presqu-accident', module: 'presquaccident', visible: true, order: 13 },
+    { id: 'presqu-accident-rapport', icon: 'FileText', label: 'Rapport P.accident', path: '/presqu-accident-rapport', module: 'presquaccident', visible: true, order: 14 },
+    { id: 'documentations', icon: 'FolderOpen', label: 'Documentations', path: '/documentations', module: 'documentations', visible: true, order: 15 },
+    { id: 'reports', icon: 'BarChart3', label: 'Rapports', path: '/reports', module: 'reports', visible: true, order: 16 },
+    { id: 'people', icon: 'Users', label: 'Équipes', path: '/people', module: 'people', visible: true, order: 17 },
+    { id: 'planning', icon: 'Calendar', label: 'Planning', path: '/planning', module: 'planning', visible: true, order: 18 },
+    { id: 'vendors', icon: 'ShoppingCart', label: 'Fournisseurs', path: '/vendors', module: 'vendors', visible: true, order: 19 },
+    { id: 'purchase-history', icon: 'ShoppingBag', label: 'Historique Achat', path: '/purchase-history', module: 'purchaseHistory', visible: true, order: 20 },
+    { id: 'import-export', icon: 'Database', label: 'Import / Export', path: '/import-export', module: 'importExport', visible: true, order: 21 }
+  ];
+
+  // Utiliser les préférences ou la liste par défaut
+  const userMenuItems = preferences?.menu_items && preferences.menu_items.length > 0 
+    ? preferences.menu_items 
+    : defaultMenuItems;
+
+  // Trier par ordre et filtrer par visibilité et permissions
+  const menuItems = userMenuItems
+    .sort((a, b) => (a.order || 0) - (b.order || 0))
+    .filter(item => {
+      // Filtrer par visibilité
+      if (item.visible === false) return false;
+      
+      // Filtrer par permissions
+      if (item.module && !canView(item.module)) return false;
+      
+      return true;
+    })
+    .map(item => ({
+      ...item,
+      icon: iconMap[item.icon] || LayoutDashboard
+    }));
 
   const handleLogout = () => {
     localStorage.removeItem('token');
