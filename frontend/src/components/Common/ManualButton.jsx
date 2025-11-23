@@ -284,75 +284,79 @@ const ManualButton = () => {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-7xl h-[90vh] p-0">
-          <div className="flex flex-col h-full">
-            {/* Header */}
-            <DialogHeader className="px-6 py-4 border-b">
-              <div className="flex items-center justify-between">
-                <DialogTitle className="flex items-center gap-2">
-                  <BookOpen size={24} />
-                  Manuel Utilisateur - GMAO Iris
-                </DialogTitle>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={exportPDF}
-                    className="flex items-center gap-2"
-                  >
-                    <Download size={16} />
-                    Export PDF
-                  </Button>
-                </div>
-              </div>
-            </DialogHeader>
-
-            {/* Search Bar */}
-            <div className="px-6 py-3 border-b bg-gray-50">
-              <div className="flex gap-2">
-                <div className="flex-1 relative">
-                  <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                  <Input
-                    placeholder="Rechercher dans le manuel..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && searchManual()}
-                    className="pl-10"
-                  />
-                </div>
-                <Button onClick={searchManual} size="sm">
-                  Rechercher
-                </Button>
-                
-                {/* Filtres */}
-                <select
-                  value={levelFilter}
-                  onChange={(e) => {
-                    setLevelFilter(e.target.value);
-                    setManualData(null); // Forcer le rechargement
-                  }}
-                  className="px-3 py-2 border rounded text-sm"
+        <DialogContent className="max-w-[95vw] w-[95vw] h-[92vh] p-0 flex flex-col">
+          {/* Header */}
+          <DialogHeader className="px-6 py-4 border-b shrink-0">
+            <div className="flex items-center justify-between">
+              <DialogTitle className="flex items-center gap-3 text-xl">
+                <BookOpen size={28} className="text-blue-600" />
+                <span>Manuel Utilisateur - GMAO Iris</span>
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={exportPDF}
+                  className="flex items-center gap-2"
                 >
-                  <option value="both">Tous niveaux</option>
-                  <option value="beginner">Débutant</option>
-                  <option value="advanced">Avancé</option>
-                </select>
+                  <Download size={16} />
+                  Export PDF
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+
+          {/* Search Bar */}
+          <div className="px-6 py-3 border-b bg-gray-50 shrink-0">
+            <div className="flex gap-2 items-center">
+              <div className="flex-1 relative">
+                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <Input
+                  placeholder="Rechercher dans le manuel..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && searchManual()}
+                  className="pl-10"
+                />
+              </div>
+              <Button onClick={searchManual} size="sm">
+                Rechercher
+              </Button>
+              
+              {/* Filtres */}
+              <select
+                value={levelFilter}
+                onChange={(e) => {
+                  setLevelFilter(e.target.value);
+                  setManualData(null); // Forcer le rechargement
+                }}
+                className="px-3 py-2 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="both">Tous niveaux</option>
+                <option value="beginner">Débutant</option>
+                <option value="advanced">Avancé</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Content Area - with explicit height */}
+          <div className="flex-1 flex overflow-hidden min-h-0">
+            {/* Table of Contents - Sidebar with scrollbar */}
+            <div className="w-80 border-r bg-gray-50 flex flex-col shrink-0">
+              <div className="px-4 py-3 border-b bg-white">
+                <h3 className="font-semibold flex items-center gap-2 text-base">
+                  <Filter size={18} />
+                  Table des Matières
+                </h3>
+              </div>
+              <div className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+                {renderTableOfContents()}
               </div>
             </div>
 
-            {/* Content Area */}
-            <div className="flex-1 flex overflow-hidden">
-              {/* Table of Contents - Sidebar */}
-              <div className="w-80 border-r bg-gray-50 overflow-y-auto p-4">
-                <h3 className="font-semibold mb-4 flex items-center gap-2">
-                  <Filter size={16} />
-                  Table des Matières
-                </h3>
-                {renderTableOfContents()}
-              </div>
-
-              {/* Main Content */}
-              <div className="flex-1 overflow-y-auto p-6">
+            {/* Main Content with scrollbar */}
+            <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+              <div className="flex-1 overflow-y-auto p-8 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
                 {renderContent()}
               </div>
             </div>
