@@ -16,6 +16,9 @@ const HelpButton = () => {
   const { toast } = useToast();
 
   const captureScreenshot = async () => {
+    let emergentBadge = null;
+    let originalBadgeDisplay = null;
+    
     try {
       // Sauvegarder l'URL actuelle avant toute manipulation
       const currentUrl = window.location.href;
@@ -35,41 +38,48 @@ const HelpButton = () => {
       }
       
       // Masquer temporairement le badge Emergent pour la capture
-      const emergentBadge = document.getElementById('emergent-badge');
-      const originalBadgeDisplay = emergentBadge ? emergentBadge.style.display : null;
+      emergentBadge = document.getElementById('emergent-badge');
+      originalBadgeDisplay = emergentBadge ? emergentBadge.style.display : null;
       if (emergentBadge) {
         emergentBadge.style.display = 'none';
       }
       
+      console.log('🎯 Début de la capture avec html-to-image...');
+      
       // Capturer avec html-to-image (meilleure gestion CSS)
       const rootElement = document.getElementById('root') || document.body;
+      
       const dataUrl = await toPng(rootElement, {
         quality: 0.8,
         pixelRatio: 1,
         cacheBust: true,
         filter: (node) => {
-          // Filtrer les éléments à exclure
-          if (node.id === 'emergent-badge') return false;
-          const style = window.getComputedStyle(node);
-          return style.display !== 'none' && style.visibility !== 'hidden';
+          try {
+            // Filtrer les éléments à exclure
+            if (node.id === 'emergent-badge') return false;
+            if (!node.style) return true;
+            const style = window.getComputedStyle(node);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+          } catch (e) {
+            return true;
+          }
         }
       });
       
-      // Restaurer le badge
+      console.log('✅ Capture réussie pour:', currentUrl, '- Taille:', dataUrl.length);
+      
+      return dataUrl;
+      
+    } catch (error) {
+      console.error('❌ Erreur lors de la capture d\'écran:', error);
+      console.error('❌ Stack:', error.stack);
+      return null;
+    } finally {
+      // Toujours restaurer le badge et rouvrir la modale
       if (emergentBadge && originalBadgeDisplay !== null) {
         emergentBadge.style.display = originalBadgeDisplay;
       }
-      
-      console.log('✅ Capture réussie pour:', currentUrl);
-      
-      // Rouvrir la modale après la capture
       setOpen(true);
-      
-      return dataUrl;
-    } catch (error) {
-      console.error('Erreur lors de la capture d\'écran:', error);
-      setOpen(true);
-      return null;
     }
   };
 
