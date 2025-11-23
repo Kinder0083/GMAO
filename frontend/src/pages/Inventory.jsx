@@ -98,7 +98,7 @@ const Inventory = () => {
   const totalValue = inventory.reduce((sum, item) => sum + (item.quantite * item.prixUnitaire), 0);
 
   const getStockStatus = (item) => {
-    if (item.quantite === 0) {
+    if (item.quantite <= 0) {
       return { color: 'text-red-600', bg: 'bg-red-100', label: 'Rupture', icon: AlertTriangle };
     } else if (item.quantite <= item.quantiteMin) {
       return { color: 'text-orange-600', bg: 'bg-orange-100', label: 'Stock bas', icon: TrendingDown };
