@@ -67,28 +67,107 @@ class PartsUsedSystemTester:
             self.log(f"❌ Admin login request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_get_equipment(self):
-        """TEST 1: Récupérer un équipement valide pour les tests"""
-        self.log("🧪 TEST 1: Récupérer un équipement valide")
+    def test_get_initial_state(self):
+        """TEST 1: Vérifier l'état initial - Inventaire, Ordres de travail, Équipements"""
+        self.log("🧪 TEST 1: Vérifier l'état initial du système")
         
         try:
-            response = self.admin_session.get(
-                f"{BACKEND_URL}/equipments",
-                timeout=15
-            )
+            # 1. GET /api/inventory - Noter la quantité d'une pièce test
+            self.log("📦 Récupération de l'inventaire...")
+            response = self.admin_session.get(f"{BACKEND_URL}/inventory", timeout=15)
+            
+            if response.status_code == 200:
+                inventory_items = response.json()
+                if inventory_items:
+                    # Prendre le premier item d'inventaire
+                    test_item = inventory_items[0]
+                    self.test_inventory_item_id = test_item.get('id')
+                    self.initial_inventory_quantity = test_item.get('quantite', 0)
+                    self.inventory_item_name = test_item.get('nom', 'Pièce Test')
+                    
+                    self.log(f"✅ Pièce d'inventaire trouvée - ID: {self.test_inventory_item_id}")
+                    self.log(f"✅ Nom: {self.inventory_item_name}")
+                    self.log(f"✅ Quantité initiale: {self.initial_inventory_quantity}")
+                else:
+                    self.log("❌ Aucune pièce d'inventaire trouvée", "ERROR")
+                    return False
+            else:
+                self.log(f"❌ Récupération inventaire échouée - Status: {response.status_code}", "ERROR")
+                return False
+            
+            # 2. GET /api/work-orders - Prendre un ordre de travail existant
+            self.log("📋 Récupération des ordres de travail...")
+            response = self.admin_session.get(f"{BACKEND_URL}/work-orders", timeout=15)
+            
+            if response.status_code == 200:
+                work_orders = response.json()
+                if work_orders:
+                    # Prendre le premier ordre de travail
+                    test_wo = work_orders[0]
+                    self.test_work_order_id = test_wo.get('id')
+                    self.log(f"✅ Ordre de travail trouvé - ID: {self.test_work_order_id}")
+                    self.log(f"✅ Titre: {test_wo.get('titre', 'N/A')}")
+                else:
+                    self.log("⚠️ Aucun ordre de travail existant, création d'un nouveau...")
+                    return self.create_test_work_order()
+            else:
+                self.log(f"❌ Récupération ordres de travail échouée - Status: {response.status_code}", "ERROR")
+                return False
+            
+            # 3. GET /api/equipment - Prendre un équipement test
+            self.log("🔧 Récupération des équipements...")
+            response = self.admin_session.get(f"{BACKEND_URL}/equipments", timeout=15)
             
             if response.status_code == 200:
                 equipments = response.json()
                 if equipments:
-                    self.equipment_id = equipments[0].get('id')
-                    self.log(f"✅ Équipement trouvé - ID: {self.equipment_id}")
-                    self.log(f"✅ Nom: {equipments[0].get('nom', 'N/A')}")
-                    return True
+                    test_equipment = equipments[0]
+                    self.test_equipment_id = test_equipment.get('id')
+                    self.equipment_name = test_equipment.get('nom', 'Équipement Test')
+                    self.log(f"✅ Équipement trouvé - ID: {self.test_equipment_id}")
+                    self.log(f"✅ Nom: {self.equipment_name}")
                 else:
                     self.log("❌ Aucun équipement trouvé", "ERROR")
                     return False
             else:
                 self.log(f"❌ Récupération équipements échouée - Status: {response.status_code}", "ERROR")
+                return False
+            
+            self.log("✅ État initial vérifié avec succès")
+            return True
+                
+        except requests.exceptions.RequestException as e:
+            self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
+            return False
+    
+    def create_test_work_order(self):
+        """Créer un ordre de travail de test si aucun n'existe"""
+        self.log("📋 Création d'un ordre de travail de test...")
+        
+        try:
+            wo_data = {
+                "titre": "Test pièces utilisées",
+                "description": "Ordre de travail créé pour tester le système de pièces utilisées",
+                "type": "CORRECTIF",
+                "priorite": "NORMALE",
+                "statut": "OUVERT",
+                "equipement_id": self.test_equipment_id,
+                "tempsEstime": 2.0
+            }
+            
+            response = self.admin_session.post(
+                f"{BACKEND_URL}/work-orders",
+                json=wo_data,
+                timeout=15
+            )
+            
+            if response.status_code in [200, 201]:
+                data = response.json()
+                self.test_work_order_id = data.get('id')
+                self.log(f"✅ Ordre de travail créé - ID: {self.test_work_order_id}")
+                return True
+            else:
+                self.log(f"❌ Création ordre de travail échouée - Status: {response.status_code}", "ERROR")
                 return False
                 
         except requests.exceptions.RequestException as e:
