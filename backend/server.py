@@ -4168,6 +4168,82 @@ async def add_work_order_comment(
             detail="Erreur lors de l'ajout du commentaire"
         )
 
+@api_router.post("/work-orders/{work_order_id}/parts-used")
+async def add_work_order_parts(
+    work_order_id: str,
+    parts: List[PartUsedCreate],
+    current_user: dict = Depends(get_current_user)
+):
+    """Ajoute des pièces utilisées à un ordre de travail SANS créer de commentaire"""
+    try:
+        # Vérifier que l'ordre de travail existe
+        work_order = await db.work_orders.find_one({"_id": ObjectId(work_order_id)})
+        if not work_order:
+            raise HTTPException(status_code=404, detail="Ordre de travail non trouvé")
+        
+        # Traiter les pièces utilisées
+        parts_used_list = []
+        logger.info(f"Ajout direct de {len(parts)} pièces utilisées")
+        for part in parts:
+            logger.info(f"Pièce: inventory_item_id={part.inventory_item_id}, name={part.inventory_item_name}, custom={part.custom_part_name}, quantity={part.quantity}")
+            part_data = {
+                "id": str(uuid.uuid4()),
+                "inventory_item_id": part.inventory_item_id,
+                "inventory_item_name": part.inventory_item_name,
+                "custom_part_name": part.custom_part_name,
+                "quantity": part.quantity,
+                "timestamp": datetime.now(timezone.utc)
+            }
+            
+            # N'ajouter les champs "Prélevé Sur" que s'ils sont fournis
+            if hasattr(part, 'source_equipment_id') and part.source_equipment_id:
+                part_data["source_equipment_id"] = part.source_equipment_id
+                part_data["source_equipment_name"] = part.source_equipment_name
+            if hasattr(part, 'custom_source') and part.custom_source:
+                part_data["custom_source"] = part.custom_source
+            
+            parts_used_list.append(part_data)
+            
+            # Si c'est une pièce d'inventaire, déduire du stock
+            if part.inventory_item_id:
+                inventory_item = await db.inventory.find_one({"_id": ObjectId(part.inventory_item_id)})
+                if inventory_item:
+                    new_quantity = inventory_item["quantite"] - part.quantity
+                    await db.inventory.update_one(
+                        {"_id": ObjectId(part.inventory_item_id)},
+                        {"$set": {"quantite": new_quantity}}
+                    )
+                    logger.info(f"Stock mis à jour: {part.inventory_item_name} - {part.quantity} unité(s) déduite(s)")
+        
+        # Ajouter les pièces à l'ordre de travail (SANS commentaire)
+        await db.work_orders.update_one(
+            {"_id": ObjectId(work_order_id)},
+            {"$push": {"parts_used": {"$each": parts_used_list}}}
+        )
+        
+        # Log dans l'audit
+        await audit_service.log_action(
+            user_id=current_user["id"],
+            user_name=f"{current_user['prenom']} {current_user['nom']}",
+            user_email=current_user["email"],
+            action=ActionType.UPDATE,
+            entity_type=EntityType.WORK_ORDER,
+            entity_id=work_order_id,
+            entity_name=work_order.get("titre", ""),
+            details=f"{len(parts_used_list)} pièce(s) utilisée(s) ajoutée(s)"
+        )
+        
+        return {"parts_used": parts_used_list, "count": len(parts_used_list)}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de l'ajout des pièces: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Erreur lors de l'ajout des pièces"
+        )
+
 @api_router.get("/work-orders/{work_order_id}/comments")
 async def get_work_order_comments(
     work_order_id: str,
