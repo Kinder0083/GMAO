@@ -529,20 +529,21 @@ class PartsUsedSystemTester:
             self.log(f"❌ Request failed - Error: {str(e)}", "ERROR")
             return False
     
-    def test_verify_journal_approval(self):
-        """TEST 7: Vérifier l'entrée dans le journal après approbation"""
-        self.log("🧪 TEST 7: Vérifier l'entrée dans le journal après approbation")
+    def test_verify_audit_journal(self):
+        """TEST 7: Vérification du journal d'audit"""
+        self.log("🧪 TEST 7: Vérifier le journal d'audit pour les pièces utilisées")
         
-        if not self.created_demande_id:
-            self.log("❌ Aucune demande créée pour vérifier le journal", "ERROR")
+        if not self.test_work_order_id:
+            self.log("❌ ID ordre de travail manquant", "ERROR")
             return False
         
         try:
-            # Récupérer les logs d'audit avec filtre sur DEMANDE_ARRET
+            # GET /api/audit-logs - Chercher les logs liés aux pièces utilisées
+            self.log("📋 Récupération du journal d'audit...")
             response = self.admin_session.get(
                 f"{BACKEND_URL}/audit-logs",
                 params={
-                    "entity_type": "DEMANDE_ARRET",
+                    "entity_type": "WORK_ORDER",
                     "limit": 50
                 },
                 timeout=15
@@ -551,33 +552,34 @@ class PartsUsedSystemTester:
             if response.status_code == 200:
                 data = response.json()
                 logs = data.get('logs', [])
-                self.log(f"✅ Journal récupéré - {len(logs)} entrées trouvées")
+                self.log(f"✅ Journal récupéré - {len(logs)} entrées WORK_ORDER trouvées")
                 
-                # Chercher l'entrée d'approbation de notre demande
-                approval_log = None
+                # Chercher les entrées liées à notre ordre de travail avec pièces utilisées
+                parts_logs = []
                 for log in logs:
-                    if (log.get('entity_id') == self.created_demande_id and 
-                        log.get('action') == 'UPDATE' and
-                        log.get('entity_type') == 'DEMANDE_ARRET' and
-                        'APPROUVÉE' in log.get('details', '')):
-                        approval_log = log
-                        break
+                    if (log.get('entity_id') == self.test_work_order_id and 
+                        'pièce(s) utilisée(s)' in log.get('details', '')):
+                        parts_logs.append(log)
                 
-                if approval_log:
-                    self.log("✅ SUCCÈS: Entrée d'approbation trouvée dans le journal")
-                    self.log(f"✅ Action: {approval_log.get('action')}")
-                    self.log(f"✅ Details: {approval_log.get('details')}")
+                if parts_logs:
+                    self.log(f"✅ SUCCÈS: {len(parts_logs)} entrée(s) de pièces utilisées trouvée(s)")
                     
-                    # Vérifier les changements de statut
-                    changes = approval_log.get('changes', {})
-                    if changes.get('statut') == 'EN_ATTENTE → APPROUVEE':
-                        self.log("✅ SUCCÈS: Changement de statut correctement enregistré")
+                    # Vérifier la première entrée
+                    log_entry = parts_logs[0]
+                    self.log(f"✅ Action: {log_entry.get('action')}")
+                    self.log(f"✅ Entity Type: {log_entry.get('entity_type')}")
+                    self.log(f"✅ Details: {log_entry.get('details')}")
+                    
+                    # Vérifier que le texte contient "pièce(s) utilisée(s)"
+                    details = log_entry.get('details', '')
+                    if 'pièce(s) utilisée(s)' in details:
+                        self.log("✅ SUCCÈS: Journal d'audit mis à jour avec mention des pièces")
                         return True
                     else:
-                        self.log(f"❌ ÉCHEC: Changement de statut incorrect: {changes.get('statut')}", "ERROR")
+                        self.log("❌ ÉCHEC: Mention des pièces manquante dans les détails", "ERROR")
                         return False
                 else:
-                    self.log("❌ ÉCHEC: Entrée d'approbation non trouvée dans le journal", "ERROR")
+                    self.log("❌ ÉCHEC: Aucune entrée de pièces utilisées trouvée dans le journal", "ERROR")
                     return False
             else:
                 self.log(f"❌ Récupération du journal échouée - Status: {response.status_code}", "ERROR")
