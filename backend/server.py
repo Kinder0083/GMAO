@@ -4900,7 +4900,7 @@ async def delete_meter(meter_id: str, current_user: dict = Depends(require_permi
 async def create_reading(
     meter_id: str,
     reading: MeterReadingCreate,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("meters", "edit"))
 ):
     """Créer un nouveau relevé pour un compteur"""
     try:
