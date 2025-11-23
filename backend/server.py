@@ -1391,7 +1391,7 @@ async def get_equipment_children(eq_id: str, current_user: dict = Depends(requir
         raise HTTPException(status_code=400, detail=str(e))
 
 @api_router.get("/equipments/{eq_id}/hierarchy")
-async def get_equipment_hierarchy(eq_id: str, current_user: dict = Depends(get_current_user)):
+async def get_equipment_hierarchy(eq_id: str, current_user: dict = Depends(require_permission("assets", "view"))):
     """Récupérer toute la hiérarchie d'un équipement (récursif)"""
     try:
         async def build_hierarchy(equipment_id: str):
