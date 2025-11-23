@@ -1927,6 +1927,86 @@ backend:
           - Les calculs de déduction sont précis et fiables
           - Support complet des formats pièces d'inventaire et externes
           - Prêt pour utilisation en production
+      - working: true
+        agent: "testing"
+        comment: |
+          ✅ RETESTS COMPLETS RÉUSSIS - Corrections du système de pièces utilisées validées (Novembre 2025)
+          
+          🎯 CONTEXTE DU RETEST:
+          L'utilisateur a signalé 2 problèmes critiques:
+          1. Les pièces ne sont pas décomptées du stock
+          2. Les pièces enregistrées n'apparaissent pas quand on rouvre l'ordre
+          
+          🔧 CORRECTIONS APPORTÉES VÉRIFIÉES:
+          1. ✅ Ligne 4120 server.py: Correction syntaxe MongoDB $push (ne peut pas avoir 2 clés $push dans le même objet)
+          2. ✅ Initialisation du champ `parts_used: []` lors de la création d'un ordre (ligne 902)
+          3. ✅ Frontend: Section "Historique des Pièces Utilisées" pour afficher les pièces
+          
+          📊 TESTS CRITIQUES EFFECTUÉS (8/8 RÉUSSIS):
+          
+          🎯 TEST CRITIQUE #1: Vérifier l'état initial d'une pièce d'inventaire ✅ RÉUSSI
+          - GET /api/inventory: SUCCESS (200 OK)
+          - Pièce test trouvée: "Accouplement" (ID: 691c312efc3218486e5aedd4)
+          - Quantité initiale notée: -1 unité (stock négatif existant)
+          
+          🎯 TEST CRITIQUE #2: Ajouter une pièce à un ordre de travail ✅ RÉUSSI
+          - POST /api/work-orders/{id}/comments avec parts_used: SUCCESS (200 OK)
+          - Body testé: {"text": "Test correction déduction stock", "parts_used": [{"inventory_item_id": "691c312efc3218486e5aedd4", "inventory_item_name": "Accouplement", "quantity": 2, "source_equipment_id": "6919850470364fe7c3bdcfe7", "source_equipment_name": "ciba"}]}
+          - Commentaire créé avec ID: 7bca9441-cc10-4b94-9702-4d12cacad4ca
+          - Pièce ajoutée: Accouplement (Quantité: 2.0)
+          
+          🎯 TEST CRITIQUE #3: VÉRIFICATION DÉDUCTION DU STOCK ✅ RÉUSSI
+          - Quantité initiale: -1 unité
+          - Quantité après ajout de 2 pièces: -3 unités
+          - ✅ DÉDUCTION AUTOMATIQUE CONFIRMÉE: -2 unités comme attendu
+          - Log backend confirme: "Stock mis à jour: Accouplement - 2.0 unité(s) déduite(s)"
+          
+          🎯 TEST CRITIQUE #4: VÉRIFICATION PIÈCES DANS L'ORDRE DE TRAVAIL ✅ RÉUSSI
+          - Ordre de travail ID: 6919854270364fe7c3bdcfe8
+          - ✅ Champ `parts_used` contient la pièce ajoutée
+          - ✅ Tous les champs requis présents: inventory_item_id, inventory_item_name, quantity, source_equipment_name, timestamp
+          - ✅ Historique complet conservé (16 pièces utilisées au total)
+          
+          🎯 TEST CRITIQUE #5: Vérification de la persistance ✅ RÉUSSI
+          - Deuxième GET /api/work-orders confirme persistance des données
+          - ✅ Les pièces restent présentes après rechargement
+          - ✅ Aucune perte de données détectée
+          
+          🎯 TEST CRITIQUE #6: Test avec plusieurs pièces ✅ RÉUSSI
+          - Ajout de 3 pièces supplémentaires (1 inventaire + 2 externes): SUCCESS
+          - ✅ Total des pièces dans parts_used = 19 (16 existantes + 3 nouvelles)
+          - ✅ Support complet des pièces multiples confirmé
+          
+          🎯 TEST CRITIQUE #7: Test pièces externes ✅ RÉUSSI
+          - Pièce externe "Pièce externe test": SUCCESS
+          - ✅ AUCUNE déduction d'inventaire (comportement correct)
+          - ✅ Pièce externe correctement enregistrée
+          
+          🎯 TEST CRITIQUE #8: Vérification journal d'audit ✅ RÉUSSI
+          - GET /api/audit-logs: 12 entrées de pièces utilisées trouvées
+          - ✅ Journal mis à jour avec "pièce(s) utilisée(s)"
+          - ✅ Audit logging fonctionnel
+          
+          🔍 VÉRIFICATIONS TECHNIQUES BACKEND:
+          - ✅ Ligne 4120-4129: Syntaxe MongoDB $push corrigée (une seule opération $push avec "comments" et "parts_used")
+          - ✅ Ligne 902: Initialisation parts_used: [] lors création ordre
+          - ✅ Lignes 4107-4116: Déduction automatique stock pour pièces d'inventaire
+          - ✅ Lignes 4119-4129: Mise à jour ordre de travail avec commentaire ET pièces
+          - ✅ Lignes 4138-4151: Audit logging avec mention des pièces
+          
+          📋 RÉSULTATS ATTENDUS CONFIRMÉS:
+          ✅ Quantité d'inventaire diminuée correctement (-2 unités)
+          ✅ Pièces présentes dans work_order.parts_used
+          ✅ Persistance des données après rechargement
+          ✅ Support de multiples pièces
+          
+          🎉 CONCLUSION FINALE: LES CORRECTIONS SONT ENTIÈREMENT RÉUSSIES
+          - ✅ Problème #1 RÉSOLU: Les pièces sont maintenant décomptées du stock automatiquement
+          - ✅ Problème #2 RÉSOLU: Les pièces enregistrées apparaissent bien quand on rouvre l'ordre
+          - ✅ Correction ligne 4120 server.py: Syntaxe MongoDB $push fonctionnelle
+          - ✅ Initialisation parts_used: [] opérationnelle
+          - ✅ Système de pièces utilisées ENTIÈREMENT FONCTIONNEL
+          - ✅ Prêt pour utilisation en production
 
 frontend:
   - task: "Plan de Surveillance - Interface complète avec 3 vues"
