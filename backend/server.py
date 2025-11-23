@@ -4953,7 +4953,7 @@ async def create_reading(
 @api_router.get("/meters/{meter_id}/readings", response_model=List[MeterReading])
 async def get_meter_readings(
     meter_id: str,
-    current_user: dict = Depends(get_current_user),
+    current_user: dict = Depends(require_permission("meters", "view")),
     start_date: Optional[str] = None,
     end_date: Optional[str] = None
 ):
