@@ -560,6 +560,39 @@ const WorkOrderDialog = ({ open, onOpenChange, workOrder, onSuccess }) => {
               </Button>
             </div>
 
+            {/* Historique des pièces utilisées */}
+            {workOrder.parts_used && workOrder.parts_used.length > 0 && (
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <h4 className="text-sm font-semibold text-blue-900 mb-3">Historique des pièces utilisées</h4>
+                <div className="space-y-2">
+                  {workOrder.parts_used.map((part, index) => (
+                    <div key={part.id || index} className="bg-white rounded-md p-3 text-sm">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="font-semibold text-gray-900">
+                            {part.inventory_item_name || part.custom_part_name}
+                          </div>
+                          <div className="flex items-center gap-4 mt-1 text-gray-600">
+                            <span>Quantité : <strong>{part.quantity}</strong></span>
+                            {(part.source_equipment_name || part.custom_source) && (
+                              <span className="text-xs">
+                                Prélevée sur : <strong>{part.source_equipment_name || part.custom_source}</strong>
+                              </span>
+                            )}
+                          </div>
+                          {part.timestamp && (
+                            <div className="text-xs text-gray-400 mt-1">
+                              {formatDate(part.timestamp)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {partsUsed.length === 0 ? (
               <p className="text-sm text-gray-500 text-center py-4 bg-gray-50 rounded-lg">
                 Aucune pièce ajoutée. Cliquez sur "Ajouter une pièce" pour commencer.
