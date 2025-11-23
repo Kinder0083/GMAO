@@ -5646,7 +5646,7 @@ async def get_improvement_request_comments(request_id: str, current_user: dict =
 async def upload_improvement_attachment(
     imp_id: str,
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("improvements", "edit"))
 ):
     """Upload fichier pour une amélioration"""
     imp = await db.improvements.find_one({"id": imp_id})
