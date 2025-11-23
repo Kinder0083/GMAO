@@ -292,6 +292,7 @@ class PartsUsedSystemTester:
         try:
             # GET /api/work-orders/{id} - Vérifier que les pièces sont dans l'historique
             self.log("📋 Vérification de l'ordre de travail mis à jour...")
+            self.log(f"🔍 Debug - Using work order ID: {self.test_work_order_id}")
             response = self.admin_session.get(
                 f"{BACKEND_URL}/work-orders/{self.test_work_order_id}",
                 timeout=15
