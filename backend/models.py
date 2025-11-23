@@ -385,6 +385,27 @@ class Comment(BaseModel):
 class CommentCreate(BaseModel):
     text: str
 
+# Parts Used Models
+class PartUsed(BaseModel):
+    id: str
+    inventory_item_id: Optional[str] = None  # None si pièce externe (texte libre)
+    inventory_item_name: Optional[str] = None  # Nom de la pièce d'inventaire
+    custom_part_name: Optional[str] = None  # Nom de pièce externe (texte libre)
+    quantity: float  # Quantité utilisée
+    source_equipment_id: Optional[str] = None  # ID équipement (si sélectionné)
+    source_equipment_name: Optional[str] = None  # Nom équipement
+    custom_source: Optional[str] = None  # Source personnalisée (texte libre)
+    timestamp: datetime
+
+class PartUsedCreate(BaseModel):
+    inventory_item_id: Optional[str] = None
+    inventory_item_name: Optional[str] = None
+    custom_part_name: Optional[str] = None
+    quantity: float
+    source_equipment_id: Optional[str] = None
+    source_equipment_name: Optional[str] = None
+    custom_source: Optional[str] = None
+
 # User Models
 class UserBase(BaseModel):
     nom: str
