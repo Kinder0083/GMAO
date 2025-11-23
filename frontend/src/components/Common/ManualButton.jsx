@@ -29,12 +29,12 @@ const ManualButton = () => {
   const [moduleFilter, setModuleFilter] = useState('all');
   const { toast } = useToast();
 
-  // Charger le manuel quand la modale s'ouvre
+  // Charger le manuel quand la modale s'ouvre ou quand les filtres changent
   useEffect(() => {
-    if (open && !manualData) {
+    if (open) {
       loadManual();
     }
-  }, [open]);
+  }, [open, levelFilter, moduleFilter]);
 
   const loadManual = async () => {
     setLoading(true);
