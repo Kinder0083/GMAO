@@ -52,18 +52,7 @@ const HelpButton = () => {
       const dataUrl = await toPng(rootElement, {
         quality: 0.8,
         pixelRatio: 1,
-        cacheBust: true,
-        filter: (node) => {
-          try {
-            // Filtrer les éléments à exclure
-            if (node.id === 'emergent-badge') return false;
-            if (!node.style) return true;
-            const style = window.getComputedStyle(node);
-            return style.display !== 'none' && style.visibility !== 'hidden';
-          } catch (e) {
-            return true;
-          }
-        }
+        cacheBust: true
       });
       
       console.log('✅ Capture réussie pour:', currentUrl, '- Taille:', dataUrl.length);
