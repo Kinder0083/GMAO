@@ -212,8 +212,12 @@ class PartsUsedSystemTester:
             self.log(f"   Pièce: {self.inventory_item_name} (Quantité: 2)")
             self.log(f"   Source: {self.equipment_name}")
             
+            # Use ObjectId for comments endpoint
+            comments_id = self.test_work_order_object_id or self.test_work_order_id
+            self.log(f"🔍 Debug - Using ID for comments: {comments_id}")
+            
             response = self.admin_session.post(
-                f"{BACKEND_URL}/work-orders/{self.test_work_order_id}/comments",
+                f"{BACKEND_URL}/work-orders/{comments_id}/comments",
                 json=comment_data,
                 timeout=15
             )
