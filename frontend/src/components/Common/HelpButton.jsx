@@ -46,12 +46,24 @@ const HelpButton = () => {
       
       console.log('🎯 Début de la capture avec html-to-image...');
       
-      // Capturer document.body pour une capture complète du viewport
+      // Obtenir les dimensions du viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      console.log(`📐 Dimensions viewport: ${viewportWidth}x${viewportHeight}`);
+      
+      // Capturer document.body avec dimensions explicites du viewport
       const dataUrl = await toPng(document.body, {
         quality: 0.8,
         pixelRatio: 1,
         cacheBust: true,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        width: viewportWidth,
+        height: viewportHeight,
+        style: {
+          width: `${viewportWidth}px`,
+          height: `${viewportHeight}px`
+        }
       });
       
       console.log('✅ Capture réussie pour:', currentUrl, '- Taille:', dataUrl.length);
