@@ -152,6 +152,7 @@ const Assets = () => {
     { value: 'OPERATIONNEL', label: 'Opérationnel', count: equipments.filter(e => e.statut === 'OPERATIONNEL').length },
     { value: 'EN_MAINTENANCE', label: 'En maintenance', count: equipments.filter(e => e.statut === 'EN_MAINTENANCE').length },
     { value: 'HORS_SERVICE', label: 'Hors service', count: equipments.filter(e => e.statut === 'HORS_SERVICE').length },
+    { value: 'EN_CT', label: 'En C.T', count: equipments.filter(e => e.statut === 'EN_CT').length },
     { value: 'ALERTE_S_EQUIP', label: 'Alerte S.Equip', count: equipments.filter(e => e.statut === 'ALERTE_S_EQUIP').length }
   ];
 
