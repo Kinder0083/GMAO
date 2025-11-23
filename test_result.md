@@ -7269,3 +7269,51 @@ agent_communication:
       ✅ L'endpoint backend fonctionne parfaitement selon les spécifications
       ✅ Les tests demandés sont terminés avec succès
       ✅ **DEMANDER À L'UTILISATEUR DE CONFIRMER** que les tests backend sont satisfaisants
+
+  - agent: "main"
+    message: |
+      ✅ CORRECTION - Mise à jour en temps réel du badge inventaire (Novembre 2025)
+      
+      📋 **PROBLÈME REPORTÉ PAR L'UTILISATEUR**:
+      Le badge inventaire dans le header ne se mettait pas à jour immédiatement lors des modifications
+      de quantité via les boutons +/- sur la page Inventaire.
+      
+      🔧 **CORRECTIONS EFFECTUÉES**:
+      
+      **1. Inventory.jsx** (ligne 58):
+      - Ajout de `window.dispatchEvent(new Event('inventoryItemUpdated'))` dans `adjustQuantity()`
+      - Déclenché après la mise à jour réussie de la quantité
+      - Ligne 88: Ajout du même événement dans `confirmDelete()` avec `inventoryItemDeleted`
+      
+      **2. InventoryFormDialog.jsx** (lignes 75 et 82):
+      - Ajout de `window.dispatchEvent(new Event('inventoryItemUpdated'))` après mise à jour
+      - Ajout de `window.dispatchEvent(new Event('inventoryItemCreated'))` après création
+      - Événements déclenchés avant l'affichage du toast
+      
+      **3. WorkOrderDialog.jsx** (ligne 260):
+      - Ajout de `window.dispatchEvent(new Event('inventoryItemUpdated'))` après l'ajout de pièces
+      - Assure la mise à jour du badge quand des pièces sont utilisées dans un bon de travail
+      
+      ✅ **ÉVÉNEMENTS DÉCLENCHÉS**:
+      - `inventoryItemCreated` : Lors de la création d'un nouvel article
+      - `inventoryItemUpdated` : Lors de la modification de quantité (boutons +/-, édition, utilisation dans BT)
+      - `inventoryItemDeleted` : Lors de la suppression d'un article
+      
+      ✅ **RÉCEPTION DES ÉVÉNEMENTS**:
+      MainLayout.jsx écoute déjà ces événements (lignes 107-117, 137-142) et appelle
+      automatiquement `loadInventoryStats()` pour rafraîchir le badge.
+      
+      🎯 **RÉSULTAT**:
+      - ✅ Le badge se met à jour instantanément lors de toute modification d'inventaire
+      - ✅ Fonctionne pour : ajout/suppression/modification d'articles, ajustements +/-
+      - ✅ Fonctionne aussi lors de l'utilisation de pièces dans les bons de travail
+      - ✅ Pas besoin d'attendre les 60 secondes du rafraîchissement automatique
+      
+      📝 **FICHIERS MODIFIÉS**:
+      - /app/frontend/src/pages/Inventory.jsx: Événements dans adjustQuantity et confirmDelete
+      - /app/frontend/src/components/Inventory/InventoryFormDialog.jsx: Événements dans handleSubmit
+      - /app/frontend/src/components/WorkOrders/WorkOrderDialog.jsx: Événement dans handleStatusChange
+      
+      🎉 **CONCLUSION**: 
+      Le badge inventaire se met maintenant à jour **en temps réel** à chaque modification.
+      Problème résolu et testé avec succès !
