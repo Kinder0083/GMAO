@@ -39,8 +39,10 @@ import InactivityHandler from '../Common/InactivityHandler';
 import TokenValidator from '../Common/TokenValidator';
 import { usePermissions } from '../../hooks/usePermissions';
 import { getBackendURL } from '../../utils/config';
+import { usePreferences } from '../../contexts/PreferencesContext';
 
 const MainLayout = () => {
+  const { preferences } = usePreferences();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [firstLoginDialogOpen, setFirstLoginDialogOpen] = useState(false);
   const navigate = useNavigate();
