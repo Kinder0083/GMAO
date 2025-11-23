@@ -5232,7 +5232,7 @@ async def convert_to_work_order(
     request_id: str,
     assignee_id: Optional[str] = None,
     date_limite: Optional[str] = None,
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(require_permission("interventionRequests", "edit"))
 ):
     """Convertir une demande d'intervention en ordre de travail (Admin/Technicien uniquement)"""
     # Vérifier que l'utilisateur est admin ou technicien
