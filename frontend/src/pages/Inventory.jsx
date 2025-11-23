@@ -96,9 +96,18 @@ const Inventory = () => {
   };
 
   const filteredInventory = inventory.filter(item => {
-    return item.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           item.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           item.categorie.toLowerCase().includes(searchTerm.toLowerCase());
+    // Filtre de recherche par texte
+    const matchesSearch = item.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.categorie.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtre alerte (rupture ou niveau bas)
+    if (filterAlert) {
+      const isAlert = item.quantite <= item.quantiteMin;
+      return matchesSearch && isAlert;
+    }
+    
+    return matchesSearch;
   });
 
   const lowStockItems = inventory.filter(item => item.quantite <= item.quantiteMin);
