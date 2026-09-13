@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 
 from dependencies import get_current_user, require_permission
+from llm_service import ask_llm, LLMNotConfiguredError
 
 logger = logging.getLogger(__name__)
 
@@ -28,17 +29,6 @@ class WidgetGenerateRequest(BaseModel):
     description: str
     sensor_id: Optional[str] = None
     meter_id: Optional[str] = None
-
-
-async def _get_llm_key():
-    key = os.environ.get("EMERGENT_LLM_KEY")
-    if not key:
-        gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-        if gk and gk.get("value"):
-            key = gk["value"]
-    if not key:
-        raise HTTPException(status_code=500, detail="Cle LLM non configuree")
-    return key
 
 
 WIDGET_GENERATION_PROMPT = """Tu es un expert en creation de widgets pour un dashboard de FSAO (Fonctionnement des Services Assistee par Ordinateur).
@@ -198,24 +188,13 @@ async def generate_widget(
 ):
     """Genere et cree un widget a partir d'une description en langage naturel."""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-
-        api_key = await _get_llm_key()
-
         user_prompt = request.description
         if request.sensor_id:
             user_prompt += f"\n[Info: sensor_id disponible = {request.sensor_id}]"
         if request.meter_id:
             user_prompt += f"\n[Info: meter_id disponible = {request.meter_id}]"
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"widget_gen_{uuid.uuid4().hex[:6]}",
-            system_message=WIDGET_GENERATION_PROMPT
-        )
-        chat.with_model("gemini", "gemini-2.5-flash")
-
-        response_text = await chat.send_message(UserMessage(text=user_prompt))
+        response_text = await ask_llm(system_message=WIDGET_GENERATION_PROMPT, user_message=user_prompt)
         raw = clean_json_response(response_text)
 
         try:

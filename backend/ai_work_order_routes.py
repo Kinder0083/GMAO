@@ -11,6 +11,8 @@ import logging
 import json
 import os
 
+from llm_service import ask_llm, clean_json_response, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai-work-orders", tags=["IA Ordres de Travail"])
@@ -25,25 +27,6 @@ def init_ai_wo_routes(database, audit_svc):
     audit_service = audit_svc
 
 
-def clean_json_response(text: str) -> str:
-    t = text.strip()
-    if t.startswith("```"):
-        t = t.split("\n", 1)[1] if "\n" in t else t[3:]
-    if t.endswith("```"):
-        t = t[:-3]
-    return t.strip()
-
-
-async def _get_llm():
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
-    key = os.environ.get("EMERGENT_LLM_KEY")
-    if not key:
-        global_key = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-        if global_key and global_key.get("value"):
-            key = global_key["value"]
-    if not key:
-        raise HTTPException(status_code=500, detail="Cle LLM non configuree")
-    return LlmChat, UserMessage, key
 
 
 @router.post("/diagnostic")
@@ -178,10 +161,10 @@ Reponds en JSON avec cette structure exacte :
   "commentaire_expert": "Synthese et recommandation globale en 2-3 phrases"
 }}"""
 
-        LlmChat, UserMessage, key = await _get_llm()
-        chat = LlmChat(api_key=key, session_id=f"ai_wo_diagnostic_{work_order_id}", system_message="Tu es un expert en maintenance industrielle FSAO. Reponds UNIQUEMENT en JSON valide.")
-        chat.with_model("gemini", "gemini-2.5-flash")
-        response = await chat.send_message(UserMessage(text=prompt))
+        response = await ask_llm(
+            system_message="Tu es un expert en maintenance industrielle FSAO. Reponds UNIQUEMENT en JSON valide.",
+            user_message=prompt,
+        )
         result = json.loads(clean_json_response(response))
 
         return {"success": True, "diagnostic": result, "equipment_history_count": len(history)}
@@ -266,10 +249,10 @@ Reponds en JSON :
   }}
 }}"""
 
-        LlmChat, UserMessage, key = await _get_llm()
-        chat = LlmChat(api_key=key, session_id=f"ai_wo_summary_{work_order_id}", system_message="Tu es un expert FSAO. Reponds UNIQUEMENT en JSON valide.")
-        chat.with_model("gemini", "gemini-2.5-flash")
-        response = await chat.send_message(UserMessage(text=prompt))
+        response = await ask_llm(
+            system_message="Tu es un expert FSAO. Reponds UNIQUEMENT en JSON valide.",
+            user_message=prompt,
+        )
         result = json.loads(clean_json_response(response))
 
         return {"success": True, "summary": result}

@@ -12,6 +12,8 @@ import io
 import os
 import logging
 
+from llm_service import ask_llm, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/qr", tags=["qr-codes"])
@@ -346,36 +348,17 @@ Sois concis, factuel et utile. Utilise des puces et du gras pour la lisibilité.
 
     # 8. Appeler le LLM avec le modèle configuré
     try:
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            global_key = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-            if global_key:
-                api_key = global_key.get("value")
-
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé API IA non configurée")
-
         # Lire le modèle configuré dans les paramètres système
         ai_settings = await db.system_settings.find_one({"key": QR_AI_SETTINGS_KEY}, {"_id": 0})
         ai_provider = ai_settings.get("provider", "gemini") if ai_settings else "gemini"
         ai_model = ai_settings.get("model", "gemini-2.5-flash") if ai_settings else "gemini-2.5-flash"
 
-        # Fallback si provider non supporté par Emergent
-        if ai_provider in ("deepseek", "mistral"):
-            ai_provider = "gemini"
-            ai_model = "gemini-2.5-flash"
-
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"qr_ai_{eq_id}_{_uuid.uuid4().hex[:6]}",
-            system_message=system_prompt
+        response_text = await ask_llm(
+            system_message=system_prompt,
+            user_message=f"Voici les données de l'équipement. Génère le résumé IA.\n\n{data_context}",
+            provider=ai_provider,
+            model=ai_model,
         )
-        chat.with_model(ai_provider, ai_model)
-
-        user_msg = UserMessage(text=f"Voici les données de l'équipement. Génère le résumé IA.\n\n{data_context}")
-        response_text = await chat.send_message(user_msg)
 
         return {
             "equipment_id": eq_id,

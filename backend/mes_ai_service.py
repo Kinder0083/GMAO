@@ -11,6 +11,8 @@ import re
 import uuid
 from typing import Any, Dict, List, Optional
 
+from llm_service import ask_llm, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 
@@ -219,14 +221,7 @@ class MESAIService:
 
     async def _call_llm(self, flat: Dict[str, Any], cfg: Dict[str, Any],
                         machine_name: Optional[str] = None, machine_type: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Appel reel au LLM via Emergent Universal Key."""
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise RuntimeError("EMERGENT_LLM_KEY absent du backend/.env")
-
-        # Import paresseux pour ne pas planter le serveur si lib indispo
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-
+        """Appel reel au LLM."""
         sample_str = json.dumps(flat, ensure_ascii=False, indent=2, default=str)
         ctx = f"Machine : {machine_name or 'inconnue'} (type={machine_type or 'inconnu'})"
         user_text = f"""{ctx}
@@ -246,13 +241,12 @@ Renvoie un tableau JSON pur (pas de markdown) avec un objet par cle, dans cet or
     "description": "..."
   }}
 ]"""
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"mes-ai-{uuid.uuid4()}",
+        resp = await ask_llm(
             system_message=SYSTEM_PROMPT,
-        ).with_model(cfg.get("provider", "anthropic"), cfg.get("model", "claude-sonnet-4-5-20250929"))
-
-        resp = await chat.send_message(UserMessage(text=user_text))
+            user_message=user_text,
+            provider=cfg.get("provider", "anthropic"),
+            model=cfg.get("model", "claude-sonnet-4-5-20250929"),
+        )
         text = _strip_json_codeblocks(str(resp))
         try:
             parsed = json.loads(text)

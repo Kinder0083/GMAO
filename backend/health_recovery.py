@@ -664,13 +664,6 @@ def recovery_level_3_medium():
         )
         log.info(f"  pip install: {'OK' if ok else 'ECHEC'}")
 
-        # emergentintegrations
-        run_cmd(
-            [venv_pip, "install", "emergentintegrations",
-             "--extra-index-url", "https://d33sy5i8bnduwe.cloudfront.net/simple/"],
-            timeout=120
-        )
-
     # Frontend rebuild
     _rebuild_frontend()
 
@@ -756,11 +749,6 @@ def recovery_level_4_hard():
     req_file = os.path.join(APP_ROOT, "backend", "requirements.txt")
     if os.path.exists(req_file):
         run_cmd([venv_pip, "install", "-r", req_file], timeout=300)
-        run_cmd(
-            [venv_pip, "install", "emergentintegrations",
-             "--extra-index-url", "https://d33sy5i8bnduwe.cloudfront.net/simple/"],
-            timeout=120
-        )
 
     # Frontend rebuild
     _rebuild_frontend()

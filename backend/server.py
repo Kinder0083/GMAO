@@ -908,6 +908,10 @@ api_router.include_router(data_integrity_router)
 
 # ==================== MODULES EXTERNES ====================
 
+# Service LLM unifie (remplace emergentintegrations/Emergent - voir llm_service.py)
+from llm_service import init_llm_service
+init_llm_service(db)
+
 # Surveillance routes
 from surveillance_routes import router as surveillance_router, init_surveillance_routes
 init_surveillance_routes(db, audit_service, realtime_manager)

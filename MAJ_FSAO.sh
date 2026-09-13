@@ -279,7 +279,6 @@ if [ -f "$APP_ROOT/venv/bin/activate" ]; then
     else
         step_warn "pip install échoué (non bloquant)"
     fi
-    pip install emergentintegrations --extra-index-url "$EXTRA_INDEX" >> "$LOG_FILE" 2>&1 || true
     deactivate 2>/dev/null || true
 elif [ -f "$APP_ROOT/backend/requirements.txt" ]; then
     PIP_CMD=$(command -v pip3 2>/dev/null || echo "pip")

@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 import uuid
 import logging
+import os
 
 from models import (
     ActionType, EntityType, MessageResponse,
@@ -16,6 +17,7 @@ from models import (
 )
 from dependencies import get_current_user, get_current_admin_user, require_permission
 from routes.shared import db, audit_service, serialize_doc
+from llm_service import ask_llm, ask_llm_with_file, LLMNotConfiguredError
 
 EntityType_Audit = EntityType
 logger = logging.getLogger(__name__)
@@ -122,12 +124,6 @@ async def extract_vendor_from_document(
     import json as json_mod
 
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé LLM non configurée")
-
         ext = os.path.splitext(file.filename)[1].lower()
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
@@ -179,12 +175,6 @@ RÈGLES:
 - Le champ categorie doit correspondre EXACTEMENT à une des valeurs listées
 - Extrais le maximum d'informations possibles"""
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"vendor_extract_{uuid.uuid4().hex[:8]}",
-            system_message=system_prompt
-        ).with_model("gemini", "gemini-2.5-flash")
-
         if ext in spreadsheet_formats:
             # Convertir Excel/CSV en texte pour l'envoyer à Gemini
             text_content = ""
@@ -210,10 +200,9 @@ RÈGLES:
                 except Exception:
                     text_content = "Impossible de lire le fichier"
 
-            response = await chat.send_message(
-                UserMessage(
-                    text=f"Voici le contenu extrait d'un document fournisseur ({file.filename}). Analyse-le et extrais les informations du fournisseur. Réponds uniquement en JSON.\n\n---\n{text_content[:15000]}"
-                )
+            response = await ask_llm(
+                system_message=system_prompt,
+                user_message=f"Voici le contenu extrait d'un document fournisseur ({file.filename}). Analyse-le et extrais les informations du fournisseur. Réponds uniquement en JSON.\n\n---\n{text_content[:15000]}",
             )
         else:
             # Formats natifs (PDF, images) — envoi direct du fichier
@@ -225,12 +214,12 @@ RÈGLES:
                 ".webp": "image/webp",
             }
             mime_type = mime_map.get(ext, "application/octet-stream")
-            
-            response = await chat.send_message(
-                UserMessage(
-                    text="Analyse ce document et extrais les informations du fournisseur. Réponds uniquement en JSON.",
-                    file_contents=[FileContentWithMimeType(file_path=tmp_path, mime_type=mime_type)]
-                )
+
+            response = await ask_llm_with_file(
+                system_message=system_prompt,
+                user_message="Analyse ce document et extrais les informations du fournisseur. Réponds uniquement en JSON.",
+                file_path=tmp_path,
+                mime_type=mime_type,
             )
 
         # Nettoyer le fichier temporaire

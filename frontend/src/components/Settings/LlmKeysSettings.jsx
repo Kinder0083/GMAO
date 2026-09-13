@@ -4,15 +4,19 @@ import api from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
 import { formatErrorMessage } from '../../utils/errorFormatter';
 
+const EMPTY_LLM_KEYS = {
+  openai_api_key: '',
+  anthropic_api_key: '',
+  gemini_api_key: '',
+  deepseek_api_key: '',
+  mistral_api_key: ''
+};
+
 const LlmKeysSettings = () => {
-  const [llmKeys, setLlmKeys] = useState({
-    deepseek_api_key: '',
-    mistral_api_key: ''
-  });
+  const [llmKeys, setLlmKeys] = useState(EMPTY_LLM_KEYS);
   const [loadingLlmKeys, setLoadingLlmKeys] = useState(true);
   const [savingLlmKeys, setSavingLlmKeys] = useState(false);
-  const [showDeepseekKey, setShowDeepseekKey] = useState(false);
-  const [showMistralKey, setShowMistralKey] = useState(false);
+  const [visibleKeys, setVisibleKeys] = useState({});
   const [llmVersions, setLlmVersions] = useState(null);
   const [checkingLlmVersions, setCheckingLlmVersions] = useState(false);
   const { toast } = useToast();
@@ -26,10 +30,7 @@ const LlmKeysSettings = () => {
     try {
       setLoadingLlmKeys(true);
       const response = await api.get('/ai/global-keys');
-      setLlmKeys(response.data || {
-        deepseek_api_key: '',
-        mistral_api_key: ''
-      });
+      setLlmKeys({ ...EMPTY_LLM_KEYS, ...(response.data || {}) });
     } catch (error) {
       console.error('Erreur chargement clés LLM:', error);
     } finally {
@@ -95,7 +96,7 @@ const LlmKeysSettings = () => {
         <div>
           <h2 className="text-xl font-bold">Clés API - Fournisseurs LLM</h2>
           <p className="text-sm text-purple-100 mt-1">
-            Configurez les clés API pour les fournisseurs d'IA non couverts par la clé Emergent
+            Renseignez la clé API d'au moins un fournisseur pour activer l'assistant Adria et les fonctionnalités IA
           </p>
         </div>
       </div>
@@ -113,67 +114,49 @@ const LlmKeysSettings = () => {
               <div className="flex items-start gap-2">
                 <Sparkles className="h-5 w-5 text-indigo-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-indigo-800">
-                  <p className="font-semibold mb-1">À propos des clés API LLM :</p>
+                  <p className="font-semibold mb-1">Où obtenir une clé API :</p>
                   <ul className="list-disc list-inside space-y-1">
-                    <li><strong>Clé Emergent</strong> : Déjà configurée, supporte OpenAI, Claude et Gemini</li>
-                    <li><strong>DeepSeek</strong> : Obtenez votre clé sur <a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer" className="underline">platform.deepseek.com</a></li>
-                    <li><strong>Mistral</strong> : Obtenez votre clé sur <a href="https://console.mistral.ai" target="_blank" rel="noopener noreferrer" className="underline">console.mistral.ai</a></li>
+                    <li><strong>OpenAI</strong> : <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="underline">platform.openai.com</a></li>
+                    <li><strong>Anthropic (Claude)</strong> : <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer" className="underline">console.anthropic.com</a></li>
+                    <li><strong>Google Gemini</strong> : <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="underline">aistudio.google.com</a></li>
+                    <li><strong>DeepSeek</strong> : <a href="https://platform.deepseek.com" target="_blank" rel="noopener noreferrer" className="underline">platform.deepseek.com</a></li>
+                    <li><strong>Mistral</strong> : <a href="https://console.mistral.ai" target="_blank" rel="noopener noreferrer" className="underline">console.mistral.ai</a></li>
                   </ul>
                 </div>
               </div>
             </div>
 
-            {/* Clé DeepSeek */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Clé API DeepSeek
-              </label>
-              <div className="relative">
-                <input
-                  type={showDeepseekKey ? 'text' : 'password'}
-                  value={llmKeys.deepseek_api_key || ''}
-                  onChange={(e) => setLlmKeys({...llmKeys, deepseek_api_key: e.target.value})}
-                  placeholder="sk-xxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowDeepseekKey(!showDeepseekKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showDeepseekKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
+            {/* Champs de clés API par fournisseur */}
+            {[
+              { key: 'openai_api_key', label: 'Clé API OpenAI', placeholder: 'sk-xxxxxxxxxxxxxxxxxxxxxxxx', hint: "Permet d'utiliser les modèles GPT-4o, GPT-5.1" },
+              { key: 'anthropic_api_key', label: 'Clé API Anthropic (Claude)', placeholder: 'sk-ant-xxxxxxxxxxxxxxxxxxxx', hint: "Permet d'utiliser les modèles Claude Sonnet, Claude Haiku" },
+              { key: 'gemini_api_key', label: 'Clé API Google Gemini', placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxx', hint: "Permet d'utiliser les modèles Gemini 2.5 Flash, Gemini 2.5 Pro" },
+              { key: 'deepseek_api_key', label: 'Clé API DeepSeek', placeholder: 'sk-xxxxxxxxxxxxxxxxxxxxxxxx', hint: "Permet d'utiliser les modèles DeepSeek Chat et DeepSeek Coder" },
+              { key: 'mistral_api_key', label: 'Clé API Mistral', placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxx', hint: "Permet d'utiliser les modèles Mistral Large et Mistral Medium" },
+            ].map(({ key, label, placeholder, hint }) => (
+              <div key={key}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {label}
+                </label>
+                <div className="relative">
+                  <input
+                    type={visibleKeys[key] ? 'text' : 'password'}
+                    value={llmKeys[key] || ''}
+                    onChange={(e) => setLlmKeys({ ...llmKeys, [key]: e.target.value })}
+                    placeholder={placeholder}
+                    className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setVisibleKeys({ ...visibleKeys, [key]: !visibleKeys[key] })}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {visibleKeys[key] ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">{hint}</p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Permet d'utiliser les modèles DeepSeek Chat et DeepSeek Coder
-              </p>
-            </div>
-
-            {/* Clé Mistral */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Clé API Mistral
-              </label>
-              <div className="relative">
-                <input
-                  type={showMistralKey ? 'text' : 'password'}
-                  value={llmKeys.mistral_api_key || ''}
-                  onChange={(e) => setLlmKeys({...llmKeys, mistral_api_key: e.target.value})}
-                  placeholder="xxxxxxxxxxxxxxxxxxxxxxxx"
-                  className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowMistralKey(!showMistralKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                >
-                  {showMistralKey ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                </button>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Permet d'utiliser les modèles Mistral Large et Mistral Medium
-              </p>
-            </div>
+            ))}
 
             {/* Bouton Sauvegarder */}
             <div className="flex items-center gap-4 pt-4 border-t border-gray-200">

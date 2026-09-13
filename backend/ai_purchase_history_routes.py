@@ -12,6 +12,8 @@ import uuid
 import json
 import os
 
+from llm_service import ask_llm, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai-purchase-history", tags=["IA Historique Achats"])
@@ -42,17 +44,6 @@ FALLBACK_CHAIN = [
 ]
 
 
-async def _get_llm_key():
-    key = os.environ.get("EMERGENT_LLM_KEY")
-    if not key:
-        gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-        if gk and gk.get("value"):
-            key = gk["value"]
-    if not key:
-        raise HTTPException(status_code=500, detail="Cle LLM non configuree")
-    return key
-
-
 async def _get_user_ai_config(user_id: str):
     try:
         prefs = await db.user_preferences.find_one({"user_id": user_id}, {"_id": 0})
@@ -66,8 +57,7 @@ async def _get_user_ai_config(user_id: str):
     return "gemini", "gemini-2.5-flash"
 
 
-async def _call_llm_with_fallback(api_key, session_id, system_message, user_text, preferred_provider, preferred_model):
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
+async def _call_llm_with_fallback(session_id, system_message, user_text, preferred_provider, preferred_model):
     import asyncio as _asyncio
 
     chain = [(preferred_provider, preferred_model)]
@@ -79,14 +69,8 @@ async def _call_llm_with_fallback(api_key, session_id, system_message, user_text
     for provider, model in chain:
         try:
             logger.info(f"[IA Achat] Essai {provider}/{model}...")
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"{session_id}_{provider}",
-                system_message=system_message
-            ).with_model(provider, model)
-
             response = await _asyncio.wait_for(
-                chat.send_message(UserMessage(text=user_text)),
+                ask_llm(system_message=system_message, user_message=user_text, provider=provider, model=model),
                 timeout=90
             )
             logger.info(f"[IA Achat] Succes avec {provider}/{model}")
@@ -133,7 +117,6 @@ async def analyze_purchase_trends(
 ):
     """Analyse IA des tendances d'achat : fournisseurs, couts, categories, anomalies."""
     try:
-        api_key = await _get_llm_key()
         pref_provider, pref_model = await _get_user_ai_config(current_user.get("id"))
 
         items, already_archived_count = await _get_unanalyzed_purchases("purchase_trend", 500)
@@ -218,7 +201,6 @@ Format:
 }"""
 
         response, used_provider, used_model = await _call_llm_with_fallback(
-            api_key=api_key,
             session_id=f"purchase_trends_{uuid.uuid4().hex[:8]}",
             system_message=system_msg,
             user_text=f"Analyse ces {len(items)} lignes d'achat et identifie les tendances:\n\n" +
@@ -284,7 +266,6 @@ async def generate_purchase_report(
 ):
     """Genere un rapport de synthese achat structure pour presentation en reunion."""
     try:
-        api_key = await _get_llm_key()
         pref_provider, pref_model = await _get_user_ai_config(current_user.get("id"))
 
         items, already_archived_count = await _get_unanalyzed_purchases("purchase_report", 500)
@@ -375,7 +356,6 @@ DETAIL DES ACHATS:
 {chr(10).join(purchases_detail)}"""
 
         response, used_provider, used_model = await _call_llm_with_fallback(
-            api_key=api_key,
             session_id=f"purchase_report_{uuid.uuid4().hex[:8]}",
             system_message=system_msg,
             user_text=user_text,

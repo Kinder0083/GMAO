@@ -2,6 +2,7 @@
   "name": "frontend",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:8001",
   "dependencies": {
     "@babel/runtime": "^7.28.6",
     "@craco/craco": "^7.1.0",

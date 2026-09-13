@@ -14,6 +14,8 @@ import json
 import os
 from io import BytesIO
 
+from llm_service import ask_llm, ask_llm_with_file, LLMNotConfiguredError
+
 # Répertoire racine du backend (fonctionne sur tous les environnements : /app, /opt/gmao-iris, etc.)
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -1167,17 +1169,7 @@ async def generate_form_template_ai(
 ):
     """Générer un modèle de formulaire via IA à partir d'une description, image, Excel ou JSON"""
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
         import tempfile
-
-        # Récupérer la clé LLM
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-            if gk and gk.get("value"):
-                api_key = gk["value"]
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé LLM non configurée")
 
         # Récupérer le modèle IA configuré
         ai_settings = await db.global_settings.find_one({"key": "form_ai_model"})
@@ -1187,16 +1179,10 @@ async def generate_form_template_ai(
             provider = ai_settings["value"].get("provider", "openai")
             model = ai_settings["value"].get("model", "gpt-4o")
 
-        # Créer le chat IA
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"form-gen-{uuid.uuid4()}",
-            system_message=FORM_AI_PROMPT
-        ).with_model(provider, model)
-
         # Construire le message
         user_text = ""
-        file_contents = []
+        image_tmp_path = None
+        image_mime_type = None
 
         if json_prompt:
             user_text = f"Voici un prompt JSON à convertir en formulaire :\n```json\n{json_prompt}\n```\nGénère le formulaire correspondant."
@@ -1215,8 +1201,8 @@ async def generate_form_template_ai(
                 # Image : envoyer directement à l'IA
                 with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as tmp:
                     tmp.write(content)
-                    tmp_path = tmp.name
-                file_contents.append(FileContentWithMimeType(file_path=tmp_path, mime_type=mime_type))
+                    image_tmp_path = tmp.name
+                image_mime_type = mime_type
                 user_text += f"\n\nAnalyse cette image de formulaire et extrais tous les champs visibles."
 
             elif "spreadsheet" in mime_type or "excel" in mime_type or file.filename.endswith(('.xlsx', '.xls', '.csv')):
@@ -1294,8 +1280,22 @@ async def generate_form_template_ai(
             raise HTTPException(status_code=400, detail="Fournissez une description, un JSON ou un fichier")
 
         # Appeler l'IA
-        msg = UserMessage(text=user_text, file_contents=file_contents if file_contents else None)
-        response = await chat.send_message(msg)
+        if image_tmp_path:
+            response = await ask_llm_with_file(
+                system_message=FORM_AI_PROMPT,
+                user_message=user_text,
+                file_path=image_tmp_path,
+                mime_type=image_mime_type,
+                provider=provider,
+                model=model,
+            )
+        else:
+            response = await ask_llm(
+                system_message=FORM_AI_PROMPT,
+                user_message=user_text,
+                provider=provider,
+                model=model,
+            )
 
         # Parser la réponse JSON
         import re

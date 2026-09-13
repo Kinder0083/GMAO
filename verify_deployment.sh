@@ -235,14 +235,13 @@ fi
 if [ -n "$PYTHON_CMD" ]; then
     echo "  Python : $($PYTHON_CMD --version 2>&1)"
     
-    # emergentintegrations
-    if $PYTHON_CMD -c "import emergentintegrations" 2>/dev/null; then
-        EI_VERSION=$($PYTHON_CMD -c "import emergentintegrations; print(emergentintegrations.__version__)" 2>/dev/null || echo "inconnu")
-        echo -e "${GREEN}✓${NC} emergentintegrations installé (version: $EI_VERSION)"
+    # litellm (moteur LLM unifie utilise par les fonctionnalites IA)
+    if $PYTHON_CMD -c "import litellm" 2>/dev/null; then
+        echo -e "${GREEN}✓${NC} litellm installé"
     else
-        echo -e "${YELLOW}⚠${NC} emergentintegrations NON installé"
+        echo -e "${YELLOW}⚠${NC} litellm NON installé"
         echo "    → Les fonctionnalités IA (Adria, analyse PDF) ne fonctionneront pas"
-        echo "    → Pour l'installer: pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/"
+        echo "    → Pour l'installer: pip install -r backend/requirements.txt"
         WARNINGS=$((WARNINGS + 1))
     fi
 fi
@@ -324,11 +323,10 @@ if [ $ERRORS -gt 0 ]; then
     echo "   cd /chemin/vers/votre/projet"
     echo "   git fetch origin && git reset --hard origin/main"
     echo ""
-    echo "2. Installez les dépendances backend (SANS emergentintegrations) :"
+    echo "2. Installez les dépendances backend :"
     echo "   source venv/bin/activate"
     echo "   pip install -r backend/requirements.txt"
-    echo "   # Si vous avez besoin de l'IA :"
-    echo "   pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/"
+    echo "   # Pour l'IA : renseignez vos cles API dans Parametres > Cles API LLM"
     echo ""
     echo "3. REBUILDER le frontend (CRUCIAL) :"
     echo "   cd frontend"

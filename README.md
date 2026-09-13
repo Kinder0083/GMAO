@@ -2,7 +2,7 @@
 
 Application de Fonctionnement des Services Assistee par Ordinateur (FSAO) complete et auto-hebergee.
 
-**Version :** 1.12.1
+**Version :** 1.13.0
 **Concepteur :** Greg
 **Derniere mise a jour :** Avril 2026
 
@@ -367,7 +367,7 @@ fsao-iris/
 | Notifications | Web Push (VAPID/pywebpush) + Expo Push          |
 | PWA         | Service Worker, manifest.json, installation mobile |
 | Deploiement | Proxmox LXC (Debian 12)                         |
-| IA          | Emergent LLM (Gemini 2.5 Flash) - assistant Adria, analyse QHSE, generation documents |
+| IA          | litellm (OpenAI, Anthropic, Gemini, DeepSeek, Mistral - au choix) - assistant Adria, analyse QHSE, generation documents |
 
 ---
 
@@ -459,8 +459,12 @@ GOOGLE_CLIENT_ID=xxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPX-xxxx
 GOOGLE_DRIVE_REDIRECT_URI=https://votre-domaine.com/api/backup/drive/callback
 
-# IA (assistant chat)
-EMERGENT_LLM_KEY=sk-emergent-xxxx
+# IA (assistant Adria et fonctionnalites IA - au moins une cle est necessaire)
+OPENAI_API_KEY=sk-xxxx
+ANTHROPIC_API_KEY=sk-ant-xxxx
+GEMINI_API_KEY=xxxx
+DEEPSEEK_API_KEY=sk-xxxx
+MISTRAL_API_KEY=xxxx
 
 # Notifications Push PWA (Web Push VAPID)
 VAPID_PUBLIC_KEY=<cle_publique_VAPID>
@@ -708,7 +712,6 @@ systemctl status mongod
 cd /opt/gmao-iris/backend
 source venv/bin/activate
 pip install -r requirements.txt
-pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
 supervisorctl restart gmao-iris-backend
 ```
 

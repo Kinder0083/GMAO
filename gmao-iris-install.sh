@@ -619,7 +619,6 @@ SMTP_PORT=25
 SMTP_FROM=noreply@gmao-iris.local
 SMTP_FROM_NAME=GMAO Iris
 APP_URL=${FRONTEND_URL}
-EMERGENT_LLM_KEY=sk-emergent-12d3316F4Fe54F79e6
 CAMERA_ENCRYPTION_KEY=\${CAMERA_ENCRYPTION_KEY}
 BEOF
 
@@ -642,13 +641,6 @@ pip install -r requirements.txt
 
 # Forcer bcrypt compatible avec passlib (bcrypt 4.x casse passlib 1.7.4)
 pip install "bcrypt<4.0.0"
-
-# Installer emergentintegrations depuis le repo Emergent
-echo "📦 Installation de emergentintegrations..."
-pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ || {
-    echo "⚠️ Installation de emergentintegrations échouée, tentative alternative..."
-    pip install --index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ --extra-index-url https://pypi.org/simple/ emergentintegrations
-}
 
 # Créer les admins directement avec Python inline
 echo "🔐 Création des comptes administrateurs..."
@@ -829,7 +821,6 @@ echo "🐍 Étape 2: Dépendances Backend..."
 if [ -f "\$BACKEND_DIR/requirements.txt" ]; then
     "\$VENV_DIR/bin/pip" install -r "\$BACKEND_DIR/requirements.txt" --quiet
 fi
-"\$VENV_DIR/bin/pip" install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ --quiet 2>/dev/null || true
 echo "   ✅ Dépendances backend installées"
 
 # 3. Compiler le frontend

@@ -77,7 +77,6 @@ cp /tmp/frontend.env frontend/.env 2>/dev/null
 # ── Installer et compiler ──
 source venv/bin/activate
 pip install -r backend/requirements.txt
-pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
 deactivate
 cd frontend && yarn install && CI=false yarn build && cd ..
 

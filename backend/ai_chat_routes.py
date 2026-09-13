@@ -5,6 +5,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional, List
 from dependencies import get_current_user, get_current_admin_user
+from llm_service import ask_llm, ask_llm_chat, get_api_key, transcribe_audio, LLMNotConfiguredError
+from llm_service import synthesize_speech as llm_synthesize_speech
 import logging
 import os
 from datetime import datetime, timezone
@@ -57,8 +59,8 @@ LLM_PROVIDERS = {
             {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "default": False},
             {"id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite", "default": False},
         ],
-        "requires_api_key": False,  # Utilise clé Emergent
-        "provider_key": "EMERGENT_LLM_KEY"
+        "requires_api_key": True,
+        "provider_key": "GEMINI_API_KEY"
     },
     "openai": {
         "id": "openai",
@@ -68,8 +70,8 @@ LLM_PROVIDERS = {
             {"id": "gpt-4o-mini", "name": "GPT-4o Mini", "default": False},
             {"id": "gpt-5.1", "name": "GPT-5.1", "default": False},
         ],
-        "requires_api_key": False,  # Utilise clé Emergent
-        "provider_key": "EMERGENT_LLM_KEY"
+        "requires_api_key": True,
+        "provider_key": "OPENAI_API_KEY"
     },
     "anthropic": {
         "id": "anthropic",
@@ -78,8 +80,8 @@ LLM_PROVIDERS = {
             {"id": "claude-4-sonnet-20250514", "name": "Claude 4 Sonnet", "default": True},
             {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku", "default": False},
         ],
-        "requires_api_key": False,  # Utilise clé Emergent
-        "provider_key": "EMERGENT_LLM_KEY"
+        "requires_api_key": True,
+        "provider_key": "ANTHROPIC_API_KEY"
     },
     "deepseek": {
         "id": "deepseek",
@@ -88,7 +90,7 @@ LLM_PROVIDERS = {
             {"id": "deepseek-chat", "name": "DeepSeek Chat", "default": True},
             {"id": "deepseek-coder", "name": "DeepSeek Coder", "default": False},
         ],
-        "requires_api_key": True,  # Nécessite clé globale
+        "requires_api_key": True,
         "provider_key": "DEEPSEEK_API_KEY"
     },
     "mistral": {
@@ -98,7 +100,7 @@ LLM_PROVIDERS = {
             {"id": "mistral-large-latest", "name": "Mistral Large", "default": True},
             {"id": "mistral-medium-latest", "name": "Mistral Medium", "default": False},
         ],
-        "requires_api_key": True,  # Nécessite clé globale
+        "requires_api_key": True,
         "provider_key": "MISTRAL_API_KEY"
     }
 }
@@ -792,19 +794,12 @@ async def get_llm_providers(
         providers_list = []
         
         for provider_id, provider_info in LLM_PROVIDERS.items():
-            is_available = False
-            
-            # Vérifier si la clé est disponible
-            key_name = provider_info.get("provider_key")
-            if key_name:
-                # Vérifier d'abord la clé globale, puis la clé Emergent
-                global_key = await db.global_settings.find_one({"key": key_name})
-                if global_key and global_key.get("value"):
-                    is_available = True
-                elif key_name == "EMERGENT_LLM_KEY":
-                    # Vérifier la variable d'environnement
-                    is_available = bool(os.environ.get("EMERGENT_LLM_KEY"))
-            
+            try:
+                await get_api_key(provider_id)
+                is_available = True
+            except LLMNotConfiguredError:
+                is_available = False
+
             providers_list.append({
                 "id": provider_info["id"],
                 "name": provider_info["name"],
@@ -986,8 +981,13 @@ async def get_user_sessions(
 # ==================== Endpoints Clés API Globales ====================
 
 class GlobalLLMKeys(BaseModel):
+    openai_api_key: Optional[str] = None
+    anthropic_api_key: Optional[str] = None
+    gemini_api_key: Optional[str] = None
     deepseek_api_key: Optional[str] = None
     mistral_api_key: Optional[str] = None
+
+GLOBAL_LLM_KEY_NAMES = ["OPENAI_API_KEY", "ANTHROPIC_API_KEY", "GEMINI_API_KEY", "DEEPSEEK_API_KEY", "MISTRAL_API_KEY"]
 
 @router.get("/global-keys")
 async def get_global_llm_keys(
@@ -996,9 +996,9 @@ async def get_global_llm_keys(
     """Récupérer les clés API globales (admin seulement)"""
     try:
         keys = {}
-        
+
         # Récupérer chaque clé
-        for key_name in ["DEEPSEEK_API_KEY", "MISTRAL_API_KEY"]:
+        for key_name in GLOBAL_LLM_KEY_NAMES:
             setting = await db.global_settings.find_one({"key": key_name})
             # Masquer partiellement la clé pour la sécurité
             if setting and setting.get("value"):
@@ -1011,9 +1011,9 @@ async def get_global_llm_keys(
                 keys[key_name.lower()] = masked
             else:
                 keys[key_name.lower()] = ""
-        
+
         return keys
-        
+
     except Exception as e:
         logger.error(f"Erreur récupération clés LLM: {e}")
         raise HTTPException(status_code=500, detail="Erreur récupération clés LLM")
@@ -1027,36 +1027,25 @@ async def update_global_llm_keys(
     """Mettre à jour les clés API globales (admin seulement)"""
     try:
         from datetime import datetime, timezone
-        
-        # Mettre à jour chaque clé si elle est fournie et non masquée
-        if keys.deepseek_api_key and not keys.deepseek_api_key.startswith("****") and "*" not in keys.deepseek_api_key:
-            await db.global_settings.update_one(
-                {"key": "DEEPSEEK_API_KEY"},
-                {"$set": {
-                    "key": "DEEPSEEK_API_KEY",
-                    "value": keys.deepseek_api_key,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_by": current_user.get("id")
-                }},
-                upsert=True
-            )
-            logger.info("Clé API DeepSeek mise à jour")
-        
-        if keys.mistral_api_key and not keys.mistral_api_key.startswith("****") and "*" not in keys.mistral_api_key:
-            await db.global_settings.update_one(
-                {"key": "MISTRAL_API_KEY"},
-                {"$set": {
-                    "key": "MISTRAL_API_KEY",
-                    "value": keys.mistral_api_key,
-                    "updated_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_by": current_user.get("id")
-                }},
-                upsert=True
-            )
-            logger.info("Clé API Mistral mise à jour")
-        
+
+        for key_name in GLOBAL_LLM_KEY_NAMES:
+            value = getattr(keys, key_name.lower(), None)
+            # Ignorer si absente ou si c'est la valeur masquée renvoyée par le GET
+            if value and "*" not in value:
+                await db.global_settings.update_one(
+                    {"key": key_name},
+                    {"$set": {
+                        "key": key_name,
+                        "value": value,
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
+                        "updated_by": current_user.get("id")
+                    }},
+                    upsert=True
+                )
+                logger.info(f"Clé API {key_name} mise à jour")
+
         return {"success": True, "message": "Clés API mises à jour"}
-        
+
     except Exception as e:
         logger.error(f"Erreur mise à jour clés LLM: {e}")
         raise HTTPException(status_code=500, detail="Erreur mise à jour clés LLM")
@@ -1599,85 +1588,29 @@ async def transcribe_audio_endpoint(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Transcrit un fichier audio en texte via OpenAI Whisper
-    Utilise la clé Emergent LLM
+    Transcrit un fichier audio en texte via OpenAI Whisper (nécessite une clé OpenAI)
     """
     try:
-        # Récupérer la clé API
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-            if gk and gk.get("value"):
-                api_key = gk["value"]
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé API non configurée pour la transcription")
-        
         # Lire le contenu audio
         audio_content = await audio.read()
-        
+
         if len(audio_content) == 0:
             raise HTTPException(status_code=400, detail="Fichier audio vide")
-        
+
         logger.info(f"Transcription audio: {len(audio_content)} bytes, type: {audio.content_type}")
-        
+
         # Sauvegarder temporairement le fichier
         with tempfile.NamedTemporaryFile(suffix=".webm", delete=False) as tmp_file:
             tmp_file.write(audio_content)
             tmp_path = tmp_file.name
-        
+
         try:
-            # Utiliser emergentintegrations pour Whisper
-            from emergentintegrations.llm.openai import OpenAISpeechToText
-            
-            stt = OpenAISpeechToText(api_key=api_key)
-            
-            with open(tmp_path, "rb") as audio_file:
-                response = await stt.transcribe(
-                    file=audio_file,
-                    model="whisper-1",
-                    response_format="json",
-                    language="fr"
-                )
-            
-            transcription = response.text if hasattr(response, 'text') else str(response)
-            
+            transcription = await transcribe_audio(tmp_path, language="fr")
             logger.info(f"Audio transcrit avec succès: {transcription[:50]}...")
-            
             return {
                 "success": True,
                 "transcription": transcription
             }
-            
-        except ImportError as ie:
-            logger.warning(f"emergentintegrations non disponible: {ie}, utilisation du fallback httpx")
-            
-            # Fallback: utiliser l'API OpenAI directement via httpx
-            import httpx
-            
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                with open(tmp_path, "rb") as f:
-                    files = {"file": ("audio.webm", f, "audio/webm")}
-                    data = {"model": "whisper-1", "language": "fr"}
-                    
-                    response = await client.post(
-                        "https://api.openai.com/v1/audio/transcriptions",
-                        headers={"Authorization": f"Bearer {api_key}"},
-                        files=files,
-                        data=data
-                    )
-                    
-            if response.status_code == 200:
-                result = response.json()
-                transcription = result.get("text", "")
-                logger.info(f"Audio transcrit (fallback): {transcription[:50]}...")
-                return {
-                    "success": True,
-                    "transcription": transcription
-                }
-            else:
-                logger.error(f"Erreur API Whisper: {response.status_code} - {response.text}")
-                raise HTTPException(status_code=500, detail=f"Erreur transcription: {response.text}")
-                
         finally:
             # Nettoyer le fichier temporaire
             try:
@@ -1685,7 +1618,9 @@ async def transcribe_audio_endpoint(
                 os_module.unlink(tmp_path)
             except:
                 pass
-                
+
+    except LLMNotConfiguredError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -1700,72 +1635,21 @@ async def synthesize_speech(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Synthèse vocale (Text-to-Speech) via OpenAI TTS
+    Synthèse vocale (Text-to-Speech) via OpenAI TTS (nécessite une clé OpenAI)
     Retourne l'audio en base64
     """
     try:
-        # Récupérer la clé API
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-            if gk and gk.get("value"):
-                api_key = gk["value"]
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé API non configurée pour la synthèse vocale")
-        
-        # Limiter la longueur du texte
-        if len(text) > 4096:
-            text = text[:4096]
-        
-        try:
-            from emergentintegrations.llm.openai import text_to_speech as ei_tts
-            
-            # Générer l'audio
-            audio_content = await ei_tts(
-                api_key=api_key,
-                text=text,
-                voice=voice,
-                model="tts-1"
-            )
-            
-            # Encoder en base64
-            audio_base64 = base64.b64encode(audio_content).decode('utf-8')
-            
-            return {
-                "success": True,
-                "audio_base64": audio_base64,
-                "format": "mp3"
-            }
-            
-        except ImportError:
-            # Fallback: utiliser l'API OpenAI directement
-            import httpx
-            
-            async with httpx.AsyncClient() as client:
-                response = await client.post(
-                    "https://api.openai.com/v1/audio/speech",
-                    headers={
-                        "Authorization": f"Bearer {api_key}",
-                        "Content-Type": "application/json"
-                    },
-                    json={
-                        "model": "tts-1",
-                        "input": text,
-                        "voice": voice,
-                        "response_format": "mp3"
-                    }
-                )
-                
-            if response.status_code == 200:
-                audio_base64 = base64.b64encode(response.content).decode('utf-8')
-                return {
-                    "success": True,
-                    "audio_base64": audio_base64,
-                    "format": "mp3"
-                }
-            else:
-                raise HTTPException(status_code=500, detail=f"Erreur synthèse vocale: {response.text}")
-                
+        audio_content = await llm_synthesize_speech(text=text, voice=voice)
+        audio_base64 = base64.b64encode(audio_content).decode('utf-8')
+
+        return {
+            "success": True,
+            "audio_base64": audio_base64,
+            "format": "mp3"
+        }
+
+    except LLMNotConfiguredError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -1803,21 +1687,7 @@ async def get_llm_response(
     dynamic_context: str = ""
 ) -> str:
     """Obtenir une réponse du LLM avec mémoire de conversation et contexte enrichi"""
-    
-    # Récupérer la clé API
-    api_key = None
-    provider_info = LLM_PROVIDERS.get(provider, LLM_PROVIDERS["gemini"])
-    key_name = provider_info.get("provider_key", "EMERGENT_LLM_KEY")
-    
-    global_key = await db.global_settings.find_one({"key": key_name})
-    if global_key and global_key.get("value"):
-        api_key = global_key["value"]
-    else:
-        api_key = os.environ.get(key_name) or os.environ.get("EMERGENT_LLM_KEY")
-    
-    if not api_key:
-        raise Exception(f"Clé API non configurée pour {provider}")
-    
+
     # Préparer le message système avec le contexte enrichi
     system_message = get_system_message(assistant_name, assistant_gender, language, app_context)
     
@@ -1841,32 +1711,12 @@ async def get_llm_response(
         enriched_message = f"{message}\n\n[DONNEES PERTINENTES DE LA BASE DE DONNEES]\n{dynamic_context}"
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-        
-        ei_provider = provider
-        if provider in ["deepseek", "mistral"]:
-            logger.warning(f"Provider {provider} non supporté par Emergent, fallback sur gemini")
-            ei_provider = "gemini"
-            model = "gemini-2.5-flash"
-        
-        # Créer le chat avec l'historique complet via initial_messages
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"gmao_{assistant_name}_{uuid.uuid4().hex[:6]}",
-            system_message=system_message,
-            initial_messages=messages
-        )
-        
-        chat.with_model(ei_provider, model)
-        
-        user_message = UserMessage(text=enriched_message)
-        response = await chat.send_message(user_message)
-        
+        messages.append({"role": "user", "content": enriched_message})
+        response = await ask_llm_chat(messages=messages, provider=provider, model=model)
         return response
-        
-    except ImportError:
-        logger.error("emergentintegrations non installé")
-        raise Exception("Le module emergentintegrations n'est pas installé")
+
+    except LLMNotConfiguredError:
+        raise
     except Exception as e:
         logger.error(f"Erreur appel LLM: {e}")
         raise

@@ -143,7 +143,6 @@ echo "[5/6] Installation des dépendances..."
 if [ -f "$APP_ROOT/venv/bin/activate" ]; then
     source "$APP_ROOT/venv/bin/activate"
     pip install -r "$APP_ROOT/backend/requirements.txt" 2>&1 || echo "[WARN] pip install échoué"
-    pip install emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/ 2>&1 || true
     deactivate 2>/dev/null || true
 else
     pip3 install -r "$APP_ROOT/backend/requirements.txt" 2>&1 || echo "[WARN] pip install échoué"

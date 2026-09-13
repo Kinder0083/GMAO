@@ -12,6 +12,8 @@ import uuid
 import json
 import os
 
+from llm_service import ask_llm, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/accident-analysis", tags=["Analyse d'Accidents"])
@@ -41,17 +43,6 @@ def clean_json(text: str) -> str:
     return t.strip()
 
 
-async def _get_llm_key():
-    key = os.environ.get("EMERGENT_LLM_KEY")
-    if not key:
-        gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-        if gk and gk.get("value"):
-            key = gk["value"]
-    if not key:
-        raise HTTPException(status_code=500, detail="Cle LLM non configuree")
-    return key
-
-
 async def _get_ai_config():
     """Recupere le modele IA configure pour les analyses d'accidents."""
     try:
@@ -65,10 +56,8 @@ async def _get_ai_config():
 
 
 async def _call_llm(session_id: str, system_message: str, user_text: str):
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
     import asyncio
 
-    api_key = await _get_llm_key()
     provider, model = await _get_ai_config()
 
     chain = [(provider, model)]
@@ -78,21 +67,15 @@ async def _call_llm(session_id: str, system_message: str, user_text: str):
 
     for prov, mod in chain:
         try:
-            chat = LlmChat(
-                api_key=api_key,
-                session_id=f"accident_{session_id}_{prov}",
-                system_message=system_message
-            ).with_model(prov, mod)
-
             response = await asyncio.wait_for(
-                chat.send_message(UserMessage(text=user_text)),
+                ask_llm(system_message=system_message, user_message=user_text, provider=prov, model=mod),
                 timeout=90
             )
             return response
         except Exception as e:
             logger.warning(f"[Accident IA] Echec {prov}/{mod}: {e}")
 
-    raise HTTPException(status_code=500, detail="Tous les providers IA ont echoue")
+    raise HTTPException(status_code=500, detail="Tous les providers IA ont echoue (verifiez les cles API dans Parametres)")
 
 
 def serialize_doc(doc):

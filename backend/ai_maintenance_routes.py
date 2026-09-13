@@ -14,6 +14,8 @@ import json
 import os
 import tempfile
 
+from llm_service import ask_llm, ask_llm_with_file, clean_json_response, LLMNotConfiguredError
+
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/ai-maintenance", tags=["IA Maintenance"])
@@ -28,26 +30,6 @@ def init_ai_maintenance_routes(database, audit_svc):
     audit_service = audit_svc
 
 
-def clean_json_response(text: str) -> str:
-    """Nettoie la réponse JSON de l'IA (supprime backticks, etc.)"""
-    t = text.strip()
-    if t.startswith("```"):
-        t = t.split("\n", 1)[1] if "\n" in t else t[3:]
-    if t.endswith("```"):
-        t = t[:-3]
-    return t.strip()
-
-
-async def _get_llm_key():
-    """Recupere la cle LLM depuis l'env ou la DB global_settings."""
-    key = os.environ.get("EMERGENT_LLM_KEY")
-    if not key:
-        gk = await db.global_settings.find_one({"key": "EMERGENT_LLM_KEY"})
-        if gk and gk.get("value"):
-            key = gk["value"]
-    if not key:
-        raise HTTPException(status_code=500, detail="Cle LLM non configuree")
-    return key
 
 
 # ========================================================
@@ -64,10 +46,6 @@ async def generate_checklist_from_document(
     avec les points de contrôle extraits.
     """
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-
-        api_key = await _get_llm_key()
-
         ext = os.path.splitext(file.filename)[1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             content = await file.read()
@@ -83,10 +61,7 @@ async def generate_checklist_from_document(
         }
         mime_type = mime_map.get(ext, "application/pdf")
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"checklist_gen_{uuid.uuid4().hex[:8]}",
-            system_message="""Tu es un expert en maintenance industrielle et en création de checklists de contrôle préventif.
+        checklist_system_message = """Tu es un expert en maintenance industrielle et en création de checklists de contrôle préventif.
 Analyse le document technique fourni (manuel constructeur, fiche technique, notice de maintenance, norme, etc.)
 et génère une checklist complète de points de contrôle.
 
@@ -129,13 +104,13 @@ IMPORTANT:
 - Utilise TEXT pour les relevés de numéros de série, observations, etc.
 - Groupe les items par thème logique si le document couvre plusieurs aspects
 - Si le document mentionne plusieurs fréquences de maintenance, crée une checklist par fréquence"""
-        ).with_model("gemini", "gemini-2.5-flash")
 
-        file_content = FileContentWithMimeType(file_path=tmp_path, mime_type=mime_type)
-        response = await chat.send_message(UserMessage(
-            text="Analyse ce document technique et génère des checklists de contrôle préventif détaillées.",
-            file_contents=[file_content]
-        ))
+        response = await ask_llm_with_file(
+            system_message=checklist_system_message,
+            user_message="Analyse ce document technique et génère des checklists de contrôle préventif détaillées.",
+            file_path=tmp_path,
+            mime_type=mime_type,
+        )
 
         os.unlink(tmp_path)
         response_text = clean_json_response(response)
@@ -227,10 +202,6 @@ async def generate_maintenance_program(
     de maintenance préventive avec checklists associées.
     """
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-
-        api_key = await _get_llm_key()
-
         ext = os.path.splitext(file.filename)[1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             content = await file.read()
@@ -246,10 +217,7 @@ async def generate_maintenance_program(
         }
         mime_type = mime_map.get(ext, "application/pdf")
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"maint_prog_{uuid.uuid4().hex[:8]}",
-            system_message="""Tu es un expert en maintenance industrielle préventive.
+        maint_prog_system_message = """Tu es un expert en maintenance industrielle préventive.
 Analyse le document fourni (carnet de maintenance constructeur, fiche technique, notice d'entretien)
 et génère un programme complet de maintenance préventive.
 
@@ -292,13 +260,13 @@ IMPORTANT:
 - Sois précis sur les valeurs numériques (seuils, tolérances)
 - Inclus les pièces de rechange et consommables nécessaires
 - Mentionne les compétences/habilitations requises"""
-        ).with_model("gemini", "gemini-2.5-flash")
 
-        file_content = FileContentWithMimeType(file_path=tmp_path, mime_type=mime_type)
-        response = await chat.send_message(UserMessage(
-            text="Analyse ce document et génère un programme complet de maintenance préventive avec toutes les opérations et checklists associées.",
-            file_contents=[file_content]
-        ))
+        response = await ask_llm_with_file(
+            system_message=maint_prog_system_message,
+            user_message="Analyse ce document et génère un programme complet de maintenance préventive avec toutes les opérations et checklists associées.",
+            file_path=tmp_path,
+            mime_type=mime_type,
+        )
 
         os.unlink(tmp_path)
         response_text = clean_json_response(response)
@@ -433,10 +401,6 @@ async def analyze_nonconformities(
     les patterns de non-conformités et générer des recommandations.
     """
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage
-
-        api_key = await _get_llm_key()
-
         # Récupérer l'historique des exécutions (90 derniers jours)
         from datetime import timedelta
         cutoff = (datetime.now(timezone.utc) - timedelta(days=int(data.get("days", 90)))).isoformat()
@@ -511,10 +475,7 @@ Analyse ces données et identifie:
 3. Les recommandations d'action
 4. Les ordres de travail curatifs à créer"""
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"nc_analysis_{uuid.uuid4().hex[:8]}",
-            system_message="""Tu es un expert en maintenance industrielle et analyse de données.
+        nc_system_message = """Tu es un expert en maintenance industrielle et analyse de données.
 Analyse les données de non-conformités des contrôles préventifs et génère un rapport d'analyse.
 
 Réponds UNIQUEMENT avec un JSON valide, sans texte autour ni backticks.
@@ -562,9 +523,8 @@ Format attendu:
     }
   ]
 }"""
-        ).with_model("gemini", "gemini-2.5-flash")
 
-        response = await chat.send_message(UserMessage(text=analysis_prompt))
+        response = await ask_llm(system_message=nc_system_message, user_message=analysis_prompt)
         response_text = clean_json_response(response)
         analysis = json.loads(response_text)
 

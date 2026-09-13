@@ -1099,14 +1099,7 @@ async def _extract_with_gemini(content: bytes, filename: str) -> list:
     import os
     import json
     import tempfile
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    api_key = os.environ.get("EMERGENT_LLM_KEY")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="Cle API Gemini non configuree")
-
-    from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
+    from llm_service import ask_llm_with_file
 
     # Determiner le mime type
     mime_map = {
@@ -1125,18 +1118,9 @@ async def _extract_with_gemini(content: bytes, filename: str) -> list:
         tmp_path = tmp.name
 
     try:
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"presqu-extract-{os.urandom(4).hex()}",
-            system_message="""Tu es un assistant specialise dans l'extraction de donnees de securite industrielle.
+        extract_system_message = """Tu es un assistant specialise dans l'extraction de donnees de securite industrielle.
 Tu analyses des documents (PDF, images, tableaux) contenant des presqu'accidents (near-miss) et tu extrais les informations structurees.
 Tu DOIS repondre UNIQUEMENT avec un JSON valide, sans texte avant ou apres. Pas de markdown, pas de ```json."""
-        ).with_model("gemini", "gemini-2.5-flash")
-
-        file_attachment = FileContentWithMimeType(
-            file_path=tmp_path,
-            mime_type=mime_type
-        )
 
         prompt = """Analyse ce document et extrais TOUS les presqu'accidents (near-miss / incidents) qu'il contient.
 
@@ -1155,12 +1139,12 @@ Pour chaque presqu'accident, extrais ces champs:
 Reponds avec un JSON au format: {"items": [{...}, {...}]}
 Si le document ne contient pas de presqu'accidents, reponds: {"items": []}"""
 
-        user_message = UserMessage(
-            text=prompt,
-            file_contents=[file_attachment]
+        response = await ask_llm_with_file(
+            system_message=extract_system_message,
+            user_message=prompt,
+            file_path=tmp_path,
+            mime_type=mime_type,
         )
-
-        response = await chat.send_message(user_message)
 
         # Parser le JSON de la reponse
         response_text = response.strip()

@@ -9,6 +9,8 @@ import uuid
 import logging
 import os
 
+from llm_service import ask_llm, ask_llm_with_file, LLMNotConfiguredError
+
 from models import (
     SurveillanceItem,
     SurveillanceItemCreate,
@@ -1427,12 +1429,6 @@ async def extract_surveillance_from_document(
     import json
 
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé LLM non configurée")
-
         # Sauvegarder temporairement le fichier ET de façon permanente
         ext = os.path.splitext(file.filename)[1].lower()
         
@@ -1463,10 +1459,7 @@ async def extract_surveillance_from_document(
         mime_type = mime_map.get(ext, "application/pdf")
 
         # Étape 1 : Extraction des informations du document
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"surveillance_extract_{uuid.uuid4().hex[:8]}",
-            system_message="""Tu es un expert en réglementation française de sécurité au travail et en contrôles réglementaires.
+        extract_system_message = """Tu es un expert en réglementation française de sécurité au travail et en contrôles réglementaires.
 Analyse le document de contrôle/vérification fourni et extrais TOUS les types de contrôles distincts qu'il contient.
 
 Un rapport d'organisme de contrôle (APAVE, SOCOTEC, DEKRA, BUREAU VERITAS) peut contenir :
@@ -1510,17 +1503,13 @@ IMPORTANT:
 - periodicite_detectee en format SIMPLE uniquement (ex: '1 an', '6 mois')
 - batiment JAMAIS null, utiliser '' si non précisé
 - Si anomalies: résultat = NON_CONFORME ou AVEC_RESERVES"""
-        ).with_model("gemini", "gemini-2.5-flash")
 
-        file_content = FileContentWithMimeType(
+        response = await ask_llm_with_file(
+            system_message=extract_system_message,
+            user_message="Analyse ce document de contrôle réglementaire et extrais toutes les informations pour chaque type de contrôle distinct.",
             file_path=tmp_path,
-            mime_type=mime_type
+            mime_type=mime_type,
         )
-
-        response = await chat.send_message(UserMessage(
-            text="Analyse ce document de contrôle réglementaire et extrais toutes les informations pour chaque type de contrôle distinct.",
-            file_contents=[file_content]
-        ))
 
         # Nettoyer le fichier temporaire
         os.unlink(tmp_path)
@@ -1544,10 +1533,7 @@ IMPORTANT:
                 classe = ctrl.get("classe_type", "")
                 category = ctrl.get("category", "")
                 
-                periodicity_chat = LlmChat(
-                    api_key=api_key,
-                    session_id=f"periodicity_search_{uuid.uuid4().hex[:8]}",
-                    system_message="""Tu es un expert en réglementation française de sécurité au travail.
+                periodicity_system_message = """Tu es un expert en réglementation française de sécurité au travail.
 On te donne un type de contrôle et ses références réglementaires.
 Tu dois déterminer la périodicité réglementaire obligatoire en France pour ce type de contrôle.
 
@@ -1571,15 +1557,15 @@ Voici les principales périodicités réglementaires françaises:
 - SSI/détection incendie: 1 an (MS 73, PE 4)
 - Installations de gaz: 1 an (Arrêté du 21/12/1993)
 - Appareils à pression: selon catégorie (Arrêté du 20/11/2017)"""
-                ).with_model("gemini", "gemini-2.5-flash")
 
-                period_response = await periodicity_chat.send_message(UserMessage(
-                    text=f"""Détermine la périodicité réglementaire pour ce contrôle:
+                period_response = await ask_llm(
+                    system_message=periodicity_system_message,
+                    user_message=f"""Détermine la périodicité réglementaire pour ce contrôle:
 - Type: {classe}
 - Catégorie: {category}
 - Références réglementaires trouvées dans le document: {refs}
-- Équipements: {ctrl.get('equipements_concernes', 'Non précisé')}"""
-                ))
+- Équipements: {ctrl.get('equipements_concernes', 'Non précisé')}""",
+                )
 
                 period_text = period_response.strip()
                 if period_text.startswith("```"):
@@ -2118,23 +2104,14 @@ async def analyze_report_for_occurrence(
         raise HTTPException(status_code=400, detail="Cet item est déjà réalisé")
     
     try:
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-        
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé LLM non configurée")
-        
         ext = os.path.splitext(file.filename)[1].lower()
         with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
             content = await file.read()
             tmp.write(content)
             tmp_path = tmp.name
-        
+
         # Préparer le contenu pour l'IA
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"report_match_{uuid.uuid4().hex[:8]}",
-            system_message=f"""Tu analyses un rapport de contrôle pour mettre à jour un contrôle planifié.
+        match_system_message = f"""Tu analyses un rapport de contrôle pour mettre à jour un contrôle planifié.
 
 Le contrôle planifié est:
 - Type: {item.get('classe_type')}
@@ -2163,11 +2140,10 @@ Réponds UNIQUEMENT en JSON:
 }}
 
 corresponds_to_planned = true si le rapport correspond bien au contrôle planifié ci-dessus."""
-        ).with_model("gemini", "gemini-2.5-flash")
-        
+
         # Envoyer le fichier ou le texte
         spreadsheet_formats = {".xlsx", ".xls", ".csv"}
-        
+
         if ext in spreadsheet_formats:
             import openpyxl
             text_content = ""
@@ -2183,17 +2159,18 @@ corresponds_to_planned = true si le rapport correspond bien au contrôle planifi
             except Exception:
                 with open(tmp_path, 'r', errors='replace') as f:
                     text_content = f.read()
-            
-            response = await chat.send_message(
-                UserMessage(text=f"Analyse ce rapport:\n\n{text_content[:15000]}")
+
+            response = await ask_llm(
+                system_message=match_system_message,
+                user_message=f"Analyse ce rapport:\n\n{text_content[:15000]}",
             )
         else:
             mime_map = {".pdf": "application/pdf", ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp"}
-            response = await chat.send_message(
-                UserMessage(
-                    text="Analyse ce rapport de contrôle.",
-                    file_contents=[FileContentWithMimeType(file_path=tmp_path, mime_type=mime_map.get(ext, "application/octet-stream"))]
-                )
+            response = await ask_llm_with_file(
+                system_message=match_system_message,
+                user_message="Analyse ce rapport de contrôle.",
+                file_path=tmp_path,
+                mime_type=mime_map.get(ext, "application/octet-stream"),
             )
         
         try:

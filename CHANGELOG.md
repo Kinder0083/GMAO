@@ -1,5 +1,14 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.13.0 - Independance vis-a-vis d'Emergent pour l'IA (Avril 2026)
+
+### IA
+- **Suppression de la dependance a `emergentintegrations`** (SDK proprietaire de la plateforme Emergent, installable uniquement via un index prive) sur les 18 fichiers backend qui l'utilisaient
+- Nouveau module `backend/llm_service.py` : couche d'acces unifiee aux LLM via `litellm`, appelant directement les fournisseurs (OpenAI, Anthropic/Claude, Google Gemini, DeepSeek, Mistral) avec les cles API propres de chaque installation
+- **DeepSeek et Mistral fonctionnent desormais reellement** dans l'assistant Adria : le selecteur de modele basculait silencieusement sur Gemini quand ces fournisseurs etaient choisis, sans jamais les appeler
+- Parametres > Cles API LLM : ajout des champs OpenAI, Anthropic et Google Gemini (auparavant seuls DeepSeek et Mistral etaient proposes, les 3 autres passaient par la cle Emergent)
+- Plus de cle `EMERGENT_LLM_KEY` codee en dur dans le script d'installation ; `.env.example` documente desormais les 5 variables de cles fournisseur
+
 ## Version 1.12.1 - Securite : compte de secours a l'installation (Avril 2026)
 
 ### Securite

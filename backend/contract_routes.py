@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from bson import ObjectId
 
 from dependencies import get_current_user, get_current_admin_user, check_permission, require_permission
+from llm_service import ask_llm_with_file, LLMNotConfiguredError
 
 logger = logging.getLogger(__name__)
 
@@ -626,11 +627,6 @@ async def extract_contract_info(
     """Extraire les informations d'un contrat via IA (Gemini)"""
     try:
         import tempfile
-        from emergentintegrations.llm.chat import LlmChat, UserMessage, FileContentWithMimeType
-
-        api_key = os.environ.get("EMERGENT_LLM_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="Clé LLM non configurée")
 
         # Sauvegarder temporairement le fichier
         ext = os.path.splitext(file.filename)[1].lower()
@@ -648,10 +644,7 @@ async def extract_contract_info(
         }
         mime_type = mime_map.get(ext, "application/pdf")
 
-        chat = LlmChat(
-            api_key=api_key,
-            session_id=f"contract_extract_{uuid.uuid4().hex[:8]}",
-            system_message="""Tu es un assistant spécialisé dans l'extraction d'informations de contrats commerciaux.
+        contract_system_message = """Tu es un assistant spécialisé dans l'extraction d'informations de contrats commerciaux.
 Analyse le document fourni et extrais les informations suivantes au format JSON strict.
 Si une information n'est pas trouvée, utilise null.
 Réponds UNIQUEMENT avec le JSON, sans aucun texte autour ni backticks.
@@ -678,17 +671,13 @@ Format attendu:
   "contact_email": "string ou null",
   "notes": "string - résumé des points importants du contrat"
 }"""
-        ).with_model("gemini", "gemini-2.5-flash")
 
-        file_content = FileContentWithMimeType(
+        response = await ask_llm_with_file(
+            system_message=contract_system_message,
+            user_message="Analyse ce contrat et extrais toutes les informations demandées au format JSON.",
             file_path=tmp_path,
-            mime_type=mime_type
+            mime_type=mime_type,
         )
-
-        response = await chat.send_message(UserMessage(
-            text="Analyse ce contrat et extrais toutes les informations demandées au format JSON.",
-            file_contents=[file_content]
-        ))
 
         # Nettoyer le fichier temporaire
         os.unlink(tmp_path)
