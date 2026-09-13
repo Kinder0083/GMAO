@@ -76,6 +76,7 @@ class UserPermissions(BaseModel):
     aiDashboard: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Tableau de bord IA - Vue unifiée des analyses IA
     aiAutomations: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Automatisations IA - Configuration des règles automatiques
     aiWidgets: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Widgets IA (Adria) - Création de widgets par l'assistant IA
+    affichageDynamique: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Affichage Dynamique - Écrans de signalétique personnalisables
 
 # Fonction helper pour obtenir les permissions par défaut selon le rôle
 def get_default_permissions_by_role(role: str) -> UserPermissions:
@@ -131,7 +132,8 @@ def get_default_permissions_by_role(role: str) -> UserPermissions:
             accidentAnalysis=ModulePermission(view=True, edit=True, delete=True),
             aiDashboard=ModulePermission(view=True, edit=True, delete=True),
             aiAutomations=ModulePermission(view=True, edit=True, delete=True),
-            aiWidgets=ModulePermission(view=True, edit=True, delete=True)
+            aiWidgets=ModulePermission(view=True, edit=True, delete=True),
+            affichageDynamique=ModulePermission(view=True, edit=True, delete=True)
         )
     
     # Rôle spécial AFFICHAGE : Uniquement accès au tableau d'affichage

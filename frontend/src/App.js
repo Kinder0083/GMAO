@@ -98,6 +98,8 @@ import TrainingPublicPage from "./pages/TrainingPublicPage";
 import AccidentAnalysisPage from "./pages/AccidentAnalysisPage";
 import AccidentAnalysisDetail from "./pages/AccidentAnalysisDetail";
 import AccidentAnalysisAdmin from "./pages/AccidentAnalysis/AccidentAnalysisAdmin";
+import AffichageDynamiquePage from "./pages/AffichageDynamiquePage";
+import AffichageDynamiquePublicPage from "./pages/AffichageDynamiquePublicPage";
 
 // Protected Route Component with Token Validation
 const ProtectedRoute = ({ children }) => {
@@ -237,6 +239,7 @@ function App() {
           <Route path="/qr/:equipmentId" element={<QREquipmentPage />} />
           <Route path="/qr-inventory/:itemId" element={<QRInventoryPage />} />
           <Route path="/training-public/:token" element={<TrainingPublicPage />} />
+          <Route path="/affichage-public/:token" element={<AffichageDynamiquePublicPage />} />
           {/* Route spéciale pour le Tableau d'affichage - plein écran sans menu */}
           <Route 
             path="/whiteboard" 
@@ -332,6 +335,7 @@ function App() {
             <Route path="accident-analysis" element={<AccidentAnalysisPage />} />
             <Route path="accident-analysis/admin" element={<AccidentAnalysisAdmin />} />
             <Route path="accident-analysis/:id" element={<AccidentAnalysisDetail />} />
+            <Route path="affichage-dynamique" element={<AffichageDynamiquePage />} />
           </Route>
         </Routes>
       </BrowserRouter>

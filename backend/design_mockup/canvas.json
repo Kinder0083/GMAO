@@ -1,0 +1,11 @@
+{
+  "artboards": [
+    { "file": "Main.dc.html", "x": 0, "y": 0, "w": 1440, "h": 900 },
+    { "file": "EcranPublic.dc.html", "x": 1520, "y": 0, "w": 1920, "h": 1080 }
+  ],
+  "annotations": [
+    { "id": "note-editeur", "x": 0, "y": -70, "w": 420, "text": "Editeur (authentifie) : palette de blocs a gauche, canvas libre a droite. Glisser-deposer + redimensionnement." },
+    { "id": "note-public", "x": 1520, "y": -70, "w": 420, "text": "Ecran public (URL sans authentification) : plein ecran, lecture seule, optimise pour un affichage TV a distance." }
+  ],
+  "launch": { "view": "canvas" }
+}

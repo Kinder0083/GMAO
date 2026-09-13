@@ -1153,6 +1153,12 @@ from accident_analysis_routes import router as accident_analysis_router, init_ac
 init_accident_analysis_routes(db, audit_service)
 api_router.include_router(accident_analysis_router)
 
+# Affichage Dynamique (écrans de signalétique / digital signage)
+from dynamic_display_routes import router as dynamic_display_router, init_dynamic_display_routes
+from mes_routes import mes_service as _mes_service_for_display
+init_dynamic_display_routes(db, _mes_service_for_display)
+api_router.include_router(dynamic_display_router)
+
 # Sauvegardes MongoDB natives (mongodump)
 from routes.mongodb_backup import router as mongodb_backup_router
 api_router.include_router(mongodb_backup_router)

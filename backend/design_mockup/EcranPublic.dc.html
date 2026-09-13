@@ -1,0 +1,119 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif; }
+  .tile { background:#161e33; border:1px solid #232c47; border-radius:20px; }
+  .lbl { font-size:15px; font-weight:600; color:#8b93ad; text-transform:uppercase; letter-spacing:.06em; }
+</style>
+</helmet>
+
+<div style="width:1920px;height:1080px;background:#0b0f1c;position:relative;padding:40px;display:flex;flex-direction:column;gap:24px;">
+
+  <!-- Header bar -->
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="width:44px;height:44px;border-radius:11px;background:#2563eb;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:19px;">G</div>
+      <div style="color:#fff;font-weight:650;font-size:24px;">FSAO Iris — Atelier Production</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:44px;font-weight:700;color:#fff;line-height:1;">14:32:07</div>
+      <div style="font-size:15px;color:#8b93ad;margin-top:4px;">Jeudi 12 mars 2026</div>
+    </div>
+  </div>
+
+  <!-- Main grid -->
+  <div style="flex:1;display:grid;grid-template-columns:repeat(3, minmax(0,1fr));grid-template-rows:1fr 1fr;gap:24px;min-height:0;">
+
+    <!-- Cadence (big, spans 2 cols) -->
+    <div class="tile" style="grid-column:span 2;padding:32px;display:flex;flex-direction:column;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"><path d="M3 12h4l2 8 4-16 2 8h6"/></svg>
+        <div class="lbl">Cadence — Ligne 3</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:16px;margin-top:14px;">
+        <div style="font-size:140px;font-weight:750;color:#fff;line-height:1;">87</div>
+        <div style="font-size:28px;color:#8b93ad;font-weight:500;">cp/min</div>
+      </div>
+      <div style="margin-top:20px;height:16px;border-radius:8px;background:#232c47;overflow:hidden;">
+        <div style="width:72%;height:100%;background:linear-gradient(90deg,#4f46e5,#818cf8);"></div>
+      </div>
+      <div style="margin-top:12px;font-size:17px;color:#8b93ad;">Objectif theorique : 90 cp/min</div>
+    </div>
+
+    <!-- Temperature -->
+    <div class="tile" style="padding:28px;display:flex;flex-direction:column;justify-content:center;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2"><path d="M12 2v6M12 22v-4M4.9 4.9l4.2 4.2M19.1 4.9l-4.2 4.2M2 12h4M18 12h4"/><circle cx="12" cy="12" r="3"/></svg>
+        <div class="lbl">Temperature atelier</div>
+      </div>
+      <div style="display:flex;align-items:baseline;gap:10px;margin-top:14px;">
+        <div style="font-size:96px;font-weight:750;color:#fff;line-height:1;">22.4</div>
+        <div style="font-size:26px;color:#8b93ad;">°C</div>
+      </div>
+    </div>
+
+    <!-- Statut equipements -->
+    <div class="tile" style="padding:28px;">
+      <div class="lbl" style="margin-bottom:16px;">Statut equipements</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:19px;color:#e5e7eb;">Ligne 1</span>
+          <span style="font-size:14px;font-weight:650;color:#4ade80;background:rgba(74,222,128,.12);padding:5px 14px;border-radius:99px;">En marche</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:19px;color:#e5e7eb;">Ligne 2</span>
+          <span style="font-size:14px;font-weight:650;color:#4ade80;background:rgba(74,222,128,.12);padding:5px 14px;border-radius:99px;">En marche</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:19px;color:#e5e7eb;">Ligne 3</span>
+          <span style="font-size:14px;font-weight:650;color:#fbbf24;background:rgba(251,191,36,.12);padding:5px 14px;border-radius:99px;">Ralenti</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:19px;color:#e5e7eb;">Compresseur A</span>
+          <span style="font-size:14px;font-weight:650;color:#f87171;background:rgba(248,113,113,.12);padding:5px 14px;border-radius:99px;">Arret</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ordres du jour -->
+    <div class="tile" style="grid-column:span 2;padding:28px;">
+      <div class="lbl" style="margin-bottom:16px;">Ordres du jour</div>
+      <div style="display:flex;flex-direction:column;gap:12px;font-size:19px;color:#e5e7eb;">
+        <div>#5861 — Changement filtre compresseur</div>
+        <div>#5864 — Controle vibratoire Ligne 3</div>
+        <div>#5870 — Nettoyage capteur temperature</div>
+      </div>
+    </div>
+
+    <!-- KPI mini -->
+    <div class="tile" style="padding:28px;display:flex;flex-direction:column;justify-content:center;gap:18px;">
+      <div>
+        <div class="lbl">TRS global</div>
+        <div style="font-size:52px;font-weight:750;color:#fff;margin-top:6px;">78%</div>
+      </div>
+      <div style="height:1px;background:#232c47;"></div>
+      <div>
+        <div class="lbl">Rebuts jour</div>
+        <div style="font-size:52px;font-weight:750;color:#fff;margin-top:6px;">3</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bandeau texte libre -->
+  <div style="background:#161e33;border:1px solid #232c47;border-radius:16px;padding:18px 26px;display:flex;align-items:center;gap:14px;">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" style="flex-shrink:0;"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+    <div style="font-size:19px;color:#e5e7eb;">Consigne du jour : port du casque obligatoire en zone 3 — verification des cadenas LOTO avant toute intervention.</div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

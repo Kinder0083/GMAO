@@ -47,7 +47,8 @@ import {
   History,
   TrendingUp,
   GraduationCap,
-  GitBranch
+  GitBranch,
+  Tv
 } from 'lucide-react';
 
 // Mapping des noms d'icônes vers les composants
@@ -97,7 +98,8 @@ export const iconMap = {
   'History': History,
   'TrendingUp': TrendingUp,
   'GraduationCap': GraduationCap,
-  'GitBranch': GitBranch
+  'GitBranch': GitBranch,
+  'Tv': Tv
 };
 
 // Liste par défaut des items du menu
@@ -140,7 +142,8 @@ export const getDefaultMenuItems = (isAdmin) => [
   { id: 'consignations-loto', icon: 'Shield', label: 'Consignations LOTO', path: '/consignations-loto', module: 'consignationsLoto', visible: true, order: 6.5 },
   { id: 'purchase-history', icon: 'ShoppingBag', label: 'Historique Achat', path: '/purchase-history', module: 'purchaseHistory', visible: true, order: 20 },
   { id: 'import-export', icon: 'Database', label: 'Import / Export', path: '/import-export', module: 'importExport', visible: false, order: 21 },
-  { id: 'whiteboard', icon: 'PresentationIcon', label: 'Tableau d\'affichage', path: '/whiteboard', module: 'whiteboard', visible: true, order: 22 }
+  { id: 'whiteboard', icon: 'PresentationIcon', label: 'Tableau d\'affichage', path: '/whiteboard', module: 'whiteboard', visible: true, order: 22 },
+  { id: 'affichage-dynamique', icon: 'Tv', label: 'Affichage Dynamique', path: '/affichage-dynamique', module: 'affichageDynamique', visible: true, order: 22.5 }
 ];
 
 // Fonction pour obtenir l'icône par nom

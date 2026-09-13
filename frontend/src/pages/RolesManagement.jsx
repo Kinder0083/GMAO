@@ -85,6 +85,7 @@ const MODULES = [
   { key: 'aiDashboard', label: 'Tableau de bord IA' },
   { key: 'aiAutomations', label: 'Automatisations IA' },
   { key: 'aiWidgets', label: 'Widgets IA (Adria)' },
+  { key: 'affichageDynamique', label: 'Affichage Dynamique' },
 ];
 
 // Couleurs disponibles pour les badges
