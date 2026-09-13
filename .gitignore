@@ -6,6 +6,8 @@ backend/*.pyc
 backend/.pytest_cache/
 backend/uploads/
 backend/tests/
+backend/chunked_uploads/
+backend/.screenshots/
 
 # Frontend
 frontend/node_modules/
