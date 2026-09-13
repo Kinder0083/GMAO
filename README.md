@@ -2,7 +2,7 @@
 
 Application de Fonctionnement des Services Assistee par Ordinateur (FSAO) complete et auto-hebergee.
 
-**Version :** 1.12.0
+**Version :** 1.12.1
 **Concepteur :** Greg
 **Derniere mise a jour :** Avril 2026
 
@@ -553,9 +553,7 @@ Pour utiliser Google Drive comme destination de sauvegarde :
 ### Comptes par defaut (apres installation Proxmox)
 
 1. **Compte administrateur** : defini pendant l'installation
-2. **Compte de secours** : `buenogy@gmail.com` / `Admin2024!`
-
-> Changez ou supprimez le compte de secours en production.
+2. **Compte de secours** (optionnel) : email et mot de passe definis pendant l'installation. Laisser le champ email vide pendant l'installation pour ne pas en creer.
 
 ### Endpoints API principaux
 

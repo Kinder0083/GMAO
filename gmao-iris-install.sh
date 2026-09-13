@@ -247,6 +247,17 @@ read -sp "Mot de passe admin (min 8 car): " ADMIN_PASS < /dev/tty
 echo ""
 [[ ${#ADMIN_PASS} -lt 8 ]] && err "Mot de passe trop court"
 
+echo ""
+msg "Compte administrateur de secours (recommandé, optionnel)"
+echo "Permet de récupérer l'accès si le compte principal est perdu. Laissez vide pour ne pas en créer."
+read -p "Email admin de secours [vide = aucun]: " RESCUE_ADMIN_EMAIL < /dev/tty
+RESCUE_ADMIN_PASS=""
+if [[ -n "$RESCUE_ADMIN_EMAIL" ]]; then
+    read -sp "Mot de passe admin de secours (min 8 car): " RESCUE_ADMIN_PASS < /dev/tty
+    echo ""
+    [[ ${#RESCUE_ADMIN_PASS} -lt 8 ]] && err "Mot de passe trop court"
+fi
+
 read -sp "Mot de passe root container: " ROOT_PASS < /dev/tty
 echo ""
 [[ ${#ROOT_PASS} -lt 8 ]] && err "Mot de passe root trop court"
@@ -706,24 +717,29 @@ async def create_admins():
             await db.users.insert_one(admin1)
             print('✅ Admin principal créé: ${ADMIN_EMAIL}')
         
-        # Admin de secours
-        admin2 = {
-            'email': 'buenogy@gmail.com',
-            'hashed_password': hash_password('Admin2024!'),
-            'nom': 'Bueno', 'prenom': 'Gregory', 'role': 'ADMIN',
-            'telephone': None, 'service': None, 'statut': 'actif',
-            'dateCreation': datetime.now(timezone.utc).isoformat(),
-            'derniereConnexion': None, 'firstLogin': False,
-            'permissions': admin_permissions, 'responsable_hierarchique_id': None
-        }
-        
-        existing2 = await db.users.find_one({'email': 'buenogy@gmail.com'})
-        if existing2:
-            await db.users.update_one({'email': 'buenogy@gmail.com'}, {'\$set': admin2})
-            print('✅ Admin secours mis à jour: buenogy@gmail.com')
+        # Admin de secours (optionnel, defini par l'installateur - propre a cette installation)
+        rescue_email = '${RESCUE_ADMIN_EMAIL}'
+        rescue_pass = '${RESCUE_ADMIN_PASS}'
+        if rescue_email:
+            admin2 = {
+                'email': rescue_email,
+                'hashed_password': hash_password(rescue_pass),
+                'nom': 'Secours', 'prenom': 'Admin', 'role': 'ADMIN',
+                'telephone': None, 'service': None, 'statut': 'actif',
+                'dateCreation': datetime.now(timezone.utc).isoformat(),
+                'derniereConnexion': None, 'firstLogin': False,
+                'permissions': admin_permissions, 'responsable_hierarchique_id': None
+            }
+
+            existing2 = await db.users.find_one({'email': rescue_email})
+            if existing2:
+                await db.users.update_one({'email': rescue_email}, {'\$set': admin2})
+                print(f'✅ Admin secours mis à jour: {rescue_email}')
+            else:
+                await db.users.insert_one(admin2)
+                print(f'✅ Admin secours créé: {rescue_email}')
         else:
-            await db.users.insert_one(admin2)
-            print('✅ Admin secours créé: buenogy@gmail.com')
+            print('ℹ️  Aucun admin de secours configuré (email non renseigné)')
         
         client.close()
         return True
@@ -737,7 +753,7 @@ PYEOF
 if [ \$? -eq 0 ]; then
     echo "✅ Comptes administrateurs créés"
 else
-    echo "⚠️  Avertissement: Problème création admins (vous pourrez utiliser buenogy@gmail.com / Admin2024!)"
+    echo "⚠️  Avertissement: Problème création admins (réessayez avec le compte principal: ${ADMIN_EMAIL})"
 fi
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1072,10 +1088,12 @@ echo "🔐 Compte principal:"
 echo "   Email:        ${ADMIN_EMAIL}"
 echo "   Mot de passe: [celui que vous avez défini]"
 echo ""
-echo "🔐 Compte de secours:"
-echo "   Email:        buenogy@gmail.com"
-echo "   Mot de passe: Admin2024!"
-echo ""
+if [[ -n "$RESCUE_ADMIN_EMAIL" ]]; then
+    echo "🔐 Compte de secours:"
+    echo "   Email:        ${RESCUE_ADMIN_EMAIL}"
+    echo "   Mot de passe: [celui que vous avez défini]"
+    echo ""
+fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "  Statut des services"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

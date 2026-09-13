@@ -1,5 +1,11 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.12.1 - Securite : compte de secours a l'installation (Avril 2026)
+
+### Securite
+- **Suppression du compte administrateur de secours code en dur** (`buenogy@gmail.com` / `Admin2024!`) qui etait cree automatiquement et identiquement sur chaque installation
+- Le script `gmao-iris-install.sh` demande desormais l'email et le mot de passe du compte de secours a l'installateur (optionnel, laisser vide pour ne pas en creer) ; ce compte est propre a chaque installation
+
 ## Version 1.12.0 - M.E.S. ESP32, Coherence des Donnees & Pointages (Avril 2026)
 
 ### M.E.S. — Migration vers une architecture ESP32 edge-computing
