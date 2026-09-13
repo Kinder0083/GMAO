@@ -77,8 +77,8 @@ LLM_PROVIDERS = {
         "id": "anthropic",
         "name": "Anthropic Claude",
         "models": [
-            {"id": "claude-4-sonnet-20250514", "name": "Claude 4 Sonnet", "default": True},
-            {"id": "claude-3-5-haiku-20241022", "name": "Claude 3.5 Haiku", "default": False},
+            {"id": "claude-sonnet-5", "name": "Claude Sonnet 5", "default": True},
+            {"id": "claude-haiku-4-5-20251001", "name": "Claude Haiku 4.5", "default": False},
         ],
         "requires_api_key": True,
         "provider_key": "ANTHROPIC_API_KEY"
