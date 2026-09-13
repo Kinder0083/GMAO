@@ -85,12 +85,12 @@ async def check_qr_dependencies():
 
 # ========== PARAMÈTRES IA QR (SYSTÈME) ==========
 
-# Providers/modèles supportés pour QR IA (via Emergent key)
+# Providers/modèles supportés pour QR IA
 QR_AI_PROVIDERS = {
     "gemini": {
         "id": "gemini", "name": "Google Gemini",
         "models": [
-            {"id": "gemini-3.6-flash", "name": "Gemini 2.5 Flash", "default": True},
+            {"id": "gemini-3.6-flash", "name": "Gemini 3.6 Flash", "default": True},
             {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro"},
             {"id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite"},
         ]

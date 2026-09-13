@@ -282,7 +282,7 @@ IDs : Format UUID string (str) après migration DB du 25 mars 2026
 L'utilisateur déploie manuellement depuis son serveur Proxmox. **Toujours fournir ces commandes après une modification.**
 
 ```bash
-# 1. Dans l'interface Emergent → "Save to Github"
+# 1. git add / commit / push depuis le poste de dev
 # 2. Sur le serveur Proxmox :
 cd /chemin/vers/gmao-iris
 git pull

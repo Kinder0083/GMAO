@@ -1,7 +1,7 @@
 """
 Service d'auto-mapping IA pour le module M.E.S.
 - analyse un payload JSON (ou un echantillon) et propose des mappings de champs
-- utilise Emergent Universal Key (Claude Sonnet 4.5 par defaut)
+- utilise llm_service (Claude Sonnet 4.5 par defaut, voir DEFAULT_MES_AI_CONFIG)
 - respecte la config admin stockee dans system_settings.mes_ai_config
 """
 import json

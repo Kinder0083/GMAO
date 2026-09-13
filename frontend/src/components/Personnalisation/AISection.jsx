@@ -203,7 +203,7 @@ const AISection = () => {
             </select>
           )}
           <p className="text-xs text-gray-500">
-            <Sparkles className="inline" size={12} /> Les fournisseurs avec clé Emergent sont disponibles par défaut
+            <Sparkles className="inline" size={12} /> Necessite une cle API configuree par un administrateur (Parametres &gt; Cles API LLM)
           </p>
         </div>
 

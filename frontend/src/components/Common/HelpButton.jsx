@@ -19,9 +19,6 @@ const HelpButton = () => {
   const { toast } = useToast();
 
   const captureScreenshot = async () => {
-    let emergentBadge = null;
-    let originalBadgeDisplay = null;
-    
     try {
       // Si on a une annotation, la retourner directement fusionnée avec le screenshot
       if (annotationImage) {
@@ -44,13 +41,6 @@ const HelpButton = () => {
         console.warn('⚠️ Navigation détectée pendant la capture, annulation...');
         setOpen(true);
         return null;
-      }
-      
-      // Masquer temporairement le badge Emergent pour la capture
-      emergentBadge = document.getElementById('emergent-badge');
-      originalBadgeDisplay = emergentBadge ? emergentBadge.style.display : null;
-      if (emergentBadge) {
-        emergentBadge.style.display = 'none';
       }
       
       console.log('🎯 Début de la capture avec html-to-image...');
@@ -106,10 +96,6 @@ const HelpButton = () => {
       console.error('❌ Stack:', error.stack);
       return null;
     } finally {
-      // Toujours restaurer le badge et rouvrir la modale
-      if (emergentBadge && originalBadgeDisplay !== null) {
-        emergentBadge.style.display = originalBadgeDisplay;
-      }
       setOpen(true);
     }
   };
@@ -180,13 +166,6 @@ const HelpButton = () => {
   const captureScreenshotForDrawing = async () => {
     try {
       // Capture simple sans fermer la modale
-      const emergentBadge = document.getElementById('emergent-badge');
-      const originalDisplay = emergentBadge ? emergentBadge.style.display : null;
-      
-      if (emergentBadge) {
-        emergentBadge.style.display = 'none';
-      }
-      
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       
@@ -217,11 +196,7 @@ const HelpButton = () => {
       });
       
       document.body.removeChild(captureWrapper);
-      
-      if (emergentBadge && originalDisplay !== null) {
-        emergentBadge.style.display = originalDisplay;
-      }
-      
+
       return dataUrl;
     } catch (error) {
       console.error('Erreur capture pour dessin:', error);

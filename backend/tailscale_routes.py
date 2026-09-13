@@ -85,7 +85,7 @@ async def get_tailscale_config(current_user: dict = Depends(get_current_user)):
         
         # Déterminer le chemin du fichier .env selon l'environnement
         # Sur Proxmox: /opt/gmao-iris/frontend/.env
-        # Sur Emergent dev: /app/frontend/.env
+        # En environnement conteneurise (chemin /app): /app/frontend/.env
         proxmox_env_path = Path("/opt/gmao-iris/frontend/.env")
         dev_env_path = Path("/app/frontend/.env")
         
