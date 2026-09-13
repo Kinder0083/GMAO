@@ -23,7 +23,7 @@ audit_service = None
 
 FALLBACK_CHAIN = [
     ("openai", "gpt-5.2"),
-    ("gemini", "gemini-2.5-flash"),
+    ("gemini", "gemini-3.6-flash"),
     ("anthropic", "claude-sonnet-4-5-20250929"),
 ]
 

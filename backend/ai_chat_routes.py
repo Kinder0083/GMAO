@@ -55,7 +55,7 @@ LLM_PROVIDERS = {
         "id": "gemini",
         "name": "Google Gemini",
         "models": [
-            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "default": True},
+            {"id": "gemini-3.6-flash", "name": "Gemini 2.5 Flash", "default": True},
             {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro", "default": False},
             {"id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite", "default": False},
         ],
@@ -830,7 +830,7 @@ async def chat_with_ai(
         assistant_name = preferences.get("ai_assistant_name", "Adria") if preferences else "Adria"
         assistant_gender = preferences.get("ai_assistant_gender", "female") if preferences else "female"
         llm_provider = preferences.get("ai_llm_provider", "gemini") if preferences else "gemini"
-        llm_model = preferences.get("ai_llm_model", "gemini-2.5-flash") if preferences else "gemini-2.5-flash"
+        llm_model = preferences.get("ai_llm_model", "gemini-3.6-flash") if preferences else "gemini-3.6-flash"
         language = preferences.get("language", "fr") if preferences else "fr"
         
         # Générer ou récupérer l'ID de session
@@ -1059,7 +1059,7 @@ AVAILABLE_AI_MODELS = [
     {"provider": "openai", "model": "gpt-5.2", "label": "OpenAI GPT-5.2"},
     {"provider": "openai", "model": "gpt-4o", "label": "OpenAI GPT-4o"},
     {"provider": "openai", "model": "gpt-4o-mini", "label": "OpenAI GPT-4o Mini (Rapide)"},
-    {"provider": "google", "model": "gemini-2.5-flash", "label": "Google Gemini 2.5 Flash"},
+    {"provider": "google", "model": "gemini-3.6-flash", "label": "Google Gemini 2.5 Flash"},
     {"provider": "google", "model": "gemini-2.5-pro-preview-05-06", "label": "Google Gemini 2.5 Pro"},
     {"provider": "anthropic", "model": "claude-sonnet-4-5-20250929", "label": "Claude Sonnet 4.5"},
     {"provider": "deepseek", "model": "deepseek-chat", "label": "DeepSeek Chat"},
@@ -1070,8 +1070,8 @@ AVAILABLE_AI_MODELS = [
 # Versions connues des modèles (référence pour le vérificateur)
 KNOWN_LLM_VERSIONS = {
     "gemini": {
-        "latest": "gemini-2.5-flash",
-        "versions": ["gemini-2.5-flash", "gemini-2.5-pro-preview-05-06", "gemini-2.5-flash-lite"],
+        "latest": "gemini-3.6-flash",
+        "versions": ["gemini-3.6-flash", "gemini-2.5-pro-preview-05-06", "gemini-2.5-flash-lite"],
         "last_check": None
     },
     "openai": {

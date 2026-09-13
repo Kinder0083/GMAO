@@ -38,7 +38,7 @@ def clean_json_response(text: str) -> str:
 
 
 FALLBACK_CHAIN = [
-    ("gemini", "gemini-2.5-flash"),
+    ("gemini", "gemini-3.6-flash"),
     ("openai", "gpt-4o-mini"),
     ("anthropic", "claude-sonnet-4-5"),
 ]
@@ -54,7 +54,7 @@ async def _get_user_ai_config(user_id: str):
                 return provider, model
     except Exception:
         pass
-    return "gemini", "gemini-2.5-flash"
+    return "gemini", "gemini-3.6-flash"
 
 
 async def _call_llm_with_fallback(session_id, system_message, user_text, preferred_provider, preferred_model):

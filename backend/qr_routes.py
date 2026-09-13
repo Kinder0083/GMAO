@@ -90,7 +90,7 @@ QR_AI_PROVIDERS = {
     "gemini": {
         "id": "gemini", "name": "Google Gemini",
         "models": [
-            {"id": "gemini-2.5-flash", "name": "Gemini 2.5 Flash", "default": True},
+            {"id": "gemini-3.6-flash", "name": "Gemini 2.5 Flash", "default": True},
             {"id": "gemini-2.5-pro", "name": "Gemini 2.5 Pro"},
             {"id": "gemini-2.5-flash-lite", "name": "Gemini 2.5 Flash Lite"},
         ]
@@ -119,15 +119,15 @@ async def get_qr_ai_settings():
     """Récupérer les paramètres IA pour les résumés QR (public pour lecture)."""
     settings = await db.system_settings.find_one({"key": QR_AI_SETTINGS_KEY}, {"_id": 0})
     if settings:
-        return {"provider": settings.get("provider", "gemini"), "model": settings.get("model", "gemini-2.5-flash"), "providers": QR_AI_PROVIDERS}
-    return {"provider": "gemini", "model": "gemini-2.5-flash", "providers": QR_AI_PROVIDERS}
+        return {"provider": settings.get("provider", "gemini"), "model": settings.get("model", "gemini-3.6-flash"), "providers": QR_AI_PROVIDERS}
+    return {"provider": "gemini", "model": "gemini-3.6-flash", "providers": QR_AI_PROVIDERS}
 
 
 @router.put("/ai-settings")
 async def update_qr_ai_settings(data: dict, current_user: dict = Depends(get_current_admin_user)):
     """Mettre à jour les paramètres IA pour les résumés QR (admin uniquement)."""
     provider = data.get("provider", "gemini")
-    model = data.get("model", "gemini-2.5-flash")
+    model = data.get("model", "gemini-3.6-flash")
 
     # Valider que le provider et le modèle existent
     if provider not in QR_AI_PROVIDERS:
@@ -351,7 +351,7 @@ Sois concis, factuel et utile. Utilise des puces et du gras pour la lisibilité.
         # Lire le modèle configuré dans les paramètres système
         ai_settings = await db.system_settings.find_one({"key": QR_AI_SETTINGS_KEY}, {"_id": 0})
         ai_provider = ai_settings.get("provider", "gemini") if ai_settings else "gemini"
-        ai_model = ai_settings.get("model", "gemini-2.5-flash") if ai_settings else "gemini-2.5-flash"
+        ai_model = ai_settings.get("model", "gemini-3.6-flash") if ai_settings else "gemini-3.6-flash"
 
         response_text = await ask_llm(
             system_message=system_prompt,

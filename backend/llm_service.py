@@ -41,7 +41,7 @@ PROVIDER_KEY_NAME = {
 
 # Modele par defaut si aucun n'est precise pour ce fournisseur
 DEFAULT_MODEL = {
-    "gemini": "gemini-2.5-flash",
+    "gemini": "gemini-3.6-flash",
     "openai": "gpt-4o",
     "anthropic": "claude-sonnet-4-5-20250929",
     "deepseek": "deepseek-chat",
@@ -120,7 +120,7 @@ async def ask_llm_with_file(
 ) -> str:
     """Appel avec un fichier joint (image ou PDF) - necessite un modele multimodal.
     Gemini et Claude gerent nativement les PDF ; OpenAI necessite une image."""
-    model = model or DEFAULT_MODEL.get(provider, "gemini-2.5-flash")
+    model = model or DEFAULT_MODEL.get(provider, "gemini-3.6-flash")
     api_key = await get_api_key(provider)
 
     with open(file_path, "rb") as f:
@@ -147,7 +147,7 @@ async def ask_llm_chat(
 ) -> str:
     """Appel avec un historique de conversation complet (liste de {role, content}),
     utilise par l'assistant Adria."""
-    model = model or DEFAULT_MODEL.get(provider, "gemini-2.5-flash")
+    model = model or DEFAULT_MODEL.get(provider, "gemini-3.6-flash")
     api_key = await get_api_key(provider)
 
     response = await litellm.acompletion(

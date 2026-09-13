@@ -2543,7 +2543,7 @@ class UserPreferences(BaseModel):
     ai_assistant_name: str = "Adria"  # Nom de l'assistant IA
     ai_assistant_gender: str = "female"  # "male" ou "female"
     ai_llm_provider: str = "gemini"  # "gemini", "openai", "anthropic", "deepseek", "mistral"
-    ai_llm_model: str = "gemini-2.5-flash"  # Modèle LLM par défaut
+    ai_llm_model: str = "gemini-3.6-flash"  # Modèle LLM par défaut
     # Preference onglet Dashboard Service
     service_dashboard_tab: Optional[str] = None
     
