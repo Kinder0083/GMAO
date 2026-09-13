@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import {
-  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+  LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea
 } from 'recharts';
 import PayloadDetectionDialog from '../components/MES/PayloadDetectionDialog';
 import DynamicLiveTiles from '../components/MES/DynamicLiveTiles';
@@ -758,6 +758,9 @@ const MachineDashboard = ({ machineId, onBack }) => {
   const [period, setPeriod] = useState('6h');
   const [customFrom, setCustomFrom] = useState('');
   const [customTo, setCustomTo] = useState('');
+  const [refAreaLeft, setRefAreaLeft] = useState(null);
+  const [refAreaRight, setRefAreaRight] = useState(null);
+  const [zoomRange, setZoomRange] = useState(null);
   const [editing, setEditing] = useState(false);
   const [pinging, setPinging] = useState(false);
   const [showAlerts, setShowAlerts] = useState(false);
@@ -824,6 +827,10 @@ const MachineDashboard = ({ machineId, onBack }) => {
   // Refetch machine periodically pour rafraichir live_values (mode JSON_UNIFIED)
   useEffect(() => { const i = setInterval(loadMachine, 8000); return () => clearInterval(i); }, [loadMachine]);
   useEffect(() => { loadHistory(); const i = setInterval(loadHistory, 60000); return () => clearInterval(i); }, [loadHistory]);
+  // Reinitialiser le zoom uniquement quand l'utilisateur change la periode affichee
+  // (ne pas reagir a [history] : loadHistory rafraichit toutes les 60s avec une nouvelle reference de tableau
+  // meme si la periode n'a pas change, ce qui annulerait le zoom en cours pour rien)
+  useEffect(() => { setZoomRange(null); setRefAreaLeft(null); setRefAreaRight(null); }, [period, customFrom, customTo]);
 
   const simulatePulse = async () => {
     try {
@@ -873,6 +880,29 @@ const MachineDashboard = ({ machineId, onBack }) => {
     cadence: h.cadence,
     theoretical: h.theoretical,
   }));
+
+  // Donnees affichees : la plage zoomee si l'utilisateur a selectionne une zone, sinon tout
+  const displayedChartData = zoomRange
+    ? chartData.slice(Math.min(zoomRange.left, zoomRange.right), Math.max(zoomRange.left, zoomRange.right) + 1)
+    : chartData;
+
+  const handleChartMouseDown = (e) => {
+    if (e && e.activeTooltipIndex != null) setRefAreaLeft(e.activeTooltipIndex);
+  };
+
+  const handleChartMouseMove = (e) => {
+    if (refAreaLeft !== null && e && e.activeTooltipIndex != null) setRefAreaRight(e.activeTooltipIndex);
+  };
+
+  const handleChartMouseUp = () => {
+    if (refAreaLeft !== null && refAreaRight !== null && refAreaLeft !== refAreaRight) {
+      setZoomRange({ left: refAreaLeft, right: refAreaRight });
+    }
+    setRefAreaLeft(null);
+    setRefAreaRight(null);
+  };
+
+  const resetZoom = () => setZoomRange(null);
 
   const unreadAlerts = alerts.filter(a => !a.read);
 
@@ -1042,6 +1072,13 @@ const MachineDashboard = ({ machineId, onBack }) => {
                 data-testid="mes-period-custom">
                 Perso.
               </button>
+              {zoomRange && (
+                <button onClick={resetZoom}
+                  className="px-3 py-1 text-xs rounded-lg bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+                  data-testid="mes-zoom-reset">
+                  Reinitialiser le zoom
+                </button>
+              )}
             </div>
           </div>
           {period === 'custom' && (
@@ -1062,16 +1099,37 @@ const MachineDashboard = ({ machineId, onBack }) => {
           {chartData.length === 0 ? (
             <div className="text-center py-12 text-gray-400" data-testid="mes-chart-empty">Pas de donnees pour cette periode</div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="time" tick={{ fontSize: 10 }} />
-                <YAxis tick={{ fontSize: 10 }} />
-                <Tooltip contentStyle={{ fontSize: 12, borderRadius: '8px' }} />
-                <ReferenceLine y={machine.theoretical_cadence} stroke="#a78bfa" strokeDasharray="5 5" label="Theorique" />
-                <Line type="monotone" dataKey="cadence" stroke="#6366f1" strokeWidth={2} dot={false} name="Cadence reelle" />
-              </LineChart>
-            </ResponsiveContainer>
+            <>
+              <p className="text-[11px] text-gray-400 mb-1">
+                Cliquez-glissez sur le graphique pour zoomer sur une plage
+              </p>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart
+                  data={displayedChartData}
+                  onMouseDown={handleChartMouseDown}
+                  onMouseMove={handleChartMouseMove}
+                  onMouseUp={handleChartMouseUp}
+                  style={{ cursor: refAreaLeft !== null ? 'crosshair' : 'default', userSelect: 'none' }}
+                  data-testid="mes-cadence-chart"
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="time" tick={{ fontSize: 10 }} allowDataOverflow />
+                  <YAxis tick={{ fontSize: 10 }} allowDataOverflow />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: '8px' }} />
+                  <ReferenceLine y={machine.theoretical_cadence} stroke="#a78bfa" strokeDasharray="5 5" label="Theorique" />
+                  <Line type="monotone" dataKey="cadence" stroke="#6366f1" strokeWidth={2} dot={false} name="Cadence reelle" isAnimationActive={false} />
+                  {refAreaLeft !== null && refAreaRight !== null && (
+                    <ReferenceArea
+                      x1={chartData[refAreaLeft]?.time}
+                      x2={chartData[refAreaRight]?.time}
+                      strokeOpacity={0.3}
+                      fill="#6366f1"
+                      fillOpacity={0.15}
+                    />
+                  )}
+                </LineChart>
+              </ResponsiveContainer>
+            </>
           )}
         </CardContent>
       </Card>

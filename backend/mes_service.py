@@ -510,6 +510,15 @@ class MESService:
         is_running = False
         downtime_seconds = 0
 
+        # Correction : last_pulse_at peut être une chaîne ISO en DB (quelle que soit la branche empruntée ci-dessous)
+        if isinstance(last_pulse, str):
+            try:
+                last_pulse = datetime.fromisoformat(last_pulse.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                last_pulse = None
+        if last_pulse and last_pulse.tzinfo is None:
+            last_pulse = last_pulse.replace(tzinfo=timezone.utc)
+
         # Pour cp/min avec état explicite : utiliser directement le flag is_running de la machine
         if machine_type == "cp/min" and machine.get("state_explicit"):
             is_running = bool(machine.get("is_running", False))
@@ -526,14 +535,6 @@ class MESService:
                 if state_at:
                     downtime_seconds = (now - state_at).total_seconds()
         elif last_pulse:
-            # Correction : last_pulse_at peut être une chaîne ISO en DB
-            if isinstance(last_pulse, str):
-                try:
-                    last_pulse = datetime.fromisoformat(last_pulse.replace("Z", "+00:00"))
-                except (ValueError, AttributeError):
-                    last_pulse = None
-            if last_pulse and last_pulse.tzinfo is None:
-                last_pulse = last_pulse.replace(tzinfo=timezone.utc)
             expected_interval = 60.0 / theoretical if theoretical > 0 else 10
             threshold = expected_interval * (1 + margin_pct / 100)
             elapsed = (now - last_pulse).total_seconds()
