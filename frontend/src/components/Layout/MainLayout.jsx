@@ -185,6 +185,7 @@ const MainLayout = () => {
     { id: 'purchase-history', icon: 'ShoppingBag', label: 'Historique Achat', path: '/purchase-history', module: 'purchaseHistory', visible: true, order: 20 },
     { id: 'import-export', icon: 'Database', label: 'Import / Export', path: '/import-export', module: 'importExport', visible: true, order: 21 },
     { id: 'whiteboard', icon: 'PresentationIcon', label: 'Tableau d\'affichage', path: '/whiteboard', module: 'whiteboard', visible: true, order: 22 },
+    { id: 'affichage-dynamique', icon: 'Tv', label: 'Affichage Dynamique', path: '/affichage-dynamique', module: 'affichageDynamique', visible: true, order: 22.5 },
     { id: 'training', icon: 'GraduationCap', label: 'Formation', path: '/training', module: 'training', visible: true, order: 23 }
   ];
 

@@ -127,6 +127,7 @@ const DEFAULT_MENU_ITEMS = [
   { id: 'iot-dashboard', label: 'Dashboard IoT', path: '/iot-dashboard', icon: 'BarChart3', module: 'iotDashboard', visible: true, favorite: false, order: 25, category_id: null },
   { id: 'mqtt-logs', label: 'Logs MQTT', path: '/mqtt-logs', icon: 'Terminal', module: 'mqttLogs', visible: true, favorite: false, order: 26, category_id: null },
   { id: 'whiteboard', label: 'Tableau d\'affichage', path: '/whiteboard', icon: 'Presentation', module: 'whiteboard', visible: true, favorite: false, order: 27, category_id: null },
+  { id: 'affichage-dynamique', label: 'Affichage Dynamique', path: '/affichage-dynamique', icon: 'Presentation', module: 'affichageDynamique', visible: true, favorite: false, order: 27.5, category_id: null },
   { id: 'consignations-loto', label: 'Consignations LOTO', path: '/consignations-loto', icon: 'Shield', module: 'consignationsLoto', visible: true, favorite: false, order: 28, category_id: null },
   { id: 'surveillance-ai-history', label: 'Historique IA', path: '/surveillance-ai-history', icon: 'History', module: 'surveillance', visible: true, favorite: false, order: 29, category_id: null },
   { id: 'surveillance-ai-dashboard', label: 'Tendances IA', path: '/surveillance-ai-dashboard', icon: 'TrendingUp', module: 'surveillance', visible: true, favorite: false, order: 30, category_id: null },

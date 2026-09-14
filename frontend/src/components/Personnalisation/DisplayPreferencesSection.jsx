@@ -64,7 +64,8 @@ const DisplayPreferencesSection = () => {
     { value: '/sensors', label: 'Capteurs MQTT', module: 'sensors' },
     { value: '/iot-dashboard', label: 'Dashboard IoT', module: 'iotDashboard' },
     { value: '/mqtt-logs', label: 'Logs MQTT', module: 'mqttLogs' },
-    { value: '/whiteboard', label: 'Tableau d\'affichage', module: 'whiteboard' }
+    { value: '/whiteboard', label: 'Tableau d\'affichage', module: 'whiteboard' },
+    { value: '/affichage-dynamique', label: 'Affichage Dynamique', module: 'affichageDynamique' }
   ].filter(page => canView(page.module));
 
   return (
