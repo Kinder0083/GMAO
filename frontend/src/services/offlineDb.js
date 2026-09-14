@@ -83,6 +83,26 @@ export const addToSyncQueue = async (method, url, data, headers = {}, fileRefs =
   }
 };
 
+/**
+ * Attache des références de fichiers (déjà stockés via storeOfflineFile) au DERNIER
+ * élément mis en file d'attente correspondant à la méthode/URL données. Utilisé pour
+ * le schéma "créer puis uploader les pièces jointes une fois l'ID réel connu" (DI,
+ * presqu'accidents publics...), repris par offlineSync.js à la resynchronisation.
+ */
+export const attachPendingFilesToLastQueueItem = async (method, url, fileRefs) => {
+  try {
+    const db = await getOfflineDb();
+    const items = await db.getAllFromIndex('syncQueue', 'status', 'pending');
+    const lastItem = items[items.length - 1];
+    if (lastItem && lastItem.url === url && lastItem.method === method) {
+      lastItem.pendingFiles = fileRefs;
+      await db.put('syncQueue', lastItem);
+    }
+  } catch (e) {
+    console.warn('[Offline] Erreur liaison fichiers:', e);
+  }
+};
+
 export const getPendingSyncItems = async () => {
   try {
     const db = await getOfflineDb();

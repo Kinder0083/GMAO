@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Camera, Paperclip, X, ChevronLeft, Loader2, CheckCircle2, AlertTriangle, Eye, Send, Upload, CloudOff } from 'lucide-react';
+import { Camera, Paperclip, X, ChevronLeft, Loader2, CheckCircle2, ShieldAlert, Send, Upload, CloudOff } from 'lucide-react';
 import { BACKEND_URL } from '../../utils/config';
 import { addToSyncQueue, storeOfflineFile, attachPendingFilesToLastQueueItem } from '../../services/offlineDb';
 
@@ -12,21 +12,20 @@ const fetchWithTimeout = (url, options = {}) => {
   return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timer));
 };
 
-const PRIORITIES = [
-  { value: 'AUCUNE', label: 'Normale', color: 'bg-gray-100 text-gray-700 border-gray-200' },
-  { value: 'BASSE', label: 'Basse', color: 'bg-blue-50 text-blue-700 border-blue-200' },
-  { value: 'MOYENNE', label: 'Moyenne', color: 'bg-amber-50 text-amber-700 border-amber-200' },
-  { value: 'HAUTE', label: 'Haute', color: 'bg-orange-50 text-orange-700 border-orange-200' },
-  { value: 'URGENTE', label: 'Urgente', color: 'bg-red-50 text-red-700 border-red-200' },
+const SEVERITIES = [
+  { value: 'FAIBLE', label: 'Faible', color: 'bg-blue-50 text-blue-700 border-blue-200', ring: 'ring-blue-400' },
+  { value: 'MOYEN', label: 'Moyen', color: 'bg-amber-50 text-amber-700 border-amber-200', ring: 'ring-amber-400' },
+  { value: 'ELEVE', label: 'Eleve', color: 'bg-orange-50 text-orange-700 border-orange-200', ring: 'ring-orange-400' },
+  { value: 'CRITIQUE', label: 'Critique', color: 'bg-red-50 text-red-700 border-red-200', ring: 'ring-red-400' },
 ];
 
-const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande', submitLabel = 'Envoyer la demande' }) => {
+const PublicPresquAccidentForm = ({ equipment, onClose }) => {
   const [step, setStep] = useState('form'); // form | sending | success | offline | error
   const [form, setForm] = useState({
-    demandeur_nom: '',
+    declarant: '',
     titre: '',
     description: '',
-    priorite: 'AUCUNE',
+    severite: 'MOYEN',
   });
   const [photos, setPhotos] = useState([]);
   const [previewImg, setPreviewImg] = useState(null);
@@ -96,20 +95,18 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   // Compress image on client side before upload (for mobile compatibility)
   const compressImage = (file, maxSize = 1200, quality = 0.8) => {
     return new Promise((resolve) => {
-      // If not an image, return as-is
       if (!file.type.startsWith('image/')) {
         resolve(file);
         return;
       }
-      
+
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      
+
       img.onload = () => {
         let { width, height } = img;
-        
-        // Resize if larger than maxSize
+
         if (Math.max(width, height) > maxSize) {
           if (width > height) {
             height = Math.round(height * (maxSize / width));
@@ -119,11 +116,11 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
             height = maxSize;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         canvas.toBlob(
           (blob) => {
             if (blob) {
@@ -137,7 +134,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
           quality
         );
       };
-      
+
       img.onerror = () => resolve(file);
       img.src = URL.createObjectURL(file);
     });
@@ -145,7 +142,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
   const queueOffline = async (payload) => {
     try {
-      await addToSyncQueue('post', '/qr/public/intervention-request', payload, {}, []);
+      await addToSyncQueue('post', '/qr/public/presqu-accident', payload, {}, []);
 
       if (photos.length > 0) {
         const fileRefs = [];
@@ -163,13 +160,13 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
           }
         }
         if (fileRefs.length > 0) {
-          await attachPendingFilesToLastQueueItem('post', '/qr/public/intervention-request', fileRefs);
+          await attachPendingFilesToLastQueueItem('post', '/qr/public/presqu-accident', fileRefs);
         }
       }
       setStep('offline');
     } catch (e) {
       console.error('[Offline] Erreur mise en file d\'attente:', e);
-      setErrorMsg('Impossible d\'enregistrer la demande, meme hors ligne. Reessayez.');
+      setErrorMsg('Impossible d\'enregistrer la declaration, meme hors ligne. Reessayez.');
       setStep('error');
     }
   };
@@ -185,15 +182,15 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
     const payload = {
       titre: form.titre.trim(),
       description: form.description.trim(),
-      priorite: form.priorite,
+      severite: form.severite,
       equipment_id: equipment.id,
-      demandeur_nom: form.demandeur_nom.trim() || 'Anonyme',
+      declarant: form.declarant.trim() || 'Anonyme',
     };
 
-    // 1. Creer la demande d'intervention
+    // 1. Creer le presqu'accident
     let res;
     try {
-      res = await fetchWithTimeout(`${API_URL}/api/qr/public/intervention-request`, {
+      res = await fetchWithTimeout(`${API_URL}/api/qr/public/presqu-accident`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -214,7 +211,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
     try {
       const result = await res.json();
-      const requestId = result.id;
+      const itemId = result.id;
 
       // 2. Upload photos (compressed for mobile compatibility)
       for (const photo of photos) {
@@ -222,7 +219,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
           const compressed = await compressImage(photo.file);
           const fd = new FormData();
           fd.append('file', compressed);
-          const uploadRes = await fetchWithTimeout(`${API_URL}/api/qr/public/intervention-request/${requestId}/attachments`, {
+          const uploadRes = await fetchWithTimeout(`${API_URL}/api/qr/public/presqu-accident/${itemId}/attachments`, {
             method: 'POST',
             body: fd,
           });
@@ -245,20 +242,20 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   // Success screen
   if (step === 'success') {
     return (
-      <div className="space-y-6 text-center py-8" data-testid="public-di-success">
+      <div className="space-y-6 text-center py-8" data-testid="public-pa-success">
         <div className="w-20 h-20 mx-auto rounded-full bg-emerald-100 flex items-center justify-center">
           <CheckCircle2 size={40} className="text-emerald-600" />
         </div>
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Demande envoyee</h2>
+          <h2 className="text-xl font-bold text-gray-900">Presqu'accident declare</h2>
           <p className="text-sm text-gray-500 mt-2">
-            Votre demande d'intervention a ete transmise avec succes. L'equipe de maintenance sera informee.
+            Merci pour votre vigilance. Votre declaration a ete transmise et sera examinee par l'equipe securite/maintenance.
           </p>
         </div>
         <button
           onClick={onClose}
           className="w-full py-3.5 rounded-xl bg-emerald-600 text-white font-semibold text-base active:bg-emerald-700 transition-colors"
-          data-testid="public-di-back-btn"
+          data-testid="public-pa-back-btn"
         >
           Retour a la fiche equipement
         </button>
@@ -269,20 +266,20 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   // Offline screen
   if (step === 'offline') {
     return (
-      <div className="space-y-6 text-center py-8" data-testid="public-di-offline">
+      <div className="space-y-6 text-center py-8" data-testid="public-pa-offline">
         <div className="w-20 h-20 mx-auto rounded-full bg-amber-100 flex items-center justify-center">
           <CloudOff size={40} className="text-amber-600" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-gray-900">Enregistre localement</h2>
           <p className="text-sm text-gray-500 mt-2">
-            Pas de connexion pour le moment. Votre demande est enregistree sur ce telephone et sera envoyee automatiquement des que le reseau revient.
+            Pas de connexion pour le moment. Votre declaration est enregistree sur ce telephone et sera envoyee automatiquement des que le reseau revient.
           </p>
         </div>
         <button
           onClick={onClose}
           className="w-full py-3.5 rounded-xl bg-amber-600 text-white font-semibold text-base active:bg-amber-700 transition-colors"
-          data-testid="public-di-offline-back-btn"
+          data-testid="public-pa-offline-back-btn"
         >
           Retour a la fiche equipement
         </button>
@@ -293,9 +290,9 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   // Error screen
   if (step === 'error') {
     return (
-      <div className="space-y-6 text-center py-8" data-testid="public-di-error">
+      <div className="space-y-6 text-center py-8" data-testid="public-pa-error">
         <div className="w-20 h-20 mx-auto rounded-full bg-red-100 flex items-center justify-center">
-          <AlertTriangle size={40} className="text-red-600" />
+          <ShieldAlert size={40} className="text-red-600" />
         </div>
         <div>
           <h2 className="text-xl font-bold text-gray-900">Erreur</h2>
@@ -322,8 +319,8 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   // Sending screen
   if (step === 'sending') {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-4" data-testid="public-di-sending">
-        <Loader2 size={40} className="animate-spin text-blue-600" />
+      <div className="flex flex-col items-center justify-center py-16 space-y-4" data-testid="public-pa-sending">
+        <Loader2 size={40} className="animate-spin text-amber-600" />
         <p className="text-sm text-gray-600 font-medium">Envoi en cours...</p>
         {photos.length > 0 && (
           <p className="text-xs text-gray-400">Upload de {photos.length} photo(s)...</p>
@@ -334,18 +331,18 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
   // Form
   return (
-    <div className="space-y-5" data-testid="public-di-form">
+    <div className="space-y-5" data-testid="public-pa-form">
       {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={onClose}
           className="p-2 -ml-2 rounded-lg active:bg-gray-100 transition-colors"
-          data-testid="public-di-close-btn"
+          data-testid="public-pa-close-btn"
         >
           <ChevronLeft size={22} className="text-gray-600" />
         </button>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-gray-900">{title}</h2>
+          <h2 className="text-lg font-bold text-gray-900">Declarer un presqu'accident</h2>
           <p className="text-xs text-gray-500 truncate">
             {equipment.nom}
             {equipment.emplacement ? ` — ${equipment.emplacement}` : ''}
@@ -354,13 +351,13 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
       </div>
 
       {/* Equipment info bar */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
-          <AlertTriangle size={18} className="text-blue-600" />
+      <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+          <ShieldAlert size={18} className="text-amber-600" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-blue-900 truncate">{equipment.nom}</p>
-          <p className="text-xs text-blue-600">Equipement pre-selectionne</p>
+          <p className="text-sm font-semibold text-amber-900 truncate">{equipment.nom}</p>
+          <p className="text-xs text-amber-700">Aucun compte necessaire — quelques secondes suffisent</p>
         </div>
       </div>
 
@@ -371,11 +368,11 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">Votre nom</label>
           <input
             type="text"
-            data-testid="public-di-name"
-            value={form.demandeur_nom}
-            onChange={e => setForm(f => ({ ...f, demandeur_nom: e.target.value }))}
-            placeholder="Prenom Nom"
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white placeholder-gray-400"
+            data-testid="public-pa-name"
+            value={form.declarant}
+            onChange={e => setForm(f => ({ ...f, declarant: e.target.value }))}
+            placeholder="Prenom Nom (facultatif)"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white placeholder-gray-400"
             autoComplete="name"
           />
         </div>
@@ -383,50 +380,50 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
         {/* Title */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Titre de la demande <span className="text-red-500">*</span>
+            Que s'est-il passe ? <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
-            data-testid="public-di-titre"
+            data-testid="public-pa-titre"
             value={form.titre}
             onChange={e => setForm(f => ({ ...f, titre: e.target.value }))}
-            placeholder="Ex: Fuite d'huile sur le verin"
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white placeholder-gray-400"
+            placeholder="Ex: Glissade pres du convoyeur"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white placeholder-gray-400"
           />
         </div>
 
         {/* Description */}
         <div>
           <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-            Description <span className="text-red-500">*</span>
+            Circonstances <span className="text-red-500">*</span>
           </label>
           <textarea
-            data-testid="public-di-description"
+            data-testid="public-pa-description"
             value={form.description}
             onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-            placeholder="Decrivez le probleme constate..."
+            placeholder="Decrivez ce qui s'est passe et ce qui aurait pu arriver..."
             rows={4}
-            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white placeholder-gray-400 resize-none"
+            className="w-full px-4 py-3 rounded-xl border border-gray-300 text-base focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent bg-white placeholder-gray-400 resize-none"
           />
         </div>
 
-        {/* Priority */}
+        {/* Severity */}
         <div>
-          <label className="block text-sm font-semibold text-gray-700 mb-2">Priorite</label>
-          <div className="grid grid-cols-3 gap-2" data-testid="public-di-priority">
-            {PRIORITIES.filter(p => ['AUCUNE', 'MOYENNE', 'HAUTE', 'URGENTE'].includes(p.value)).map(p => (
+          <label className="block text-sm font-semibold text-gray-700 mb-2">Gravite si ca avait eu lieu</label>
+          <div className="grid grid-cols-4 gap-2" data-testid="public-pa-severity">
+            {SEVERITIES.map(s => (
               <button
-                key={p.value}
+                key={s.value}
                 type="button"
-                onClick={() => setForm(f => ({ ...f, priorite: p.value }))}
-                className={`py-2.5 px-3 rounded-xl border text-sm font-medium transition-all ${
-                  form.priorite === p.value
-                    ? `${p.color} ring-2 ring-offset-1 ${p.value === 'URGENTE' ? 'ring-red-400' : p.value === 'HAUTE' ? 'ring-orange-400' : p.value === 'MOYENNE' ? 'ring-amber-400' : 'ring-gray-400'}`
+                onClick={() => setForm(f => ({ ...f, severite: s.value }))}
+                className={`py-2.5 px-2 rounded-xl border text-xs font-medium transition-all ${
+                  form.severite === s.value
+                    ? `${s.color} ring-2 ring-offset-1 ${s.ring}`
                     : 'bg-white border-gray-200 text-gray-500'
                 }`}
-                data-testid={`public-di-prio-${p.value}`}
+                data-testid={`public-pa-sev-${s.value}`}
               >
-                {p.label}
+                {s.label}
               </button>
             ))}
           </div>
@@ -440,21 +437,21 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
           {/* Zone de drag & drop */}
           <div
-            data-testid="public-di-drop-zone"
+            data-testid="public-pa-drop-zone"
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             className={`relative rounded-xl border-2 border-dashed transition-colors duration-200 ${
               isDragging
-                ? 'border-blue-500 bg-blue-50'
+                ? 'border-amber-500 bg-amber-50'
                 : 'border-gray-200 bg-white'
             }`}
           >
             {isDragging && (
-              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-blue-50/90">
-                <Upload size={32} className="text-blue-500 mb-2" />
-                <p className="text-sm font-medium text-blue-600">Deposez vos photos ici</p>
+              <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-xl bg-amber-50/90">
+                <Upload size={32} className="text-amber-500 mb-2" />
+                <p className="text-sm font-medium text-amber-600">Deposez vos photos ici</p>
               </div>
             )}
             <div className="p-3">
@@ -462,17 +459,17 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
                 <button
                   type="button"
                   onClick={() => cameraRef.current?.click()}
-                  className="flex flex-col items-center justify-center py-4 rounded-xl border-2 border-dashed border-blue-300 bg-blue-50 active:bg-blue-100 transition-colors"
-                  data-testid="public-di-camera-btn"
+                  className="flex flex-col items-center justify-center py-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50 active:bg-amber-100 transition-colors"
+                  data-testid="public-pa-camera-btn"
                 >
-                  <Camera size={28} className="text-blue-600 mb-1" />
-                  <span className="text-sm font-medium text-blue-700">Prendre photo</span>
+                  <Camera size={28} className="text-amber-600 mb-1" />
+                  <span className="text-sm font-medium text-amber-700">Prendre photo</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => fileRef.current?.click()}
                   className="flex flex-col items-center justify-center py-4 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 active:bg-gray-100 transition-colors"
-                  data-testid="public-di-file-btn"
+                  data-testid="public-pa-file-btn"
                 >
                   <Paperclip size={28} className="text-gray-500 mb-1" />
                   <span className="text-sm font-medium text-gray-600">Galerie</span>
@@ -486,7 +483,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
           {/* Photo thumbnails */}
           {photos.length > 0 && (
-            <div className="grid grid-cols-3 gap-2 mt-3" data-testid="public-di-photos">
+            <div className="grid grid-cols-3 gap-2 mt-3" data-testid="public-pa-photos">
               {photos.map((photo, idx) => (
                 <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-gray-200 bg-gray-100">
                   <img src={photo.preview} alt={photo.name} className="w-full h-full object-cover" />
@@ -499,7 +496,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
                     type="button"
                     onClick={() => removePhoto(idx)}
                     className="absolute top-1 right-1 p-1 bg-black/60 rounded-full active:bg-black/80"
-                    data-testid={`public-di-remove-photo-${idx}`}
+                    data-testid={`public-pa-remove-photo-${idx}`}
                   >
                     <X size={14} className="text-white" />
                   </button>
@@ -512,7 +509,7 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
 
       {/* Error */}
       {errorMsg && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700" data-testid="public-di-form-error">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-700" data-testid="public-pa-form-error">
           {errorMsg}
         </div>
       )}
@@ -521,11 +518,11 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
       <button
         type="button"
         onClick={handleSubmit}
-        className="w-full py-4 rounded-xl bg-blue-600 text-white font-semibold text-base flex items-center justify-center gap-2 active:bg-blue-700 transition-colors shadow-lg shadow-blue-600/25"
-        data-testid="public-di-submit-btn"
+        className="w-full py-4 rounded-xl bg-amber-600 text-white font-semibold text-base flex items-center justify-center gap-2 active:bg-amber-700 transition-colors shadow-lg shadow-amber-600/25"
+        data-testid="public-pa-submit-btn"
       >
         <Send size={20} />
-        {submitLabel}
+        Envoyer la declaration
       </button>
 
       {/* Fullscreen preview */}
@@ -552,4 +549,4 @@ const PublicInterventionForm = ({ equipment, onClose, title = 'Nouvelle demande'
   );
 };
 
-export default PublicInterventionForm;
+export default PublicPresquAccidentForm;

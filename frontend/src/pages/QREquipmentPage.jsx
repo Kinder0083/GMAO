@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ClipboardList, History, BarChart3, PlusCircle, AlertTriangle, Calendar,
   MapPin, Wrench, Activity, ChevronRight, ArrowLeft, QrCode, Lock,
-  CheckCircle2, XCircle, Clock, AlertCircle, Sparkles, RefreshCw
+  CheckCircle2, XCircle, Clock, AlertCircle, Sparkles, RefreshCw, ShieldCheck
 } from 'lucide-react';
 import PublicInterventionForm from '../components/QR/PublicInterventionForm';
+import PublicPresquAccidentForm from '../components/QR/PublicPresquAccidentForm';
 import { BACKEND_URL } from '../utils/config';
 
 const API_URL = BACKEND_URL;
@@ -62,7 +63,9 @@ const QREquipmentPage = () => {
   const [aiSummary, setAiSummary] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-  const [showInterventionForm, setShowInterventionForm] = useState(false);
+  const [interventionFormMode, setInterventionFormMode] = useState(null); // null | 'request' | 'breakdown'
+  const [showPresquAccidentForm, setShowPresquAccidentForm] = useState(false);
+  const [isAuthenticated] = useState(() => !!localStorage.getItem('token'));
 
   useEffect(() => {
     loadData();
@@ -98,9 +101,9 @@ const QREquipmentPage = () => {
       'wo-history': () => loadPanel('wo-history', `/equipment/${equipmentId}/wo-history`),
       'kpi': () => loadPanel('kpi', `/equipment/${equipmentId}/kpi`),
       'preventive-plan': () => loadPanel('preventive-plan', `/equipment/${equipmentId}/preventive`),
-      'create-intervention': () => setShowInterventionForm(true),
-      'report-breakdown': () => navigate(`/work-orders?createForEquipment=${equipmentId}`),
-      'create-presquaccident': () => navigate(`/presqu-accident?createForEquipment=${equipmentId}`),
+      'create-intervention': () => setInterventionFormMode('request'),
+      'report-breakdown': () => setInterventionFormMode('breakdown'),
+      'create-presquaccident': () => setShowPresquAccidentForm(true),
     };
 
     const handler = actionHandlers[action.id];
@@ -162,22 +165,47 @@ const QREquipmentPage = () => {
     return Icon ? <Icon size={size} className={className} /> : null;
   };
 
-  // Show public intervention form
-  if (showInterventionForm && equipment) {
+  // Show public intervention / breakdown form
+  if (interventionFormMode && equipment) {
+    const isBreakdown = interventionFormMode === 'breakdown';
     return (
       <div className="min-h-screen bg-gray-50" data-testid="qr-public-di-page">
         <div className="bg-white border-b shadow-sm">
           <div className="max-w-lg mx-auto px-4 py-4">
             <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
               <QrCode size={16} />
-              <span>FSAO Iris — Demande d'intervention</span>
+              <span>FSAO Iris — {isBreakdown ? 'Signaler une panne' : "Demande d'intervention"}</span>
             </div>
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 py-6">
           <PublicInterventionForm
             equipment={equipment}
-            onClose={() => setShowInterventionForm(false)}
+            onClose={() => setInterventionFormMode(null)}
+            title={isBreakdown ? 'Signaler une panne' : 'Nouvelle demande'}
+            submitLabel={isBreakdown ? 'Signaler la panne' : 'Envoyer la demande'}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Show public near-miss ("presqu'accident") form
+  if (showPresquAccidentForm && equipment) {
+    return (
+      <div className="min-h-screen bg-gray-50" data-testid="qr-public-pa-page">
+        <div className="bg-white border-b shadow-sm">
+          <div className="max-w-lg mx-auto px-4 py-4">
+            <div className="flex items-center gap-2 text-sm text-gray-500 mb-1">
+              <QrCode size={16} />
+              <span>FSAO Iris — Presqu'accident</span>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-lg mx-auto px-4 py-6">
+          <PublicPresquAccidentForm
+            equipment={equipment}
+            onClose={() => setShowPresquAccidentForm(false)}
           />
         </div>
       </div>
@@ -319,10 +347,10 @@ const QREquipmentPage = () => {
         </div>
 
         {/* Actions */}
-        <div className="space-y-2" data-testid="qr-actions-list">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide px-1">Actions rapides</h2>
-          {actions.map((action) => {
+        {(() => {
+          const renderAction = (action) => {
             const isActive = activePanel === action.id;
+            const locked = action.requires_auth && !isAuthenticated;
             return (
               <div key={action.id}>
                 <button
@@ -330,18 +358,21 @@ const QREquipmentPage = () => {
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border transition-all text-left ${
                     isActive
                       ? 'bg-blue-50 border-blue-200 shadow-sm'
-                      : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300'
+                      : locked
+                        ? 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                        : 'bg-white hover:bg-gray-50 border-gray-200 hover:border-gray-300'
                   }`}
                   data-testid={`qr-action-${action.id}`}
                 >
-                  <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-100' : 'bg-gray-100'}`}>
-                    <IconComponent name={action.icon} size={18} className={isActive ? 'text-blue-600' : 'text-gray-600'} />
+                  <div className={`p-2 rounded-lg ${isActive ? 'bg-blue-100' : locked ? 'bg-gray-100' : 'bg-gray-100'}`}>
+                    <IconComponent name={action.icon} size={18} className={isActive ? 'text-blue-600' : locked ? 'text-gray-400' : 'text-gray-600'} />
                   </div>
-                  <span className={`flex-1 text-sm font-medium ${isActive ? 'text-blue-700' : 'text-gray-700'}`}>
-                    {action.label}
+                  <span className={`flex-1 min-w-0 text-sm font-medium ${isActive ? 'text-blue-700' : locked ? 'text-gray-500' : 'text-gray-700'}`}>
+                    <span className="block truncate">{action.label}</span>
+                    {locked && <span className="block text-xs font-normal text-gray-400 mt-0.5">Connexion requise</span>}
                   </span>
-                  {action.requires_auth && <Lock size={14} className="text-gray-300" />}
-                  <ChevronRight size={16} className={`text-gray-400 transition-transform ${isActive ? 'rotate-90' : ''}`} />
+                  {locked && <Lock size={14} className="text-gray-300 flex-shrink-0" />}
+                  <ChevronRight size={16} className={`text-gray-400 transition-transform flex-shrink-0 ${isActive ? 'rotate-90' : ''}`} />
                 </button>
 
                 {/* Inline panel */}
@@ -363,8 +394,42 @@ const QREquipmentPage = () => {
                 )}
               </div>
             );
-          })}
-        </div>
+          };
+
+          if (isAuthenticated) {
+            return (
+              <div className="space-y-2" data-testid="qr-actions-list">
+                <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide px-1">Actions rapides</h2>
+                {actions.map(renderAction)}
+              </div>
+            );
+          }
+
+          const publicActions = actions.filter(a => !a.requires_auth);
+          const lockedActions = actions.filter(a => a.requires_auth);
+
+          return (
+            <>
+              {publicActions.length > 0 && (
+                <div className="space-y-2" data-testid="qr-actions-list">
+                  <div className="flex items-center gap-1.5 px-1">
+                    <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Actions rapides</h2>
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                      <ShieldCheck size={11} /> Sans compte
+                    </span>
+                  </div>
+                  {publicActions.map(renderAction)}
+                </div>
+              )}
+              {lockedActions.length > 0 && (
+                <div className="space-y-2 pt-1" data-testid="qr-actions-list-locked">
+                  <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-wide px-1">Reservees au personnel connecte</h2>
+                  {lockedActions.map(renderAction)}
+                </div>
+              )}
+            </>
+          );
+        })()}
 
         {/* Footer */}
         <p className="text-center text-xs text-gray-400 pt-4">

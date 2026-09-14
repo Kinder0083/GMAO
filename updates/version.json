@@ -1,13 +1,16 @@
 {
-  "version": "1.15.3",
-  "versionName": "Correction : QR code equipement/formation inutilisable (URL backend indefinie)",
+  "version": "1.16.0",
+  "versionName": "QR Code equipement : presqu'accident public, panne signalable sans compte, mode hors-ligne",
   "releaseDate": "2026-09-14",
-  "description": "Corrige le QR code des equipements (et plusieurs autres pages publiques) qui pouvait afficher Equipement introuvable alors que tout fonctionnait cote serveur",
+  "description": "Refonte des actions QR equipement : le reglage 'Authentification requise' de Parametres speciaux fonctionne enfin, une nouvelle declaration de presqu'accident 100% publique, et les soumissions fonctionnent meme sans reseau",
   "changes": [
-    "Correction : la page publique du QR code equipement/sous-equipement (et QR inventaire, formulaire d'intervention publique, formations) pouvait afficher une erreur alors que l'equipement existait bien - cause : ces pages utilisaient l'adresse du serveur backend sans repli, qui devenait litteralement 'undefined' des que la variable d'environnement correspondante n'etait pas definie au moment du build, cassant toutes leurs requetes",
-    "Ces pages utilisent desormais le meme mecanisme de repli fiable (adresse du site actuel) que le reste de l'application",
-    "Correction du meme probleme sur 2 actions du menu contextuel Documentations (Visualiser/Telecharger un document) et sur l'extraction IA et l'import en masse des presqu'accidents",
-    "Correction : le renouvellement automatique du jeton de connexion (avant expiration) etait lui aussi silencieusement casse par le meme probleme"
+    "Correction : desactiver 'Authentification requise' sur une action QR (Signaler une panne, Presqu'accident) n'avait aucun effet - ces actions redirigeaient toujours vers une page protegee par connexion, quel que soit le reglage",
+    "Nouveau : 'Declarer un presqu'accident' est desormais un vrai parcours public (formulaire sur la page QR, photo en un tap, aucun compte requis) - jusqu'ici cette action n'avait tout simplement aucun mecanisme public cote serveur",
+    "'Signaler une panne' ouvre desormais le meme formulaire rapide public que 'Creer une demande d'intervention', sans connexion requise",
+    "La page QR distingue maintenant clairement les actions utilisables sans compte (bandeau 'Sans compte') des actions reservees au personnel connecte",
+    "Nouveau : si le reseau coupe au moment d'envoyer une declaration ou une demande depuis le QR, elle est enregistree sur le telephone et envoyee automatiquement des que la connexion revient (comme le reste de l'application)",
+    "Correction de performance : l'envoi de notification email aux administrateurs (demande d'intervention et presqu'accident publics) bloquait la reponse plusieurs secondes si le serveur mail etait lent - il se fait desormais en arriere-plan, la confirmation s'affiche instantanement",
+    "Renfort : protection contre le double-tap sur les formulaires publics QR (pouvait creer des declarations en double)"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

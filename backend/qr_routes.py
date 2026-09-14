@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import StreamingResponse
 from dependencies import get_current_user, get_current_admin_user
 from datetime import datetime, timezone
+import asyncio
 import io
 import os
 import logging
@@ -28,10 +29,15 @@ DEFAULT_ACTIONS = [
     {"id": "wo-history", "label": "Historique des OT", "icon": "History", "type": "link", "enabled": True, "order": 2, "requires_auth": False},
     {"id": "kpi", "label": "KPI de l'équipement", "icon": "BarChart3", "type": "link", "enabled": True, "order": 3, "requires_auth": False},
     {"id": "create-intervention", "label": "Créer une demande d'intervention", "icon": "PlusCircle", "type": "action", "enabled": True, "order": 4, "requires_auth": False},
-    {"id": "report-breakdown", "label": "Signaler une panne", "icon": "AlertTriangle", "type": "action", "enabled": True, "order": 5, "requires_auth": True},
+    {"id": "report-breakdown", "label": "Signaler une panne", "icon": "AlertTriangle", "type": "action", "enabled": True, "order": 5, "requires_auth": False},
     {"id": "preventive-plan", "label": "Plan de maintenance préventive", "icon": "Calendar", "type": "link", "enabled": True, "order": 6, "requires_auth": False},
-    {"id": "create-presquaccident", "label": "Signaler un presqu'accident", "icon": "AlertCircle", "type": "action", "enabled": True, "order": 7, "requires_auth": True},
+    {"id": "create-presquaccident", "label": "Signaler un presqu'accident", "icon": "AlertCircle", "type": "action", "enabled": True, "order": 7, "requires_auth": False},
 ]
+
+# Actions qui ont désormais un vrai parcours public (formulaire + endpoint sans auth) :
+# on force requires_auth à False même sur une config déjà enregistrée, pour que le
+# réglage "Authentification requise" dans Paramètres spéciaux reflète la réalité.
+PUBLIC_CAPABLE_ACTIONS = ["create-intervention", "report-breakdown", "create-presquaccident"]
 
 
 async def ensure_default_actions():
@@ -51,15 +57,15 @@ async def ensure_default_actions():
                 {"config_id": "default"},
                 {"$push": {"actions": {"$each": new_actions}}}
             )
-        # Migrate: make create-intervention public (no auth required)
+        # Migrate: les actions ayant un vrai parcours public (formulaire + endpoint sans
+        # auth) doivent avoir requires_auth=False, même sur une config deja enregistree
         actions = config.get("actions", [])
         for action in actions:
-            if action.get("id") == "create-intervention" and action.get("requires_auth") is True:
+            if action.get("id") in PUBLIC_CAPABLE_ACTIONS and action.get("requires_auth") is True:
                 await db[ACTIONS_COLLECTION].update_one(
-                    {"config_id": "default", "actions.id": "create-intervention"},
+                    {"config_id": "default", "actions.id": action["id"]},
                     {"$set": {"actions.$.requires_auth": False}}
                 )
-                break
 
 
 
@@ -508,15 +514,26 @@ async def create_public_intervention_request(data: dict):
 
     logger.info(f"[QR PUBLIC] DI creee: {request_id} par {demandeur_nom} pour equipement {equipment_id}")
 
-    # Notification email aux responsables maintenance (admins)
+    # Notification email aux responsables maintenance (admins) : lancee en arriere-plan
+    # (asyncio.create_task) pour ne jamais faire attendre le declarant - l'envoi SMTP
+    # est bloquant et peut prendre plusieurs secondes, voire echouer par timeout si le
+    # serveur SMTP est indisponible.
+    equip_nom = eq_info.get("nom", "N/A") if eq_info else "N/A"
+    loc_nom = loc_info.get("nom", "") if loc_info else ""
+    asyncio.create_task(_notify_admins_public_intervention(
+        request_id, titre, description, demandeur_nom, priorite, equip_nom, loc_nom
+    ))
+
+    return {"success": True, "id": request_id, "message": "Demande transmise avec succes"}
+
+
+async def _notify_admins_public_intervention(request_id, titre, description, demandeur_nom, priorite, equip_nom, loc_nom):
+    """Envoie (en arriere-plan) l'email de notification d'une DI publique aux admins."""
     try:
         import email_service
         app_url = os.environ.get('FRONTEND_URL', os.environ.get('APP_URL', 'http://localhost'))
         convert_url = f"{app_url}/intervention-requests?action=convert&id={request_id}"
         refuse_url = f"{app_url}/intervention-requests?action=refuse&id={request_id}"
-
-        equip_nom = eq_info.get("nom", "N/A") if eq_info else "N/A"
-        loc_nom = loc_info.get("nom", "") if loc_info else ""
 
         priority_colors = {
             "URGENTE": "#dc2626", "HAUTE": "#ea580c",
@@ -585,21 +602,19 @@ async def create_public_intervention_request(data: dict):
         </div>
         """
 
-        # Envoyer aux admins et responsables
+        # Envoyer aux admins et responsables (send_email est bloquant -> thread separe)
         admins = await db.users.find({"role": "ADMIN", "statut": "actif"}).to_list(100)
         admin_emails = [a["email"] for a in admins if a.get("email")]
         sent_count = 0
         for admin_email in admin_emails:
             try:
-                if email_service.send_email(admin_email, subject, html_content):
+                if await asyncio.to_thread(email_service.send_email, admin_email, subject, html_content):
                     sent_count += 1
             except Exception as mail_err:
                 logger.warning(f"Erreur envoi email notification DI QR a {admin_email}: {mail_err}")
         logger.info(f"[QR PUBLIC] Notification email envoyee a {sent_count}/{len(admin_emails)} admins")
     except Exception as notif_err:
         logger.warning(f"[QR PUBLIC] Erreur notification email: {notif_err}")
-
-    return {"success": True, "id": request_id, "message": "Demande transmise avec succes"}
 
 
 @router.post("/public/intervention-request/{request_id}/attachments")
@@ -661,6 +676,245 @@ async def upload_public_intervention_attachment(request_id: str, file: UploadFil
             "url": f"/api/intervention-requests/{request_id}/attachments/{str(att_oid)}"
         }
     }
+
+
+@router.post("/public/presqu-accident")
+async def create_public_presqu_accident(data: dict):
+    """Créer un presqu'accident SANS authentification (accès public via QR code)."""
+    import uuid as _uuid
+    from bson import ObjectId
+
+    titre = (data.get("titre") or "").strip()
+    description = (data.get("description") or "").strip()
+    equipment_id = (data.get("equipment_id") or "").strip()
+    declarant = (data.get("declarant") or "Anonyme").strip()
+    severite = data.get("severite", "MOYEN")
+
+    if not titre:
+        raise HTTPException(status_code=400, detail="Le titre est obligatoire")
+    if not description:
+        raise HTTPException(status_code=400, detail="La description est obligatoire")
+
+    valid_severities = ["FAIBLE", "MOYEN", "ELEVE", "CRITIQUE"]
+    if severite not in valid_severities:
+        severite = "MOYEN"
+
+    valid_services = ["ADV", "LOGISTIQUE", "PRODUCTION", "QHSE", "MAINTENANCE", "LABO", "INDUS", "AUTRE"]
+
+    # Résoudre l'équipement (nom, service, emplacement) pour pré-remplir intelligemment
+    # les champs obligatoires sans les demander à un déclarant anonyme
+    equipement_nom = None
+    lieu = "Non précisé"
+    service = "AUTRE"
+    if equipment_id:
+        try:
+            eq = await db.equipments.find_one({"_id": ObjectId(equipment_id)})
+        except Exception:
+            eq = None
+        if eq:
+            equipement_nom = eq.get("nom")
+            if eq.get("service") in valid_services:
+                service = eq.get("service")
+            if eq.get("emplacement_id"):
+                try:
+                    loc = await db.locations.find_one({"_id": ObjectId(eq["emplacement_id"])})
+                    if loc:
+                        lieu = loc.get("nom", lieu)
+                except Exception:
+                    pass
+
+    # Numéro au format [année]-[numéro incrémenté], comme la création authentifiée
+    current_year = datetime.now().year
+    count = await db.presqu_accident_items.count_documents({"numero": {"$regex": f"^{current_year}-"}})
+    numero = f"{current_year}-{str(count + 1).zfill(3)}"
+
+    item_id = str(_uuid.uuid4())
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    item_dict = {
+        "id": item_id,
+        "numero": numero,
+        "titre": titre,
+        "description": description,
+        "date_incident": now_iso,
+        "lieu": lieu,
+        "service": service,
+        "categorie_incident": None,
+        "equipement_id": equipment_id or None,
+        "equipement_nom": equipement_nom,
+        "declarant": f"{declarant} (QR)",
+        "personnes_impliquees": None,
+        "temoins": None,
+        "responsable_id": None,
+        "contexte_cause": None,
+        "mesures_immediates": None,
+        "severite": severite,
+        "type_lesion_potentielle": None,
+        "facteurs_contributifs": [],
+        "conditions_incident": None,
+        "actions_proposees": None,
+        "actions_preventions": None,
+        "responsable_action": None,
+        "date_echeance_action": None,
+        "commentaire_traitement": None,
+        "status": "A_TRAITER",
+        "date_cloture": None,
+        "attachments": [],
+        "attachments_traitement": [],
+        "commentaire": None,
+        "piece_jointe_url": None,
+        "piece_jointe_nom": None,
+        "created_at": now_iso,
+        "updated_at": now_iso,
+        "created_by": "PUBLIC",
+        "updated_by": None,
+        "traite_par": None,
+        "traite_le": None,
+    }
+
+    await db.presqu_accident_items.insert_one(item_dict)
+
+    clean_item = {k: v for k, v in item_dict.items() if k != "_id"}
+
+    # Broadcast WebSocket pour la synchronisation temps réel
+    try:
+        from realtime_manager import realtime_manager
+        await realtime_manager.emit_event("near_miss", "created", clean_item)
+    except Exception as e:
+        logger.warning(f"WebSocket broadcast failed for public presqu'accident: {e}")
+
+    logger.info(f"[QR PUBLIC] Presqu'accident créé: {item_id} par {declarant} pour équipement {equipment_id}")
+
+    # Notification email aux admins : lancee en arriere-plan (voir _notify_admins_public_intervention
+    # pour la meme raison - ne jamais faire attendre le declarant pour un envoi SMTP potentiellement lent)
+    asyncio.create_task(_notify_admins_public_presqu_accident(
+        item_id, titre, description, declarant, severite, equipement_nom
+    ))
+
+    return {"success": True, "id": item_id, "numero": numero, "message": "Presqu'accident transmis avec succès"}
+
+
+async def _notify_admins_public_presqu_accident(item_id, titre, description, declarant, severite, equipement_nom):
+    """Envoie (en arriere-plan) l'email de notification d'un presqu'accident public aux admins."""
+    try:
+        import email_service
+        app_url = os.environ.get('FRONTEND_URL', os.environ.get('APP_URL', 'http://localhost'))
+        detail_url = f"{app_url}/presqu-accident?openId={item_id}"
+
+        severity_colors = {"FAIBLE": "#3b82f6", "MOYEN": "#d97706", "ELEVE": "#ea580c", "CRITIQUE": "#dc2626"}
+        sev_color = severity_colors.get(severite, "#6b7280")
+
+        subject = f"Nouveau presqu'accident (QR) - {titre}"
+        html_content = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #b45309, #f59e0b); color: white; padding: 20px 24px; border-radius: 12px 12px 0 0;">
+                <h2 style="margin: 0; font-size: 18px;">Nouveau presqu'accident déclaré</h2>
+                <p style="margin: 6px 0 0; opacity: 0.9; font-size: 13px;">Soumis via QR code par {declarant}</p>
+            </div>
+            <div style="padding: 24px; background: #ffffff; border: 1px solid #e5e7eb; border-top: none;">
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px; width: 120px;">Titre</td>
+                            <td style="padding: 6px 0; font-weight: 600; font-size: 14px;">{titre}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Description</td>
+                            <td style="padding: 6px 0; font-size: 14px;">{description}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Équipement</td>
+                            <td style="padding: 6px 0; font-size: 14px; font-weight: 500;">{equipement_nom or 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Déclarant</td>
+                            <td style="padding: 6px 0; font-size: 14px;">{declarant}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Gravité</td>
+                            <td style="padding: 6px 0;">
+                                <span style="display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; color: white; background-color: {sev_color};">{severite}</span>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <a href="{detail_url}" style="display: inline-block; padding: 12px 32px; background-color: #b45309; color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 14px;">
+                        Voir le presqu'accident
+                    </a>
+                </div>
+                <p style="color: #94a3b8; font-size: 12px; text-align: center; margin: 0;">FSAO Iris - GMAO</p>
+            </div>
+            <div style="border-radius: 0 0 12px 12px; background: #f1f5f9; padding: 12px; border: 1px solid #e5e7eb; border-top: none;">
+                <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">Cet email a été envoyé automatiquement suite à une déclaration via QR code.</p>
+            </div>
+        </div>
+        """
+
+        # send_email est bloquant (smtplib synchrone) -> execute dans un thread separe
+        # pour ne jamais geler la boucle asyncio, meme en tache de fond
+        admins = await db.users.find({"role": "ADMIN", "statut": "actif"}).to_list(100)
+        admin_emails = [a["email"] for a in admins if a.get("email")]
+        sent_count = 0
+        for admin_email in admin_emails:
+            try:
+                if await asyncio.to_thread(email_service.send_email, admin_email, subject, html_content):
+                    sent_count += 1
+            except Exception as mail_err:
+                logger.warning(f"Erreur envoi email notification presqu'accident QR à {admin_email}: {mail_err}")
+        logger.info(f"[QR PUBLIC] Notification email envoyée à {sent_count}/{len(admin_emails)} admins")
+    except Exception as notif_err:
+        logger.warning(f"[QR PUBLIC] Erreur notification email: {notif_err}")
+
+
+@router.post("/public/presqu-accident/{item_id}/attachments")
+async def upload_public_presqu_accident_attachment(item_id: str, file: UploadFile = File(...)):
+    """Upload un fichier sur un presqu'accident créé publiquement (sans auth)."""
+    from pathlib import Path as _Path
+    import uuid as _uuid
+
+    item = await db.presqu_accident_items.find_one({"id": item_id, "created_by": "PUBLIC"})
+    if not item:
+        raise HTTPException(status_code=404, detail="Presqu'accident non trouvé")
+
+    content = await file.read()
+    if len(content) > 25 * 1024 * 1024:
+        raise HTTPException(status_code=400, detail="Fichier trop volumineux (max 25MB)")
+
+    from image_compressor import get_compression_settings, compress_image
+    comp_settings = await get_compression_settings(db)
+    content, compressed_filename, new_mime, was_compressed = compress_image(content, file.filename, comp_settings)
+
+    # Même répertoire que l'upload authentifié (presqu_accident_routes.py) pour que
+    # les téléchargements/consultations existants fonctionnent sans changement
+    upload_dir = _Path("/app/backend/uploads/presqu-accident")
+    upload_dir.mkdir(parents=True, exist_ok=True)
+
+    file_ext = _Path(compressed_filename).suffix if was_compressed else _Path(file.filename).suffix
+    attachment_id = str(_uuid.uuid4())
+    unique_filename = f"{attachment_id}{file_ext}"
+    file_path = upload_dir / unique_filename
+
+    with open(file_path, "wb") as f:
+        f.write(content)
+
+    new_attachment = {
+        "id": attachment_id,
+        "filename": unique_filename,
+        "original_filename": file.filename,
+        "path": str(file_path),
+        "mime_type": new_mime if was_compressed else (file.content_type or "application/octet-stream"),
+        "size": len(content),
+        "uploaded_at": datetime.now(timezone.utc).isoformat(),
+        "uploaded_by": None,
+    }
+
+    await db.presqu_accident_items.update_one(
+        {"id": item_id},
+        {"$push": {"attachments": new_attachment}}
+    )
+
+    return {"success": True, "attachment": new_attachment}
 
 
 # ========== ROUTES AUTHENTIFIÉES ==========

@@ -1,5 +1,15 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.16.0 - QR Code equipement : presqu'accident public, panne signalable sans compte, mode hors-ligne (Septembre 2026)
+
+- **Correction (cause du bug rapporte)** : desactiver "Authentification requise" sur une action QR ("Signaler une panne", "Signaler un presqu'accident") n'avait aucun effet visible. Cause : ces deux actions redirigeaient vers une page protegee par connexion (`/work-orders`, `/presqu-accident`) quel que soit le reglage - seule "Creer une demande d'intervention" disposait d'un vrai parcours public (formulaire + route backend sans authentification). Le reglage ne pouvait donc jamais fonctionner pour ces deux actions, faute de mecanisme public correspondant.
+- **Nouveau** : "Declarer un presqu'accident" est desormais un veritable parcours public - formulaire directement sur la page QR (titre, circonstances, gravite, photo en un tap), nouvelle route backend dediee sans authentification, notification automatique des administrateurs.
+- **Nouveau** : "Signaler une panne" ouvre desormais le meme formulaire public rapide que "Creer une demande d'intervention" (au lieu de rediriger vers l'ecran de connexion).
+- **Ergonomie** : la page QR separe visuellement les actions utilisables sans compte ("Sans compte") des actions reservees au personnel connecte, pour qu'un novice comprenne immediatement ce qu'il peut faire sans se connecter.
+- **Nouveau (mode hors-ligne)** : si le reseau coupe au moment d'envoyer une demande ou une declaration depuis le QR, elle est enregistree localement sur l'appareil et transmise automatiquement des que la connexion revient - comme le reste de l'application.
+- **Performance** : l'envoi des notifications email aux administrateurs (demande d'intervention et presqu'accident publics) se fait desormais en arriere-plan ; il pouvait auparavant bloquer la confirmation plusieurs secondes, voire dix secondes ou plus, si le serveur mail etait lent a repondre.
+- **Renfort** : protection contre le double-tap sur les formulaires publics QR, qui pouvait creer des declarations/demandes en double (trouve pendant les tests de cette version).
+
 ## Version 1.15.3 - Correction : QR code equipement/formation inutilisable (Septembre 2026)
 
 - **Correction (cause racine)** : la page publique ouverte en flashant le QR code d'un equipement (ou sous-equipement) affichait "Equipement introuvable" alors que l'equipement existait bien et que l'API repondait correctement. Cause : `QREquipmentPage.jsx` (et 5 autres fichiers : QR inventaire, formulaire d'intervention public, formulaire de surveillance, mode inventaire rapide, page de formation publique) lisaient directement la variable d'environnement de l'adresse backend SANS repli. Des que cette variable n'est pas definie au moment du build du frontend, elle vaut `undefined` en JavaScript, ce qui se retrouve litteralement dans l'URL des requetes (ex: `/qr/undefined/api/...`) - le serveur renvoyait alors la page d'accueil au lieu des donnees, faisant echouer le chargement.
