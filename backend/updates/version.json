@@ -1,11 +1,10 @@
 {
-  "version": "1.14.1",
-  "versionName": "Correction : menu Affichage Dynamique invisible",
+  "version": "1.14.2",
+  "versionName": "Correction : liste des équipements vide dans le bloc Cadence",
   "releaseDate": "2026-09-14",
-  "description": "Corrige le menu Affichage Dynamique qui n'apparaissait pas dans la barre laterale malgre la mise a jour 1.14.0 (la sidebar utilisait une liste de menu differente de celle qui avait ete mise a jour)",
+  "description": "Corrige le bloc Cadence equipement de l'Affichage Dynamique dont la liste deroulante Equipement restait vide",
   "changes": [
-    "Correction : le menu Affichage Dynamique apparait desormais dans la barre laterale (trois listes de menu dupliquees dans le code, une seule avait ete mise a jour)",
-    "Correction : le nouvel ecran apparait aussi dans le selecteur de page de demarrage et dans l'ecran de personnalisation du menu"
+    "Correction : le bloc Cadence equipement de l'Affichage Dynamique affiche desormais le nom reel de l'equipement (la route ne recuperait pas le nom, toujours vide)"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

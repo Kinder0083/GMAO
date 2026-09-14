@@ -136,8 +136,23 @@ async def get_public_link(screen_id: str, current_user: dict = Depends(require_p
 
 @router.get("/sources/machines")
 async def list_machines_source(current_user: dict = Depends(require_permission("affichageDynamique", "view"))):
-    machines = await db.mes_machines.find({"active": True}, {"_id": 1, "name": 1}).to_list(500)
-    return [{"id": str(m["_id"]), "name": m.get("name", "")} for m in machines]
+    # Les documents mes_machines n'ont pas de champ "name" en propre : le nom
+    # affiche est celui de l'equipement (et, le cas echeant, du sous-equipement)
+    # auquel la machine est rattachee - meme logique que mes_service.get_machines().
+    machines = await db.mes_machines.find(
+        {"active": True}, {"_id": 1, "equipment_id": 1, "sub_equipment_id": 1}
+    ).to_list(500)
+    result = []
+    for m in machines:
+        eq = await db.equipments.find_one({"_id": m.get("equipment_id")}, {"nom": 1})
+        label = eq["nom"] if eq else "Équipement inconnu"
+        sub_id = m.get("sub_equipment_id")
+        if sub_id:
+            sub = await db.equipments.find_one({"_id": sub_id}, {"nom": 1})
+            if sub:
+                label = f"{label} / {sub['nom']}"
+        result.append({"id": str(m["_id"]), "name": label})
+    return result
 
 
 @router.get("/sources/sensors")
@@ -164,9 +179,15 @@ async def _resolve_block(block: dict) -> dict:
             machine_id = config.get("machine_id")
             if machine_id and _mes_service:
                 metrics = await _mes_service.get_realtime_metrics(machine_id)
-                machine = await db.mes_machines.find_one({"_id": ObjectId(machine_id)}, {"name": 1})
+                # mes_machines n'a pas de champ "name" en propre : le nom vient
+                # de l'equipement rattache (meme logique que /sources/machines).
+                machine_name = ""
+                machine = await db.mes_machines.find_one({"_id": ObjectId(machine_id)}, {"equipment_id": 1})
+                if machine and machine.get("equipment_id"):
+                    eq = await db.equipments.find_one({"_id": machine["equipment_id"]}, {"nom": 1})
+                    machine_name = eq["nom"] if eq else ""
                 data = {
-                    "machine_name": machine.get("name", "") if machine else "",
+                    "machine_name": machine_name,
                     "cadence": metrics.get("cadence_per_min", 0),
                     "theoretical": metrics.get("theoretical_cadence", 0),
                     "is_running": metrics.get("is_running", False),

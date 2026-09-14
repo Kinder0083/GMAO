@@ -1,5 +1,9 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.14.2 - Correction : liste des equipements vide dans le bloc Cadence (Septembre 2026)
+
+- **Correction** : dans l'editeur Affichage Dynamique, le bloc "Cadence equipement" affichait une liste "Equipement" vide. Cause : les machines M.E.S. n'ont pas de nom en propre (leur nom vient de l'equipement auquel elles sont rattachees) - la route qui alimentait cette liste ne recuperait jamais ce nom et renvoyait systematiquement une chaine vide. Corrige pour aller chercher le vrai nom d'equipement, comme le fait deja le module M.E.S. lui-meme.
+
 ## Version 1.14.1 - Correction : menu Affichage Dynamique invisible (Septembre 2026)
 
 - **Correction** : le menu "Affichage Dynamique" n'apparaissait pas dans la barre laterale malgre la mise a jour 1.14.0. Cause : trois listes de menu dupliquees existent dans le code (sidebar, ecran de personnalisation du menu, selecteur de page de demarrage) - seule l'une d'elles avait ete mise a jour lors de l'ajout initial de la fonctionnalite. Les trois sont desormais synchronisees.
