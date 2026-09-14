@@ -1,10 +1,13 @@
 {
-  "version": "1.15.1",
-  "versionName": "Correction : numero de version incoherent sur l'ecran de connexion",
+  "version": "1.15.2",
+  "versionName": "Correction : dossiers et enregistrements dupliques dans Documentations",
   "releaseDate": "2026-09-14",
-  "description": "Corrige le numero de version affiche sur l'ecran de connexion, qui pouvait differer de celui affiche dans Mise a jour (deux fichiers version.json distincts)",
+  "description": "Corrige les doublons de dossiers/poles dans Documentations et le menu contextuel qui s'affichait en double lors d'un clic droit",
   "changes": [
-    "Correction : l'ecran de connexion et le menu Mise a jour lisent desormais le meme fichier de version - ils ne peuvent plus afficher des numeros differents"
+    "Correction : les poles de service (ex: dossier Maintenance) ne peuvent plus etre dupliques en base - un index unique protege desormais poles_service, doc_folders, documents et autorisations_particulieres comme le reste de l'application",
+    "Nettoyage automatique et idempotent des doublons deja presents en base au demarrage du serveur (y compris plusieurs doublons trouves dans les autorisations particulieres)",
+    "Correction : le clic droit sur le fond de l'explorateur Documentations pouvait afficher deux menus contextuels superposes",
+    "Renfort : protection contre le double-clic lors de la creation d'un pole ou d'un dossier"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

@@ -52,6 +52,7 @@ export default function ExplorerView({ poles, onRefresh }) {
   const [renameName, setRenameName] = useState('');
   const [newFolderDialog, setNewFolderDialog] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [creatingFolder, setCreatingFolder] = useState(false);
   const [sendToDialog, setSendToDialog] = useState(null);
   const [shareEmailDialog, setShareEmailDialog] = useState(null);
   const [insertDialog, setInsertDialog] = useState(null);
@@ -169,6 +170,7 @@ export default function ExplorerView({ poles, onRefresh }) {
   const handleBgContextMenu = (e) => {
     if (e.target === e.currentTarget || e.target.closest('[data-explorer-bg]')) {
       e.preventDefault();
+      e.stopPropagation();
       setContextMenu({ x: e.clientX, y: e.clientY, item: null, itemType: 'background' });
     }
   };
@@ -243,7 +245,8 @@ export default function ExplorerView({ poles, onRefresh }) {
   };
 
   const handleCreateFolder = async () => {
-    if (!newFolderName.trim()) return;
+    if (!newFolderName.trim() || creatingFolder) return;
+    setCreatingFolder(true);
     try {
       await documentationsAPI.createFolder(currentPoleId, { name: newFolderName.trim(), parent_id: currentFolderId });
       setNewFolderDialog(false); setNewFolderName('');
@@ -251,6 +254,8 @@ export default function ExplorerView({ poles, onRefresh }) {
       toast({ title: 'Dossier créé' });
     } catch {
       toast({ title: 'Erreur', description: 'Impossible de créer le dossier', variant: 'destructive' });
+    } finally {
+      setCreatingFolder(false);
     }
   };
 
@@ -706,7 +711,7 @@ export default function ExplorerView({ poles, onRefresh }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setNewFolderDialog(false)}>Annuler</Button>
-            <Button onClick={handleCreateFolder} data-testid="new-folder-confirm-btn">Créer</Button>
+            <Button onClick={handleCreateFolder} disabled={creatingFolder} data-testid="new-folder-confirm-btn">Créer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

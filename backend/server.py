@@ -1635,11 +1635,27 @@ async def create_unique_id_indexes():
         "roles",
         "notifications",
         "demandes_arret",
+        "poles_service",
+        "doc_folders",
+        "documents",
+        "autorisations_particulieres",
     ]
     created = 0
     for coll_name in collections:
         try:
             coll = db[coll_name]
+            # Dédoublonnage préalable : si plusieurs documents partagent le même 'id'
+            # (bug historique), on ne garde que le plus ancien afin de permettre
+            # la création de l'index unique ci-dessous.
+            duplicate_groups = await coll.aggregate([
+                {"$match": {"id": {"$exists": True}}},
+                {"$group": {"_id": "$id", "count": {"$sum": 1}, "docs": {"$push": "$_id"}}},
+                {"$match": {"count": {"$gt": 1}}}
+            ]).to_list(length=None)
+            for dup in duplicate_groups:
+                extras = sorted(dup["docs"])[1:]  # garde le plus ancien (tri par ObjectId)
+                await coll.delete_many({"_id": {"$in": extras}})
+                logger.warning(f"Doublon id='{dup['_id']}' dans {coll_name}: {len(extras)} copie(s) supprimée(s)")
             await coll.create_index("id", unique=True, sparse=True)
             created += 1
         except Exception as e:

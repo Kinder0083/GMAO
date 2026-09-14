@@ -101,7 +101,11 @@ export const useRealtimeData = (entityType, fetchDataFn, options = {}) => {
           if (onCreatedRef.current) {
             onCreatedRef.current(message.data);
           } else {
-            setData(prevData => [message.data, ...prevData]);
+            setData(prevData =>
+              prevData.some(item => item.id === message.data.id)
+                ? prevData
+                : [message.data, ...prevData]
+            );
           }
           break;
 

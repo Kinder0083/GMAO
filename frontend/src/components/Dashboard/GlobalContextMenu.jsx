@@ -67,6 +67,10 @@ const GlobalContextMenu = ({ onCreateShortcut }) => {
 
   const handleContextMenu = useCallback((e) => {
     if (e.ctrlKey) {
+      // Ignorer si on est dans l'explorateur de documents (menu contextuel dédié)
+      if (e.target?.closest?.('[data-explorer-bg], [data-testid^="explorer-item-"], [data-testid="explorer-view"]')) {
+        return;
+      }
       e.preventDefault();
       // Détecter si l'utilisateur a cliqué sur une zone (data-zone-id)
       const zoneEl = e.target?.closest?.('[data-zone-id]');

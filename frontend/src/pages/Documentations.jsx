@@ -56,6 +56,7 @@ function Documentations() {
   
   const [openForm, setOpenForm] = useState(false);
   const [selectedPole, setSelectedPole] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewModeState] = useState(() => localStorage.getItem('docs_viewMode') || 'cards');
   const setViewMode = (mode) => { localStorage.setItem('docs_viewMode', mode); setViewModeState(mode); };
@@ -151,6 +152,8 @@ function Documentations() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
+    setSubmitting(true);
     try {
       // Mettre à jour la couleur selon le pôle sélectionné
       const poleData = {
@@ -174,6 +177,8 @@ function Documentations() {
         description: formatErrorMessage(error, 'Erreur lors de l\'enregistrement'),
         variant: 'destructive'
       });
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -681,7 +686,7 @@ function Documentations() {
               <Button type="button" variant="outline" onClick={() => setOpenForm(false)}>
                 Annuler
               </Button>
-              <Button type="submit">
+              <Button type="submit" disabled={submitting}>
                 {selectedPole ? 'Mettre à jour' : 'Créer'}
               </Button>
             </DialogFooter>

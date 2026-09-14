@@ -1,5 +1,11 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.15.2 - Correction : dossiers et enregistrements dupliques dans Documentations (Septembre 2026)
+
+- **Correction (dossiers dupliques)** : un meme pole de service (ex: "Maintenance") pouvait apparaitre deux fois dans Documentations, avec les memes fichiers. Cause : contrairement a la plupart des collections de l'application, `poles_service` (et `doc_folders`, `documents`, `autorisations_particulieres`) n'etaient pas protegees par un index unique empechant deux enregistrements de partager le meme identifiant. Au passage, plusieurs enregistrements dupliques (jusqu'a 3 copies d'une meme autorisation particuliere) ont ete detectes et nettoyes automatiquement au demarrage - ce nettoyage est idempotent et s'appliquera aussi automatiquement lors de la mise a jour en production.
+- **Correction (menu contextuel en double)** : dans la vue "Explorateur" de Documentations, un clic droit sur le fond (pour creer un nouveau dossier/document) pouvait faire apparaitre deux menus contextuels superposes lors d'un Ctrl+clic droit. Cause : le clic n'etait pas correctement stoppe et remontait jusqu'au menu contextuel global de l'application.
+- **Renfort** : les formulaires de creation de pole/dossier sont desormais proteges contre un double-clic accidentel (qui pouvait creer deux enregistrements reels identiques).
+
 ## Version 1.15.1 - Correction : numero de version incoherent sur l'ecran de connexion (Septembre 2026)
 
 - **Correction** : l'écran de connexion pouvait afficher un numéro de version différent de celui affiché dans le menu "Mise à jour". Cause : deux fichiers `version.json` distincts existaient dans le dépôt (`updates/version.json` à la racine, lu par le système de mise à jour, et `backend/updates/version.json`, lu par l'écran de connexion) - il suffisait qu'ils divergent pour produire l'incohérence. Le fichier en double a été supprimé ; l'écran de connexion lit désormais la même source unique que "Mise à jour".
