@@ -1,5 +1,15 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.17.0 - Audit securite/fiabilite : premiers correctifs critiques (Septembre 2026)
+
+Premiers correctifs issus de l'audit complet de l'application (architecture, securite, patterns de bugs recurrents) :
+
+- **Limitation de debit** : aucune protection anti brute-force n'existait sur la connexion, ni aucun garde-fou sur les points d'entree publics QR. Ajout d'une limitation par adresse IP - 10 tentatives/minute sur `/auth/login`, 20/minute sur la creation de demande d'intervention/presqu'accident publiques.
+- **Doublons de donnees de securite** : `presqu_accident_items` et `surveillance_items` etaient exposes a la meme faille de doublon deja corrigee sur le module Documentations (aucun index unique en base). Desormais proteges, avec nettoyage automatique des doublons deja presents au demarrage.
+- **Blocage de l'application pendant les operations d'admin longues** : reconfigurer Tailscale, restaurer ou lancer une sauvegarde MongoDB executait des commandes systeme (recompilation frontend, mongodump/mongorestore) de facon synchrone, gelant l'application entiere pour tous les utilisateurs pendant toute la duree de l'operation - jusqu'a plusieurs minutes. Ces operations tournent desormais en arriere-plan sans bloquer les autres requetes.
+
+D'autres constats de l'audit (protection anti double-soumission sur le formulaire de presqu'accident principal, envois d'email bloquants dans d'autres modules, chemins de fichiers codes en dur, chiffrement des sauvegardes...) restent a traiter dans de prochaines mises a jour.
+
 ## Version 1.16.0 - QR Code equipement : presqu'accident public, panne signalable sans compte, mode hors-ligne (Septembre 2026)
 
 - **Correction (cause du bug rapporte)** : desactiver "Authentification requise" sur une action QR ("Signaler une panne", "Signaler un presqu'accident") n'avait aucun effet visible. Cause : ces deux actions redirigeaient vers une page protegee par connexion (`/work-orders`, `/presqu-accident`) quel que soit le reglage - seule "Creer une demande d'intervention" disposait d'un vrai parcours public (formulaire + route backend sans authentification). Le reglage ne pouvait donc jamais fonctionner pour ces deux actions, faute de mecanisme public correspondant.

@@ -26,6 +26,7 @@ from jose import jwt, JWTError
 from dependencies import get_current_user, get_current_admin_user
 from openapi_config import AUTH_ERRORS, STANDARD_ERRORS
 from routes.shared import db, audit_service, serialize_doc, find_user_flexible
+from rate_limiter import limiter
 import email_service
 import string
 
@@ -85,7 +86,8 @@ async def register(user_create: UserCreate):
     description="Authentifie un utilisateur et retourne un token JWT valide 7 jours. Le token doit etre inclus dans le header `Authorization: Bearer <token>` pour les requetes protegees.",
     responses={401: {"description": "Identifiants invalides", "content": {"application/json": {"example": {"detail": "Identifiants invalides"}}}}}
 )
-async def login(login_request: LoginRequest):
+@limiter.limit("10/minute")
+async def login(request: Request, login_request: LoginRequest):
     """Se connecter et obtenir un token JWT"""
     # Debug logging
     logger.info(f"🔍 LOGIN ATTEMPT - Email: {login_request.email}")

@@ -5,6 +5,7 @@ Gestion du cron système, lancement manuel, restauration, logs.
 import os
 import shutil
 import subprocess
+import asyncio
 import logging
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,7 +32,7 @@ CRON_SCRIPT = Path("/root/backup_mongo_auto.sh")
 #  Utilitaires
 # ─────────────────────────────────────────
 
-def _run(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
+def _run_sync(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
     """Exécute une commande shell et retourne (code, stdout, stderr)."""
     try:
         result = subprocess.run(
@@ -47,21 +48,30 @@ def _run(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
         return -1, "", str(e)
 
 
-def _is_mongodump_installed() -> bool:
-    code, _, _ = _run(["mongodump", "--version"])
+async def _run(cmd: list[str], timeout: int = 60) -> tuple[int, str, str]:
+    """
+    Version asynchrone de _run_sync : exécute la commande dans un thread séparé
+    pour ne jamais bloquer la boucle asyncio partagée par toutes les requêtes -
+    mongodump/mongorestore peuvent tourner jusqu'à 10 minutes (timeout=600).
+    """
+    return await asyncio.to_thread(_run_sync, cmd, timeout)
+
+
+async def _is_mongodump_installed() -> bool:
+    code, _, _ = await _run(["mongodump", "--version"])
     return code == 0
 
 
-def _get_mongodump_version() -> str:
-    code, out, _ = _run(["mongodump", "--version"])
+async def _get_mongodump_version() -> str:
+    code, out, _ = await _run(["mongodump", "--version"])
     if code == 0 and out:
         return out.strip().split("\n")[0]
     return ""
 
 
-def _is_cron_running() -> bool:
+async def _is_cron_running() -> bool:
     for daemon in ["cron", "crond"]:
-        code, _, _ = _run(["pgrep", "-x", daemon])
+        code, _, _ = await _run(["pgrep", "-x", daemon])
         if code == 0:
             return True
     return False
@@ -166,9 +176,9 @@ def _get_last_log_lines(n: int = 100) -> list[str]:
 @router.get("/status")
 async def get_status(current_user: dict = Depends(get_current_admin_user)):
     """État complet du système de sauvegarde MongoDB."""
-    installed = _is_mongodump_installed()
-    version = _get_mongodump_version() if installed else ""
-    cron_active = _is_cron_running()
+    installed = await _is_mongodump_installed()
+    version = await _get_mongodump_version() if installed else ""
+    cron_active = await _is_cron_running()
     cron_config = _get_cron_config()
     backups = _list_backups()
     disk = _get_disk_info()
@@ -193,23 +203,23 @@ async def get_status(current_user: dict = Depends(get_current_admin_user)):
 @router.post("/install-mongodump")
 async def install_mongodump(current_user: dict = Depends(get_current_admin_user)):
     """Tente d'installer mongodump via apt (Debian/Ubuntu/LXC)."""
-    if _is_mongodump_installed():
+    if await _is_mongodump_installed():
         return {"success": True, "message": "mongodump déjà installé."}
 
-    code, out, err = _run(
+    code, out, err = await _run(
         ["apt-get", "install", "-y", "mongodb-database-tools"],
         timeout=120
     )
-    if code == 0 and _is_mongodump_installed():
-        return {"success": True, "message": "mongodump installé avec succès.", "version": _get_mongodump_version()}
+    if code == 0 and await _is_mongodump_installed():
+        return {"success": True, "message": "mongodump installé avec succès.", "version": await _get_mongodump_version()}
 
     # Fallback : installer via snap
-    code2, out2, err2 = _run(
+    code2, out2, err2 = await _run(
         ["snap", "install", "mongodump"],
         timeout=120
     )
-    if code2 == 0 and _is_mongodump_installed():
-        return {"success": True, "message": "mongodump installé via snap.", "version": _get_mongodump_version()}
+    if code2 == 0 and await _is_mongodump_installed():
+        return {"success": True, "message": "mongodump installé via snap.", "version": await _get_mongodump_version()}
 
     raise HTTPException(
         status_code=500,
@@ -223,7 +233,7 @@ async def run_backup(
     current_user: dict = Depends(get_current_admin_user)
 ):
     """Lance une sauvegarde manuelle immédiate."""
-    if not _is_mongodump_installed():
+    if not await _is_mongodump_installed():
         raise HTTPException(status_code=400, detail="mongodump n'est pas installé.")
 
     BACKUP_ROOT.mkdir(parents=True, exist_ok=True)
@@ -232,8 +242,9 @@ async def run_backup(
 
     backup_dir.mkdir(parents=True, exist_ok=True)
 
-    # Exécution synchrone (attente max 10 min)
-    code, out, err = _run(
+    # Exécutée dans un thread séparé (attente max 10 min) pour ne pas geler
+    # l'application pour tous les utilisateurs pendant la sauvegarde
+    code, out, err = await _run(
         ["mongodump", "--db", DB_NAME, "--out", str(backup_dir), "--gzip", "--quiet"],
         timeout=600
     )
@@ -295,7 +306,11 @@ async def restore_backup(
     if not backup_path.exists():
         raise HTTPException(status_code=404, detail=f"Sauvegarde introuvable : {backup_path}")
 
-    code, out, err = _run(
+    # Exécutée dans un thread séparé (attente max 10 min) : sans ça, toute
+    # l'application est indisponible pour tous les utilisateurs pendant la
+    # restauration - un moment particulièrement critique puisque --drop
+    # reconstruit la base pendant ce temps
+    code, out, err = await _run(
         ["mongorestore", "--db", DB_NAME, "--drop", "--gzip", str(backup_path)],
         timeout=600
     )
@@ -336,7 +351,7 @@ async def set_cron(
     current_user: dict = Depends(get_current_admin_user)
 ):
     """Configure la sauvegarde automatique via cron système."""
-    if not _is_mongodump_installed():
+    if not await _is_mongodump_installed():
         raise HTTPException(status_code=400, detail="mongodump n'est pas installé.")
     if not (0 <= config.hour <= 23 and 0 <= config.minute <= 59):
         raise HTTPException(status_code=400, detail="Heure invalide.")
@@ -368,9 +383,9 @@ async def set_cron(
         )
 
     # Vérifier que cron est démarré
-    if not _is_cron_running():
-        _run(["service", "cron", "start"], timeout=10)
-        _run(["service", "crond", "start"], timeout=10)
+    if not await _is_cron_running():
+        await _run(["service", "cron", "start"], timeout=10)
+        await _run(["service", "crond", "start"], timeout=10)
 
     return {
         "success": True,

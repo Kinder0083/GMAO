@@ -129,6 +129,14 @@ app = FastAPI(
     }
 )
 
+# --- Limitation de debit (anti brute-force / anti-spam) ---
+from rate_limiter import limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 # --- Protection docs Swagger par HTTP Basic Auth ---
 docs_security = HTTPBasic()
 
@@ -1639,6 +1647,8 @@ async def create_unique_id_indexes():
         "doc_folders",
         "documents",
         "autorisations_particulieres",
+        "presqu_accident_items",
+        "surveillance_items",
     ]
     created = 0
     for coll_name in collections:

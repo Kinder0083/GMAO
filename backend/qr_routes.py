@@ -4,7 +4,8 @@ Routes pour la gestion des QR codes équipements
 - Page publique d'actions rapides (sans auth)
 - Configuration des actions (admin)
 """
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Request
+from rate_limiter import limiter
 from fastapi.responses import StreamingResponse
 from dependencies import get_current_user, get_current_admin_user
 from datetime import datetime, timezone
@@ -426,7 +427,8 @@ async def get_equipment_locations_public(eq_id: str):
 
 
 @router.post("/public/intervention-request")
-async def create_public_intervention_request(data: dict):
+@limiter.limit("20/minute")
+async def create_public_intervention_request(request: Request, data: dict):
     """Creer une demande d'intervention SANS authentification (acces public via QR code)."""
     import uuid as _uuid
 
@@ -679,7 +681,8 @@ async def upload_public_intervention_attachment(request_id: str, file: UploadFil
 
 
 @router.post("/public/presqu-accident")
-async def create_public_presqu_accident(data: dict):
+@limiter.limit("20/minute")
+async def create_public_presqu_accident(request: Request, data: dict):
     """Créer un presqu'accident SANS authentification (accès public via QR code)."""
     import uuid as _uuid
     from bson import ObjectId

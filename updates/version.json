@@ -1,16 +1,12 @@
 {
-  "version": "1.16.0",
-  "versionName": "QR Code equipement : presqu'accident public, panne signalable sans compte, mode hors-ligne",
+  "version": "1.17.0",
+  "versionName": "Audit securite/fiabilite : anti brute-force, doublons presqu'accident/surveillance, deblocage des operations d'admin longues",
   "releaseDate": "2026-09-14",
-  "description": "Refonte des actions QR equipement : le reglage 'Authentification requise' de Parametres speciaux fonctionne enfin, une nouvelle declaration de presqu'accident 100% publique, et les soumissions fonctionnent meme sans reseau",
+  "description": "Premiers correctifs issus de l'audit complet de l'application : limitation de debit anti brute-force, protection des donnees de securite contre les doublons, et fin du gel de l'application pendant les operations d'administration longues",
   "changes": [
-    "Correction : desactiver 'Authentification requise' sur une action QR (Signaler une panne, Presqu'accident) n'avait aucun effet - ces actions redirigeaient toujours vers une page protegee par connexion, quel que soit le reglage",
-    "Nouveau : 'Declarer un presqu'accident' est desormais un vrai parcours public (formulaire sur la page QR, photo en un tap, aucun compte requis) - jusqu'ici cette action n'avait tout simplement aucun mecanisme public cote serveur",
-    "'Signaler une panne' ouvre desormais le meme formulaire rapide public que 'Creer une demande d'intervention', sans connexion requise",
-    "La page QR distingue maintenant clairement les actions utilisables sans compte (bandeau 'Sans compte') des actions reservees au personnel connecte",
-    "Nouveau : si le reseau coupe au moment d'envoyer une declaration ou une demande depuis le QR, elle est enregistree sur le telephone et envoyee automatiquement des que la connexion revient (comme le reste de l'application)",
-    "Correction de performance : l'envoi de notification email aux administrateurs (demande d'intervention et presqu'accident publics) bloquait la reponse plusieurs secondes si le serveur mail etait lent - il se fait desormais en arriere-plan, la confirmation s'affiche instantanement",
-    "Renfort : protection contre le double-tap sur les formulaires publics QR (pouvait creer des declarations en double)"
+    "Securite : limitation de debit sur la connexion (10 tentatives/minute par IP) et sur les points d'entree publics QR (20/minute) - aucune protection anti brute-force n'existait auparavant",
+    "Correction : les presqu'accidents et les controles du plan de surveillance pouvaient etre dupliques silencieusement (meme faille que celle deja corrigee sur Documentations) - desormais proteges par un index unique, avec nettoyage automatique des doublons deja presents (15 doublons detectes et nettoyes en test)",
+    "Correction majeure de fiabilite : la reconfiguration Tailscale, la restauration d'une sauvegarde MongoDB et la sauvegarde manuelle MongoDB geraient l'application entiere pour TOUS les utilisateurs pendant toute leur duree (jusqu'a plusieurs minutes) - ces operations tournent desormais en arriere-plan sans bloquer les autres requetes"
   ],
   "minVersion": "1.13.0",
   "breaking": false,
