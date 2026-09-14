@@ -11,8 +11,9 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-# Répertoire de stockage des PDFs
-PDF_STORAGE_DIR = Path("/app/backend/uploads/reports")
+# Chemin resolu dynamiquement + répertoire de stockage des PDFs
+BACKEND_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+PDF_STORAGE_DIR = BACKEND_DIR / "uploads" / "reports"
 PDF_STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 

@@ -12,7 +12,9 @@ import uuid
 import os
 import mimetypes
 import aiofiles
+import asyncio
 import logging
+import email_service
 
 from models import (
     InterventionRequest, InterventionRequestCreate, InterventionRequestUpdate,
@@ -28,8 +30,16 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Demandes d'Intervention"])
 
-IR_UPLOAD_DIR = Path("/app/backend/uploads/intervention-requests")
+# Chemin resolu dynamiquement (backend/routes/intervention_requests.py -> deux
+# niveaux au-dessus = backend/)
+BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+IR_UPLOAD_DIR = BACKEND_DIR / "uploads" / "intervention-requests"
 IR_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+# Taille max des pieces jointes (25MB) - meme limite que les OT et ameliorations.
+# Etait reference sans jamais etre definie : tout upload de piece jointe sur une
+# demande d'intervention levait une NameError avant ce correctif.
+MAX_FILE_SIZE = 25 * 1024 * 1024
 
 
 def _get_realtime_manager():
@@ -443,8 +453,8 @@ async def upload_ir_attachment(
         
         file_ext = Path(compressed_filename).suffix if was_compressed else Path(file.filename).suffix
         unique_filename = f"{uuid.uuid4()}{file_ext}"
-        file_path = IR_IR_UPLOAD_DIR / unique_filename
-        
+        file_path = IR_UPLOAD_DIR / unique_filename
+
         async with aiofiles.open(file_path, 'wb') as f:
             await f.write(content)
         
@@ -503,11 +513,13 @@ async def download_ir_attachment(
         if not attachment:
             raise HTTPException(status_code=404, detail="Piece jointe non trouvee")
         
-        file_path = IR_IR_UPLOAD_DIR / attachment["filename"]
-        
-        # Fallback: check old public upload path
+        file_path = IR_UPLOAD_DIR / attachment["filename"]
+
+        # Fallback: check old public upload path (ancienne convention avec
+        # underscore et sous-dossier par requete, conservee pour les fichiers
+        # deja existants sous cette forme)
         if not file_path.exists():
-            old_path = Path(f"/app/backend/uploads/intervention_requests/{request_id}") / attachment["filename"]
+            old_path = BACKEND_DIR / "uploads" / "intervention_requests" / request_id / attachment["filename"]
             if old_path.exists():
                 file_path = old_path
         
@@ -549,7 +561,7 @@ async def delete_ir_attachment(
             raise HTTPException(status_code=404, detail="Piece jointe non trouvee")
         
         # Delete file from disk
-        file_path = IR_IR_UPLOAD_DIR / attachment["filename"]
+        file_path = IR_UPLOAD_DIR / attachment["filename"]
         if file_path.exists():
             file_path.unlink()
         
@@ -623,7 +635,10 @@ async def refuse_intervention_request(
                         </div>
                     </div>
                     """
-                    email_service.send_email(creator["email"], subject, html_content)
+                    # send_email est bloquant (smtplib synchrone) - execute dans
+                    # un thread separe pour ne pas geler la boucle asyncio
+                    # partagee par toutes les requetes
+                    await asyncio.to_thread(email_service.send_email, creator["email"], subject, html_content)
         except Exception as email_err:
             logger.warning(f"Erreur envoi email refus DI: {str(email_err)}")
         
@@ -726,19 +741,19 @@ async def convert_to_work_order(
         ir_attachments = req.get("attachments", [])
         if ir_attachments:
             import shutil
-            WO_UPLOAD_DIR = Path("/app/backend/uploads/work-orders")
+            WO_UPLOAD_DIR = BACKEND_DIR / "uploads" / "work-orders"
             WO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
             for att in ir_attachments:
                 try:
-                    src_path = IR_IR_UPLOAD_DIR / att["filename"]
+                    src_path = IR_UPLOAD_DIR / att["filename"]
                     # Fallback: check old public upload path
                     if not src_path.exists():
-                        old_path = Path(f"/app/backend/uploads/intervention_requests/{request_id}") / att["filename"]
+                        old_path = BACKEND_DIR / "uploads" / "intervention_requests" / request_id / att["filename"]
                         if old_path.exists():
                             src_path = old_path
                     if src_path.exists():
                         new_filename = f"{uuid.uuid4()}{Path(att['filename']).suffix}"
-                        dst_path = WO_IR_UPLOAD_DIR / new_filename
+                        dst_path = WO_UPLOAD_DIR / new_filename
                         shutil.copy2(str(src_path), str(dst_path))
                         wo_attachment = {
                             "_id": ObjectId(),

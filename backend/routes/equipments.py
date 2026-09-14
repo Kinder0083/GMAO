@@ -556,12 +556,16 @@ async def update_equipment_status(
             
             # Émettre un événement WebSocket pour notifier les autres clients
             try:
-                await broadcast_update("equipments", {
-                    "type": "equipment_status_changed",
-                    "equipment_id": eq_id,
-                    "new_status": statut.value if hasattr(statut, 'value') else statut,
-                    "maintenance_ended": True
-                })
+                await _get_realtime_manager().emit_event(
+                    "equipments",
+                    "status_changed",
+                    {
+                        "type": "equipment_status_changed",
+                        "equipment_id": eq_id,
+                        "new_status": statut.value if hasattr(statut, 'value') else statut,
+                        "maintenance_ended": True
+                    }
+                )
             except Exception as ws_error:
                 logger.warning(f"Erreur WebSocket broadcast: {ws_error}")
         

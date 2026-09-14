@@ -12,7 +12,9 @@ import uuid
 import os
 import mimetypes
 import aiofiles
+import asyncio
 import logging
+import email_service
 
 from models import (
     ActionType, EntityType, AddTimeSpent, TimeEntryUpdate, MessageResponse,
@@ -29,6 +31,10 @@ logger = logging.getLogger(__name__)
 
 # Taille max des pieces jointes (25MB) — meme limite que les OT et DI
 MAX_FILE_SIZE = 25 * 1024 * 1024
+
+# Chemin resolu dynamiquement (backend/routes/improvements.py -> deux niveaux
+# au-dessus = backend/)
+BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 router = APIRouter(tags=["Ameliorations"])
 
@@ -482,7 +488,10 @@ async def update_improvement_request_status(
                 else:
                     body += "<p>Vous pouvez soumettre une nouvelle demande avec les modifications suggérées.</p>"
                 
-                email_service.send_email(
+                # send_email est bloquant (smtplib synchrone) - execute dans un
+                # thread separe pour ne pas geler la boucle asyncio partagee
+                await asyncio.to_thread(
+                    email_service.send_email,
                     to_email=creator["email"],
                     subject=subject,
                     html_content=body
@@ -746,21 +755,21 @@ async def convert_to_improvement(
         }
         
         # Recopie des pieces jointes depuis la demande d'amelioration vers l'amelioration
-        # Les fichiers sont copies dans /app/backend/uploads/improvements/ avec un nouvel UUID
+        # Les fichiers sont copies dans uploads/improvements/ avec un nouvel UUID
         # pour garantir l'isolation entre la DI et l'amelioration (suppression independante)
         copied_attachments = []
         try:
             import shutil as _shutil
             req_attachments = req.get("attachments", []) or []
             if req_attachments:
-                target_dir = Path("/app/backend/uploads/improvements")
+                target_dir = BACKEND_DIR / "uploads" / "improvements"
                 target_dir.mkdir(parents=True, exist_ok=True)
                 for src_att in req_attachments:
                     src_path = src_att.get("path")
                     src_filename = src_att.get("filename", "")
                     # Fallback: reconstruire le path a partir du filename si manquant
                     if not src_path and src_filename:
-                        src_path = str(Path("/app/backend/uploads/improvement_requests") / src_filename)
+                        src_path = str(BACKEND_DIR / "uploads" / "improvement_requests" / src_filename)
                     if not src_path or not os.path.exists(src_path):
                         logger.warning(f"PJ source introuvable pour copie: {src_path}")
                         continue
@@ -844,7 +853,7 @@ async def convert_to_improvement(
 async def upload_attachment_generic(item_id: str, file: UploadFile, collection_name: str, current_user: dict):
     """Upload generique de piece jointe avec compression d'image automatique"""
     try:
-        upload_dir = Path(f"/app/backend/uploads/{collection_name}")
+        upload_dir = BACKEND_DIR / "uploads" / collection_name
         upload_dir.mkdir(parents=True, exist_ok=True)
         
         content = await file.read()
@@ -890,7 +899,7 @@ async def upload_attachment_generic(item_id: str, file: UploadFile, collection_n
 
 async def download_attachment_generic(item_id: str, filename: str, collection_name: str):
     """Download generique de piece jointe"""
-    file_path = Path(f"/app/backend/uploads/{collection_name}") / filename
+    file_path = BACKEND_DIR / "uploads" / collection_name / filename
     if not file_path.exists():
         raise HTTPException(status_code=404, detail="Fichier non trouve")
     return FileResponse(str(file_path))
@@ -948,7 +957,7 @@ async def delete_improvement_request_attachment(
     
     # Suppression du fichier sur disque
     try:
-        file_path = Path("/app/backend/uploads/improvement_requests") / attachment.get("filename", "")
+        file_path = BACKEND_DIR / "uploads" / "improvement_requests" / attachment.get("filename", "")
         if file_path.exists():
             file_path.unlink()
     except Exception as e:
@@ -1607,22 +1616,6 @@ async def delete_improvement_time_entry(
     except Exception as e:
         logger.error(f"Erreur suppression time entry amélioration: {e}")
         raise HTTPException(status_code=500, detail="Erreur lors de la suppression")
-        raise HTTPException(status_code=404, detail="Amélioration non trouvée")
-    
-    await db.improvements.delete_one({"id": imp_id})
-    
-    await audit_service.log_action(
-        user_id=current_user["id"],
-        user_name=f"{current_user.get('nom', '')} {current_user.get('prenom', '')}",
-        user_email=current_user["email"],
-        action=ActionType.DELETE,
-        entity_type=EntityType.IMPROVEMENT,
-        entity_id=imp_id,
-        entity_name=imp["titre"],
-        details="Suppression amélioration"
-    )
-    
-    return {"message": "Amélioration supprimée"}
 
 
 

@@ -3,6 +3,7 @@ Fonctions email pour les Demandes d'Arrêt pour Maintenance
 """
 import os
 import logging
+import asyncio
 import email_service
 
 logger = logging.getLogger(__name__)
@@ -90,7 +91,10 @@ Pour approuver: {approve_link}
 Pour refuser: {refuse_link}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demande['destinataire_email'],
             subject=subject,
             html_content=html_content,
@@ -217,7 +221,10 @@ Pour refuser: {refuse_url}
 Pour proposer d'autres dates: {counter_url}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demande.get('destinataire_email', ''),
             subject=subject,
             html_content=html_content,
@@ -299,7 +306,10 @@ Report {status_text}
 Dates demandées: Du {report.get('nouvelle_date_debut', '')} au {report.get('nouvelle_date_fin', '')}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demandeur_email,
             subject=subject,
             html_content=html_content,
@@ -399,7 +409,10 @@ Pour accepter: {accept_url}
 Pour refuser: {refuse_url}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demandeur_email,
             subject=subject,
             html_content=html_content,
@@ -475,7 +488,10 @@ Contre-proposition {status_text}
 Dates proposées: Du {counter.get('date_debut', '')} au {counter.get('date_fin', '')}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=destinataire_email,
             subject=subject,
             html_content=html_content,
@@ -549,7 +565,10 @@ Annulée par: {cancelled_by_name}
 Motif: {motif}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demande.get('destinataire_email', ''),
             subject=subject,
             html_content=html_content,
@@ -638,7 +657,10 @@ Pour approuver: {approve_link}
 Pour refuser: {refuse_link}
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demande.get('destinataire_email', ''),
             subject=subject,
             html_content=html_content,
@@ -754,7 +776,10 @@ Période: Du {demande.get('date_debut', '')} au {demande.get('date_fin', '')}
 Veuillez vous rendre sur l'application pour sélectionner le nouveau statut de l'équipement.
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=demande.get('demandeur_email', demande.get('destinataire_email', '')),
             subject=subject,
             html_content=html_content,

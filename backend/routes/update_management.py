@@ -13,6 +13,7 @@ import os
 from models import ActionType, EntityType
 from dependencies import get_current_user, get_current_admin_user, require_permission
 from routes.shared import db, audit_service, serialize_doc
+from websocket_manager import manager as chat_manager
 
 EntityType_Audit = EntityType
 logger = logging.getLogger(__name__)

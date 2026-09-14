@@ -24,11 +24,14 @@ router = APIRouter(tags=["Import/Export"])
 # Variable globale pour la DB (sera injectée depuis server.py)
 db = None
 
+# Chemin resolu dynamiquement (fonctionne quel que soit le repertoire d'installation)
+BACKEND_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+
 # Répertoire des uploads
-UPLOADS_DIR = Path("/app/backend/uploads")
+UPLOADS_DIR = BACKEND_DIR / "uploads"
 
 # Répertoire temporaire pour les uploads chunkés
-CHUNKED_UPLOAD_DIR = Path("/app/backend/chunked_uploads")
+CHUNKED_UPLOAD_DIR = BACKEND_DIR / "chunked_uploads"
 CHUNKED_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 def init_db(database):

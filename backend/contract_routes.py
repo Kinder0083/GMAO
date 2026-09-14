@@ -24,7 +24,8 @@ router = APIRouter(prefix="/contracts", tags=["Contrats"])
 db = None
 audit_service = None
 
-UPLOADS_DIR = Path("/app/backend/uploads/contracts")
+BACKEND_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+UPLOADS_DIR = BACKEND_DIR / "uploads" / "contracts"
 UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
 
 

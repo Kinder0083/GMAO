@@ -6,8 +6,9 @@ from pathlib import Path
 import os
 from motor.motor_asyncio import AsyncIOMotorClient
 
-# Configuration upload pièces jointes
-UPLOAD_DIR = Path("/app/backend/uploads/demandes-arret")
+# Configuration upload pièces jointes (chemin resolu dynamiquement)
+BACKEND_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+UPLOAD_DIR = BACKEND_DIR / "uploads" / "demandes-arret"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB max
 

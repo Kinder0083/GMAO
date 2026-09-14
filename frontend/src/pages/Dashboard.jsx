@@ -47,6 +47,7 @@ import MaintenanceStatusPendingAlert from '../components/Dashboard/MaintenanceSt
 import SortableShortcut from '../components/Dashboard/SortableShortcut';
 import ShortcutEditDialog from '../components/Dashboard/ShortcutEditDialog';
 import WidgetPermissionsDialog from '../components/Dashboard/WidgetPermissionsDialog';
+import { WIDGET_LABELS } from '../constants/dashboardWidgets';
 
 // Composant Widget Sortable
 const SortableWidget = ({ item, isEditMode, stat, colorClasses, onDelete, onPermissions, isAdmin }) => {
@@ -495,21 +496,6 @@ const Dashboard = () => {
     ));
     setHasChanges(true);
   }, []);
-
-  // Labels des widgets pour le bouton "Ajouter un widget"
-  const WIDGET_LABELS = {
-    'work_orders_active': 'Ordres Actifs',
-    'equipment_maintenance': 'Equipements en maintenance',
-    'overdue_tasks': 'Taches en retard',
-    'maintenance_stats': 'Taux de completion',
-    'demandes_arret_pending': 'Demandes d\'arret',
-    'di_en_attente': 'DI en attente',
-    'di_temps_reponse': 'Temps reponse DI',
-    'ecart_temps': 'Ecart Temps Est./Reel',
-    'charge_maintenance': 'Charge OT restante',
-    'equipment_status_overview': 'Apercu statut equipements',
-    'global_summary': 'Resume global'
-  };
 
   // Widgets présents dans le layout actuel
   const presentWidgetIds = useMemo(() =>

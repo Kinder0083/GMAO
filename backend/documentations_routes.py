@@ -12,6 +12,7 @@ import logging
 import mimetypes
 import json
 import os
+import asyncio
 from io import BytesIO
 
 from llm_service import ask_llm, ask_llm_with_file, LLMNotConfiguredError
@@ -2508,9 +2509,10 @@ async def share_by_email(
         </div>
         """
 
-        # ── Envoi ────────────────────────────────────────────────────────────
+        # ── Envoi (dans un thread separe : send_email* est bloquant) ────────
         if attachment_data:
-            success = email_service.send_email_with_attachment(
+            success = await asyncio.to_thread(
+                email_service.send_email_with_attachment,
                 to_email=recipient,
                 subject=subject,
                 html_content=html_content,
@@ -2518,7 +2520,8 @@ async def share_by_email(
                 attachment_filename=attachment_filename
             )
         else:
-            success = email_service.send_email(
+            success = await asyncio.to_thread(
+                email_service.send_email,
                 to_email=recipient,
                 subject=subject,
                 html_content=html_content

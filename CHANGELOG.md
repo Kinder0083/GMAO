@@ -1,5 +1,17 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.18.0 - Audit securite/fiabilite : phases 2 et 3 (Septembre 2026)
+
+Suite directe de la version 1.17.0 - phases 2 et 3 de la feuille de route de l'audit (hors chiffrement des sauvegardes, explicitement reporte).
+
+- **Bug critique corrige** : l'upload, le telechargement et la suppression de pieces jointes sur une demande d'intervention plantaient systematiquement avec une erreur serveur (`IR_IR_UPLOAD_DIR`/`MAX_FILE_SIZE` references mais jamais definis dans `routes/intervention_requests.py`). Cette fonctionnalite etait totalement inutilisable. Au passage, le refus d'une demande d'intervention n'a jamais notifie le demandeur par email (`email_service` non importe, echec silencieux avale par un `try/except`).
+- **Chemins de fichiers codes en dur** : 14 fichiers ecrivaient/lisaient des fichiers via un chemin absolu fige sur l'ancien serveur d'hebergement (`/app/backend/...`) au lieu de l'installation reelle. Remplace par une resolution dynamique partout.
+- **Emails non-bloquants generalises** : le correctif de performance deja applique au QR code (envoi en arriere-plan au lieu de bloquer la reponse HTTP) etend a 7 fichiers de plus - tickets de support, refus de demande d'intervention, changement de statut d'amelioration, partage de document par email, tous les emails de demande d'arret, notification de fin de sauvegarde, et alerte camera (qui tournait en tache de fond et pouvait ralentir l'application pour tout le monde une fois par minute).
+- **Catalogue des widgets du tableau de bord unifie** : existait en 4 copies desynchronisees ; desormais une seule source de verite (`constants/dashboardWidgets.js`). Corrige au passage 2 widgets ("Ecart Temps Est./Reel", "Charge OT restante") qui etaient rendus sur le tableau de bord mais invisibles/impossibles a desactiver depuis Personnalisation.
+- **Securite** : la page publique de formation (`GET /training/files/{filename}`) ne validait pas le nom de fichier demande - risque de traversee de repertoire, corrige. Ajout d'une verification au demarrage du serveur signalant si `SECRET_KEY` est restee a sa valeur par defaut.
+- **Doublons - extension** : 20 collections supplementaires protegees contre les identifiants dupliques (messages de chat, pointages, absences, modeles de formulaires, chapitres du manuel...). Le nettoyage automatique au demarrage a corrige plusieurs dizaines de doublons deja presents en base - dont un chapitre du manuel utilisateur present en **17 exemplaires**.
+- **Nouveau : premier pipeline CI** (`.github/workflows/ci.yml`) - verifie automatiquement, a chaque envoi sur GitHub, que le backend compile et ne contient pas de variable/import non defini, et que le frontend se compile en production. Deja utile avant meme sa mise en ligne : il a permis de detecter et corriger **14 bugs supplementaires** du meme type que celui des pieces jointes, repartis dans 7 fichiers (equipements, ameliorations, notifications, maintenance preventive, mises a jour, utilisateurs, fournisseurs) - dont une fonction de suppression d'amelioration entierement dupliquee et inaccessible, et un bouton de verification manuelle des maintenances preventives qui n'a jamais fonctionne.
+
 ## Version 1.17.0 - Audit securite/fiabilite : premiers correctifs critiques (Septembre 2026)
 
 Premiers correctifs issus de l'audit complet de l'application (architecture, securite, patterns de bugs recurrents) :

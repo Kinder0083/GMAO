@@ -7,6 +7,7 @@ import os
 import logging
 import shutil
 import zipfile
+import asyncio
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -15,8 +16,11 @@ from bson import ObjectId
 
 logger = logging.getLogger(__name__)
 
+# Chemin resolu dynamiquement (fonctionne quel que soit le repertoire d'installation)
+BACKEND_DIR = Path(os.path.dirname(os.path.abspath(__file__)))
+
 # Répertoire de stockage local des backups
-BACKUP_DIR = Path("/app/backend/backups")
+BACKUP_DIR = BACKEND_DIR / "backups"
 BACKUP_DIR.mkdir(parents=True, exist_ok=True)
 
 db = None
@@ -125,7 +129,7 @@ async def execute_backup(schedule: dict) -> dict:
             zf.writestr("data.xlsx", xlsx_output.getvalue())
 
             # 1b. Ajouter tous les fichiers uploadés
-            uploads_dir = Path("/app/backend/uploads")
+            uploads_dir = BACKEND_DIR / "uploads"
             if uploads_dir.exists():
                 for file_path in uploads_dir.rglob("*"):
                     if file_path.is_file():
@@ -426,7 +430,9 @@ async def _send_backup_email(schedule: dict, status: str, file_size: int = 0, mo
         """
 
     try:
-        email_service.send_email(recipient, subject, html)
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les requetes
+        await asyncio.to_thread(email_service.send_email, recipient, subject, html)
         logger.info(f"[Backup] Email de notification envoyé à {recipient}")
     except Exception as e:
         logger.warning(f"[Backup] Erreur envoi email: {e}")

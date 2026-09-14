@@ -1104,8 +1104,10 @@ async def upload_excel_file(
         raise HTTPException(status_code=400, detail="Format non supporte. Utilisez .xlsx, .xls ou .csv")
     
     try:
-        # Sauvegarder le fichier
-        upload_dir = FilePath("/app/backend/uploads/excel")
+        # Sauvegarder le fichier (chemin resolu dynamiquement)
+        import os as _os
+        backend_dir = _os.path.dirname(_os.path.abspath(__file__))
+        upload_dir = FilePath(backend_dir) / "uploads" / "excel"
         upload_dir.mkdir(parents=True, exist_ok=True)
         
         file_id = str(uuid.uuid4())[:8]

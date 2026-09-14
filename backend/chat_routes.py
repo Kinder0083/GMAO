@@ -29,8 +29,11 @@ def init_chat_routes(database):
     global db
     db = database
 
+# Chemin resolu dynamiquement (fonctionne quel que soit le repertoire d'installation)
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # Dossier de stockage des fichiers
-CHAT_UPLOADS_DIR = "/app/backend/uploads/chat/"
+CHAT_UPLOADS_DIR = os.path.join(BACKEND_DIR, "uploads", "chat") + "/"
 os.makedirs(CHAT_UPLOADS_DIR, exist_ok=True)
 
 # =====================================
@@ -930,7 +933,7 @@ async def transfer_to_workorder(
         # Copier le fichier vers le dossier des pièces jointes OT
         import shutil
         import uuid as uuid_mod
-        work_order_attachments_dir = "/app/backend/uploads/work-orders/"
+        work_order_attachments_dir = os.path.join(BACKEND_DIR, "uploads", "work-orders") + "/"
         os.makedirs(work_order_attachments_dir, exist_ok=True)
         
         # Générer un nom unique pour éviter les conflits
@@ -1019,7 +1022,7 @@ async def transfer_to_improvement(
         # Copier le fichier
         import shutil
         import uuid as uuid_mod
-        improvements_dir = "/app/backend/uploads/improvements/"
+        improvements_dir = os.path.join(BACKEND_DIR, "uploads", "improvements") + "/"
         os.makedirs(improvements_dir, exist_ok=True)
         
         # Générer un nom unique pour éviter les conflits
@@ -1101,7 +1104,7 @@ async def transfer_to_preventive(
         # Copier le fichier
         import shutil
         import uuid as uuid_mod
-        preventive_dir = "/app/backend/uploads/preventive-maintenance/"
+        preventive_dir = os.path.join(BACKEND_DIR, "uploads", "preventive-maintenance") + "/"
         os.makedirs(preventive_dir, exist_ok=True)
         
         # Générer un nom unique pour éviter les conflits
@@ -1181,7 +1184,7 @@ async def transfer_to_nearmiss(
         
         # Copier le fichier
         import shutil
-        nearmiss_dir = "/app/backend/uploads/presqu-accident/"
+        nearmiss_dir = os.path.join(BACKEND_DIR, "uploads", "presqu-accident") + "/"
         os.makedirs(nearmiss_dir, exist_ok=True)
         
         # Générer un nom unique pour éviter les conflits

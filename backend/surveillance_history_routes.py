@@ -11,7 +11,8 @@ import shutil
 router = APIRouter(prefix="/surveillance-history", tags=["Surveillance History"])
 logger = logging.getLogger(__name__)
 
-UPLOAD_DIR = "/app/backend/uploads/surveillance_history"
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BACKEND_DIR, "uploads", "surveillance_history")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 class HistoryEntry(BaseModel):

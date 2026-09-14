@@ -16,8 +16,9 @@ from models import (
     Vendor, VendorCreate, VendorUpdate
 )
 from dependencies import get_current_user, get_current_admin_user, require_permission
-from routes.shared import db, audit_service, serialize_doc
+from routes.shared import db, audit_service, serialize_doc, _get_realtime_manager
 from llm_service import ask_llm, ask_llm_with_file, LLMNotConfiguredError
+from category_mapping import get_category_from_article_dm6
 
 EntityType_Audit = EntityType
 logger = logging.getLogger(__name__)
@@ -44,7 +45,7 @@ async def create_vendor(vendor_create: VendorCreate, current_user: dict = Depend
     vendor_data = serialize_doc(vendor_dict)
     
     # Broadcast WebSocket pour la synchronisation temps réel
-    await realtime_manager.emit_event(
+    await _get_realtime_manager().emit_event(
         "suppliers",
         "created",
         vendor_data,
@@ -69,7 +70,7 @@ async def update_vendor(vendor_id: str, vendor_update: VendorUpdate, current_use
         vendor_data = serialize_doc(vendor)
         
         # Broadcast WebSocket pour la synchronisation temps réel
-        await realtime_manager.emit_event(
+        await _get_realtime_manager().emit_event(
             "suppliers",
             "updated",
             vendor_data,
@@ -94,7 +95,7 @@ async def delete_vendor(vendor_id: str, current_user: dict = Depends(require_per
             raise HTTPException(status_code=404, detail="Fournisseur non trouvé")
         
         # Broadcast WebSocket pour la synchronisation temps réel
-        await realtime_manager.emit_event(
+        await _get_realtime_manager().emit_event(
             "suppliers",
             "deleted",
             {"id": vendor_id, "nom": vendor_name},

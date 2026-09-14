@@ -710,8 +710,10 @@ async def upload_attachment(
         if not item:
             raise HTTPException(status_code=404, detail="Presqu'accident non trouvé")
         
-        # Créer le répertoire uploads/presqu-accident si nécessaire
-        upload_dir = Path("/app/backend/uploads/presqu-accident")
+        # Créer le répertoire uploads/presqu-accident si nécessaire (chemin resolu dynamiquement)
+        import os as _os
+        backend_dir = _os.path.dirname(_os.path.abspath(__file__))
+        upload_dir = Path(backend_dir) / "uploads" / "presqu-accident"
         upload_dir.mkdir(parents=True, exist_ok=True)
         
         # Générer un nom de fichier unique

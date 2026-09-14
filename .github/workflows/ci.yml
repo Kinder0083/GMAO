@@ -1,0 +1,68 @@
+name: CI
+
+# Premier pipeline d'integration continue de l'application : il ne fait pas
+# encore tourner de suite de tests automatisee (backend/tests/ necessite un
+# serveur deja demarre et des identifiants de test - voir l'audit du
+# 14/09/2026), mais il attrape des maintenant la classe de bug la plus
+# frequemment rencontree en pratique cette session : des references a des
+# variables/imports jamais definis (ex: IR_IR_UPLOAD_DIR, MAX_FILE_SIZE,
+# email_service oublie) qui ne se revelent aujourd'hui qu'au moment ou la
+# route concernee est appelee en production.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  backend:
+    name: Backend - compilation et noms non definis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Verifier que chaque fichier compile
+        run: python -m compileall -q .
+
+      - name: Detecter les noms/imports non definis (flake8 F821)
+        run: |
+          pip install --quiet flake8
+          # F821 : nom utilise mais jamais defini/importe. C'est la regle qui
+          # a trouve 17 bugs reels lors de l'audit du 14/09/2026 (variables et
+          # imports oublies faisant planter une route au premier appel).
+          # F401 (imports inutilises, ~450 cas) et F811 (redefinitions, ~16
+          # cas) existent deja en grand nombre dans le code actuel : les
+          # activer maintenant rendrait le pipeline rouge des le premier push
+          # pour du cosmetique plutot que des bugs - a traiter separement.
+          flake8 . --select=F821 --exclude=venv,scripts,tools --show-source
+
+  frontend:
+    name: Frontend - build de production
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "yarn"
+          cache-dependency-path: frontend/yarn.lock
+
+      - name: Installer les dependances
+        run: yarn install --frozen-lockfile
+
+      - name: Build de production (CRA/craco)
+        run: yarn build
+        env:
+          CI: false

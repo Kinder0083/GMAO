@@ -12,6 +12,11 @@ import os
 
 router = APIRouter(prefix="/training", tags=["Formation"])
 
+# Chemin resolu dynamiquement (fonctionne quel que soit le repertoire d'installation,
+# au lieu d'un chemin absolu fige sur /app/backend)
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+TRAINING_UPLOAD_DIR = os.path.join(BACKEND_DIR, "uploads", "training")
+
 db = None
 
 def init_training_routes(database):
@@ -134,12 +139,11 @@ async def delete_session(session_id: str, current_user: dict = Depends(get_curre
 
 @router.post("/upload")
 async def upload_training_file(file: UploadFile = File(...), current_user: dict = Depends(get_current_user)):
-    upload_dir = "/app/backend/uploads/training"
-    os.makedirs(upload_dir, exist_ok=True)
+    os.makedirs(TRAINING_UPLOAD_DIR, exist_ok=True)
 
     ext = os.path.splitext(file.filename)[1]
     filename = f"{uuid.uuid4()}{ext}"
-    filepath = os.path.join(upload_dir, filename)
+    filepath = os.path.join(TRAINING_UPLOAD_DIR, filename)
 
     content = await file.read()
     with open(filepath, "wb") as f:
@@ -153,7 +157,11 @@ async def upload_training_file(file: UploadFile = File(...), current_user: dict 
 @router.get("/files/{filename}")
 async def get_training_file(filename: str):
     from fastapi.responses import FileResponse
-    filepath = f"/app/backend/uploads/training/{filename}"
+    # Le nom de fichier vient d'une route publique et sans authentification :
+    # basename() retire tout separateur/`..` pour empecher toute traversee de
+    # repertoire (ex: ../../server.py) avant de le joindre au dossier attendu.
+    safe_name = os.path.basename(filename)
+    filepath = os.path.join(TRAINING_UPLOAD_DIR, safe_name)
     if not os.path.exists(filepath):
         raise HTTPException(status_code=404, detail="Fichier non trouve")
     return FileResponse(filepath)

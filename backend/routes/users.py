@@ -2,7 +2,7 @@
 Routes des Utilisateurs - CRUD, Permissions, Roles
 Extrait de server.py pour une meilleure maintenabilite.
 """
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
 from datetime import datetime, timezone
 from typing import List, Optional

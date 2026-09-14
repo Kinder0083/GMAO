@@ -639,8 +639,9 @@ async def upload_public_intervention_attachment(request_id: str, file: UploadFil
     comp_settings = await get_compression_settings(db)
     content, compressed_filename, new_mime, was_compressed = compress_image(content, file.filename, comp_settings)
 
-    # Use the SAME upload dir as standard DI uploads
-    IR_UPLOAD_DIR = Path("/app/backend/uploads/intervention-requests")
+    # Use the SAME upload dir as standard DI uploads (chemin resolu dynamiquement)
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    IR_UPLOAD_DIR = Path(backend_dir) / "uploads" / "intervention-requests"
     IR_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     import uuid as _uuid
@@ -890,7 +891,9 @@ async def upload_public_presqu_accident_attachment(item_id: str, file: UploadFil
 
     # Même répertoire que l'upload authentifié (presqu_accident_routes.py) pour que
     # les téléchargements/consultations existants fonctionnent sans changement
-    upload_dir = _Path("/app/backend/uploads/presqu-accident")
+    # (chemin resolu dynamiquement)
+    backend_dir = os.path.dirname(os.path.abspath(__file__))
+    upload_dir = _Path(backend_dir) / "uploads" / "presqu-accident"
     upload_dir.mkdir(parents=True, exist_ok=True)
 
     file_ext = _Path(compressed_filename).suffix if was_compressed else _Path(file.filename).suffix

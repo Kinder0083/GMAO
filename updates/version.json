@@ -1,12 +1,18 @@
 {
-  "version": "1.17.0",
-  "versionName": "Audit securite/fiabilite : anti brute-force, doublons presqu'accident/surveillance, deblocage des operations d'admin longues",
+  "version": "1.18.0",
+  "versionName": "Audit securite/fiabilite : phases 2 et 3 - bug critique des pieces jointes DI, chemins codes en dur, emails non-bloquants, premier pipeline CI",
   "releaseDate": "2026-09-14",
-  "description": "Premiers correctifs issus de l'audit complet de l'application : limitation de debit anti brute-force, protection des donnees de securite contre les doublons, et fin du gel de l'application pendant les operations d'administration longues",
+  "description": "Suite de l'audit complet : un bug qui rendait toute piece jointe de demande d'intervention impossible a envoyer, les chemins de fichiers codes en dur corriges dans 14 fichiers, les envois d'email non-bloquants generalises, le catalogue de widgets du tableau de bord unifie, et 14 bugs supplementaires de meme nature detectes et corriges grace au nouveau pipeline de verification",
   "changes": [
-    "Securite : limitation de debit sur la connexion (10 tentatives/minute par IP) et sur les points d'entree publics QR (20/minute) - aucune protection anti brute-force n'existait auparavant",
-    "Correction : les presqu'accidents et les controles du plan de surveillance pouvaient etre dupliques silencieusement (meme faille que celle deja corrigee sur Documentations) - desormais proteges par un index unique, avec nettoyage automatique des doublons deja presents (15 doublons detectes et nettoyes en test)",
-    "Correction majeure de fiabilite : la reconfiguration Tailscale, la restauration d'une sauvegarde MongoDB et la sauvegarde manuelle MongoDB geraient l'application entiere pour TOUS les utilisateurs pendant toute leur duree (jusqu'a plusieurs minutes) - ces operations tournent desormais en arriere-plan sans bloquer les autres requetes"
+    "Correction critique : l'upload, le telechargement et la suppression de pieces jointes sur une demande d'intervention echouaient systematiquement (erreur serveur) a cause d'une variable jamais definie dans le code - fonctionnalite totalement inutilisable depuis un moment indetermine, desormais reparee",
+    "Correction : le refus d'une demande d'intervention n'envoyait jamais l'email de notification au demandeur (echec silencieux) - meme cause, desormais reparee",
+    "Correction : 14 chemins de fichiers codes en dur sur l'ancien serveur d'hebergement (/app/backend/...) remplaces par une resolution dynamique dans 14 fichiers - risque reel d'ecriture au mauvais endroit sur l'installation actuelle",
+    "Performance : generalisation du correctif d'envoi d'email non-bloquant (deja applique au QR code) a 7 fichiers supplementaires (tickets support, refus de demande, changement de statut d'amelioration, partage de document, emails de demande d'arret, notification de sauvegarde, alerte camera)",
+    "Correction : le catalogue des widgets du tableau de bord existait en 4 copies desynchronisees - unifie en une seule source, ce qui corrige au passage 2 widgets (Ecart Temps Est./Reel, Charge OT restante) invisibles depuis les reglages de personnalisation",
+    "Securite : la page publique de formation ne validait pas le nom de fichier demande (risque de traversee de repertoire) - corrige",
+    "Securite : verification au demarrage que la cle secrete de connexion (SECRET_KEY) n'est pas restee a sa valeur par defaut",
+    "Extension de la protection contre les doublons a 20 collections supplementaires (messages de chat, pointages, absences, modeles de formulaires...) - un nettoyage automatique a corrige plusieurs dizaines de doublons deja presents, dont un chapitre du manuel utilisateur duplique 17 fois",
+    "Nouveau : premier pipeline d'integration continue (verification automatique a chaque envoi sur GitHub) - a deja permis de detecter et corriger 14 bugs de plus du meme type que celui des pieces jointes, repartis dans 7 fichiers (equipements, ameliorations, notifications, maintenance preventive, mises a jour, utilisateurs, fournisseurs)"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

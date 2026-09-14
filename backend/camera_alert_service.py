@@ -189,12 +189,17 @@ async def send_camera_offline_alert(
         </html>
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les
+        # requetes de l'application (cette verification tourne en tache de
+        # fond toutes les minutes, pour toutes les cameras)
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=recipient_email,
             subject=subject,
             html_content=html_content
         )
-        
+
         return success
         
     except Exception as e:
@@ -253,12 +258,17 @@ async def send_camera_back_online_alert(
         </html>
         """
         
-        success = email_service.send_email(
+        # send_email est bloquant (smtplib synchrone) - execute dans un thread
+        # separe pour ne pas geler la boucle asyncio partagee par toutes les
+        # requetes de l'application (cette verification tourne en tache de
+        # fond toutes les minutes, pour toutes les cameras)
+        success = await asyncio.to_thread(
+            email_service.send_email,
             to_email=recipient_email,
             subject=subject,
             html_content=html_content
         )
-        
+
         return success
         
     except Exception as e:

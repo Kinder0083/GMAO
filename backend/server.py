@@ -100,6 +100,18 @@ mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ.get('DB_NAME', 'gmao_iris')]
 
+# --- Verification de la cle secrete JWT ---
+# auth.py et routes/auth.py utilisent tous les deux ce meme repli codee en dur
+# si SECRET_KEY n'est pas definie dans l'environnement - un jeton signe avec
+# cette valeur publique serait acceptable pour n'importe qui la connaissant.
+_DEFAULT_SECRET_KEY = "your_jwt_secret_key_change_in_production"
+if os.environ.get("SECRET_KEY", _DEFAULT_SECRET_KEY) == _DEFAULT_SECRET_KEY:
+    logging.getLogger(__name__).critical(
+        "🚨 SECURITE : SECRET_KEY n'est pas definie (ou vaut la valeur par defaut du code). "
+        "Tous les jetons de connexion sont signes avec une cle publique et previsible. "
+        "Definissez une valeur unique et secrete pour SECRET_KEY dans backend/.env."
+    )
+
 # Initialize dependencies with database
 dependencies.set_database(db)
 
@@ -1649,6 +1661,25 @@ async def create_unique_id_indexes():
         "autorisations_particulieres",
         "presqu_accident_items",
         "surveillance_items",
+        "chat_messages",
+        "service_responsables",
+        "team_members",
+        "time_entries",
+        "absences",
+        "manual_sections",
+        "manual_chapters",
+        "manual_versions",
+        "weekly_report_templates",
+        "automations",
+        "form_templates",
+        "custom_forms",
+        "meters",
+        "support_requests",
+        "maintenance_assignments",
+        "inventory_movements",
+        "inventory_restock_requests",
+        "planning_equipement",
+        "user_preferences",
     ]
     created = 0
     for coll_name in collections:

@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import List, Optional
 import uuid
 import os
+import secrets
 import mimetypes
 import aiofiles
 import logging
@@ -27,7 +28,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Maintenance Preventive"])
 
-PM_UPLOAD_DIR = Path("/app/backend/uploads/preventive-maintenance")
+# Chemin resolu dynamiquement (backend/routes/preventive_maintenance.py -> deux
+# niveaux au-dessus = backend/)
+BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PM_UPLOAD_DIR = BACKEND_DIR / "uploads" / "preventive-maintenance"
 PM_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 @router.get("/preventive-maintenance",
@@ -159,7 +163,7 @@ async def upload_pm_attachment(
             raise HTTPException(status_code=404, detail="Maintenance préventive non trouvée")
         
         # Créer le répertoire uploads/preventive-maintenance si nécessaire
-        upload_dir = "/app/backend/uploads/preventive-maintenance"
+        upload_dir = str(PM_UPLOAD_DIR)
         os.makedirs(upload_dir, exist_ok=True)
         
         # Générer un nom de fichier unique
@@ -351,6 +355,10 @@ async def check_and_execute_due_maintenances(current_user: dict = Depends(requir
     """Vérifie et exécute MANUELLEMENT les maintenances échues (admin ou droits édition maintenance préventive)"""
     try:
         logger.info(f"🔄 Vérification MANUELLE déclenchée par {current_user.get('email', 'Unknown')}")
+        # Import local : la fonction est definie dans server.py, qui importe ce
+        # module au demarrage - un import en tete de fichier creerait une
+        # dependance circulaire
+        from server import auto_check_preventive_maintenance
         await auto_check_preventive_maintenance()
         return {"success": True, "message": "Vérification manuelle effectuée - Consultez les logs pour les détails"}
     except Exception as e:

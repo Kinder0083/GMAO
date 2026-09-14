@@ -39,8 +39,10 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Ordres de Travail"])
 
-# Répertoire d'upload pour les pièces jointes
-WO_UPLOAD_DIR = Path("/app/backend/uploads/work-orders")
+# Répertoire d'upload pour les pièces jointes (chemin resolu dynamiquement -
+# backend/routes/work_orders.py -> deux niveaux au-dessus = backend/)
+BACKEND_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+WO_UPLOAD_DIR = BACKEND_DIR / "uploads" / "work-orders"
 WO_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 MAX_FILE_SIZE = 25 * 1024 * 1024  # 25MB
 

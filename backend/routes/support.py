@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 import uuid
 import logging
+import asyncio
 
 from models import ActionType, EntityType, MessageResponse, SuccessResponse, HelpRequestResponse, HelpRequest
 from pydantic import BaseModel
@@ -162,7 +163,10 @@ async def submit_support_request(
         
         for admin_email in admin_emails:
             try:
-                email_service.send_email(
+                # send_email est bloquant (smtplib synchrone) - execute dans un
+                # thread separe pour ne pas geler la boucle asyncio partagee
+                await asyncio.to_thread(
+                    email_service.send_email,
                     to_email=admin_email,
                     subject=subject,
                     html_content=email_html
@@ -326,7 +330,11 @@ async def request_help(
             screenshot_filename = f'screenshot_{request_id[:8]}.png'
             
             for admin_email in admin_emails:
-                email_service.send_email_with_attachment(
+                # send_email_with_attachment est bloquant (smtplib synchrone) -
+                # execute dans un thread separe pour ne pas geler la boucle
+                # asyncio partagee par toutes les requetes
+                await asyncio.to_thread(
+                    email_service.send_email_with_attachment,
                     to_email=admin_email,
                     subject=subject,
                     html_content=email_html,
