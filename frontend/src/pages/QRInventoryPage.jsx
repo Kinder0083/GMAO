@@ -5,8 +5,9 @@ import {
   ChevronRight, QrCode, Lock, ArrowLeft, MapPin, Tag, Building2,
   CheckCircle2, AlertCircle, TrendingDown
 } from 'lucide-react';
+import { BACKEND_URL } from '../utils/config';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL;
 
 const fetchPublic = async (url) => {
   const res = await fetch(`${API_URL}/api/qr-inventory/public${url}`);

@@ -1235,8 +1235,8 @@ function PoleDetails() {
           {/* Actions selon le type */}
           {ctxMenu.type === 'document' && (
             <>
-              <CtxItem icon={Eye} label="Visualiser" onClick={() => { window.open(`${process.env.REACT_APP_BACKEND_URL}/api/documentations/documents/${ctxMenu.item.id}/view?token=${localStorage.getItem('token')}`, '_blank'); setCtxMenu(null); }} />
-              <CtxItem icon={Download} label="Télécharger" onClick={() => { window.open(`${process.env.REACT_APP_BACKEND_URL}/api/documentations/documents/${ctxMenu.item.id}/download?token=${localStorage.getItem('token')}`, '_blank'); setCtxMenu(null); }} />
+              <CtxItem icon={Eye} label="Visualiser" onClick={() => { window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/documents/${ctxMenu.item.id}/view?token=${localStorage.getItem('token')}`, '_blank'); setCtxMenu(null); }} />
+              <CtxItem icon={Download} label="Télécharger" onClick={() => { window.open(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/documentations/documents/${ctxMenu.item.id}/download?token=${localStorage.getItem('token')}`, '_blank'); setCtxMenu(null); }} />
               <CtxItem icon={Printer} label="Imprimer" onClick={() => { handlePrint('document', ctxMenu.item.id); setCtxMenu(null); }} />
               <div className="border-t border-gray-100 my-1" />
               <CtxItem icon={Mail} label="Partager par email" onClick={() => { window.location.href = `mailto:?subject=Document: ${ctxMenu.item.fichier_nom || ctxMenu.item.titre || 'Document'}&body=Document disponible dans le système FSAO Iris.`; setCtxMenu(null); }} />

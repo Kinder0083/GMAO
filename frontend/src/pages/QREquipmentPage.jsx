@@ -6,8 +6,9 @@ import {
   CheckCircle2, XCircle, Clock, AlertCircle, Sparkles, RefreshCw
 } from 'lucide-react';
 import PublicInterventionForm from '../components/QR/PublicInterventionForm';
+import { BACKEND_URL } from '../utils/config';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL;
 
 const iconMap = {
   ClipboardList, History, BarChart3, PlusCircle, AlertTriangle, Calendar,

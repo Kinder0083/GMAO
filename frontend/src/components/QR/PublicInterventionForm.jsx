@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Paperclip, X, ChevronLeft, Loader2, CheckCircle2, AlertTriangle, Eye, Send, Upload } from 'lucide-react';
+import { BACKEND_URL } from '../../utils/config';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL;
 
 const PRIORITIES = [
   { value: 'AUCUNE', label: 'Normale', color: 'bg-gray-100 text-gray-700 border-gray-200' },

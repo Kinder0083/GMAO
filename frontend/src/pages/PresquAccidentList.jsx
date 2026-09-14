@@ -110,7 +110,7 @@ function PresquAccidentList() {
       const fd = new FormData();
       fd.append('file', file);
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/presqu-accident/ai/extract`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/presqu-accident/ai/extract`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: fd
@@ -143,7 +143,7 @@ function PresquAccidentList() {
     setImporting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/presqu-accident/import-bulk`, {
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || window.location.origin}/api/presqu-accident/import-bulk`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,

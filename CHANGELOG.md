@@ -1,5 +1,11 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.15.3 - Correction : QR code equipement/formation inutilisable (Septembre 2026)
+
+- **Correction (cause racine)** : la page publique ouverte en flashant le QR code d'un equipement (ou sous-equipement) affichait "Equipement introuvable" alors que l'equipement existait bien et que l'API repondait correctement. Cause : `QREquipmentPage.jsx` (et 5 autres fichiers : QR inventaire, formulaire d'intervention public, formulaire de surveillance, mode inventaire rapide, page de formation publique) lisaient directement la variable d'environnement de l'adresse backend SANS repli. Des que cette variable n'est pas definie au moment du build du frontend, elle vaut `undefined` en JavaScript, ce qui se retrouve litteralement dans l'URL des requetes (ex: `/qr/undefined/api/...`) - le serveur renvoyait alors la page d'accueil au lieu des donnees, faisant echouer le chargement.
+- Ces pages utilisent desormais le meme utilitaire de repli fiable (`utils/config.js`, deja utilise par le reste de l'application) qui retombe automatiquement sur l'adresse du site actuel.
+- Meme correctif applique a 2 actions du menu contextuel Documentations (Visualiser/Telecharger un document), a l'extraction IA et l'import en masse des presqu'accidents, et au renouvellement automatique silencieux du jeton de connexion.
+
 ## Version 1.15.2 - Correction : dossiers et enregistrements dupliques dans Documentations (Septembre 2026)
 
 - **Correction (dossiers dupliques)** : un meme pole de service (ex: "Maintenance") pouvait apparaitre deux fois dans Documentations, avec les memes fichiers. Cause : contrairement a la plupart des collections de l'application, `poles_service` (et `doc_folders`, `documents`, `autorisations_particulieres`) n'etaient pas protegees par un index unique empechant deux enregistrements de partager le meme identifiant. Au passage, plusieurs enregistrements dupliques (jusqu'a 3 copies d'une meme autorisation particuliere) ont ete detectes et nettoyes automatiquement au demarrage - ce nettoyage est idempotent et s'appliquera aussi automatiquement lors de la mise a jour en production.

@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Send, FileText, Paperclip, X, Download, Loader2 } from 'lucide-react';
 import { surveillanceAPI, usersAPI } from '../../services/api';
 import { useToast } from '../../hooks/use-toast';
+import { BACKEND_URL } from '../../utils/config';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = BACKEND_URL;
 
 function SurveillanceItemForm({ open, item, onClose }) {
   const { toast } = useToast();

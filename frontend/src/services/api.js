@@ -68,7 +68,7 @@ api.interceptors.request.use(
           // Lancer le refresh en arrière-plan (sans bloquer la requête courante)
           setTimeout(async () => {
             try {
-              const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/auth/refresh`, {
+              const res = await fetch(`${BACKEND_URL}/api/auth/refresh`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
               });

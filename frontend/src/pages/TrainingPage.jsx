@@ -11,7 +11,7 @@ import {
   FileText, Image, ArrowLeft, Save, BarChart3, Mail
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',

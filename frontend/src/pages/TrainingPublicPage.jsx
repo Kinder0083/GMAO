@@ -10,7 +10,7 @@ import {
   Clock, AlertTriangle, Send, FileText, Image as ImageIcon
 } from 'lucide-react';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || window.location.origin;
 
 export default function TrainingPublicPage() {
   const { token } = useParams();

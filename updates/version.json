@@ -1,13 +1,13 @@
 {
-  "version": "1.15.2",
-  "versionName": "Correction : dossiers et enregistrements dupliques dans Documentations",
+  "version": "1.15.3",
+  "versionName": "Correction : QR code equipement/formation inutilisable (URL backend indefinie)",
   "releaseDate": "2026-09-14",
-  "description": "Corrige les doublons de dossiers/poles dans Documentations et le menu contextuel qui s'affichait en double lors d'un clic droit",
+  "description": "Corrige le QR code des equipements (et plusieurs autres pages publiques) qui pouvait afficher Equipement introuvable alors que tout fonctionnait cote serveur",
   "changes": [
-    "Correction : les poles de service (ex: dossier Maintenance) ne peuvent plus etre dupliques en base - un index unique protege desormais poles_service, doc_folders, documents et autorisations_particulieres comme le reste de l'application",
-    "Nettoyage automatique et idempotent des doublons deja presents en base au demarrage du serveur (y compris plusieurs doublons trouves dans les autorisations particulieres)",
-    "Correction : le clic droit sur le fond de l'explorateur Documentations pouvait afficher deux menus contextuels superposes",
-    "Renfort : protection contre le double-clic lors de la creation d'un pole ou d'un dossier"
+    "Correction : la page publique du QR code equipement/sous-equipement (et QR inventaire, formulaire d'intervention publique, formations) pouvait afficher une erreur alors que l'equipement existait bien - cause : ces pages utilisaient l'adresse du serveur backend sans repli, qui devenait litteralement 'undefined' des que la variable d'environnement correspondante n'etait pas definie au moment du build, cassant toutes leurs requetes",
+    "Ces pages utilisent desormais le meme mecanisme de repli fiable (adresse du site actuel) que le reste de l'application",
+    "Correction du meme probleme sur 2 actions du menu contextuel Documentations (Visualiser/Telecharger un document) et sur l'extraction IA et l'import en masse des presqu'accidents",
+    "Correction : le renouvellement automatique du jeton de connexion (avant expiration) etait lui aussi silencieusement casse par le meme probleme"
   ],
   "minVersion": "1.13.0",
   "breaking": false,
