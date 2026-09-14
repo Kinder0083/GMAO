@@ -499,11 +499,15 @@ async def get_equipment_by_id(equipment_id: str):
 )
 async def get_version():
     """Obtenir la version actuelle de l'application (endpoint public).
-    Lit la version depuis updates/version.json (source unique de vérité)."""
+    Lit la version depuis <racine du depot>/updates/version.json - le MEME
+    fichier (et le meme ordre de recherche) que UpdateManager/UpdateService
+    (page "Mise a jour"), pour que la version affichee sur l'écran de
+    connexion ne puisse jamais diverger de celle affichée dans "Mise à jour".
+    """
     try:
-        version_file = os.path.join(os.path.dirname(__file__), "updates", "version.json")
+        version_file = os.path.join(os.path.dirname(__file__), "..", "updates", "version.json")
         if not os.path.exists(version_file):
-            version_file = os.path.join(os.path.dirname(__file__), "..", "updates", "version.json")
+            version_file = os.path.join(os.path.dirname(__file__), "updates", "version.json")
         if os.path.exists(version_file):
             import json as json_mod
             with open(version_file, 'r') as f:

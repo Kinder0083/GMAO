@@ -1,22 +1,10 @@
 {
-  "version": "1.15.0",
-  "versionName": "Affichage Dynamique : habillage visuel et nouveaux blocs",
+  "version": "1.15.1",
+  "versionName": "Correction : numero de version incoherent sur l'ecran de connexion",
   "releaseDate": "2026-09-14",
-  "description": "Refonte visuelle de l'Affichage Dynamique (alertes, theme clair, en-tete, accents) et nouvelles fonctionnalites (QR code, bandeau defilant, mini-graphiques, apercu plein ecran, rotation multi-ecrans, annuler/retablir)",
+  "description": "Corrige le numero de version affiche sur l'ecran de connexion, qui pouvait differer de celui affiche dans Mise a jour (deux fichiers version.json distincts)",
   "changes": [
-    "Alerte visuelle automatique (bordure pulsante + badge) sur le bloc Cadence equipement en cas d'arret ou de TRS sous objectif",
-    "Icone et couleur d'accent propres a chaque type de bloc",
-    "Modeles de mise en page prets a l'emploi a la creation d'un ecran",
-    "En-tete personnalisable (logo, nom du site, horloge)",
-    "Alignement automatique a la grille pendant le glisser-depose",
-    "Theme clair disponible en plus du theme sombre",
-    "Indicateur de mise a jour en direct",
-    "Mini-graphique (historique recent) sur les blocs Cadence, KPI et Capteur MQTT",
-    "Nouveau bloc Bandeau defilant pour les annonces",
-    "Nouveau bloc QR Code",
-    "Apercu plein ecran dans l'editeur avant publication",
-    "Rotation automatique entre plusieurs ecrans sur un meme afficheur (parametre d'URL)",
-    "Annuler (Ctrl+Z) dans l'editeur"
+    "Correction : l'ecran de connexion et le menu Mise a jour lisent desormais le meme fichier de version - ils ne peuvent plus afficher des numeros differents"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

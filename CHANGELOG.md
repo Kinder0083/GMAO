@@ -1,5 +1,9 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.15.1 - Correction : numero de version incoherent sur l'ecran de connexion (Septembre 2026)
+
+- **Correction** : l'écran de connexion pouvait afficher un numéro de version différent de celui affiché dans le menu "Mise à jour". Cause : deux fichiers `version.json` distincts existaient dans le dépôt (`updates/version.json` à la racine, lu par le système de mise à jour, et `backend/updates/version.json`, lu par l'écran de connexion) - il suffisait qu'ils divergent pour produire l'incohérence. Le fichier en double a été supprimé ; l'écran de connexion lit désormais la même source unique que "Mise à jour".
+
 ## Version 1.15.0 - Affichage Dynamique : habillage visuel et nouveaux blocs (Septembre 2026)
 
 ### Visuel
