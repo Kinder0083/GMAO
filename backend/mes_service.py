@@ -10,6 +10,9 @@ from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, List
 from bson import ObjectId
 
+import mes_schedule
+from timezone_helper import get_current_offset_hours
+
 logger = logging.getLogger(__name__)
 
 
@@ -77,59 +80,50 @@ class MESService:
 
     # ==================== MACHINES CRUD ====================
 
-    @staticmethod
-    def _break_seconds_in_window(schedule: dict, start_dt, end_dt) -> int:
-        """Calculer le nombre total de secondes de pauses planifiees qui tombent
-        dans la fenetre [start_dt, end_dt]. Tient compte des jours d'application."""
-        breaks = (schedule or {}).get("planned_breaks") or []
-        if not breaks or start_dt >= end_dt:
-            return 0
-        total = 0
-        # Iterer jour par jour
-        cursor_day = start_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        end_day = end_dt.replace(hour=0, minute=0, second=0, microsecond=0)
-        while cursor_day <= end_day:
-            wd = cursor_day.weekday()  # 0=lundi
-            for b in breaks:
-                days = b.get("days") or [0, 1, 2, 3, 4, 5, 6]
-                if wd not in days:
-                    continue
-                sh = float(b.get("start_hour") or 0)
-                eh = float(b.get("end_hour") or 0)
-                if eh <= sh:
-                    continue
-                b_start = cursor_day.replace(
-                    hour=int(sh), minute=int((sh - int(sh)) * 60)
-                )
-                b_end = cursor_day.replace(
-                    hour=int(eh) if eh < 24 else 23,
-                    minute=int((eh - int(eh)) * 60) if eh < 24 else 59,
-                )
-                # Intersection avec [start_dt, end_dt]
-                inter_start = max(b_start, start_dt)
-                inter_end = min(b_end, end_dt)
-                if inter_end > inter_start:
-                    total += int((inter_end - inter_start).total_seconds())
-            cursor_day += timedelta(days=1)
-        return total
+    async def _get_tz_offset(self, at: Optional[datetime] = None) -> float:
+        """Offset horaire (heures, DST inclus) du fuseau configure dans Parametres.
+        Repli sur Europe/Paris si rien n'est configure."""
+        settings = await self.db.system_settings.find_one({"_id": "default"}, {"timezone_name": 1})
+        iana = (settings or {}).get("timezone_name") or "Europe/Paris"
+        return get_current_offset_hours(iana, at)
 
     @staticmethod
-    def _is_in_planned_break(dt, schedule: dict) -> bool:
-        """True si `dt` tombe dans une pause planifiee."""
-        breaks = (schedule or {}).get("planned_breaks") or []
-        if not breaks:
-            return False
-        wd = dt.weekday()
-        hour_dec = dt.hour + dt.minute / 60 + dt.second / 3600
-        for b in breaks:
-            days = b.get("days") or [0, 1, 2, 3, 4, 5, 6]
-            if wd not in days:
+    def _clean_rhythms(raw) -> list:
+        """Valide/normalise une liste de rythmes de cadence : creneaux horaires
+        a cadence theorique propre (ex: poste de jour 60 cp/min, poste de nuit
+        45 cp/min). Contrairement aux pauses, `end_hour <= start_hour` est
+        volontairement accepte (poste a cheval sur minuit)."""
+        if not isinstance(raw, list):
+            return []
+        cleaned = []
+        for i, r in enumerate(raw):
+            if not isinstance(r, dict):
                 continue
-            sh = float(b.get("start_hour") or 0)
-            eh = float(b.get("end_hour") or 0)
-            if sh <= hour_dec < eh:
-                return True
-        return False
+            start_h = r.get("start_hour")
+            end_h = r.get("end_hour")
+            if isinstance(start_h, str) and ":" in start_h:
+                hh, mm = start_h.split(":")
+                start_h = float(hh) + float(mm) / 60
+            if isinstance(end_h, str) and ":" in end_h:
+                hh, mm = end_h.split(":")
+                end_h = float(hh) + float(mm) / 60
+            try:
+                start_h = float(start_h)
+                end_h = float(end_h)
+                cadence = float(r.get("theoretical_cadence"))
+            except (TypeError, ValueError):
+                continue
+            if cadence <= 0:
+                continue
+            cleaned.append({
+                "id": str(r.get("id") or f"r{i}"),
+                "name": str(r.get("name") or "Rythme"),
+                "start_hour": round(start_h, 4),
+                "end_hour": round(end_h, 4),
+                "days": [int(d) for d in (r.get("days") or []) if str(d).lstrip("-").isdigit()],
+                "theoretical_cadence": cadence,
+            })
+        return cleaned
 
     async def create_machine(self, data: dict) -> dict:
         # Type: "Imp" (impulsion 1/0) ou "cp/min" (cadence directe)
@@ -168,6 +162,7 @@ class MESService:
                 "end_hour": int(data.get("schedule_end_hour", 22)),
                 "production_days": data.get("schedule_production_days", [0, 1, 2, 3, 4]),  # Mon-Fri
                 "planned_breaks": data.get("schedule_planned_breaks", []) or [],
+                "rhythms": self._clean_rhythms(data.get("schedule_rhythms")),
             },
             "alerts": {
                 "stopped_minutes": int(data.get("alert_stopped_minutes", 5)),
@@ -244,6 +239,10 @@ class MESService:
                 update[path] = cast(data[key])
         if "schedule_production_days" in data:
             update["production_schedule.production_days"] = [int(d) for d in data["schedule_production_days"]]
+
+        # Rythmes de cadence (creneaux horaires a cadence theorique propre)
+        if "schedule_rhythms" in data:
+            update["production_schedule.rhythms"] = self._clean_rhythms(data["schedule_rhythms"])
 
         # Pauses planifiees (legal breaks)
         if "schedule_planned_breaks" in data and isinstance(data["schedule_planned_breaks"], list):
@@ -438,8 +437,14 @@ class MESService:
         margin_pct = machine.get("downtime_margin_pct", 30)
         esp32_mode = bool(machine.get("mqtt_topic_total"))
 
+        # Journee LOCALE (fuseau configure dans Parametres), pas UTC brut : sinon
+        # les horaires de poste/pauses saisis par l'admin ("6h-22h") sont
+        # appliques avec 1-2h de decalage selon l'heure d'ete/hiver.
+        offset = await self._get_tz_offset(now)
+        local_now = mes_schedule.to_local(now, offset)
+        today_start = mes_schedule.to_utc(local_now.replace(hour=0, minute=0, second=0, microsecond=0), offset)
+
         # ===== Production today (compteur cumulé en mode ESP32) =====
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         if esp32_mode:
             current_total = int(machine.get("current_total") or 0)
             baseline = int(machine.get("total_baseline") or 0)
@@ -519,6 +524,9 @@ class MESService:
         if last_pulse and last_pulse.tzinfo is None:
             last_pulse = last_pulse.replace(tzinfo=timezone.utc)
 
+        schedule = machine.get("production_schedule", {}) or {}
+        current_cadence_target, active_rhythm_name = mes_schedule.effective_cadence_now(schedule, theoretical, local_now)
+
         # Pour cp/min avec état explicite : utiliser directement le flag is_running de la machine
         if machine_type == "cp/min" and machine.get("state_explicit"):
             is_running = bool(machine.get("is_running", False))
@@ -535,71 +543,31 @@ class MESService:
                 if state_at:
                     downtime_seconds = (now - state_at).total_seconds()
         elif last_pulse:
-            expected_interval = 60.0 / theoretical if theoretical > 0 else 10
+            expected_interval = 60.0 / current_cadence_target if current_cadence_target > 0 else 10
             threshold = expected_interval * (1 + margin_pct / 100)
             elapsed = (now - last_pulse).total_seconds()
             is_running = elapsed <= threshold
             if not is_running:
                 downtime_seconds = elapsed
 
-        # Downtime today (sum of gaps > threshold)
-        downtime_today = await self._calc_downtime(mid, today_start, now, theoretical, margin_pct)
+        # ==================== TRS (disponibilite/performance/qualite) ====================
+        # Moteur unique (mes_schedule) : memes formules que le graphique de
+        # tendance, les rapports PDF/Excel et l'agregation quotidienne.
+        local_day_start = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_stats = await self._get_downtime_and_performance(
+            machine, schedule, theoretical, local_day_start, local_now, offset
+        )
+        planned_seconds = day_stats["planned_seconds"]
+        downtime_today = day_stats["downtime_seconds"]
+        operating_seconds = day_stats["operating_seconds"]
+        expected_production = day_stats["expected_production"]
 
-        # ==================== ADVANCED TRS (Level 3) ====================
-        schedule = machine.get("production_schedule", {})
-        is_24h = schedule.get("is_24h", True)
-        start_hour = schedule.get("start_hour", 6)
-        end_hour = schedule.get("end_hour", 22)
-        production_days = schedule.get("production_days", [0, 1, 2, 3, 4])
-
-        # Calculate planned production time today (seconds)
-        today_weekday = now.weekday()  # 0=Monday
-        if today_weekday not in production_days:
-            planned_seconds = 0
-        elif is_24h:
-            planned_seconds = (now - today_start).total_seconds()
-        else:
-            prod_start = today_start.replace(hour=start_hour)
-            prod_end = today_start.replace(hour=end_hour)
-            if now < prod_start:
-                planned_seconds = 0
-            elif now > prod_end:
-                planned_seconds = (prod_end - prod_start).total_seconds()
-            else:
-                planned_seconds = (now - prod_start).total_seconds()
-
-        # Soustraire les pauses planifiees (temps de pause legal, non comptabilise
-        # en indisponibilite). La fenetre exacte est celle de la production planifiee.
-        if planned_seconds > 0:
-            if is_24h:
-                window_start = today_start
-                window_end = now
-            else:
-                window_start = today_start.replace(hour=start_hour)
-                window_end = min(now, today_start.replace(hour=end_hour))
-            breaks_seconds = self._break_seconds_in_window(schedule, window_start, window_end)
-            planned_seconds = max(planned_seconds - breaks_seconds, 0)
-            # Aussi soustraire les pauses de l'arret journalier pour ne pas penaliser
-            downtime_today = max(downtime_today - breaks_seconds, 0)
-
-        # Availability = (Planned - Downtime) / Planned
-        if planned_seconds > 0:
-            operating_seconds = max(planned_seconds - downtime_today, 0)
-            availability = round(operating_seconds / planned_seconds * 100, 1)
-        else:
-            operating_seconds = 0
-            availability = 0
-
-        # Performance = (Actual count / Theoretical count during operating time)
-        if theoretical > 0 and operating_seconds > 0:
-            theoretical_during_uptime = theoretical * (operating_seconds / 60)
-            performance = round(count_today / theoretical_during_uptime * 100, 1) if theoretical_during_uptime > 0 else 0
-            performance = min(performance, 100)  # Cap at 100%
-        else:
-            performance = 0
+        availability = round(operating_seconds / planned_seconds * 100, 1) if planned_seconds > 0 else 0
+        performance = round(min(count_today / expected_production * 100, 100), 1) if expected_production > 0 else 0
 
         # Quality = (Total - Rejects) / Total
         rejects_total = await self.get_rejects_total(mid, today_start, now)
+        rejects_exceed_production = rejects_total > count_today > 0
         if count_today > 0:
             good_parts = max(count_today - rejects_total, 0)
             quality = round(good_parts / count_today * 100, 1)
@@ -623,77 +591,212 @@ class MESService:
             "trs_performance": performance,
             "trs_quality": quality,
             "rejects_today": rejects_total,
+            "rejects_exceed_production": rejects_exceed_production,
             "good_parts_today": max(count_today - rejects_total, 0),
-            "theoretical_cadence": theoretical,
+            "theoretical_cadence": current_cadence_target,
+            "active_rhythm_name": active_rhythm_name,
             "planned_seconds": round(planned_seconds),
             "operating_seconds": round(operating_seconds),
             "last_pulse_at": last_pulse.isoformat() if last_pulse else None,
         }
 
-    async def _calc_downtime(self, machine_id, start, end, theoretical, margin_pct):
-        """Calcul du temps d'arrêt entre start et end.
+    def _bound_start_by_creation(self, machine: dict, local_start: datetime, offset: float) -> datetime:
+        """Ne jamais considerer comme 'planifie' (et donc comme arret potentiel) le
+        temps avant la creation de la machine dans l'application."""
+        created_at = machine.get("created_at")
+        if isinstance(created_at, str):
+            try:
+                created_at = datetime.fromisoformat(created_at.replace("Z", "+00:00"))
+            except (ValueError, AttributeError):
+                created_at = None
+        if not created_at:
+            return local_start
+        if created_at.tzinfo is None:
+            created_at = created_at.replace(tzinfo=timezone.utc)
+        created_local = mes_schedule.to_local(created_at, offset)
+        return max(local_start, created_local)
 
-        Mode ESP32 : utilise mes_cadence_history (60s par doc).
-        Une minute où cadence=0 ET is_running=False compte comme arrêt.
-        Volume traité : ~1440 docs/jour/machine au lieu de millions de pulses.
-        """
-        machine = await self.db.mes_machines.find_one({"_id": machine_id})
-        esp32_mode = bool(machine and machine.get("mqtt_topic_total"))
-
+    async def _count_production_window_general(self, machine: dict, start_utc: datetime, end_utc: datetime) -> float:
+        """Production reelle sur [start_utc, end_utc], quelle que soit la position
+        de la fenetre dans le temps (contrairement a `_sum_production_window`,
+        toujours ancree sur 'maintenant'/`current_total`) : utilise pour les
+        historiques/rapports afin qu'ils comptent correctement les machines
+        ESP32 (compteur cumule), qui n'ecrivent plus de pulse individuel."""
+        esp32_mode = bool(machine.get("mqtt_topic_total"))
         if esp32_mode:
-            # Source de vérité : mes_cadence_history
-            cursor = self.db.mes_cadence_history.find(
-                {"machine_id": machine_id, "timestamp": {"$gte": start, "$lte": end}},
+            docs = await self.db.mes_cadence_history.find(
+                {"machine_id": machine["_id"], "timestamp": {"$gte": start_utc, "$lte": end_utc}, "total": {"$exists": True}},
+                {"total": 1, "timestamp": 1}
+            ).sort("timestamp", 1).to_list(10000)
+            if len(docs) < 2:
+                return 0
+            first_total = docs[0].get("total", 0) or 0
+            last_total = docs[-1].get("total", 0) or 0
+            return max(int(last_total) - int(first_total), 0)
+        return await self.db.mes_pulses.count_documents(
+            {"machine_id": machine["_id"], "timestamp": {"$gte": start_utc, "$lte": end_utc}}
+        )
+
+    async def _get_downtime_and_performance(self, machine: dict, schedule: dict, fallback_cadence: float,
+                                              local_start: datetime, local_end: datetime, offset: float) -> dict:
+        """Calcule planned_seconds/downtime_seconds/operating_seconds/expected_production
+        sur les segments planifies (hors pauses) de [local_start, local_end),
+        avec la strategie de detection d'arret adaptee au type de machine :
+          - ESP32 (mqtt_topic_total) ou cp/min a etat explicite : minute par
+            minute via mes_cadence_history.is_running (deja alimente chaque
+            minute pour TOUTES les machines actives, cf calculate_minute_cadence).
+          - legacy (Imp, ou cp/min sans etat explicite) : seuil sur l'ecart
+            entre pulses, execute independamment par segment planifie (gere
+            ainsi correctement les machines multi-rythmes/postes de nuit sans
+            perdre la tolerance au jitter du seuil existant).
+
+        Point de calcul UNIQUE reutilise par le dashboard temps reel,
+        l'historique/tendance, les rapports et l'agregation quotidienne.
+        """
+        local_start = self._bound_start_by_creation(machine, local_start, offset)
+        segments = mes_schedule.get_planned_segments(schedule, fallback_cadence, local_start, local_end)
+        if not segments:
+            return {"planned_seconds": 0, "downtime_seconds": 0, "operating_seconds": 0, "expected_production": 0}
+
+        esp32_mode = bool(machine.get("mqtt_topic_total"))
+        state_explicit = bool(machine.get("state_explicit"))
+        mid = machine["_id"]
+        margin_pct = machine.get("downtime_margin_pct", 30)
+
+        planned_seconds = 0.0
+        downtime_seconds = 0.0
+        expected_production = 0.0
+
+        if esp32_mode or state_explicit:
+            utc_start = mes_schedule.to_utc(segments[0]["start"], offset)
+            utc_end = mes_schedule.to_utc(local_end, offset)
+            docs = await self.db.mes_cadence_history.find(
+                {"machine_id": mid, "timestamp": {"$gte": utc_start, "$lte": utc_end}},
                 {"timestamp": 1, "cadence": 1, "is_running": 1}
-            ).sort("timestamp", 1)
-            docs = await cursor.to_list(200000)
-
-            if not docs:
-                return (end - start).total_seconds()
-
-            total_downtime = 0
+            ).sort("timestamp", 1).to_list(3000)
+            running_map = {}
             for d in docs:
-                # Une minute = 60s ; si arrêt, on compte 60s
                 running = d.get("is_running")
                 if running is None:
-                    # Fallback : utiliser cadence
                     running = (d.get("cadence", 0) or 0) > 0
-                if not running:
-                    total_downtime += 60
-            return total_downtime
+                ts = d["timestamp"]
+                if isinstance(ts, str):
+                    try:
+                        ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                    except (ValueError, AttributeError):
+                        continue
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                running_map[ts.replace(second=0, microsecond=0)] = bool(running)
 
-        # Mode legacy (Imp ou cp/min sans ESP32)
-        expected_interval = 60.0 / theoretical if theoretical > 0 else 10
-        threshold = expected_interval * (1 + margin_pct / 100)
-        cursor = self.db.mes_pulses.find(
-            {"machine_id": machine_id, "timestamp": {"$gte": start, "$lte": end}},
-            {"timestamp": 1}
-        ).sort("timestamp", 1).allow_disk_use(True)
-        pulses = await cursor.to_list(100000)
-
-        if not pulses:
-            return (end - start).total_seconds()
-
-        total_downtime = 0
-        prev_time = start
-        for p in pulses:
-            ts = p["timestamp"]
-            if isinstance(ts, str):
-                try:
-                    ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                except (ValueError, AttributeError):
+            for seg in segments:
+                seg_seconds = (seg["end"] - seg["start"]).total_seconds()
+                planned_seconds += seg_seconds
+                cadence = seg["cadence"] or 0
+                t = seg["start"]
+                step = timedelta(minutes=1)
+                while t < seg["end"]:
+                    chunk_end = min(t + step, seg["end"])
+                    chunk_seconds = (chunk_end - t).total_seconds()
+                    utc_key = mes_schedule.to_utc(t, offset).replace(second=0, microsecond=0)
+                    if running_map.get(utc_key, False):
+                        expected_production += cadence * (chunk_seconds / 60.0)
+                    else:
+                        downtime_seconds += chunk_seconds
+                    t = chunk_end
+        else:
+            # Legacy : algorithme historique par ecart entre pulses, execute par segment
+            for seg in segments:
+                seg_seconds = (seg["end"] - seg["start"]).total_seconds()
+                planned_seconds += seg_seconds
+                cadence = seg["cadence"] or 0
+                expected_interval = 60.0 / cadence if cadence > 0 else 10
+                threshold = expected_interval * (1 + margin_pct / 100)
+                utc_start = mes_schedule.to_utc(seg["start"], offset)
+                utc_end = mes_schedule.to_utc(seg["end"], offset)
+                pulses = await self.db.mes_pulses.find(
+                    {"machine_id": mid, "timestamp": {"$gte": utc_start, "$lte": utc_end}},
+                    {"timestamp": 1}
+                ).sort("timestamp", 1).to_list(50000)
+                if not pulses:
+                    downtime_seconds += seg_seconds
                     continue
-            if ts.tzinfo is None:
-                ts = ts.replace(tzinfo=timezone.utc)
-            gap = (ts - prev_time).total_seconds()
-            if gap > threshold:
-                total_downtime += gap
-            prev_time = ts
+                prev = utc_start
+                seg_downtime = 0.0
+                for p in pulses:
+                    ts = p["timestamp"]
+                    if isinstance(ts, str):
+                        try:
+                            ts = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        except (ValueError, AttributeError):
+                            continue
+                    if ts.tzinfo is None:
+                        ts = ts.replace(tzinfo=timezone.utc)
+                    gap = (ts - prev).total_seconds()
+                    if gap > threshold:
+                        seg_downtime += gap
+                    prev = ts
+                gap = (utc_end - prev).total_seconds()
+                if gap > threshold:
+                    seg_downtime += gap
+                seg_downtime = min(seg_downtime, seg_seconds)
+                downtime_seconds += seg_downtime
+                expected_production += cadence * ((seg_seconds - seg_downtime) / 60.0)
 
-        gap = (end - prev_time).total_seconds()
-        if gap > threshold:
-            total_downtime += gap
-        return total_downtime
+        operating_seconds = max(planned_seconds - downtime_seconds, 0)
+        return {
+            "planned_seconds": planned_seconds,
+            "downtime_seconds": downtime_seconds,
+            "operating_seconds": operating_seconds,
+            "expected_production": expected_production,
+        }
+
+    async def get_day_trs_stats(self, machine: dict, local_day_start: datetime, local_day_end: datetime, offset: float) -> dict:
+        """Statistiques TRS completes d'une machine sur une fenetre locale
+        donnee (typiquement un jour). Point d'entree UNIQUE utilise par
+        l'historique/tendance, les rapports PDF/Excel et l'agregation
+        quotidienne, pour eviter toute divergence entre ecrans."""
+        schedule = machine.get("production_schedule", {}) or {}
+        fallback_cadence = machine.get("theoretical_cadence", 6)
+        mid = machine["_id"]
+
+        bounded_start = self._bound_start_by_creation(machine, local_day_start, offset)
+        if bounded_start >= local_day_end:
+            return {
+                "planned_seconds": 0, "downtime_seconds": 0, "operating_seconds": 0,
+                "expected_production": 0, "production": 0, "rejects": 0,
+                "availability": 0, "performance": 0, "quality": 100, "trs": 0,
+                "is_production_day": False,
+            }
+
+        stats = await self._get_downtime_and_performance(machine, schedule, fallback_cadence, local_day_start, local_day_end, offset)
+        utc_start = mes_schedule.to_utc(bounded_start, offset)
+        utc_end = mes_schedule.to_utc(local_day_end, offset)
+        production = await self._count_production_window_general(machine, utc_start, utc_end)
+        rejects = await self.get_rejects_total(mid, utc_start, utc_end)
+
+        planned = stats["planned_seconds"]
+        operating = stats["operating_seconds"]
+        expected = stats["expected_production"]
+
+        availability = round(operating / planned * 100, 1) if planned > 0 else 0
+        performance = round(min(production / expected * 100, 100), 1) if expected > 0 else 0
+        quality = round(max(production - rejects, 0) / production * 100, 1) if production > 0 else 100
+        trs = round((availability / 100) * (performance / 100) * (quality / 100) * 100, 1) if planned > 0 else 0
+
+        return {
+            "planned_seconds": round(planned),
+            "downtime_seconds": round(stats["downtime_seconds"]),
+            "operating_seconds": round(operating),
+            "expected_production": round(expected, 1),
+            "production": production,
+            "rejects": rejects,
+            "availability": availability,
+            "performance": performance,
+            "quality": quality,
+            "trs": trs,
+            "is_production_day": planned > 0,
+        }
 
     # ==================== CADENCE HISTORY ====================
 
@@ -806,25 +909,17 @@ class MESService:
     async def _check_alerts(self, machine, current_cadence, now):
         mid = machine["_id"]
         alerts_config = machine.get("alerts", {})
+        schedule = machine.get("production_schedule", {}) or {}
+        fallback_cadence = machine.get("theoretical_cadence", 6)
 
-        # Check if we are within production hours
-        schedule = machine.get("production_schedule", {})
-        is_24h = schedule.get("is_24h", True)
-        start_hour = schedule.get("start_hour", 6)
-        end_hour = schedule.get("end_hour", 22)
-        production_days = schedule.get("production_days", [0, 1, 2, 3, 4])
+        offset = await self._get_tz_offset(now)
+        local_now = mes_schedule.to_local(now, offset)
 
-        today_weekday = now.weekday()
-        if today_weekday not in production_days:
-            return  # Not a production day, skip alerts
-
-        if not is_24h:
-            current_hour = now.hour
-            if current_hour < start_hour or current_hour >= end_hour:
-                return  # Outside production hours, skip alerts
-
-        # Pause planifiee (legal break) : pas d'alertes pendant ces creneaux
-        if self._is_in_planned_break(now, schedule):
+        # Hors rythme planifie (et hors pause) : pas d'alertes. Gere correctement
+        # les postes a cheval sur minuit (ex: 22h-6h), contrairement a l'ancienne
+        # comparaison brute `hour < start or hour >= end` qui desactivait les
+        # alertes en permanence pour ce type de poste.
+        if not mes_schedule.is_production_now(schedule, fallback_cadence, local_now):
             return
 
         # Check stopped
@@ -877,10 +972,9 @@ class MESService:
         # Check daily target
         target = alerts_config.get("daily_target", 0)
         if target > 0:
-            today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            count_today = await self.db.mes_pulses.count_documents({
-                "machine_id": mid, "timestamp": {"$gte": today_start}
-            })
+            today_start_local = local_now.replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = mes_schedule.to_utc(today_start_local, offset)
+            count_today = await self._count_production_window_general(machine, today_start, now)
             if count_today >= target:
                 await self._create_alert(machine, "TARGET_REACHED",
                     f"Objectif journalier atteint: {count_today}/{target}")
@@ -1349,11 +1443,22 @@ class MESService:
 
         db_sync.mes_machines.update_one({"_id": mid}, {"$set": update_fields})
 
+    @staticmethod
+    def _sync_tz_offset(db_sync, at: datetime) -> float:
+        """Variante synchrone de `_get_tz_offset`, pour les callbacks MQTT
+        (paho-mqtt, hors boucle asyncio)."""
+        try:
+            settings = db_sync.system_settings.find_one({"_id": "default"}, {"timezone_name": 1})
+            iana = (settings or {}).get("timezone_name") or "Europe/Paris"
+            return get_current_offset_hours(iana, at)
+        except Exception:
+            return 0
+
     def _record_total_sync(self, db_sync, machine, payload: str):
         """Mode ESP32 optimisé : reçoit le compteur cumulé de l'ESP32.
         Stocke directement la valeur sur la machine, calcule un baseline
-        à minuit pour permettre le calcul de production journalière sans
-        avoir besoin de stocker chaque pulse.
+        à minuit (heure locale configurée) pour permettre le calcul de
+        production journalière sans avoir besoin de stocker chaque pulse.
         """
         try:
             total_value = int(float(payload))
@@ -1378,7 +1483,10 @@ class MESService:
         if baseline_at and baseline_at.tzinfo is None:
             baseline_at = baseline_at.replace(tzinfo=timezone.utc)
 
-        today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        offset = self._sync_tz_offset(db_sync, now)
+        today_start = mes_schedule.to_utc(
+            mes_schedule.to_local(now, offset).replace(hour=0, minute=0, second=0, microsecond=0), offset
+        )
         update_fields = {"current_total": total_value, "current_total_at": now}
 
         # Reset baseline si nouveau jour ou si l'ESP32 a redémarré (compteur recule)
@@ -1565,6 +1673,7 @@ class MESService:
                 "start_hour": int(data.get("schedule_start_hour", 6)),
                 "end_hour": int(data.get("schedule_end_hour", 22)),
                 "production_days": data.get("schedule_production_days", [0, 1, 2, 3, 4]),
+                "rhythms": self._clean_rhythms(data.get("schedule_rhythms")),
             },
             "alerts": {
                 "stopped_minutes": int(data.get("alert_stopped_minutes", 5)),
@@ -1617,6 +1726,8 @@ class MESService:
                 update[path] = cast(data[key])
         if "schedule_production_days" in data:
             update["production_schedule.production_days"] = [int(d) for d in data["schedule_production_days"]]
+        if "schedule_rhythms" in data:
+            update["production_schedule.rhythms"] = self._clean_rhythms(data["schedule_rhythms"])
 
         email_fields = {
             "email_enabled": ("email_notifications.enabled", bool),
@@ -1643,17 +1754,37 @@ class MESService:
         await self.db.mes_product_references.delete_one({"_id": ObjectId(ref_id)})
 
     async def select_reference_for_machine(self, machine_id: str, ref_id: str) -> dict:
-        """Apply a product reference's params to a machine"""
+        """Apply a product reference's params to a machine.
+
+        Les pauses planifiees (legales, physiques - ex: pause dejeuner) sont
+        une propriete de la MACHINE/du poste de travail, pas du produit
+        fabrique : elles sont deliberement preservees ici plutot que
+        remplacees par celles (inexistantes) de la reference, ce qui les
+        effacait silencieusement a chaque changement de reference.
+        """
         ref = await self.db.mes_product_references.find_one({"_id": ObjectId(ref_id)})
         if not ref:
             return None
+        machine = await self.db.mes_machines.find_one({"_id": ObjectId(machine_id)})
+        if not machine:
+            return None
+
+        ref_schedule = ref.get("production_schedule", {}) or {}
+        current_breaks = (machine.get("production_schedule") or {}).get("planned_breaks", [])
 
         update = {
             "active_reference_id": ObjectId(ref_id),
             "theoretical_cadence": ref.get("theoretical_cadence", 6),
             "downtime_margin_pct": ref.get("downtime_margin_pct", 30),
             "trs_target": ref.get("trs_target", 85),
-            "production_schedule": ref.get("production_schedule", {}),
+            "production_schedule": {
+                "is_24h": ref_schedule.get("is_24h", True),
+                "start_hour": ref_schedule.get("start_hour", 6),
+                "end_hour": ref_schedule.get("end_hour", 22),
+                "production_days": ref_schedule.get("production_days", [0, 1, 2, 3, 4]),
+                "rhythms": ref_schedule.get("rhythms", []),
+                "planned_breaks": current_breaks,
+            },
             "alerts": ref.get("alerts", {}),
             "email_notifications": ref.get("email_notifications", {}),
         }
@@ -1669,24 +1800,19 @@ class MESService:
         if not machine:
             return []
 
+        offset = await self._get_tz_offset()
         now = datetime.now(timezone.utc)
-        theoretical = machine.get("theoretical_cadence", 6)
-        margin_pct = machine.get("downtime_margin_pct", 30)
-        schedule = machine.get("production_schedule", {})
-        is_24h = schedule.get("is_24h", True)
-        start_hour = schedule.get("start_hour", 6)
-        end_hour = schedule.get("end_hour", 22)
-        production_days = schedule.get("production_days", [0, 1, 2, 3, 4])
+        local_now = mes_schedule.to_local(now, offset)
 
         results = []
         for i in range(days - 1, -1, -1):
-            day_start = (now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
-            day_end = day_start.replace(hour=23, minute=59, second=59)
+            day_start = (local_now - timedelta(days=i)).replace(hour=0, minute=0, second=0, microsecond=0)
+            day_end = day_start + timedelta(days=1)
             if i == 0:
-                day_end = now
+                day_end = local_now
 
-            day_weekday = day_start.weekday()
-            if day_weekday not in production_days:
+            stats = await self.get_day_trs_stats(machine, day_start, day_end, offset)
+            if not stats["is_production_day"]:
                 results.append({
                     "date": day_start.strftime("%Y-%m-%d"),
                     "trs": None, "availability": None,
@@ -1696,46 +1822,11 @@ class MESService:
                 })
                 continue
 
-            # Planned time for this day
-            if is_24h:
-                planned = (day_end - day_start).total_seconds()
-            else:
-                prod_start = day_start.replace(hour=start_hour)
-                prod_end = day_start.replace(hour=end_hour)
-                if i == 0 and now < prod_end:
-                    prod_end = now
-                if i == 0 and now < prod_start:
-                    planned = 0
-                else:
-                    planned = max((prod_end - prod_start).total_seconds(), 0)
-
-            count = await self.db.mes_pulses.count_documents({
-                "machine_id": mid, "timestamp": {"$gte": day_start, "$lte": day_end}
-            })
-            downtime = await self._calc_downtime(mid, day_start, day_end, theoretical, margin_pct)
-            rejects = await self.get_rejects_total(mid, day_start, day_end)
-
-            if planned > 0:
-                operating = max(planned - downtime, 0)
-                availability = round(operating / planned * 100, 1)
-                if theoretical > 0 and operating > 0:
-                    theoretical_during_uptime = theoretical * (operating / 60)
-                    performance = round(min(count / theoretical_during_uptime * 100, 100), 1) if theoretical_during_uptime > 0 else 0
-                else:
-                    performance = 0
-                if count > 0:
-                    quality = round(max(count - rejects, 0) / count * 100, 1)
-                else:
-                    quality = 100
-                trs = round((availability / 100) * (performance / 100) * (quality / 100) * 100, 1)
-            else:
-                availability = performance = quality = trs = 0
-
             results.append({
                 "date": day_start.strftime("%Y-%m-%d"),
-                "trs": trs, "availability": availability,
-                "performance": performance, "quality": quality,
-                "production": count, "rejects": rejects,
+                "trs": stats["trs"], "availability": stats["availability"],
+                "performance": stats["performance"], "quality": stats["quality"],
+                "production": stats["production"], "rejects": stats["rejects"],
                 "is_production_day": True,
             })
 
@@ -1774,12 +1865,17 @@ class MESService:
     # ==================== REJECTS (Operator) ====================
 
     async def declare_reject(self, machine_id: str, data: dict) -> dict:
+        # Rattache le rebut a la reference produit active au moment de la
+        # declaration, pour permettre plus tard une analyse qualite par produit
+        # (auparavant impossible : un rebut n'etait lie qu'a la machine).
+        machine = await self.db.mes_machines.find_one({"_id": ObjectId(machine_id)}, {"active_reference_id": 1})
         reject = {
             "machine_id": ObjectId(machine_id),
             "quantity": int(data["quantity"]),
             "reason": data.get("reason", ""),
             "custom_reason": data.get("custom_reason", ""),
             "operator": data.get("operator", ""),
+            "reference_id": (machine or {}).get("active_reference_id"),
             "timestamp": datetime.now(timezone.utc),
         }
         result = await self.db.mes_rejects.insert_one(reject)
@@ -1846,23 +1942,30 @@ class MESService:
         return max(int(current_total) - int(first), 0)
 
     async def aggregate_daily_summary(self, target_date: datetime = None):
-        """Agrège les données d'un jour entier dans mes_daily_summary.
-        Appelé chaque jour à 00:05 (UTC) pour la veille, ou à la demande.
+        """Agrège les données d'un jour entier (heure LOCALE configurée) dans
+        mes_daily_summary. Appelé chaque jour a 00:05 pour la veille, ou à la
+        demande. Utilise le meme moteur (mes_schedule) que le dashboard/les
+        rapports : disponibilite/performance/qualite/TRS ne divergent plus
+        entre les pages "Vue d'ensemble"/heatmap/équipes et les autres écrans.
         """
+        offset = await self._get_tz_offset()
         if target_date is None:
             target_date = datetime.now(timezone.utc) - timedelta(days=1)
-        day_start = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        local_target = mes_schedule.to_local(target_date, offset)
+        day_start = local_target.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
+        utc_day_start = mes_schedule.to_utc(day_start, offset)
+        utc_day_end = mes_schedule.to_utc(day_end, offset)
 
         machines = await self.db.mes_machines.find({}).to_list(500)
         for machine in machines:
             mid = machine["_id"]
             theoretical = machine.get("theoretical_cadence", 0)
 
-            # Récupère tous les docs minute du jour
+            # Récupère tous les docs minute du jour (pour les stats brutes de cadence)
             docs = await self.db.mes_cadence_history.find(
-                {"machine_id": mid, "timestamp": {"$gte": day_start, "$lt": day_end}},
-                {"cadence": 1, "is_running": 1, "total": 1, "timestamp": 1}
+                {"machine_id": mid, "timestamp": {"$gte": utc_day_start, "$lt": utc_day_end}},
+                {"cadence": 1, "timestamp": 1}
             ).sort("timestamp", 1).to_list(2000)
 
             if not docs:
@@ -1872,36 +1975,30 @@ class MESService:
             cadence_avg = sum(cadences) / len(cadences) if cadences else 0
             cadence_max = max(cadences) if cadences else 0
 
-            running_minutes = sum(1 for d in docs if d.get("is_running"))
-            idle_minutes = len(docs) - running_minutes
-
-            # Production journalière (delta total ou somme cadences * 1min)
-            production = 0
-            totals = [d.get("total") for d in docs if d.get("total") is not None]
-            if len(totals) >= 2:
-                production = max(totals[-1] - totals[0], 0)
-            else:
-                # Fallback : somme cadence par minute
-                production = int(round(sum(cadences) / 1.0))  # cadence est en cp/min
-
-            # Rebuts du jour
-            rejects = await self.get_rejects_total(mid, day_start, day_end)
+            stats = await self.get_day_trs_stats(machine, day_start, day_end, offset)
 
             # Alertes du jour
             alerts_count = await self.db.mes_alerts.count_documents({
-                "machine_id": mid, "created_at": {"$gte": day_start, "$lt": day_end}
+                "machine_id": mid, "created_at": {"$gte": utc_day_start, "$lt": utc_day_end}
             })
 
             summary = {
                 "machine_id": mid,
-                "date": day_start,
-                "production": int(production),
-                "good_parts": max(int(production) - int(rejects), 0),
-                "rejects": int(rejects),
-                "running_minutes": running_minutes,
-                "idle_minutes": idle_minutes,
-                "running_seconds": running_minutes * 60,
-                "idle_seconds": idle_minutes * 60,
+                "date": utc_day_start,
+                "production": int(stats["production"]),
+                "good_parts": max(int(stats["production"]) - int(stats["rejects"]), 0),
+                "rejects": int(stats["rejects"]),
+                "planned_seconds": stats["planned_seconds"],
+                "downtime_seconds": stats["downtime_seconds"],
+                "expected_production": stats["expected_production"],
+                "running_seconds": stats["operating_seconds"],
+                "idle_seconds": stats["downtime_seconds"],
+                "running_minutes": round(stats["operating_seconds"] / 60),
+                "idle_minutes": round(stats["downtime_seconds"] / 60),
+                "availability_pct": stats["availability"],
+                "performance_pct": stats["performance"],
+                "quality_pct": stats["quality"],
+                "trs_pct": stats["trs"],
                 "cadence_avg": round(cadence_avg, 2),
                 "cadence_max": round(cadence_max, 2),
                 "theoretical": theoretical,
@@ -1910,7 +2007,7 @@ class MESService:
             }
             # Upsert pour pouvoir relancer sur le même jour
             await self.db.mes_daily_summary.update_one(
-                {"machine_id": mid, "date": day_start},
+                {"machine_id": mid, "date": utc_day_start},
                 {"$set": summary},
                 upsert=True,
             )
@@ -2055,25 +2152,19 @@ class MESService:
 
     async def _get_trs_report_data(self, machine_id, machine, start, end) -> dict:
         """Get TRS data for reporting"""
-        theoretical = machine.get("theoretical_cadence", 6)
-        margin_pct = machine.get("downtime_margin_pct", 30)
-        schedule = machine.get("production_schedule", {})
-        is_24h = schedule.get("is_24h", True)
-        start_hour = schedule.get("start_hour", 6)
-        end_hour = schedule.get("end_hour", 22)
-        production_days = schedule.get("production_days", [0, 1, 2, 3, 4])
-        
+        offset = await self._get_tz_offset()
+        local_start = mes_schedule.to_local(start, offset)
+        local_end = mes_schedule.to_local(end, offset)
+
         trs_values = []
-        current = start.replace(hour=0, minute=0, second=0, microsecond=0)
-        
-        while current <= end:
+        current = local_start.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        while current <= local_end:
             day_start = current
-            day_end = current.replace(hour=23, minute=59, second=59)
-            if day_end > end:
-                day_end = end
-            
-            day_weekday = current.weekday()
-            if day_weekday not in production_days:
+            day_end = min(current + timedelta(days=1), local_end)
+
+            stats = await self.get_day_trs_stats(machine, day_start, day_end, offset)
+            if not stats["is_production_day"]:
                 trs_values.append({
                     "date": current.strftime("%Y-%m-%d"),
                     "trs": None, "availability": None,
@@ -2082,48 +2173,16 @@ class MESService:
                 })
                 current += timedelta(days=1)
                 continue
-            
-            # Calculate planned time
-            if is_24h:
-                planned = (day_end - day_start).total_seconds()
-            else:
-                prod_start = day_start.replace(hour=start_hour)
-                prod_end = day_start.replace(hour=end_hour)
-                if day_end < prod_end:
-                    prod_end = day_end
-                planned = max((prod_end - prod_start).total_seconds(), 0)
-            
-            count = await self.db.mes_pulses.count_documents({
-                "machine_id": machine_id, "timestamp": {"$gte": day_start, "$lte": day_end}
-            })
-            downtime = await self._calc_downtime(machine_id, day_start, day_end, theoretical, margin_pct)
-            rejects = await self.get_rejects_total(machine_id, day_start, day_end)
-            
-            if planned > 0:
-                operating = max(planned - downtime, 0)
-                availability = round(operating / planned * 100, 1)
-                if theoretical > 0 and operating > 0:
-                    theoretical_during_uptime = theoretical * (operating / 60)
-                    performance = round(min(count / theoretical_during_uptime * 100, 100), 1) if theoretical_during_uptime > 0 else 0
-                else:
-                    performance = 0
-                if count > 0:
-                    quality = round(max(count - rejects, 0) / count * 100, 1)
-                else:
-                    quality = 100
-                trs = round((availability / 100) * (performance / 100) * (quality / 100) * 100, 1)
-            else:
-                availability = performance = quality = trs = 0
-            
+
             trs_values.append({
                 "date": current.strftime("%Y-%m-%d"),
-                "trs": trs, "availability": availability,
-                "performance": performance, "quality": quality,
-                "production": count, "rejects": rejects,
+                "trs": stats["trs"], "availability": stats["availability"],
+                "performance": stats["performance"], "quality": stats["quality"],
+                "production": stats["production"], "rejects": stats["rejects"],
                 "is_production_day": True,
             })
             current += timedelta(days=1)
-        
+
         # Averages
         prod_days = [v for v in trs_values if v.get("is_production_day") and v.get("trs") is not None]
         return {
@@ -2136,7 +2195,36 @@ class MESService:
 
     async def _get_production_report_data(self, machine_id, start, end) -> dict:
         """Get production data for reporting"""
-        # Daily production
+        machine = await self.db.mes_machines.find_one({"_id": machine_id})
+        esp32_mode = bool(machine and machine.get("mqtt_topic_total"))
+
+        if esp32_mode:
+            # Compteur cumule : les pulses individuels ne sont plus ecrits pour ce
+            # mode, il faut reconstituer la production quotidienne depuis les deltas
+            # de mes_cadence_history.total (source de verite pour l'ESP32).
+            offset = await self._get_tz_offset()
+            local_start = mes_schedule.to_local(start, offset)
+            local_end = mes_schedule.to_local(end, offset)
+            daily_values = []
+            total = 0
+            current = local_start.replace(hour=0, minute=0, second=0, microsecond=0)
+            while current <= local_end:
+                day_start = current
+                day_end = min(current + timedelta(days=1), local_end)
+                utc_start = mes_schedule.to_utc(day_start, offset)
+                utc_end = mes_schedule.to_utc(day_end, offset)
+                production = await self._count_production_window_general(machine, utc_start, utc_end)
+                if production > 0 or day_start <= local_end:
+                    daily_values.append({"date": current.strftime("%Y-%m-%d"), "production": production})
+                total += production
+                current += timedelta(days=1)
+            return {
+                "total": total,
+                "daily_values": daily_values,
+                "average_daily": round(total / max(len(daily_values), 1), 1),
+            }
+
+        # Legacy (Imp / cp/min sans compteur cumule) : les pulses individuels existent
         pipeline = [
             {"$match": {"machine_id": machine_id, "timestamp": {"$gte": start, "$lte": end}}},
             {"$group": {
@@ -2150,16 +2238,16 @@ class MESService:
             {"$sort": {"_id": 1}},
         ]
         daily = await self.db.mes_pulses.aggregate(pipeline).to_list(1000)
-        
+
         daily_values = []
         for d in daily:
             date_str = f"{d['_id']['year']:04d}-{d['_id']['month']:02d}-{d['_id']['day']:02d}"
             daily_values.append({"date": date_str, "production": d["count"]})
-        
+
         total = await self.db.mes_pulses.count_documents({
             "machine_id": machine_id, "timestamp": {"$gte": start, "$lte": end}
         })
-        
+
         return {
             "total": total,
             "daily_values": daily_values,
@@ -2168,11 +2256,14 @@ class MESService:
 
     async def _get_stops_report_data(self, machine_id, machine, start, end) -> dict:
         """Get stops/downtime data for reporting"""
-        theoretical = machine.get("theoretical_cadence", 6)
-        margin_pct = machine.get("downtime_margin_pct", 30)
-        
-        total_downtime = await self._calc_downtime(machine_id, start, end, theoretical, margin_pct)
-        
+        offset = await self._get_tz_offset()
+        local_start = mes_schedule.to_local(start, offset)
+        local_end = mes_schedule.to_local(end, offset)
+        schedule = machine.get("production_schedule", {}) or {}
+        fallback_cadence = machine.get("theoretical_cadence", 6)
+        stats = await self._get_downtime_and_performance(machine, schedule, fallback_cadence, local_start, local_end, offset)
+        total_downtime = stats["downtime_seconds"]
+
         # Get stop events from alerts
         stop_alerts = await self.db.mes_alerts.find({
             "machine_id": machine_id,
@@ -2370,7 +2461,7 @@ class MESService:
         docs = await self.db.mes_daily_summary.find(match, {
             "machine_id": 1, "date": 1, "production": 1, "good_parts": 1, "rejects": 1,
             "running_minutes": 1, "idle_minutes": 1, "cadence_avg": 1, "theoretical": 1,
-            "alerts_count": 1
+            "expected_production": 1, "alerts_count": 1
         }).to_list(20000)
 
         total_prod = sum(d.get("production", 0) or 0 for d in docs)
@@ -2382,8 +2473,11 @@ class MESService:
 
         availability = running / (running + idle) if (running + idle) > 0 else 0
         quality = (total_good / total_prod) if total_prod > 0 else 1.0
-        prod_theo = sum((d.get("theoretical", 0) or 0) * (d.get("running_minutes", 0) or 0) for d in docs)
-        performance = (total_prod / prod_theo) if prod_theo > 0 else 0
+        # expected_production integre deja la cadence theorique active par
+        # segment planifie (multi-rythmes/postes de nuit inclus) - ne pas
+        # re-approximer avec `theoretical * running_minutes` (cadence unique).
+        prod_theo = sum(d.get("expected_production", 0) or 0 for d in docs)
+        performance = min((total_prod / prod_theo) if prod_theo > 0 else 0, 1.0)
         trs = round(availability * quality * performance * 100, 1)
 
         return {
@@ -2424,7 +2518,7 @@ class MESService:
             entry["rejects"] += d.get("rejects", 0) or 0
             entry["running"] += d.get("running_minutes", 0) or 0
             entry["idle"] += d.get("idle_minutes", 0) or 0
-            entry["prod_theo"] += (d.get("theoretical", 0) or 0) * (d.get("running_minutes", 0) or 0)
+            entry["prod_theo"] += d.get("expected_production", 0) or 0
 
         ranking = []
         for m in machines_list:
@@ -2434,7 +2528,7 @@ class MESService:
             label = eq["nom"] if eq else "?"
             avail = entry["running"] / (entry["running"] + entry["idle"]) if (entry["running"] + entry["idle"]) > 0 else 0
             qual = entry["good"] / entry["production"] if entry["production"] > 0 else 1.0
-            perf = entry["production"] / entry["prod_theo"] if entry["prod_theo"] > 0 else 0
+            perf = min(entry["production"] / entry["prod_theo"] if entry["prod_theo"] > 0 else 0, 1.0)
             trs = round(avail * qual * perf * 100, 1)
             ranking.append({
                 "machine_id": mid, "machine_name": label,
@@ -2506,8 +2600,8 @@ class MESService:
                     idle = d.get("idle_minutes", 0) or 0
                     avail = running / (running + idle) if (running + idle) > 0 else 0
                     qual = d.get("good_parts", 0) / d.get("production", 1) if d.get("production", 0) > 0 else 1.0
-                    prod_theo = (d.get("theoretical", 0) or 0) * running
-                    perf = d.get("production", 0) / prod_theo if prod_theo > 0 else 0
+                    prod_theo = d.get("expected_production", 0) or 0
+                    perf = min(d.get("production", 0) / prod_theo if prod_theo > 0 else 0, 1.0)
                     val = round(avail * qual * perf * 100, 1)
                 elif metric == "production":
                     val = d.get("production", 0) or 0

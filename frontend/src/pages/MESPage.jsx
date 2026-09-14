@@ -1041,7 +1041,7 @@ const MachineDashboard = ({ machineId, onBack }) => {
         <MetricCard icon={Timer} label="Arret actuel" value={formatTime(metrics?.downtime_current_seconds)} color="red" />
         <MetricCard icon={Clock} label="Arret jour" value={formatTime(metrics?.downtime_today_seconds)} color="orange" />
         <MetricCard icon={TrendingUp} label="TRS" value={`${metrics?.trs ?? 0}%`} color="purple" />
-        <MetricCard icon={Target} label="Cadence theo." value={`${metrics?.theoretical_cadence ?? 0}`} color="gray" />
+        <MetricCard icon={Target} label={metrics?.active_rhythm_name ? `Cadence theo. (${metrics.active_rhythm_name})` : 'Cadence theo.'} value={`${metrics?.theoretical_cadence ?? 0}`} color="gray" />
       </div>
 
       {/* Tuiles dynamiques (mode JSON_UNIFIED) */}
@@ -1188,6 +1188,7 @@ const MachineSettingsModal = ({ machine, onClose }) => {
     schedule_end_hour: (src.production_schedule || src)?.schedule_end_hour ?? (src.production_schedule || schedule)?.end_hour ?? 22,
     schedule_production_days: (src.production_schedule || schedule)?.production_days ?? [0, 1, 2, 3, 4],
     schedule_planned_breaks: (src.production_schedule || schedule)?.planned_breaks ?? [],
+    schedule_rhythms: (src.production_schedule || schedule)?.rhythms ?? [],
     email_enabled: (src.email_notifications || emailNotif)?.enabled ?? false,
     email_recipients: (src.email_notifications || emailNotif)?.recipients ?? [],
     email_alert_types: (src.email_notifications || emailNotif)?.alert_types ?? [],
@@ -1283,6 +1284,7 @@ const MachineSettingsModal = ({ machine, onClose }) => {
           schedule_start_hour: ref.production_schedule?.start_hour ?? prev.schedule_start_hour,
           schedule_end_hour: ref.production_schedule?.end_hour ?? prev.schedule_end_hour,
           schedule_production_days: ref.production_schedule?.production_days ?? prev.schedule_production_days,
+          schedule_rhythms: ref.production_schedule?.rhythms ?? prev.schedule_rhythms,
           email_enabled: ref.email_notifications?.enabled ?? prev.email_enabled,
           email_recipients: ref.email_notifications?.recipients ?? prev.email_recipients,
           email_alert_types: ref.email_notifications?.alert_types ?? prev.email_alert_types,
@@ -1643,6 +1645,129 @@ const MachineSettingsModal = ({ machine, onClose }) => {
                   </button>
                 ))}
               </div>
+            </div>
+
+            {/* Rythmes de cadence (creneaux horaires a cadence theorique propre) */}
+            <div className="mt-2 bg-indigo-50/60 border border-indigo-200 rounded-lg p-3 space-y-2" data-testid="rhythms-section">
+              <div className="flex items-center justify-between">
+                <h5 className="text-xs font-bold text-indigo-900 flex items-center gap-1">
+                  <Gauge size={12} /> Rythmes de cadence par créneau (optionnel)
+                </h5>
+                {!readOnly && (
+                  <button type="button"
+                    onClick={() => setForm(prev => ({
+                      ...prev,
+                      schedule_rhythms: [
+                        ...(prev.schedule_rhythms || []),
+                        { name: 'Poste jour', start_hour: '06:00', end_hour: '22:00', days: [...(prev.schedule_production_days || [0,1,2,3,4])], theoretical_cadence: prev.theoretical_cadence || 6 }
+                      ]
+                    }))}
+                    className="text-[10px] px-2 py-0.5 bg-indigo-600 text-white rounded hover:bg-indigo-700 flex items-center gap-1"
+                    data-testid="add-rhythm-btn">
+                    <Plus size={10} /> Ajouter
+                  </button>
+                )}
+              </div>
+              <p className="text-[10px] text-indigo-800/80 leading-tight">
+                Permet une cadence théorique différente selon le créneau (ex : 60 cp/min en journée, 45 cp/min de nuit). Un créneau dont la fin est avant le début est traité comme traversant minuit (poste de nuit). Si au moins un rythme est défini ici, il remplace la cadence/le planning simples ci-dessus pour le calcul du TRS.
+              </p>
+
+              {(form.schedule_rhythms || []).length === 0 && (
+                <p className="text-[10px] text-gray-500 italic">Aucun rythme : la cadence théorique unique ci-dessus est utilisée en permanence.</p>
+              )}
+
+              {(form.schedule_rhythms || []).map((rh, idx) => (
+                <div key={idx} className="bg-white border border-indigo-200 rounded p-2 space-y-1.5" data-testid={`rhythm-${idx}`}>
+                  <div className="flex items-center gap-2">
+                    <input type="text" value={rh.name || ''}
+                      placeholder="Poste nuit"
+                      disabled={readOnly}
+                      onChange={e => setForm(prev => ({
+                        ...prev,
+                        schedule_rhythms: prev.schedule_rhythms.map((r, i) => i === idx ? { ...r, name: e.target.value } : r)
+                      }))}
+                      className="flex-1 text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50"
+                      data-testid={`rhythm-name-${idx}`}
+                    />
+                    {!readOnly && (
+                      <button type="button"
+                        onClick={() => setForm(prev => ({
+                          ...prev,
+                          schedule_rhythms: prev.schedule_rhythms.filter((_, i) => i !== idx)
+                        }))}
+                        className="text-red-500 hover:text-red-700 p-1"
+                        title="Supprimer ce rythme"
+                        data-testid={`rhythm-delete-${idx}`}>
+                        <Trash2 size={12} />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[9px] text-gray-600 block">Début</label>
+                      <input type="time" value={typeof rh.start_hour === 'number' ? toTime(rh.start_hour) : (rh.start_hour || '06:00')}
+                        disabled={readOnly}
+                        onChange={e => setForm(prev => ({
+                          ...prev,
+                          schedule_rhythms: prev.schedule_rhythms.map((r, i) => i === idx ? { ...r, start_hour: e.target.value } : r)
+                        }))}
+                        className="w-full text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50"
+                        data-testid={`rhythm-start-${idx}`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-gray-600 block">Fin</label>
+                      <input type="time" value={typeof rh.end_hour === 'number' ? toTime(rh.end_hour) : (rh.end_hour || '22:00')}
+                        disabled={readOnly}
+                        onChange={e => setForm(prev => ({
+                          ...prev,
+                          schedule_rhythms: prev.schedule_rhythms.map((r, i) => i === idx ? { ...r, end_hour: e.target.value } : r)
+                        }))}
+                        className="w-full text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50"
+                        data-testid={`rhythm-end-${idx}`}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[9px] text-gray-600 block">Cadence (cp/min)</label>
+                      <input type="number" value={rh.theoretical_cadence ?? ''}
+                        disabled={readOnly}
+                        onChange={e => setForm(prev => ({
+                          ...prev,
+                          schedule_rhythms: prev.schedule_rhythms.map((r, i) => i === idx ? { ...r, theoretical_cadence: e.target.value } : r)
+                        }))}
+                        className="w-full text-xs px-2 py-1 border rounded focus:ring-1 focus:ring-indigo-500 disabled:bg-gray-50"
+                        data-testid={`rhythm-cadence-${idx}`}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[9px] text-gray-600 block mb-0.5">Jours concernés (jour de début du créneau)</label>
+                    <div className="flex flex-wrap gap-1">
+                      {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map((day, dIdx) => {
+                        const selected = (rh.days || []).includes(dIdx);
+                        return (
+                          <button key={dIdx} type="button" disabled={readOnly}
+                            onClick={() => setForm(prev => ({
+                              ...prev,
+                              schedule_rhythms: prev.schedule_rhythms.map((r, i) => i === idx ? {
+                                ...r,
+                                days: (r.days || []).includes(dIdx)
+                                  ? r.days.filter(d => d !== dIdx)
+                                  : [...(r.days || []), dIdx].sort()
+                              } : r)
+                            }))}
+                            className={`px-2 py-0.5 text-[10px] rounded border transition-colors ${
+                              selected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-500 border-gray-200 hover:border-indigo-300'
+                            } ${readOnly ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            data-testid={`rhythm-day-${idx}-${dIdx}`}>
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Pauses planifiees (legal breaks) */}
