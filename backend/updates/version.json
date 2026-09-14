@@ -1,10 +1,22 @@
 {
-  "version": "1.14.2",
-  "versionName": "Correction : liste des équipements vide dans le bloc Cadence",
+  "version": "1.15.0",
+  "versionName": "Affichage Dynamique : habillage visuel et nouveaux blocs",
   "releaseDate": "2026-09-14",
-  "description": "Corrige le bloc Cadence equipement de l'Affichage Dynamique dont la liste deroulante Equipement restait vide",
+  "description": "Refonte visuelle de l'Affichage Dynamique (alertes, theme clair, en-tete, accents) et nouvelles fonctionnalites (QR code, bandeau defilant, mini-graphiques, apercu plein ecran, rotation multi-ecrans, annuler/retablir)",
   "changes": [
-    "Correction : le bloc Cadence equipement de l'Affichage Dynamique affiche desormais le nom reel de l'equipement (la route ne recuperait pas le nom, toujours vide)"
+    "Alerte visuelle automatique (bordure pulsante + badge) sur le bloc Cadence equipement en cas d'arret ou de TRS sous objectif",
+    "Icone et couleur d'accent propres a chaque type de bloc",
+    "Modeles de mise en page prets a l'emploi a la creation d'un ecran",
+    "En-tete personnalisable (logo, nom du site, horloge)",
+    "Alignement automatique a la grille pendant le glisser-depose",
+    "Theme clair disponible en plus du theme sombre",
+    "Indicateur de mise a jour en direct",
+    "Mini-graphique (historique recent) sur les blocs Cadence, KPI et Capteur MQTT",
+    "Nouveau bloc Bandeau defilant pour les annonces",
+    "Nouveau bloc QR Code",
+    "Apercu plein ecran dans l'editeur avant publication",
+    "Rotation automatique entre plusieurs ecrans sur un meme afficheur (parametre d'URL)",
+    "Annuler (Ctrl+Z) dans l'editeur"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

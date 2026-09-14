@@ -1,5 +1,24 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.15.0 - Affichage Dynamique : habillage visuel et nouveaux blocs (Septembre 2026)
+
+### Visuel
+- Alerte automatique (bordure pulsante + badge "ARRET"/"TRS BAS") sur le bloc Cadence equipement en cas d'arret ou de TRS sous objectif
+- Icone et couleur d'accent propres a chaque type de bloc
+- Modeles de mise en page prets a l'emploi ("Tableau de bord atelier", "Ecran d'accueil") a la creation d'un ecran
+- En-tete personnalisable (logo, nom du site, horloge)
+- Alignement automatique a la grille pendant le glisser-depose
+- Theme clair disponible en plus du theme sombre (par ecran)
+- Indicateur de mise a jour en direct (pastille + heure du dernier rafraichissement)
+
+### Fonctionnel
+- Mini-graphique (historique recent) sur les blocs Cadence, KPI et Capteur MQTT
+- Nouveau bloc **Bandeau defilant** pour les annonces/consignes
+- Nouveau bloc **QR Code** (genere cote serveur, scannable)
+- Apercu plein ecran dans l'editeur, sans avoir a publier
+- Rotation automatique entre plusieurs ecrans sur un meme afficheur physique (`?rotate=jeton2,jeton3&interval=20` sur le lien public)
+- Annuler (Ctrl+Z) sur les deplacements/redimensionnements/ajouts/suppressions de blocs
+
 ## Version 1.14.2 - Correction : liste des equipements vide dans le bloc Cadence (Septembre 2026)
 
 - **Correction** : dans l'editeur Affichage Dynamique, le bloc "Cadence equipement" affichait une liste "Equipement" vide. Cause : les machines M.E.S. n'ont pas de nom en propre (leur nom vient de l'equipement auquel elles sont rattachees) - la route qui alimentait cette liste ne recuperait jamais ce nom et renvoyait systematiquement une chaine vide. Corrige pour aller chercher le vrai nom d'equipement, comme le fait deja le module M.E.S. lui-meme.

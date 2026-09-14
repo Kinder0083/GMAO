@@ -12,8 +12,11 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '../components/ui/dialog';
-import { Tv, Plus, Save, Link as LinkIcon, Trash2, RefreshCw, X, Copy } from 'lucide-react';
-import BlockContent, { BLOCK_TYPES, KPI_METRICS } from '../components/AffichageDynamique/BlockRenderer';
+import {
+  Tv, Plus, Save, Link as LinkIcon, Trash2, RefreshCw, X, Copy, Undo2,
+  Settings2, Maximize2, LayoutTemplate, Sun, Moon,
+} from 'lucide-react';
+import BlockContent, { BLOCK_TYPES, KPI_METRICS, THEMES, isBlockInAlert } from '../components/AffichageDynamique/BlockRenderer';
 
 const API = BACKEND_URL;
 const getHeaders = () => ({ Authorization: `Bearer ${localStorage.getItem('token')}` });
@@ -23,6 +26,9 @@ const DESIGN_H = 1080;
 const MIN_W = 160;
 const MIN_H = 100;
 const PREVIEW_POLL_MS = 10000;
+const GRID = 10;
+const MAX_HISTORY = 30;
+const snapGrid = (v) => Math.round(v / GRID) * GRID;
 
 function newBlockId() {
   return (crypto.randomUUID ? crypto.randomUUID() : `blk-${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -44,29 +50,38 @@ export default function AffichageDynamiquePage() {
 
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newName, setNewName] = useState('');
+  const [templates, setTemplates] = useState([]);
+  const [newTemplate, setNewTemplate] = useState('');
 
   const [showLinkDialog, setShowLinkDialog] = useState(false);
   const [publicToken, setPublicToken] = useState(null);
+
+  const [showSettingsDialog, setShowSettingsDialog] = useState(false);
+  const [showFullscreenPreview, setShowFullscreenPreview] = useState(false);
+  const [lastRefresh, setLastRefresh] = useState(null);
 
   const [scale, setScale] = useState(0.5);
   const wrapperRef = useRef(null);
   const dragRef = useRef(null);
   const draggingRef = useRef(false);
+  const historyRef = useRef([]); // pile d'états précédents de `blocks` pour Annuler (Ctrl+Z)
 
   // ===== Chargement initial =====
   useEffect(() => {
     (async () => {
       try {
-        const [screensRes, machinesRes, sensorsRes, equipmentsRes] = await Promise.all([
+        const [screensRes, machinesRes, sensorsRes, equipmentsRes, templatesRes] = await Promise.all([
           axios.get(`${API}/api/affichage-dynamique`, { headers: getHeaders() }),
           axios.get(`${API}/api/affichage-dynamique/sources/machines`, { headers: getHeaders() }),
           axios.get(`${API}/api/affichage-dynamique/sources/sensors`, { headers: getHeaders() }),
           axios.get(`${API}/api/affichage-dynamique/sources/equipments`, { headers: getHeaders() }),
+          axios.get(`${API}/api/affichage-dynamique/templates`, { headers: getHeaders() }).catch(() => ({ data: [] })),
         ]);
         setScreens(screensRes.data);
         setMachines(machinesRes.data);
         setSensors(sensorsRes.data);
         setEquipments(equipmentsRes.data);
+        setTemplates(templatesRes.data);
         if (screensRes.data.length > 0) {
           setScreenId(screensRes.data[0].id);
         } else {
@@ -84,9 +99,10 @@ export default function AffichageDynamiquePage() {
     if (!screenId) return;
     setLoading(true);
     setSelectedId(null);
+    historyRef.current = [];
     axios.get(`${API}/api/affichage-dynamique/${screenId}`, { headers: getHeaders() })
       .then(({ data }) => {
-        setScreen(data);
+        setScreen({ theme: 'dark', header: { enabled: false, title: '', logo_url: '' }, ...data });
         setDirty(false);
       })
       .catch(() => toast({ title: 'Erreur', description: "Impossible de charger l'écran.", variant: 'destructive' }))
@@ -105,6 +121,7 @@ export default function AffichageDynamiquePage() {
           const dataById = Object.fromEntries((data.blocks || []).map((b) => [b.id, b.data]));
           return { ...prev, blocks: prev.blocks.map((b) => ({ ...b, data: dataById[b.id] ?? b.data })) };
         });
+        setLastRefresh(new Date());
       } catch (e) {
         // silencieux : la prévisualisation n'est pas critique
       }
@@ -128,10 +145,38 @@ export default function AffichageDynamiquePage() {
 
   const selectedBlock = screen?.blocks?.find((b) => b.id === selectedId) || null;
 
+  const pushHistory = useCallback((blocksSnapshot) => {
+    historyRef.current = [...historyRef.current.slice(-(MAX_HISTORY - 1)), blocksSnapshot];
+  }, []);
+
   const mutateBlocks = useCallback((updater) => {
-    setScreen((prev) => (prev ? { ...prev, blocks: updater(prev.blocks) } : prev));
+    setScreen((prev) => {
+      if (!prev) return prev;
+      pushHistory(prev.blocks);
+      return { ...prev, blocks: updater(prev.blocks) };
+    });
+    setDirty(true);
+  }, [pushHistory]);
+
+  const undo = useCallback(() => {
+    const prevBlocks = historyRef.current.pop();
+    if (prevBlocks === undefined) return;
+    setScreen((prev) => (prev ? { ...prev, blocks: prevBlocks } : prev));
     setDirty(true);
   }, []);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        e.preventDefault();
+        undo();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo]);
 
   const addBlock = (type) => {
     const def = BLOCK_TYPES.find((t) => t.type === type);
@@ -165,6 +210,7 @@ export default function AffichageDynamiquePage() {
     e.stopPropagation();
     setSelectedId(block.id);
     draggingRef.current = true;
+    if (screen) pushHistory(screen.blocks);
     dragRef.current = {
       mode,
       startX: e.clientX,
@@ -185,12 +231,12 @@ export default function AffichageDynamiquePage() {
     const dx = (e.clientX - d.startX) / scale;
     const dy = (e.clientY - d.startY) / scale;
     if (d.mode === 'drag') {
-      const x = Math.max(0, Math.round(d.origX + dx));
-      const y = Math.max(0, Math.round(d.origY + dy));
+      const x = snapGrid(Math.max(0, d.origX + dx));
+      const y = snapGrid(Math.max(0, d.origY + dy));
       mutateBlocksRaw((blocks) => blocks.map((b) => (b.id === d.id ? { ...b, x, y } : b)));
     } else {
-      const w = Math.max(MIN_W, Math.round(d.origW + dx));
-      const h = Math.max(MIN_H, Math.round(d.origH + dy));
+      const w = snapGrid(Math.max(MIN_W, d.origW + dx));
+      const h = snapGrid(Math.max(MIN_H, d.origH + dy));
       mutateBlocksRaw((blocks) => blocks.map((b) => (b.id === d.id ? { ...b, w, h } : b)));
     }
   };
@@ -219,8 +265,9 @@ export default function AffichageDynamiquePage() {
     setSaving(true);
     try {
       const blocks = screen.blocks.map(({ data, ...rest }) => rest);
-      const { data } = await axios.put(`${API}/api/affichage-dynamique/${screen.id}`, { blocks }, { headers: getHeaders() });
-      setScreen((prev) => ({ ...prev, blocks: data.blocks }));
+      const payload = { blocks, theme: screen.theme || 'dark', header: screen.header || { enabled: false } };
+      const { data } = await axios.put(`${API}/api/affichage-dynamique/${screen.id}`, payload, { headers: getHeaders() });
+      setScreen((prev) => ({ ...prev, blocks: data.blocks, theme: data.theme, header: data.header }));
       setDirty(false);
       toast({ title: 'Enregistré', description: "L'écran a été mis à jour." });
     } catch (e) {
@@ -234,11 +281,12 @@ export default function AffichageDynamiquePage() {
   const createScreen = async () => {
     if (!newName.trim()) return;
     try {
-      const { data } = await axios.post(`${API}/api/affichage-dynamique`, { nom: newName.trim(), blocks: [] }, { headers: getHeaders() });
+      const { data } = await axios.post(`${API}/api/affichage-dynamique`, { nom: newName.trim(), blocks: [], template: newTemplate || null }, { headers: getHeaders() });
       setScreens((prev) => [data, ...prev]);
       setScreenId(data.id);
       setShowNewDialog(false);
       setNewName('');
+      setNewTemplate('');
     } catch (e) {
       toast({ title: 'Erreur', description: "Création de l'écran impossible.", variant: 'destructive' });
     }
@@ -313,6 +361,21 @@ export default function AffichageDynamiquePage() {
         </div>
         {screen && (
           <div className="flex items-center gap-2">
+            {lastRefresh && (
+              <span className="hidden md:flex items-center gap-1.5 text-xs text-gray-400 mr-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 ad-live-dot" />
+                Données à {lastRefresh.toLocaleTimeString('fr-FR')}
+              </span>
+            )}
+            <Button variant="outline" size="sm" onClick={undo} title="Annuler (Ctrl+Z)">
+              <Undo2 className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowFullscreenPreview(true)}>
+              <Maximize2 className="h-4 w-4 mr-1" /> Aperçu
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowSettingsDialog(true)}>
+              <Settings2 className="h-4 w-4 mr-1" /> Réglages
+            </Button>
             <Button variant="outline" size="sm" onClick={openLinkDialog}>
               <LinkIcon className="h-4 w-4 mr-1" /> Lien public
             </Button>
@@ -344,9 +407,10 @@ export default function AffichageDynamiquePage() {
                 <button
                   key={bt.type}
                   onClick={() => addBlock(bt.type)}
-                  className="flex items-center gap-2 text-sm text-left px-3 py-2 rounded-lg border bg-white hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                  className="flex items-center gap-2 text-sm text-left px-3 py-2 rounded-lg border bg-white hover:border-blue-300 transition-colors"
                 >
-                  <bt.icon className="h-4 w-4 text-blue-600 shrink-0" />
+                  <span className="w-2 h-2 rounded-full shrink-0" style={{ background: bt.accent }} />
+                  <bt.icon className="h-4 w-4 shrink-0" style={{ color: bt.accent }} />
                   {bt.label}
                 </button>
               ))}
@@ -357,27 +421,30 @@ export default function AffichageDynamiquePage() {
           <div ref={wrapperRef} className="flex-1 overflow-auto p-4 bg-[radial-gradient(circle,_#e5e7eb_1px,_transparent_1px)] bg-[length:20px_20px]">
             <div style={{ width: DESIGN_W * scale, height: DESIGN_H * scale }}>
               <div
-                style={{ width: DESIGN_W, height: DESIGN_H, transform: `scale(${scale})`, transformOrigin: 'top left', position: 'relative', background: '#0b0f1c', borderRadius: 8 }}
+                style={{ width: DESIGN_W, height: DESIGN_H, transform: `scale(${scale})`, transformOrigin: 'top left', position: 'relative', background: THEMES[screen.theme || 'dark'].pageBg, borderRadius: 8 }}
                 onMouseDown={() => setSelectedId(null)}
               >
-                {screen.blocks.map((block) => (
+                {screen.blocks.map((block) => {
+                  const t = THEMES[screen.theme || 'dark'];
+                  return (
                   <div
                     key={block.id}
                     onMouseDown={(e) => onBlockMouseDown(e, block, 'drag')}
+                    className={isBlockInAlert(block) ? 'ad-alert-border' : ''}
                     style={{
                       position: 'absolute',
                       left: block.x,
                       top: block.y,
                       width: block.w,
                       height: block.h,
-                      background: '#161e33',
-                      border: selectedId === block.id ? '2px solid #2563eb' : '1px solid #232c47',
+                      background: t.tileBg,
+                      border: selectedId === block.id ? '2px solid #2563eb' : `1px solid ${t.tileBorder}`,
                       borderRadius: 20,
                       overflow: 'hidden',
                       cursor: 'move',
                     }}
                   >
-                    <BlockContent block={block} />
+                    <BlockContent block={block} theme={screen.theme || 'dark'} />
                     {selectedId === block.id && (
                       <>
                         <button
@@ -393,7 +460,8 @@ export default function AffichageDynamiquePage() {
                       </>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -423,12 +491,106 @@ export default function AffichageDynamiquePage() {
             <Label>Nom de l'écran</Label>
             <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Ex: Atelier Production" onKeyDown={(e) => e.key === 'Enter' && createScreen()} />
           </div>
+          <div className="space-y-2">
+            <Label>Modèle de départ (optionnel)</Label>
+            <div className="grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => setNewTemplate('')}
+                className={`text-left px-3 py-2 rounded-lg border text-sm flex items-center gap-2 ${newTemplate === '' ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+              >
+                <LayoutTemplate className="h-4 w-4 text-gray-400" /> Écran vide
+              </button>
+              {templates.map((tpl) => (
+                <button
+                  key={tpl.id}
+                  type="button"
+                  onClick={() => setNewTemplate(tpl.id)}
+                  className={`text-left px-3 py-2 rounded-lg border text-sm ${newTemplate === tpl.id ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+                >
+                  <div className="flex items-center gap-2 font-medium"><LayoutTemplate className="h-4 w-4 text-blue-500" /> {tpl.label}</div>
+                  <div className="text-xs text-gray-500 mt-0.5 ml-6">{tpl.description}</div>
+                </button>
+              ))}
+            </div>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowNewDialog(false)}>Annuler</Button>
             <Button onClick={createScreen} disabled={!newName.trim()}>Créer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Dialog réglages écran (thème + en-tête) */}
+      <Dialog open={showSettingsDialog} onOpenChange={setShowSettingsDialog}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Réglages de l'écran</DialogTitle></DialogHeader>
+          {screen && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Thème</Label>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setScreen((p) => ({ ...p, theme: 'dark' })); setDirty(true); }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm ${(screen.theme || 'dark') === 'dark' ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+                  >
+                    <Moon className="h-4 w-4" /> Sombre
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setScreen((p) => ({ ...p, theme: 'light' })); setDirty(true); }}
+                    className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg border text-sm ${screen.theme === 'light' ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-300'}`}
+                  >
+                    <Sun className="h-4 w-4" /> Clair
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2 border-t pt-3">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={!!screen.header?.enabled}
+                    onChange={(e) => { setScreen((p) => ({ ...p, header: { ...(p.header || {}), enabled: e.target.checked } })); setDirty(true); }}
+                  />
+                  Afficher un bandeau d'en-tête (logo, nom du site, horloge)
+                </label>
+                {screen.header?.enabled && (
+                  <div className="space-y-2 pl-1">
+                    <Input
+                      value={screen.header?.title || ''}
+                      onChange={(e) => { setScreen((p) => ({ ...p, header: { ...(p.header || {}), title: e.target.value } })); setDirty(true); }}
+                      placeholder="Nom du site (ex: Atelier Production)"
+                    />
+                    <Input
+                      value={screen.header?.logo_url || ''}
+                      onChange={(e) => { setScreen((p) => ({ ...p, header: { ...(p.header || {}), logo_url: e.target.value } })); setDirty(true); }}
+                      placeholder="URL du logo (optionnel)"
+                    />
+                  </div>
+                )}
+              </div>
+              <p className="text-xs text-gray-500">N'oubliez pas de cliquer sur "Enregistrer" pour appliquer ces réglages.</p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowSettingsDialog(false)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Aperçu plein écran */}
+      {showFullscreenPreview && screen && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: THEMES[screen.theme || 'dark'].pageBg }}>
+          <button
+            onClick={() => setShowFullscreenPreview(false)}
+            style={{ position: 'absolute', top: 16, right: 16, zIndex: 101, background: 'rgba(0,0,0,.4)', border: 'none', borderRadius: 999, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+          >
+            <X size={18} color="#fff" />
+          </button>
+          <FullscreenPreview screen={screen} />
+        </div>
+      )}
 
       {/* Dialog lien public */}
       <Dialog open={showLinkDialog} onOpenChange={setShowLinkDialog}>
@@ -448,6 +610,42 @@ export default function AffichageDynamiquePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function FullscreenPreview({ screen }) {
+  const [scale, setScale] = useState(1);
+  const ref = useRef(null);
+  const theme = THEMES[screen.theme || 'dark'];
+
+  useEffect(() => {
+    const update = () => {
+      if (!ref.current) return;
+      const { clientWidth, clientHeight } = ref.current;
+      setScale(Math.min(clientWidth / DESIGN_W, clientHeight / DESIGN_H));
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, []);
+
+  return (
+    <div ref={ref} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+      <div style={{ width: DESIGN_W, height: DESIGN_H, transform: `scale(${scale})`, transformOrigin: 'top left', position: 'relative' }}>
+        {screen.blocks.map((block) => (
+          <div
+            key={block.id}
+            className={isBlockInAlert(block) ? 'ad-alert-border' : ''}
+            style={{
+              position: 'absolute', left: block.x, top: block.y, width: block.w, height: block.h,
+              background: theme.tileBg, border: `1px solid ${theme.tileBorder}`, borderRadius: 20, overflow: 'hidden',
+            }}
+          >
+            <BlockContent block={block} theme={screen.theme || 'dark'} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -566,6 +764,39 @@ function BlockInspector({ block, machines, sensors, equipments, onChange }) {
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {KPI_METRICS.map((m) => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
+      {block.type === 'qrcode' && (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label>Contenu (URL ou texte)</Label>
+            <Input value={config.content || ''} onChange={(e) => onChange({ content: e.target.value })} placeholder="https://…" />
+          </div>
+          <div className="space-y-2">
+            <Label>Légende (optionnel)</Label>
+            <Input value={config.label || ''} onChange={(e) => onChange({ label: e.target.value })} placeholder="Ex: Scannez pour signaler un incident" />
+          </div>
+        </div>
+      )}
+
+      {block.type === 'ticker' && (
+        <div className="space-y-3">
+          <div className="space-y-2">
+            <Label>Texte du bandeau</Label>
+            <Textarea rows={3} value={config.text || ''} onChange={(e) => onChange({ text: e.target.value })} />
+          </div>
+          <div className="space-y-2">
+            <Label>Vitesse de défilement</Label>
+            <Select value={config.speed || 'normal'} onValueChange={(v) => onChange({ speed: v })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="lent">Lente</SelectItem>
+                <SelectItem value="normal">Normale</SelectItem>
+                <SelectItem value="rapide">Rapide</SelectItem>
               </SelectContent>
             </Select>
           </div>

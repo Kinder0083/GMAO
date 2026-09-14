@@ -13,6 +13,10 @@ from bson import ObjectId
 from dependencies import require_permission
 import uuid
 import secrets
+import copy
+import io
+import base64
+import qrcode
 
 router = APIRouter(prefix="/affichage-dynamique", tags=["Affichage Dynamique"])
 
@@ -30,7 +34,7 @@ def init_dynamic_display_routes(database, mes_service_instance=None):
 
 class DisplayBlock(BaseModel):
     id: str
-    type: str  # cadence | mqtt_sensor | free_text | image | clock | equipment_status | work_orders | kpi
+    type: str  # cadence | mqtt_sensor | free_text | image | clock | equipment_status | work_orders | kpi | qrcode | ticker
     x: float = 0
     y: float = 0
     w: float = 360
@@ -41,12 +45,42 @@ class DisplayBlock(BaseModel):
 class DisplayScreenCreate(BaseModel):
     nom: str
     blocks: List[DisplayBlock] = []
+    theme: str = "dark"
+    header: Optional[Dict[str, Any]] = None
+    template: Optional[str] = None  # applique seulement a la creation si blocks est vide
 
 
 class DisplayScreenUpdate(BaseModel):
     nom: Optional[str] = None
     blocks: Optional[List[DisplayBlock]] = None
     is_active: Optional[bool] = None
+    theme: Optional[str] = None
+    header: Optional[Dict[str, Any]] = None
+
+
+# ===== Modèles de mise en page prêts à l'emploi =====
+
+SCREEN_TEMPLATES: Dict[str, Dict[str, Any]] = {
+    "atelier": {
+        "label": "Tableau de bord atelier",
+        "description": "Cadence, statut des équipements, ordres du jour et horloge",
+        "blocks": [
+            {"id": "", "type": "cadence", "x": 60, "y": 60, "w": 700, "h": 340, "config": {}},
+            {"id": "", "type": "clock", "x": 800, "y": 60, "w": 340, "h": 160, "config": {"label": ""}},
+            {"id": "", "type": "equipment_status", "x": 800, "y": 240, "w": 340, "h": 480, "config": {"equipment_ids": []}},
+            {"id": "", "type": "work_orders", "x": 60, "y": 440, "w": 700, "h": 280, "config": {"limit": 5}},
+        ],
+    },
+    "accueil": {
+        "label": "Écran d'accueil",
+        "description": "Message de bienvenue, horloge et consignes du jour",
+        "blocks": [
+            {"id": "", "type": "clock", "x": 60, "y": 60, "w": 400, "h": 220, "config": {"label": "Heure locale"}},
+            {"id": "", "type": "free_text", "x": 500, "y": 60, "w": 640, "h": 220, "config": {"text": "Bienvenue"}},
+            {"id": "", "type": "ticker", "x": 60, "y": 320, "w": 1080, "h": 100, "config": {"text": "Consigne du jour : port du casque obligatoire en zone 3.", "speed": "normal"}},
+        ],
+    },
+}
 
 
 # ===== CRUD des écrans (authentifié) =====
@@ -57,13 +91,25 @@ async def list_screens(current_user: dict = Depends(require_permission("affichag
     return screens
 
 
+@router.get("/templates")
+async def list_templates(current_user: dict = Depends(require_permission("affichageDynamique", "view"))):
+    return [{"id": k, "label": v["label"], "description": v["description"]} for k, v in SCREEN_TEMPLATES.items()]
+
+
 @router.post("")
 async def create_screen(data: DisplayScreenCreate, current_user: dict = Depends(require_permission("affichageDynamique", "edit"))):
     now = datetime.now(timezone.utc).isoformat()
+    blocks = [b.dict() for b in data.blocks]
+    if not blocks and data.template and data.template in SCREEN_TEMPLATES:
+        blocks = copy.deepcopy(SCREEN_TEMPLATES[data.template]["blocks"])
+        for b in blocks:
+            b["id"] = str(uuid.uuid4())
     doc = {
         "id": str(uuid.uuid4()),
         "nom": data.nom,
-        "blocks": [b.dict() for b in data.blocks],
+        "blocks": blocks,
+        "theme": data.theme or "dark",
+        "header": data.header or {"enabled": False, "title": "", "logo_url": ""},
         "public_token": secrets.token_urlsafe(32),
         "is_active": True,
         "created_at": now,
@@ -96,6 +142,10 @@ async def update_screen(screen_id: str, data: DisplayScreenUpdate, current_user:
         update["blocks"] = [b.dict() for b in data.blocks]
     if data.is_active is not None:
         update["is_active"] = data.is_active
+    if data.theme is not None:
+        update["theme"] = data.theme
+    if data.header is not None:
+        update["header"] = data.header
 
     await db.dynamic_displays.update_one({"id": screen_id}, {"$set": update})
     screen = await db.dynamic_displays.find_one({"id": screen_id}, {"_id": 0})
@@ -169,6 +219,40 @@ async def list_equipments_source(current_user: dict = Depends(require_permission
 
 # ===== Résolution des blocs (logique partagée éditeur + vue publique) =====
 
+async def _get_cadence_sparkline(machine_id: str, points: int = 30) -> List[Dict[str, Any]]:
+    """Derniers points de cadence (6h) pour une mini-courbe. Best-effort : une
+    erreur ici ne doit jamais faire échouer la résolution du bloc entier."""
+    if not _mes_service:
+        return []
+    try:
+        history = await _mes_service.get_cadence_history(machine_id, period="6h")
+        return [{"t": h.get("timestamp"), "v": h.get("cadence", 0)} for h in history[-points:]]
+    except Exception:
+        return []
+
+
+async def _get_sensor_sparkline(sensor_id: str, points: int = 30) -> List[Dict[str, Any]]:
+    try:
+        readings = await db.sensor_readings.find(
+            {"sensor_id": sensor_id}, {"_id": 0, "value": 1, "timestamp": 1}
+        ).sort("timestamp", -1).to_list(points)
+        readings.reverse()
+        result = []
+        for r in readings:
+            ts = r.get("timestamp")
+            result.append({"t": ts.isoformat() if hasattr(ts, "isoformat") else ts, "v": r.get("value")})
+        return result
+    except Exception:
+        return []
+
+
+def _make_qr_data_uri(content: str) -> str:
+    img = qrcode.make(content or " ")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode()
+
+
 async def _resolve_block(block: dict) -> dict:
     """Calcule la valeur courante d'un bloc pour l'affichage. Ne fait que lire des données."""
     btype = block.get("type")
@@ -192,6 +276,8 @@ async def _resolve_block(block: dict) -> dict:
                     "theoretical": metrics.get("theoretical_cadence", 0),
                     "is_running": metrics.get("is_running", False),
                     "trs": metrics.get("trs", 0),
+                    "trs_target": metrics.get("trs_target", 0),
+                    "history": await _get_cadence_sparkline(machine_id),
                 }
 
         elif btype == "mqtt_sensor":
@@ -204,7 +290,13 @@ async def _resolve_block(block: dict) -> dict:
                         "value": sensor.get("current_value"),
                         "unit": sensor.get("unite", ""),
                         "last_update": sensor.get("last_update").isoformat() if hasattr(sensor.get("last_update"), "isoformat") else sensor.get("last_update"),
+                        "history": await _get_sensor_sparkline(sensor_id),
                     }
+
+        elif btype == "qrcode":
+            content = (config.get("content") or "").strip()
+            if content:
+                data = {"qr_data_uri": _make_qr_data_uri(content)}
 
         elif btype == "equipment_status":
             equipment_ids = config.get("equipment_ids") or []
@@ -234,9 +326,12 @@ async def _resolve_block(block: dict) -> dict:
             metric = config.get("metric", "trs")
             if machine_id and _mes_service:
                 metrics = await _mes_service.get_realtime_metrics(machine_id)
-                data = {"metric": metric, "value": metrics.get(metric, 0)}
+                history = []
+                if metric == "cadence_per_min":
+                    history = await _get_cadence_sparkline(machine_id)
+                data = {"metric": metric, "value": metrics.get(metric, 0), "history": history}
 
-        # free_text, image, clock : aucune donnée serveur nécessaire, la config est affichée telle quelle
+        # free_text, image, clock, ticker : aucune donnée serveur nécessaire, la config est affichée telle quelle
     except Exception as e:
         data = {"error": str(e)}
     return data
@@ -247,7 +342,12 @@ async def _resolve_screen(screen: dict) -> dict:
     resolved = []
     for b in blocks:
         resolved.append({**b, "data": await _resolve_block(b)})
-    return {"nom": screen.get("nom"), "blocks": resolved}
+    return {
+        "nom": screen.get("nom"),
+        "theme": screen.get("theme", "dark"),
+        "header": screen.get("header") or {"enabled": False},
+        "blocks": resolved,
+    }
 
 
 @router.get("/{screen_id}/preview")
