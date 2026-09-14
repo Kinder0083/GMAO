@@ -93,17 +93,6 @@ async def resolve_git_conflicts(
         logger.error(f"Erreur lors de la résolution des conflits: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
-async def get_update_status(current_user: dict = Depends(get_current_admin_user)):
-    """
-    Récupère le statut actuel des mises à jour (Admin uniquement)
-    """
-    try:
-        status = await update_service.get_update_status()
-        return status
-    except Exception as e:
-        logger.error(f"❌ Erreur récupération statut: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.post("/updates/dismiss/{version}")
 async def dismiss_update(version: str, current_user: dict = Depends(get_current_admin_user)):
     """
@@ -134,21 +123,21 @@ async def broadcast_update_warning(
         # Broadcast via le WebSocket du chat (tous les utilisateurs connectés)
         await chat_manager.broadcast({
             "type": "update_warning",
-            "message": "Une mise à jour va être effectuée. Vous serez déconnecté dans 30 secondes. Vous pourrez vous reconnecter dans 5 minutes.",
+            "message": "Une mise à jour va être effectuée dans quelques secondes. L'application sera indisponible quelques minutes.",
             "admin_name": admin_name,
             "version": version,
-            "countdown_seconds": 30,
+            "countdown_seconds": 8,
             "timestamp": datetime.now(timezone.utc).isoformat()
         })
-        
+
         # Broadcast via les WebSocket consignes aussi
         from consignes_routes import consigne_connections
         for uid, ws in list(consigne_connections.items()):
             try:
                 await ws.send_json({
                     "type": "update_warning",
-                    "message": "Une mise à jour va être effectuée. Vous serez déconnecté dans 30 secondes.",
-                    "countdown_seconds": 30
+                    "message": "Une mise à jour va être effectuée dans quelques secondes.",
+                    "countdown_seconds": 8
                 })
             except Exception:
                 pass
@@ -215,11 +204,34 @@ async def apply_update_endpoint(
 @router.get("/updates/log")
 async def get_update_log(current_user: dict = Depends(get_current_admin_user)):
     """
-    Retourne le log de la derniere mise a jour.
-    Source PRINCIPALE: MongoDB (fiable, survit au reboot).
+    Retourne le log de la derniere/en cours mise a jour.
+
+    Priorité au FICHIER live (le script y écrit en temps réel via `tee`) tant
+    qu'il existe : c'est la seule source qui donne une vraie progression
+    pendant que la mise à jour tourne. MongoDB (`last_update_result`) sert de
+    solde de repli et pour les métadonnées (in_progress/status/success) qui,
+    elles, sont fiables et survivent au redémarrage du service.
     """
     try:
         last_result = await db.system_settings.find_one({"key": "last_update_result"}, {"_id": 0})
+
+        log_candidates = ["/var/log/gmao-iris-update.log", "/var/log/gmao-iris-worker.log",
+                          "/tmp/gmao-iris-update.log", "/tmp/gmao-iris-worker.log"]
+        for path in log_candidates:
+            if path and os.path.exists(path) and os.path.getsize(path) > 10:
+                with open(path, 'r', errors='replace') as f:
+                    content = f.read()
+                return {
+                    "found": True,
+                    "path": path,
+                    "content": content[-50000:],
+                    "in_progress": last_result.get("in_progress", False) if last_result else False,
+                    "current_step": last_result.get("current_step", "") if last_result else "",
+                    "errors": last_result.get("errors", []) if last_result else [],
+                    "status": last_result.get("status", "") if last_result else "",
+                    "success": last_result.get("success", False) if last_result else False
+                }
+
         if last_result and last_result.get("log_output"):
             return {
                 "found": True,
@@ -231,20 +243,6 @@ async def get_update_log(current_user: dict = Depends(get_current_admin_user)):
                 "status": last_result.get("status", ""),
                 "success": last_result.get("success", False)
             }
-        
-        import glob as glob_mod
-        log_candidates = ["/var/log/gmao-iris-update.log", "/var/log/gmao-iris-worker.log",
-                          "/tmp/gmao-iris-update.log", "/tmp/gmao-iris-worker.log"]
-        for path in log_candidates:
-            if path and os.path.exists(path) and os.path.getsize(path) > 10:
-                with open(path, 'r', errors='replace') as f:
-                    content = f.read()
-                return {
-                    "found": True,
-                    "path": path,
-                    "content": content[-50000:],
-                    "in_progress": last_result.get("in_progress", False) if last_result else False
-                }
 
         return {
             "found": False,

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
 import { 
@@ -51,9 +51,17 @@ const Updates = () => {
   const [conflictData, setConflictData] = useState(null);
   const [checkingConflicts, setCheckingConflicts] = useState(false);
 
+  const serverLogRef = useRef(null);
+
   useEffect(() => {
     loadUpdateInfo();
   }, []);
+
+  useEffect(() => {
+    if (serverLogRef.current) {
+      serverLogRef.current.scrollTop = serverLogRef.current.scrollHeight;
+    }
+  }, [serverLog]);
 
   const loadServerLog = async () => {
     try {
@@ -67,7 +75,7 @@ const Updates = () => {
         setServerLog(response.data.content);
         setServerLogInfo({
           path: response.data.path,
-          size: response.data.size,
+          size: response.data.size ?? new Blob([response.data.content || '']).size,
           in_progress: response.data.in_progress
         });
       } else {
@@ -76,8 +84,14 @@ const Updates = () => {
       }
     } catch (error) {
       console.error('Erreur chargement logs:', error);
-      const detail = error.response?.data?.detail || error.message || 'Erreur inconnue';
-      setServerLog(`Impossible de charger les logs du serveur.\n\nErreur: ${detail}\n\nCela peut arriver si:\n- Le serveur vient de redemarrer apres une mise a jour\n- L'endpoint /api/updates/log n'est pas encore deploye\n- Vous n'etes pas connecte en tant qu'administrateur`);
+      // Pendant une mise à jour/rollback en cours, le backend redémarre
+      // brièvement (quelques secondes) : on ignore ces échecs transitoires
+      // plutôt que d'effacer le journal déjà affiché avec un message qui
+      // ferait croire à un vrai problème. Le prochain sondage (3s) réussira.
+      if (!updating) {
+        const detail = error.response?.data?.detail || error.message || 'Erreur inconnue';
+        setServerLog(`Impossible de charger les logs du serveur.\n\nErreur: ${detail}\n\nCela peut arriver si:\n- Le serveur vient de redemarrer apres une mise a jour\n- L'endpoint /api/updates/log n'est pas encore deploye\n- Vous n'etes pas connecte en tant qu'administrateur`);
+      }
     } finally {
       setServerLogLoading(false);
     }
@@ -85,12 +99,16 @@ const Updates = () => {
 
   const waitForBackendReady = async (token, expectedVersion) => {
     // Attendre que le restart commence
-    setUpdateLogs(prev => [...prev, '⏳ Attente du redémarrage des services (5s)...']);
+    setUpdateLogs(prev => [...prev, '⏳ Attente du redémarrage du service (5s)...']);
     await new Promise(resolve => setTimeout(resolve, 5000));
-    
-    const maxAttempts = 40;
+
+    // Le script serveur (maintenance + backup + dépendances + build) peut
+    // prendre plusieurs minutes avant le redémarrage du service : on attend
+    // large (jusqu'à ~10 min) plutôt que d'abandonner après quelques
+    // secondes en donnant l'impression que la mise à jour a échoué.
+    const maxAttempts = 300;
     let attempts = 0;
-    
+
     while (attempts < maxAttempts) {
       try {
         const response = await axios.get(`${BACKEND_URL}/api/updates/current`, {
@@ -159,13 +177,16 @@ const Updates = () => {
         }
       } catch (error) {
         attempts++;
-        setUpdateLogs(prev => [...prev, `⏳ Tentative ${attempts}/${maxAttempts} - Backend indisponible...`]);
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Un point de statut toutes les ~10s suffit — inutile de spammer une ligne par seconde
+        if (attempts === 1 || attempts % 5 === 0) {
+          setUpdateLogs(prev => [...prev, `⏳ Service en cours de redémarrage... (${attempts * 2}s écoulées)`]);
+        }
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
     }
-    
+
     // Timeout - recharger quand même la page
-    setUpdateLogs(prev => [...prev, '⚠️ Délai dépassé. Rechargement de la page...']);
+    setUpdateLogs(prev => [...prev, '⚠️ Délai dépassé (10 min). Rechargement de la page...']);
     toast({
       title: 'Attention',
       description: 'Le redémarrage prend plus de temps que prévu. Rechargement en cours...',
@@ -324,7 +345,7 @@ const Updates = () => {
   const proceedWithUpdate = async () => {
     confirm({
       title: '⚠️ ATTENTION - Mise à jour système',
-      description: 'Cette opération va :\n\n• Envoyer un avertissement à TOUS les utilisateurs connectés\n• Déconnecter automatiquement tous les utilisateurs après 30 secondes\n• Créer une sauvegarde complète de la base de données\n• Télécharger et installer la mise à jour\n• Redémarrer tous les services\n\nL\'application sera indisponible pendant environ 5 minutes.\n\nVoulez-vous continuer ?',
+      description: 'Cette opération va :\n\n• Envoyer un avertissement à TOUS les utilisateurs connectés\n• Créer une sauvegarde complète de la base de données\n• Télécharger et installer la mise à jour\n• Redémarrer le service applicatif\n\nL\'application sera indisponible quelques minutes (durée affichée en direct dans le journal). Vous pouvez suivre la progression en temps réel.\n\nVoulez-vous continuer ?',
       confirmText: 'Envoyer l\'avertissement et installer',
       cancelText: 'Annuler',
       variant: 'default',
@@ -352,17 +373,11 @@ const Updates = () => {
             setUpdateLogs(prev => [...prev, '⚠️ Impossible d\'envoyer l\'avertissement (non bloquant)']);
           }
 
-          // Étape 2: Attendre 32 secondes pour que les utilisateurs soient déconnectés
-          setUpdateLogs(prev => [...prev, '⏳ Attente de 30 secondes pour la déconnexion des utilisateurs...']);
-          for (let i = 30; i > 0; i -= 5) {
-            await new Promise(resolve => setTimeout(resolve, 5000));
-            if (i > 5) {
-              setUpdateLogs(prev => [...prev, `⏳ ${i - 5} secondes restantes...`]);
-            }
-          }
-          setUpdateLogs(prev => [...prev, '✅ Tous les utilisateurs ont été déconnectés']);
+          // Étape 2: Courte fenêtre pour que les utilisateurs voient l'avertissement
+          setUpdateLogs(prev => [...prev, '⏳ Attente de 8 secondes avant le lancement...']);
+          await new Promise(resolve => setTimeout(resolve, 8000));
 
-          // Étape 3: Lancer la mise à jour (retour immédiat HTTP 202)
+          // Étape 3: Lancer la mise à jour (retour immédiat, le script continue en arrière-plan)
           setUpdateLogs(prev => [...prev, '📦 Lancement de la mise à jour en arrière-plan...']);
 
           try {
@@ -378,8 +393,7 @@ const Updates = () => {
 
             if (response.data.accepted || response.data.success) {
               setUpdateLogs(prev => [...prev, '✅ Script de mise à jour lancé avec succès']);
-              setUpdateLogs(prev => [...prev, '📥 Téléchargement et installation en cours...']);
-              setUpdateLogs(prev => [...prev, '⏳ Les services vont redémarrer automatiquement...']);
+              setUpdateLogs(prev => [...prev, '📥 Sauvegarde, téléchargement et installation en cours...']);
             }
           } catch (applyError) {
             if (applyError.code === 'ERR_NETWORK' || applyError.code === 'ECONNABORTED' ||
@@ -390,11 +404,19 @@ const Updates = () => {
             }
           }
 
-          // Attendre que le script ait le temps de s'exécuter
-          setUpdateLogs(prev => [...prev, '⏳ Attente de la fin de la mise à jour (60-120s)...']);
-          await new Promise(resolve => setTimeout(resolve, 10000));
-          setUpdateLogs(prev => [...prev, '⏳ Vérification de la disponibilité du backend...']);
-          await waitForBackendReady(token, version);
+          // Suivi en direct : le panneau "Journal serveur" est ouvert et rafraîchi
+          // automatiquement pendant toute la durée de la mise à jour, pour voir
+          // réellement ce qui se passe au lieu d'attendre à l'aveugle.
+          setExpandedServerLog(true);
+          loadServerLog();
+          const logPollId = setInterval(loadServerLog, 3000);
+          try {
+            setUpdateLogs(prev => [...prev, '⏳ Vérification de la disponibilité du backend...']);
+            await waitForBackendReady(token, version);
+          } finally {
+            clearInterval(logPollId);
+            loadServerLog();
+          }
         } catch (error) {
           if (error.code === 'ERR_NETWORK' || error.code === 'ECONNABORTED' || 
               error.response?.status === 502 || error.response?.status === 503) {
@@ -465,8 +487,10 @@ const Updates = () => {
       onConfirm: async () => {
         try {
           setRollingBack(true);
+          setUpdating(true);
           const token = localStorage.getItem('token');
-          
+          setUpdateLogs([`📦 Lancement du rollback vers ${commitHash.substring(0, 7)}...`]);
+
           const response = await axios.post(
             `${BACKEND_URL}/api/updates/git-rollback?commit_hash=${commitHash}`,
             {},
@@ -475,16 +499,22 @@ const Updates = () => {
             }
           );
 
-          if (response.data.success) {
+          if (response.data.success || response.data.accepted) {
+            setUpdateLogs(prev => [...prev, '✅ Script de rollback lancé — sauvegarde, réinstallation et redémarrage en cours...']);
             toast({
-              title: 'Rollback réussi',
-              description: 'L\'application va redémarrer. Veuillez patienter...'
+              title: 'Rollback lancé',
+              description: 'Le service va redémarrer automatiquement. Suivez la progression ci-dessous.'
             });
 
-            // Attendre et recharger
-            setTimeout(() => {
-              window.location.reload();
-            }, 5000);
+            setExpandedServerLog(true);
+            loadServerLog();
+            const logPollId = setInterval(loadServerLog, 3000);
+            try {
+              await waitForBackendReady(token, null);
+            } finally {
+              clearInterval(logPollId);
+              loadServerLog();
+            }
           }
         } catch (error) {
           toast({
@@ -492,6 +522,8 @@ const Updates = () => {
             description: formatErrorMessage(error, 'Échec du rollback'),
             variant: 'destructive'
           });
+          setUpdating(false);
+        } finally {
           setRollingBack(false);
         }
       }
@@ -661,7 +693,8 @@ const Updates = () => {
                     )}
                   </div>
                 )}
-                <div 
+                <div
+                  ref={serverLogRef}
                   className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap"
                   data-testid="server-log-content"
                 >

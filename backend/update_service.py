@@ -235,7 +235,9 @@ class UpdateService:
             async with aiohttp.ClientSession() as session:
                 async with session.get(self.version_file_url, timeout=aiohttp.ClientTimeout(total=10)) as response:
                     if response.status == 200:
-                        remote_version_info = await response.json()
+                        # raw.githubusercontent.com sert le JSON avec Content-Type: text/plain,
+                        # donc content_type=None pour ne pas faire échouer le parsing aiohttp.
+                        remote_version_info = await response.json(content_type=None)
                         remote_version = remote_version_info.get("version", "0.0.0")
                         
                         # Comparer les versions

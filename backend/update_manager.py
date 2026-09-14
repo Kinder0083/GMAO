@@ -58,58 +58,86 @@ class UpdateManager:
             pass
         return None
     
-    async def check_github_version(self) -> Optional[Dict]:
-        """Vérifie la dernière version disponible sur GitHub (dernier commit + version.json)"""
-        try:
-            async with aiohttp.ClientSession() as session:
-                # 1. Récupérer le dernier commit de la branche
-                commit_url = f"https://api.github.com/repos/{self.github_user}/{self.github_repo}/commits/{self.github_branch}"
-                commit_data = None
-                async with session.get(commit_url) as response:
-                    if response.status == 200:
-                        commit_data = await response.json()
-                
-                if not commit_data:
-                    return None
-                
-                remote_commit = commit_data["sha"][:7]
-                commit_date = commit_data["commit"]["author"]["date"]
-                commit_message = commit_data["commit"]["message"].split('\n')[0]
-                
-                # 2. Récupérer version.json depuis GitHub pour le nom de version lisible
-                version_url = f"https://raw.githubusercontent.com/{self.github_user}/{self.github_repo}/{self.github_branch}/updates/version.json"
-                remote_version_name = f"latest-{remote_commit}"
-                remote_changes = []
-                try:
-                    async with session.get(version_url, timeout=aiohttp.ClientTimeout(total=5)) as vresp:
-                        if vresp.status == 200:
-                            version_data = await vresp.json()
-                            v = version_data.get("version", "")
-                            if v and not v.startswith("latest-"):
-                                remote_version_name = v
-                            remote_changes = version_data.get("changes", [])
-                except Exception:
-                    pass
-                
-                # 3. Vérifier si une mise à jour est disponible (comparaison par commit)
-                local_commit = await self.get_current_commit()
-                if local_commit:
-                    update_available = local_commit != remote_commit
+    @staticmethod
+    def _parse_semver(v: str):
+        parts = []
+        for p in (v or "").split('.'):
+            num = ''
+            for ch in p:
+                if ch.isdigit():
+                    num += ch
                 else:
-                    # .git absent ou corrompu : comparer via version.json
-                    self._load_version()
-                    update_available = self.current_version != remote_version_name
-                
-                return {
-                    "version": remote_version_name,
-                    "commit": remote_commit,
-                    "date": commit_date,
-                    "message": commit_message,
-                    "available": update_available,
-                    "local_commit": local_commit,
-                    "changes": remote_changes
-                }
-        
+                    break
+            parts.append(int(num) if num else 0)
+        while len(parts) < 3:
+            parts.append(0)
+        return tuple(parts[:3])
+
+    @classmethod
+    def _compare_versions(cls, v1: str, v2: str) -> int:
+        t1, t2 = cls._parse_semver(v1), cls._parse_semver(v2)
+        if t1 > t2:
+            return 1
+        if t1 < t2:
+            return -1
+        return 0
+
+    async def check_github_version(self) -> Optional[Dict]:
+        """
+        Vérifie la dernière version disponible sur GitHub.
+
+        Source de vérité : updates/version.json (via raw.githubusercontent.com),
+        comparé en versioning sémantique — PAS l'API api.github.com/repos/.../commits
+        qui est limitée à 60 requêtes/heure par IP et peut donc échouer
+        silencieusement (et faire croire à tort que l'app est à jour).
+        Le SHA/date/message de commit ne sont récupérés qu'en best-effort,
+        pour l'affichage, sans jamais bloquer la détection de mise à jour.
+        """
+        try:
+            version_url = f"https://raw.githubusercontent.com/{self.github_user}/{self.github_repo}/{self.github_branch}/updates/version.json"
+            async with aiohttp.ClientSession() as session:
+                async with session.get(version_url, timeout=aiohttp.ClientTimeout(total=8)) as vresp:
+                    if vresp.status != 200:
+                        return None
+                    # raw.githubusercontent.com sert le JSON avec Content-Type: text/plain,
+                    # donc content_type=None pour ne pas faire échouer le parsing aiohttp.
+                    version_data = await vresp.json(content_type=None)
+
+            remote_version = version_data.get("version", "")
+            if not remote_version:
+                return None
+
+            self._load_version()
+            update_available = self._compare_versions(remote_version, self.current_version) > 0
+
+            remote_commit = None
+            commit_date = version_data.get("releaseDate")
+            commit_message = version_data.get("description", "")
+            try:
+                async with aiohttp.ClientSession() as session:
+                    commit_url = f"https://api.github.com/repos/{self.github_user}/{self.github_repo}/commits/{self.github_branch}"
+                    async with session.get(commit_url, timeout=aiohttp.ClientTimeout(total=5)) as cresp:
+                        if cresp.status == 200:
+                            commit_data = await cresp.json()
+                            remote_commit = commit_data["sha"][:7]
+                            commit_date = commit_data["commit"]["author"]["date"]
+                            commit_message = commit_data["commit"]["message"].split('\n')[0]
+            except Exception:
+                pass  # quota GitHub atteint ou hors-ligne : on garde les infos de version.json
+
+            local_commit = await self.get_current_commit()
+
+            return {
+                "version": remote_version,
+                "versionName": version_data.get("versionName", ""),
+                "commit": remote_commit,
+                "date": commit_date,
+                "message": commit_message,
+                "available": update_available,
+                "local_commit": local_commit,
+                "changes": version_data.get("changes", [])
+            }
+
         except Exception as e:
             print(f"Erreur vérification version GitHub: {e}")
             return None
@@ -415,62 +443,75 @@ class UpdateManager:
             return []
 
     async def rollback_to_commit(self, commit_hash: str) -> Dict:
-        """Effectue un rollback Git vers un commit spécifique"""
-        try:
-            app_root = self.app_root
-            
-            # Vérifier si c'est un dépôt Git
-            if not Path(f"{app_root}/.git").exists():
-                return {
-                    "success": False,
-                    "message": "Pas de dépôt Git trouvé"
-                }
-            
-            # Créer un backup de sécurité avant le rollback
-            backup_result = await self.create_backup()
-            
-            # Stash les modifications locales si présentes
-            stash_result = subprocess.run(
-                ['git', 'stash', 'save', f'Auto-stash before rollback to {commit_hash[:7]}'],
-                cwd=app_root,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            # Reset vers le commit spécifié
-            reset_result = subprocess.run(
-                ['git', 'reset', '--hard', commit_hash],
-                cwd=app_root,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            if reset_result.returncode != 0:
-                return {
-                    "success": False,
-                    "message": "Échec du rollback Git",
-                    "error": reset_result.stderr
-                }
-            
-            # Enregistrer dans l'historique
-            await self.save_update_record(
-                version=f"rollback-{commit_hash[:7]}",
-                status="success",
-                message=f"Rollback vers le commit {commit_hash[:7]}"
-            )
-            
+        """
+        Lance un rollback Git vers un commit spécifique.
+
+        Délègue à MAJ_FSAO.sh (même script robuste que la mise à jour normale :
+        page de maintenance, backup MongoDB, réinstallation des dépendances,
+        rebuild frontend, redémarrage du service) avec le commit visé comme
+        3e argument, au lieu d'un simple `git reset --hard` en direct qui ne
+        change que le code sur disque sans jamais réinstaller ni redémarrer
+        quoi que ce soit.
+        """
+        import subprocess as sp
+        import uuid
+
+        app_root = self.app_root
+
+        if not Path(f"{app_root}/.git").exists():
             return {
-                "success": True,
-                "message": f"Rollback vers {commit_hash[:7]} effectué avec succès",
-                "backup_path": backup_result.get("path") if backup_result.get("success") else None,
-                "needs_restart": True
+                "success": False,
+                "message": "Pas de dépôt Git trouvé"
             }
-            
+
+        script_path = Path(app_root) / "MAJ_FSAO.sh"
+        if not script_path.exists():
+            return {
+                "success": False,
+                "message": f"Script de mise à jour introuvable: {script_path}"
+            }
+
+        update_id = str(uuid.uuid4())
+        version_label = f"rollback-{commit_hash[:7]}"
+
+        await self.save_update_record(
+            version=version_label,
+            status="in_progress",
+            message=f"Rollback vers le commit {commit_hash[:7]} lancé"
+        )
+        await self.db.system_settings.update_one(
+            {"key": "last_update_result"},
+            {"$set": {
+                "key": "last_update_result",
+                "in_progress": True,
+                "success": False,
+                "history_id": update_id,
+                "current_step": f"Lancement du rollback vers {commit_hash[:7]}",
+                "status": "in_progress",
+                "version_after": version_label,
+                "updated_at": datetime.now().isoformat()
+            }},
+            upsert=True
+        )
+
+        try:
+            sp.Popen(
+                ["/bin/bash", str(script_path), version_label, update_id, commit_hash],
+                stdout=open("/var/log/gmao-iris-update-launcher.log", "a"),
+                stderr=sp.STDOUT,
+                start_new_session=True,
+                cwd=str(app_root)
+            )
         except Exception as e:
             return {
                 "success": False,
-                "message": "Erreur lors du rollback",
-                "error": str(e)
+                "message": f"Erreur lancement du script de rollback: {e}"
             }
+
+        return {
+            "success": True,
+            "accepted": True,
+            "update_id": update_id,
+            "message": f"Rollback vers {commit_hash[:7]} lancé. Le service va redémarrer automatiquement.",
+            "needs_restart": True
+        }

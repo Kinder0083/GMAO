@@ -2,18 +2,20 @@
 # ================================================================
 # MAJ_FSAO.sh - Script de mise à jour FSAO Iris (version unifiée)
 # ================================================================
-# Appelé par update_service.py via le bouton de mise à jour.
-# Usage: MAJ_FSAO.sh <version> <update_id>
+# Appelé par update_service.py via le bouton de mise à jour, et par le
+# rollback Git (update_manager.py) avec un 3e argument = commit cible.
+# Usage: MAJ_FSAO.sh <version> <update_id> [ref_git_cible]
 #
 # Étapes :
 #   1. Déconnexion forcée des utilisateurs
 #   2. Activation page de maintenance NGINX
 #   3. Backup MongoDB
 #   4. Sauvegarde des .env
-#   5. Git fetch + reset --hard
+#   5. Git fetch + reset --hard (vers ref_git_cible, ou origin/main par défaut)
 #   6. Restauration des .env
 #   7. Installation dépendances (pip + yarn + build)
-#   8. Désactivation maintenance + redémarrage
+#   8. Désactivation maintenance
+#   9. Redémarrage du service backend (supervisorctl restart) — pas de reboot OS
 #
 # Résultat écrit dans /var/log/gmao-iris-update-result.json
 # ================================================================
@@ -21,15 +23,19 @@
 # === PARAMÈTRES ===
 VERSION_CIBLE="${1:-inconnue}"
 UPDATE_ID="${2:-$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo manual-$(date +%s))}"
+# Référence Git cible : la branche distante par défaut (mise à jour normale),
+# ou un commit précis passé en 3e argument (utilisé par le rollback Git).
 
 # === CONFIGURATION ===
 APP_ROOT="/opt/gmao-iris"
 GITHUB_URL="https://github.com/Kinder0083/GMAO.git"
 GITHUB_BRANCH="main"
+TARGET_REF="${3:-origin/$GITHUB_BRANCH}"
 MFLAG="$APP_ROOT/maintenance.flag"
 LOG_FILE="/var/log/gmao-iris-update.log"
 RESULT_FILE="/var/log/gmao-iris-update-result.json"
 EXTRA_INDEX="https://d33sy5i8bnduwe.cloudfront.net/simple/"
+SUPERVISOR_PROGRAM="gmao-iris-backend"
 
 # === SUIVI ===
 ERRORS=""
@@ -243,8 +249,8 @@ else
 fi
 
 if [ "$GIT_OK" = true ]; then
-    if git reset --hard "origin/$GITHUB_BRANCH" >> "$LOG_FILE" 2>&1; then
-        step_ok "Code source synchronisé (branche: $GITHUB_BRANCH)"
+    if git reset --hard "$TARGET_REF" >> "$LOG_FILE" 2>&1; then
+        step_ok "Code source synchronisé (référence: $TARGET_REF)"
         CODE_UPDATED="true"
     else
         step_fail "git reset échoué"
@@ -369,7 +375,20 @@ fi
 
 write_result "$SUCCESS"
 
+# ═══════════════════════════════════════════════════════════
+# REDÉMARRAGE DU SERVICE (pas de reboot complet du serveur)
+# ═══════════════════════════════════════════════════════════
+# Un simple redémarrage du programme Supervisor suffit à charger le nouveau
+# code (backend Python + build frontend déjà recompilé plus haut) : quelques
+# secondes au lieu d'un reboot OS complet (1 à plusieurs minutes), et
+# MongoDB/nginx ne sont jamais interrompus.
 echo ""
-echo "Redémarrage dans 5 secondes..."
-sleep 5
-reboot
+echo "Redémarrage du service applicatif..."
+sleep 2
+if command -v supervisorctl &> /dev/null; then
+    supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1 \
+        || sudo supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1 \
+        || step_warn "Redémarrage du service backend échoué (redémarrez-le manuellement)"
+else
+    step_warn "supervisorctl introuvable, redémarrez le backend manuellement"
+fi
