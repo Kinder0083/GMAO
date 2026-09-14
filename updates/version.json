@@ -1,17 +1,11 @@
 {
-  "version": "1.14.0",
-  "versionName": "Affichage Dynamique, Mise a jour fiabilisee, Moteur TRS unifie",
+  "version": "1.14.1",
+  "versionName": "Correction : menu Affichage Dynamique invisible",
   "releaseDate": "2026-09-14",
-  "description": "Nouvelle page Affichage Dynamique (signaletique), systeme de mise a jour in-app corrige (fin des scripts SSH manuels), moteur de calcul TRS M.E.S. unifie avec rythmes de cadence par creneau horaire",
+  "description": "Corrige le menu Affichage Dynamique qui n'apparaissait pas dans la barre laterale malgre la mise a jour 1.14.0 (la sidebar utilisait une liste de menu differente de celle qui avait ete mise a jour)",
   "changes": [
-    "M.E.S. : Zoom par selection glissee sur le graphique Historique des cadences",
-    "Affichage Dynamique : nouvelle page de signaletique 100% personnalisable par blocs (cadence, capteur MQTT, texte, image, horloge, statut equipements, ordres du jour, KPI), geree en permissions, avec lien public en lecture seule pour lecteurs Yodeck/OptiSigns",
-    "Mise a jour : le bouton in-app fonctionne desormais de bout en bout (redemarrage cible du service au lieu d'un reboot complet, suivi en direct du journal, detection de version fiabilisee)",
-    "M.E.S. : moteur de calcul TRS unifie - le tableau de bord, l'historique, les rapports et la vue d'ensemble n'affichent plus de chiffres contradictoires",
-    "M.E.S. : rythmes de cadence par creneau horaire (ex: 90 cp/min en journee, 45 cp/min la nuit) sur un meme equipement",
-    "M.E.S. : correction des postes de nuit a cheval sur minuit (disponibilite et alertes ne sont plus desactivees)",
-    "M.E.S. : les pauses planifiees ne sont plus effacees lors du changement de reference produit",
-    "M.E.S. : calculs alignes sur le fuseau horaire configure au lieu de l'UTC brut"
+    "Correction : le menu Affichage Dynamique apparait desormais dans la barre laterale (trois listes de menu dupliquees dans le code, une seule avait ete mise a jour)",
+    "Correction : le nouvel ecran apparait aussi dans le selecteur de page de demarrage et dans l'ecran de personnalisation du menu"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

@@ -1,5 +1,9 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.14.1 - Correction : menu Affichage Dynamique invisible (Septembre 2026)
+
+- **Correction** : le menu "Affichage Dynamique" n'apparaissait pas dans la barre laterale malgre la mise a jour 1.14.0. Cause : trois listes de menu dupliquees existent dans le code (sidebar, ecran de personnalisation du menu, selecteur de page de demarrage) - seule l'une d'elles avait ete mise a jour lors de l'ajout initial de la fonctionnalite. Les trois sont desormais synchronisees.
+
 ## Version 1.14.0 - Affichage Dynamique, Mise a jour fiabilisee, Moteur TRS unifie (Septembre 2026)
 
 ### M.E.S.
