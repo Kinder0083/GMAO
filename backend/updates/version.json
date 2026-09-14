@@ -1,27 +1,21 @@
 {
-  "version": "1.6.0",
-  "versionName": "Consignation LOTO avancee + IA QHSE",
-  "releaseDate": "2026-03-06",
-  "description": "Ameliorations majeures du systeme LOTO (journalisation, suppression admin, cadenas multiples, icones cliquables, remplissage auto) et integration IA pour analyse QHSE",
+  "version": "1.14.0",
+  "versionName": "Affichage Dynamique, Mise a jour fiabilisee, Moteur TRS unifie",
+  "releaseDate": "2026-09-14",
+  "description": "Nouvelle page Affichage Dynamique (signaletique), systeme de mise a jour in-app corrige (fin des scripts SSH manuels), moteur de calcul TRS M.E.S. unifie avec rythmes de cadence par creneau horaire",
   "changes": [
-    "LOTO : Journalisation complete des operations dans le journal d'audit",
-    "LOTO : Suppression des consignations reservee aux administrateurs",
-    "LOTO : Systeme de cadenas multiples (multi-utilisateurs)",
-    "LOTO : Icones cadenas cliquables dans les listes OT, Ameliorations et MP",
-    "LOTO : Remplissage automatique des champs a la selection d'un OT",
-    "IA : Generation automatique de checklists depuis documents techniques",
-    "IA : Generation automatique de plans de maintenance preventive",
-    "IA : Analyse des non-conformites avec detection de patterns recurrents",
-    "IA : Analyse des causes racines (5 Pourquoi + Ishikawa) pour presqu'accidents",
-    "IA : Generation de rapports de synthese QHSE pour reunions",
-    "Header : Organisation personnalisable des icones par glisser-deposer",
-    "Mode hors-ligne : Cache IndexedDB + synchronisation automatique",
-    "QR Code : Resume IA de l'etat d'un equipement via scan",
-    "Mise a jour : Systeme de mise a jour ameliore et plus fiable"
+    "M.E.S. : Zoom par selection glissee sur le graphique Historique des cadences",
+    "Affichage Dynamique : nouvelle page de signaletique 100% personnalisable par blocs (cadence, capteur MQTT, texte, image, horloge, statut equipements, ordres du jour, KPI), geree en permissions, avec lien public en lecture seule pour lecteurs Yodeck/OptiSigns",
+    "Mise a jour : le bouton in-app fonctionne desormais de bout en bout (redemarrage cible du service au lieu d'un reboot complet, suivi en direct du journal, detection de version fiabilisee)",
+    "M.E.S. : moteur de calcul TRS unifie - le tableau de bord, l'historique, les rapports et la vue d'ensemble n'affichent plus de chiffres contradictoires",
+    "M.E.S. : rythmes de cadence par creneau horaire (ex: 90 cp/min en journee, 45 cp/min la nuit) sur un meme equipement",
+    "M.E.S. : correction des postes de nuit a cheval sur minuit (disponibilite et alertes ne sont plus desactivees)",
+    "M.E.S. : les pauses planifiees ne sont plus effacees lors du changement de reference produit",
+    "M.E.S. : calculs alignes sur le fuseau horaire configure au lieu de l'UTC brut"
   ],
-  "minVersion": "1.5.0",
+  "minVersion": "1.13.0",
   "breaking": false,
   "downloadUrl": "https://github.com/Kinder0083/GMAO",
   "author": "Greg",
-  "lastUpdate": "2026-03-06T22:00:00.000000+00:00"
+  "lastUpdate": "2026-09-14T00:00:00.000000+00:00"
 }

@@ -1,5 +1,25 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.14.0 - Affichage Dynamique, Mise a jour fiabilisee, Moteur TRS unifie (Septembre 2026)
+
+### M.E.S.
+- **Zoom par selection glissee** sur le graphique Historique des cadences
+- **Moteur de calcul TRS unifie** (`backend/mes_schedule.py`) : le tableau de bord temps reel, l'historique/tendance, les rapports PDF/Excel et la page Rapports (vue d'ensemble/heatmap) utilisaient jusqu'ici 4 formules independantes pouvant afficher un TRS different pour la meme machine/periode - desormais un seul point de calcul partage
+- **Rythmes de cadence par creneau horaire** : une machine peut avoir plusieurs cadences theoriques selon le creneau (ex: 90 cp/min en journee, 45 cp/min la nuit) au lieu d'une seule cadence fixe
+- **Correction des postes de nuit** a cheval sur minuit (ex: 22h-6h) : ne forcent plus la disponibilite/le TRS a 0 et ne desactivent plus les alertes toute la nuit
+- **Pauses planifiees preservees** lors du changement de reference produit (elles etaient auparavant silencieusement effacees)
+- **Machines ESP32** (compteur cumule) : les rapports et le graphique de tendance affichaient une production quasi nulle (lecture d'une table vide pour ce mode) - corrige
+- **Calculs alignes sur le fuseau horaire configure** (DST-aware) au lieu de l'UTC brut
+
+### Affichage Dynamique (nouveau module)
+- Nouvelle page de signaletique 100% personnalisable par blocs glisser-deposer : cadence equipement, capteur MQTT, texte libre, image/logo, horloge, statut equipements, ordres du jour, KPI/graphique
+- Geree en permissions comme les autres modules de l'application
+- Lien public par ecran (jeton unique non devinable), consultable sans authentification, strictement en lecture seule - concu pour les lecteurs de signaletique type Yodeck/OptiSigns
+
+### Mise a jour (menu in-app)
+- Le bouton "Mettre a jour maintenant" fonctionne desormais de bout en bout : redemarrage cible du service applicatif au lieu d'un reboot complet du serveur, suivi en direct du journal de mise a jour, detection de version fiabilisee (n'utilise plus l'API GitHub limitee a 60 requetes/heure)
+- Le rollback vers une version anterieure reinstalle desormais reellement les dependances et redemarre le service, au lieu de se contenter de changer le code sur disque
+
 ## Version 1.13.0 - Independance vis-a-vis d'Emergent pour l'IA (Avril 2026)
 
 ### IA
