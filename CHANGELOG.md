@@ -1,5 +1,13 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.20.0 - Quoi de neuf ? : contenu auto-genere, fin des popups en double (Septembre 2026)
+
+Suite a l'audit de l'icone "Quoi de neuf ?" du bandeau, demande apres avoir constate qu'elle ne semblait plus rien faire d'utile.
+
+- **Correction majeure** : le panneau "Quoi de neuf ?" affichait un contenu fige depuis la version 1.7.1 - la ressaisie manuelle necessaire pour l'alimenter (un formulaire separe de CHANGELOG.md) avait ete abandonnee il y a des mois, alors que l'application en est a la 1.19.0. Son contenu est desormais genere automatiquement depuis CHANGELOG.md a chaque demarrage du serveur, donc a chaque vraie mise a jour - plus besoin de le maintenir a la main.
+- **Correction** : la collection de donnees de ce panneau contenait jusqu'a 6 exemplaires de la meme version (le rechargement du contenu par defaut n'etait jamais protege contre les doublons, et le formulaire de creation manuelle n'avait pas de garde anti double-clic). Dedoublonnee, et desormais protegee par un index unique en base cote serveur.
+- **Nettoyage** : 3 mecanismes de popup "nouveautes" distincts et non synchronises coexistaient - le panneau du bandeau (donnees figees), un popup de connexion lisant une autre collection (donnees a jour mais jamais revisibles une fois ferme), et un second popup dont la reponse du serveur ne correspondait plus du tout au format attendu par le frontend, donc ne s'affichait plus jamais, silencieusement, sans que personne ne le remarque. Unifies en une seule source et une seule interface : le panneau du bandeau, desormais fiable.
+
 ## Version 1.19.0 - Refonte du systeme de notification (Septembre 2026)
 
 Suite directe de l'audit du 14/09/2026 : plan correctif complet en 4 phases pour le systeme de notification, juge "tres bancal" par l'utilisateur. L'architecture comptait 4 canaux de livraison largement independants (cloche in-app, push mobile Expo, Web Push PWA, email) avec environ 7 chemins de code differents decidant chacun independamment "faut-il notifier" - avec les consequences ci-dessous.

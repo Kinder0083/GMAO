@@ -1025,8 +1025,20 @@ from manual_routes import router as manual_router
 api_router.include_router(manual_router)
 
 # Changelog
-from changelog_routes import router as releases_router
+from changelog_routes import router as releases_router, sync_releases_from_changelog
 api_router.include_router(releases_router)
+
+
+@app.on_event("startup")
+async def sync_changelog_on_startup():
+    """Regenere la collection `releases` (Quoi de neuf ?) depuis CHANGELOG.md.
+    Comme le service redemarre a chaque vrai deploiement (MAJ_FSAO.sh fait
+    toujours un supervisorctl restart), le changelog affiche reste a jour
+    automatiquement sans ressaisie manuelle."""
+    try:
+        await sync_releases_from_changelog()
+    except Exception as e:
+        logging.getLogger(__name__).warning(f"Erreur synchronisation changelog: {e}")
 
 # QR Codes
 from qr_routes import router as qr_router

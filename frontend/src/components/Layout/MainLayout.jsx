@@ -7,10 +7,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard } from 'lucide-react';
 import { TooltipProvider } from '../ui/tooltip';
 import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
-import RecentUpdatePopup from '../Common/RecentUpdatePopup';
 import InactivityHandler from '../Common/InactivityHandler';
 import UpdateWarningOverlay from '../Common/UpdateWarningOverlay';
-import ChangelogPopup from '../Common/ChangelogPopup';
 import TokenValidator from '../Common/TokenValidator';
 import ContextualHelpButton from '../Common/ContextualHelpButton';
 import ConsignePopup from '../Common/ConsignePopup';
@@ -332,8 +330,6 @@ const MainLayout = () => {
         }}
       />
       
-      <RecentUpdatePopup />
-      <ChangelogPopup />
       <TokenValidator />
       <InactivityHandler />
       <UpdateWarningOverlay />

@@ -1,23 +1,17 @@
 {
-  "version": "1.19.0",
-  "versionName": "Refonte du systeme de notification : cloche fiabilisee, canaux unifies, diagnostics",
-  "releaseDate": "2026-09-14",
-  "description": "Plan correctif complet du systeme de notification (suite a l'audit du 14/09) : la cloche in-app ne recevait jamais les evenements OT/equipement/chat/consigne (push uniquement), un bug empechait le destinataire de recevoir son propre evenement temps reel, l'alerte email etait un simple TODO jamais implemente, et deux routeurs de tokens mobiles dupliques risquaient de diverger silencieusement",
+  "version": "1.20.0",
+  "versionName": "Quoi de neuf ? : contenu auto-genere, fin des popups en double",
+  "releaseDate": "2026-09-15",
+  "description": "L'icone Quoi de neuf ? du bandeau etait branchee correctement mais affichait un contenu fige depuis la version 1.7.1 (l'appli en est a la 1.19.0), et jusqu'a 3 mecanismes de popup differents et non synchronises coexistaient pour le meme besoin. Le panneau se genere desormais automatiquement a partir du CHANGELOG.md deja tenu a jour, et les popups redondants ont ete retires",
   "changes": [
-    "Correction majeure : la cloche de notification (icone en haut a droite) ne recevait jamais les evenements OT assigne/statut modifie, alerte equipement, message de chat ou consigne recue - seul le canal push (mobile/navigateur) les envoyait. Ces 5 evenements alimentent desormais aussi la cloche, avec mise a jour instantanee (sans attendre le rafraichissement automatique de 30s)",
-    "Correction : un bug dans la diffusion temps reel excluait par erreur le destinataire d'une notification de son propre evenement (le parametre prevu pour exclure l'auteur d'une action etait applique au destinataire) - sans consequence visible jusqu'ici car rien n'ecoutait cet evenement precis, mais desormais actif avec le correctif ci-dessus",
-    "Correction : l'action \"Envoyer un email d'alerte\" configurable sur les alertes automatiques n'avait jamais ete implementee (TODO explicite dans le code, retournait toujours un succes fictif sans rien envoyer) - fonctionnelle desormais",
-    "Fiabilite : le suivi de sante des notifications (Parametres systeme > Sante Systeme) ne surveillait que le canal Web Push (navigateur/PWA) - le canal mobile (Expo) pouvait echouer silencieusement sans jamais apparaitre dans les diagnostics. Les deux canaux sont desormais suivis",
-    "Nouveau : indicateur dans Parametres > votre compte signalant si le serveur a du desactiver votre abonnement aux notifications push (echecs de livraison repetes) alors que votre navigateur pense encore etre abonne - au passage, l'endpoint qui liste vos abonnements existait dans le code mais n'etait relie a aucune route, donc totalement inaccessible",
-    "Fiabilite : ajout d'une tentative de renvoi automatique (avec court delai) en cas d'echec transitoire (reseau, service de push indisponible) sur les deux canaux push, avant d'abandonner",
-    "Correction (piege classique d'asyncio) : les taches d'envoi de notification lancees en arriere-plan ne conservaient aucune reference - Python peut annuler une tache ainsi orpheline avant qu'elle ne se termine, ce qui pouvait faire disparaitre silencieusement l'envoi d'une notification. 28 points d'envoi repartis dans 5 fichiers securises",
-    "Fiabilite : l'alerte \"systeme de notification en panne\" envoyee aux administrateurs ne passait que par Web Push - ironique si c'est justement ce canal qui est en panne. Un email de secours est desormais envoye en complement (limite a un envoi toutes les 4h)",
-    "Nettoyage : les deux jeux de routes d'enregistrement des appareils mobiles (doublons risquant de diverger silencieusement) sont unifies - l'ancien chemin reste fonctionnel pour la compatibilite mais delegue desormais a l'implementation documentee, au lieu de dupliquer sa logique",
-    "Ergonomie : nouvelle carte \"Notifications\" dans Parametres systeme indiquant en un coup d'oeil si le systeme de notification est fonctionnel, avec acces direct a Sante Systeme pour le detail"
+    "Correction majeure : le panneau \"Quoi de neuf ?\" du bandeau affichait un contenu fige depuis la version 1.7.1 (ressaisie manuelle abandonnee il y a des mois) alors que l'application en est a la 1.19.0. Son contenu est desormais genere automatiquement a partir de CHANGELOG.md a chaque demarrage du serveur (donc a chaque vraie mise a jour) - plus aucune ressaisie manuelle necessaire pour rester a jour",
+    "Correction : la collection de donnees de ce panneau contenait jusqu'a 6 exemplaires de la meme version (reseed non protege contre les doublons a chaque redemarrage + formulaire de creation sans garde anti double-clic) - dedoublonnee et desormais protegee par un index unique",
+    "Nettoyage : 3 mecanismes de popup \"nouveautes\" distincts et non synchronises coexistaient (le panneau du bandeau, un popup de connexion lisant une autre collection, et un second popup dont la reponse du serveur ne correspondait meme plus au format attendu par le frontend - donc ne s'affichait plus jamais silencieusement). Unifies en une seule source et une seule interface : le panneau du bandeau",
+    "Fiabilite : le formulaire de creation manuelle d'une version (Parametres > section Changelog) est desormais protege par le meme index unique cote serveur, en plus du bouton deja desactive pendant l'enregistrement"
   ],
   "minVersion": "1.13.0",
   "breaking": false,
   "downloadUrl": "https://github.com/Kinder0083/GMAO",
   "author": "Greg",
-  "lastUpdate": "2026-09-14T00:00:00.000000+00:00"
+  "lastUpdate": "2026-09-15T00:00:00.000000+00:00"
 }

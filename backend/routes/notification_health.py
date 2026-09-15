@@ -639,19 +639,6 @@ async def get_health_alerts_history(current_user: dict = Depends(get_current_adm
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/updates/recent-info")
-async def get_recent_update_info(current_user: dict = Depends(get_current_user)):
-    """
-    Récupère les informations des mises à jour récentes (pour le popup utilisateur)
-    Disponible pour tous les utilisateurs connectés
-    """
-    try:
-        info = await update_service.get_recent_updates_info(days=3)
-        return info
-    except Exception as e:
-        logger.error(f"❌ Erreur récupération info MAJ récente: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
-
 @router.get("/updates/history-list")
 async def get_update_history_list(
     limit: int = 50,
@@ -673,58 +660,6 @@ async def get_update_history_list(
         logger.error(f"❌ Erreur récupération historique mises à jour: {str(e)}")
         # Retourner une liste vide en cas d'erreur plutôt qu'une exception
         return {"data": [], "total": 0}
-
-
-@router.get("/changelog")
-async def get_changelog(current_user: dict = Depends(get_current_user)):
-    """Récupère le changelog des mises à jour pour l'utilisateur"""
-    try:
-        user_id = current_user.get("id")
-        
-        # Récupérer les entrées de changelog récentes
-        entries = await db.system_update_history.find(
-            {},
-            {"_id": 0}
-        ).sort("started_at", -1).limit(20).to_list(20)
-        
-        # Générer un identifiant unique pour chaque entrée (version ou started_at)
-        for entry in entries:
-            if not entry.get("version"):
-                entry["version"] = entry.get("started_at", "unknown")
-        
-        # Récupérer les versions lues par cet utilisateur
-        user_seen = await db.changelog_seen.find_one({"user_id": user_id}, {"_id": 0})
-        seen_versions = set(user_seen.get("versions", [])) if user_seen else set()
-        
-        for entry in entries:
-            entry["seen"] = entry.get("version", "") in seen_versions
-        
-        return {"entries": entries, "unseen_count": sum(1 for e in entries if not e.get("seen"))}
-    except Exception as e:
-        logger.error(f"❌ Erreur récupération changelog: {str(e)}")
-        return {"entries": [], "unseen_count": 0}
-
-
-@router.post("/changelog/mark-seen")
-async def mark_changelog_seen(current_user: dict = Depends(get_current_user)):
-    """Marque toutes les entrées du changelog comme lues"""
-    try:
-        user_id = current_user.get("id")
-        
-        entries = await db.system_update_history.find({}, {"_id": 0, "version": 1, "started_at": 1}).to_list(None)
-        # Utiliser version ou started_at comme identifiant unique
-        all_versions = [e.get("version") or e.get("started_at", "") for e in entries if e.get("version") or e.get("started_at")]
-        
-        await db.changelog_seen.update_one(
-            {"user_id": user_id},
-            {"$set": {"user_id": user_id, "versions": all_versions, "updated_at": datetime.now(timezone.utc).isoformat()}},
-            upsert=True
-        )
-        
-        return {"success": True}
-    except Exception as e:
-        logger.error(f"❌ Erreur marquage changelog: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.get("/menu-badges")
