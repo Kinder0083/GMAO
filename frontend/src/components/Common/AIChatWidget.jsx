@@ -43,7 +43,44 @@ const GUIDANCE_STEPS = {
   ]
 };
 
-const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion = null, onSpeakingChange = null }) => {
+const GAP = 12; // ecart en px entre le personnage flottant et la bulle
+const EDGE_MARGIN = 8;
+
+// Calcule la position de la bulle ancree au personnage flottant (`anchor`),
+// en preferant un affichage a gauche de lui, avec repli a droite ou centre
+// si la place manque, et le cote/decalage vertical de la pointe qui pointe
+// vers lui.
+function computeBalloonLayout(anchor, width, height) {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const spaceLeft = anchor.left;
+  const spaceRight = vw - (anchor.left + anchor.size);
+
+  let left;
+  let tailSide;
+  if (spaceLeft >= width + GAP) {
+    left = anchor.left - GAP - width;
+    tailSide = 'right';
+  } else if (spaceRight >= width + GAP) {
+    left = anchor.left + anchor.size + GAP;
+    tailSide = 'left';
+  } else {
+    left = clamp(anchor.left + anchor.size / 2 - width / 2, EDGE_MARGIN, vw - width - EDGE_MARGIN);
+    tailSide = null;
+  }
+
+  const top = clamp(anchor.top + anchor.size - height, EDGE_MARGIN, vh - height - EDGE_MARGIN);
+  const anchorCenterY = anchor.top + anchor.size / 2;
+  const tailY = clamp(anchorCenterY - top, 24, height - 24);
+
+  return { left, top, tailSide, tailY };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion = null, onSpeakingChange = null, anchor = null }) => {
   const { preferences } = usePreferences();
   const { toast } = useToast();
   const { isOnline } = useOnlineStatus();
@@ -60,6 +97,7 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [hasProcessedInitialQuestion, setHasProcessedInitialQuestion] = useState(false);
   const [activeGuide, setActiveGuide] = useState(null);
+  const [layout, setLayout] = useState(null);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -92,6 +130,18 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
     onSpeakingChange?.(textBurstActive || voice.isPlayingAudio);
   }, [textBurstActive, voice.isPlayingAudio, onSpeakingChange]);
   useEffect(() => () => onSpeakingChange?.(false), [onSpeakingChange]);
+
+  // Position de la bulle, ancree au personnage flottant (qui peut etre
+  // n'importe ou a l'ecran depuis qu'il est deplacable).
+  useEffect(() => {
+    if (!anchor) { setLayout(null); return undefined; }
+    const width = minimized ? 256 : 384;
+    const height = minimized ? 48 : 550;
+    const compute = () => setLayout(computeBalloonLayout(anchor, width, height));
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, [anchor, minimized]);
 
   // Scroll auto
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -265,14 +315,23 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
     toast({ title: 'Historique effacé', description: 'La conversation a été réinitialisée' });
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !layout) return null;
+
+  // Pointe triangulaire (technique CSS classique des bordures transparentes)
+  // pointant vers le personnage, du cote de la bulle qui lui fait face.
+  const tailStyle = layout.tailSide === 'right'
+    ? { right: -7, top: layout.tailY - 8, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '8px solid #fff', filter: 'drop-shadow(1px 0 0 #e5e7eb)' }
+    : layout.tailSide === 'left'
+      ? { left: -7, top: layout.tailY - 8, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '8px solid #fff', filter: 'drop-shadow(-1px 0 0 #e5e7eb)' }
+      : null;
 
   return (
-    <div className={`fixed bottom-6 transition-all duration-300 ${minimized ? 'w-64 right-[152px]' : 'w-96 right-36'}`} style={{ zIndex: 9999 }} data-testid="adria-chat-widget">
-      <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col
-                       after:content-[''] after:absolute after:-right-2 after:bottom-9 after:w-4 after:h-4 after:bg-white
-                       after:border-r after:border-b after:border-gray-200 after:rotate-[-45deg] after:z-10"
+    <div className="fixed transition-all duration-150" style={{ left: layout.left, top: layout.top, width: minimized ? 256 : 384, zIndex: 9999 }} data-testid="adria-chat-widget">
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
            style={{ maxHeight: minimized ? '48px' : '600px', height: minimized ? '48px' : '550px' }}>
+        {tailStyle && (
+          <span className="absolute w-0 h-0 z-10" style={tailStyle} />
+        )}
 
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 flex items-center justify-between rounded-t-2xl" data-testid="adria-header">

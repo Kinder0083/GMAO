@@ -1,12 +1,11 @@
 {
-  "version": "1.22.0",
-  "versionName": "Adria en superposition, animee",
+  "version": "1.23.0",
+  "versionName": "Adria deplacable, bouton d'aide en double retire",
   "releaseDate": "2026-09-15",
-  "description": "L'assistant IA n'ouvre plus une fenetre separee : Adria (personnage Cle) flotte en permanence en superposition sur l'ecran, animee (clignement des yeux, levres qui bougent en parlant), et la conversation s'ouvre desormais en bulle ancree a elle",
+  "description": "Le personnage flottant Adria peut desormais etre deplace a la souris n'importe ou sur l'ecran (position memorisee par utilisateur), et le bouton d'aide bleu qui se superposait a lui a ete retire",
   "changes": [
-    "Adria devient un personnage flottant toujours visible en superposition (comme l'assistant Office) au lieu d'une icone qu'il fallait cliquer pour faire apparaitre une fenetre - la conversation s'ouvre desormais en bulle ancree au personnage",
-    "Le personnage Cle cligne des yeux automatiquement et bouge les levres pendant qu'Adria repond, par echange entre plusieurs images fournies par l'utilisateur",
-    "Chariot elevateur, Cafetiere, Ampoule, Voiture et Fusee restent affiches si deja selectionnes, mais temporairement non selectionnables (badge \"Bientot\") en attendant leurs propres images d'animation"
+    "Le personnage Adria se deplace maintenant par glisser-deposer n'importe ou sur l'ecran - sa position est memorisee individuellement pour chaque utilisateur",
+    "Retrait du bouton d'aide contextuelle bleu qui se superposait visuellement au personnage flottant et ouvrait la meme conversation en double"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

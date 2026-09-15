@@ -2545,6 +2545,7 @@ class UserPreferences(BaseModel):
     ai_assistant_name: str = "Adria"  # Nom de l'assistant IA
     ai_assistant_gender: str = "female"  # "male" ou "female"
     ai_assistant_avatar: str = "cle"  # id du personnage - cf. ADRIA_AVATARS (frontend)
+    ai_assistant_position: Optional[Dict[str, float]] = None  # {"xPct": 0-1, "yPct": 0-1} position glissee par l'utilisateur, None = coin bas-droit par defaut
     ai_llm_provider: str = "gemini"  # "gemini", "openai", "anthropic", "deepseek", "mistral"
     ai_llm_model: str = "gemini-3.6-flash"  # Modèle LLM par défaut
     # Preference onglet Dashboard Service
@@ -2634,6 +2635,7 @@ class UserPreferencesUpdate(BaseModel):
     ai_assistant_name: Optional[str] = None
     ai_assistant_gender: Optional[str] = None
     ai_assistant_avatar: Optional[str] = None
+    ai_assistant_position: Optional[Dict[str, float]] = None
     ai_llm_provider: Optional[str] = None
     ai_llm_model: Optional[str] = None
     # Preference onglet Dashboard Service

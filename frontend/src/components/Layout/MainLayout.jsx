@@ -10,7 +10,6 @@ import FirstLoginPasswordDialog from '../Common/FirstLoginPasswordDialog';
 import InactivityHandler from '../Common/InactivityHandler';
 import UpdateWarningOverlay from '../Common/UpdateWarningOverlay';
 import TokenValidator from '../Common/TokenValidator';
-import ContextualHelpButton from '../Common/ContextualHelpButton';
 import ConsignePopup from '../Common/ConsignePopup';
 import Header from './Header';
 import Sidebar from './Sidebar';
@@ -333,7 +332,6 @@ const MainLayout = () => {
       <TokenValidator />
       <InactivityHandler />
       <UpdateWarningOverlay />
-      <ContextualHelpButton />
       <ConsignePopup />
       <GlobalContextMenu onCreateShortcut={handleCreateShortcut} />
     </div>

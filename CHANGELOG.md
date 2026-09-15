@@ -1,5 +1,12 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.23.0 - Adria deplacable, bouton d'aide en double retire (Septembre 2026)
+
+Retour direct sur la 1.22.0 : le personnage flottant se superposait visuellement au bouton d'aide contextuelle bleu ("?"), lui aussi capable d'ouvrir la conversation avec Adria - une redondance confuse. L'utilisateur a egalement demande la possibilite de repositionner le personnage lui-meme.
+
+- **Nouveau** : le personnage Adria se deplace desormais par glisser-deposer n'importe ou sur l'ecran. La position choisie est enregistree individuellement par utilisateur (comme les autres preferences), et reste coherente quelle que soit la taille de la fenetre (stockee en pourcentage de l'ecran, pas en pixels bruts) - toujours entierement visible meme apres redimensionnement.
+- **Nettoyage** : suppression du bouton d'aide contextuelle bleu (icone "?") qui flottait au meme endroit que le personnage Adria et ouvrait la meme conversation - source de confusion visuelle une fois le personnage toujours visible en permanence. Adria reste l'unique point d'entree flottant vers la conversation.
+
 ## Version 1.22.0 - Adria en superposition, animee (Septembre 2026)
 
 Suite directe des retours sur le selecteur de personnage (1.21.0/1.21.1) : l'utilisateur voulait un vrai assistant "a la Microsoft Office", en superposition transparente sur l'ecran et non dans une fenetre separee, avec un personnage reellement anime.
