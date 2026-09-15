@@ -1,5 +1,13 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.22.0 - Adria en superposition, animee (Septembre 2026)
+
+Suite directe des retours sur le selecteur de personnage (1.21.0/1.21.1) : l'utilisateur voulait un vrai assistant "a la Microsoft Office", en superposition transparente sur l'ecran et non dans une fenetre separee, avec un personnage reellement anime.
+
+- **Nouveau** : l'assistant IA n'est plus une icone qu'on clique pour faire apparaitre une fenetre - Adria est desormais un personnage flottant, toujours visible en superposition sur l'ecran, qui se balance legerement. Un clic dessus ouvre la conversation dans une bulle ancree a lui (avec sa petite pointe qui pointe vers le personnage), a la place de l'ancien panneau encadre. Toutes les fonctionnalites existantes de la conversation (actions rapides, guides interactifs, vocal, historique) sont conservees a l'identique - seule leur presentation change.
+- **Nouveau** : le personnage Cle cligne des yeux tout seul (toutes les 3 a 5 secondes) et bouge les levres pendant qu'Adria repond, par echange rapide entre 4 images (yeux/bouche ouverts ou fermes) fournies par l'utilisateur - meme technique que l'assistant Office historique (des images fixes qui s'enchainent, pas une video). Les images sont prechargees des l'ouverture de la page pour que l'animation soit instantanee des la premiere utilisation.
+- Chariot elevateur, Cafetiere, Ampoule, Voiture et Fusee n'ont pas encore ce jeu d'images : ils restent affiches normalement si deja choisis par un utilisateur, mais temporairement non selectionnables dans Personnalisation > Assistant IA (grises, badge "Bientot") en attendant leurs propres variantes.
+
 ## Version 1.21.1 - Personnage de l'assistant IA : vraies illustrations (Septembre 2026)
 
 - Les 6 personnages du selecteur (Personnalisation > Assistant IA) passent d'icones dessinees a de vraies illustrations detaillees, fournies par l'utilisateur : Cle, Chariot elevateur, Cafetiere, Ampoule, Voiture, Fusee. Robot et Robot Technicien sont retires au profit de Voiture et Fusee.

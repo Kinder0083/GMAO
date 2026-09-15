@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Bot, Info, Sparkles } from 'lucide-react';
 import { usePreferences } from './PreferencesContext';
-import AIChatWidget from '../components/Common/AIChatWidget';
+import AdriaCompanion from '../components/Common/AdriaCompanion';
 
 const AIContextMenuContext = createContext(null);
 
@@ -417,10 +417,11 @@ export const AIContextMenuProvider = ({ children }) => {
         </div>
       )}
 
-      {/* Widget de chat */}
-      <AIChatWidget 
-        isOpen={chatOpen} 
-        onClose={closeChat}
+      {/* Adria en superposition - toujours visible, conversation en bulle ancree */}
+      <AdriaCompanion
+        chatOpen={chatOpen}
+        onOpenChat={openChat}
+        onCloseChat={closeChat}
         initialContext={selectedContext}
         initialQuestion={initialQuestion}
       />

@@ -2,13 +2,15 @@ import React from 'react';
 
 // Catalogue des personnages disponibles pour l'assistant IA. Chaque image
 // vit dans public/assets/adria/<id>.png (fond transparent, portrait carre).
+// `available: false` = personnage prevu mais pas encore selectionnable (pas
+// encore d'images d'animation cligner/parler) ; reste affiche mais grise.
 export const ADRIA_AVATARS = [
-  { id: 'cle', label: 'Clé' },
-  { id: 'chariot', label: 'Chariot élévateur' },
-  { id: 'cafetiere', label: 'Cafetière' },
-  { id: 'ampoule', label: 'Ampoule' },
-  { id: 'voiture', label: 'Voiture' },
-  { id: 'fusee', label: 'Fusée' },
+  { id: 'cle', label: 'Clé', available: true },
+  { id: 'chariot', label: 'Chariot élévateur', available: false },
+  { id: 'cafetiere', label: 'Cafetière', available: false },
+  { id: 'ampoule', label: 'Ampoule', available: false },
+  { id: 'voiture', label: 'Voiture', available: false },
+  { id: 'fusee', label: 'Fusée', available: false },
 ];
 
 export const DEFAULT_AVATAR = 'cle';

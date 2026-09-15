@@ -43,7 +43,7 @@ const GUIDANCE_STEPS = {
   ]
 };
 
-const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion = null }) => {
+const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion = null, onSpeakingChange = null }) => {
   const { preferences } = usePreferences();
   const { toast } = useToast();
   const { isOnline } = useOnlineStatus();
@@ -75,6 +75,23 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
     await sendMessageToAI(transcription);
   };
   const voice = useAdriaVoice({ toast, onTranscription: handleTranscription });
+
+  // Anime les levres du personnage flottant : un court "burst" a chaque
+  // nouveau message de l'assistant (duree proportionnelle a sa longueur),
+  // prolonge tant que la voix (TTS) le lit a voix haute.
+  const [textBurstActive, setTextBurstActive] = useState(false);
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (!last || last.role !== 'assistant') return undefined;
+    setTextBurstActive(true);
+    const duration = Math.min(6000, Math.max(1200, last.content.length * 45));
+    const t = setTimeout(() => setTextBurstActive(false), duration);
+    return () => clearTimeout(t);
+  }, [messages]);
+  useEffect(() => {
+    onSpeakingChange?.(textBurstActive || voice.isPlayingAudio);
+  }, [textBurstActive, voice.isPlayingAudio, onSpeakingChange]);
+  useEffect(() => () => onSpeakingChange?.(false), [onSpeakingChange]);
 
   // Scroll auto
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -251,12 +268,14 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
   if (!isOpen) return null;
 
   return (
-    <div className={`fixed bottom-4 right-4 transition-all duration-300 ${minimized ? 'w-64' : 'w-96'}`} style={{ zIndex: 9999 }} data-testid="adria-chat-widget">
-      <div className="bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
+    <div className={`fixed bottom-6 transition-all duration-300 ${minimized ? 'w-64 right-[152px]' : 'w-96 right-36'}`} style={{ zIndex: 9999 }} data-testid="adria-chat-widget">
+      <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col
+                       after:content-[''] after:absolute after:-right-2 after:bottom-9 after:w-4 after:h-4 after:bg-white
+                       after:border-r after:border-b after:border-gray-200 after:rotate-[-45deg] after:z-10"
            style={{ maxHeight: minimized ? '48px' : '600px', height: minimized ? '48px' : '550px' }}>
 
         {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 flex items-center justify-between" data-testid="adria-header">
+        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 flex items-center justify-between rounded-t-2xl" data-testid="adria-header">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white/30"><AdriaAvatar variant={aiAvatar} size={32} /></div>
             <div>

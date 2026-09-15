@@ -187,18 +187,28 @@ const AISection = () => {
               <button
                 key={avatar.id}
                 type="button"
-                onClick={() => setAiAvatar(avatar.id)}
+                onClick={() => avatar.available && setAiAvatar(avatar.id)}
+                disabled={!avatar.available}
                 data-testid={`ai-avatar-option-${avatar.id}`}
                 className={`relative flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-colors ${
-                  aiAvatar === avatar.id ? 'border-purple-500 bg-purple-50' : 'border-transparent hover:bg-gray-50'
+                  aiAvatar === avatar.id
+                    ? 'border-purple-500 bg-purple-50'
+                    : !avatar.available
+                      ? 'border-transparent opacity-40 grayscale cursor-not-allowed'
+                      : 'border-transparent hover:bg-gray-50'
                 }`}
-                title={avatar.label}
+                title={avatar.available ? avatar.label : `${avatar.label} — bientôt disponible`}
               >
                 <AdriaAvatar variant={avatar.id} size={40} />
                 <span className="text-[11px] text-gray-600 text-center leading-tight">{avatar.label}</span>
                 {aiAvatar === avatar.id && (
                   <span className="absolute -top-1 -right-1 bg-purple-600 rounded-full p-0.5">
                     <Check size={10} className="text-white" />
+                  </span>
+                )}
+                {!avatar.available && aiAvatar !== avatar.id && (
+                  <span className="absolute -top-1 -right-1 bg-gray-400 rounded-full px-1 text-[8px] font-medium text-white leading-tight">
+                    Bientôt
                   </span>
                 )}
               </button>

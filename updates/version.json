@@ -1,11 +1,12 @@
 {
-  "version": "1.21.1",
-  "versionName": "Personnage de l'assistant IA : vraies illustrations",
+  "version": "1.22.0",
+  "versionName": "Adria en superposition, animee",
   "releaseDate": "2026-09-15",
-  "description": "Les 6 personnages de l'assistant IA (Personnalisation > Assistant IA, introduits en 1.21.0) passent d'icones dessinees a de vraies illustrations - Cle, Chariot elevateur, Cafetiere, Ampoule, Voiture, Fusee",
+  "description": "L'assistant IA n'ouvre plus une fenetre separee : Adria (personnage Cle) flotte en permanence en superposition sur l'ecran, animee (clignement des yeux, levres qui bougent en parlant), et la conversation s'ouvre desormais en bulle ancree a elle",
   "changes": [
-    "Le selecteur de personnage de l'assistant IA affiche desormais de vraies illustrations detaillees pour chacun des 6 choix, a la place des icones simplifiees de la version precedente",
-    "Nouveaux personnages Voiture et Fusee, a la place de Robot et Robot Technicien"
+    "Adria devient un personnage flottant toujours visible en superposition (comme l'assistant Office) au lieu d'une icone qu'il fallait cliquer pour faire apparaitre une fenetre - la conversation s'ouvre desormais en bulle ancree au personnage",
+    "Le personnage Cle cligne des yeux automatiquement et bouge les levres pendant qu'Adria repond, par echange entre plusieurs images fournies par l'utilisateur",
+    "Chariot elevateur, Cafetiere, Ampoule, Voiture et Fusee restent affiches si deja selectionnes, mais temporairement non selectionnables (badge \"Bientot\") en attendant leurs propres images d'animation"
   ],
   "minVersion": "1.13.0",
   "breaking": false,
