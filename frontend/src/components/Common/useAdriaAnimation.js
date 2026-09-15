@@ -11,6 +11,12 @@ const FRAMES = {
     eyesClosed: '/assets/adria/cle_yeux_fermes.png',
     both: '/assets/adria/cle_bouche_yeux_fermes.png',
   },
+  'cle-fille': {
+    base: '/assets/adria/cle-fille.png',
+    mouthClosed: '/assets/adria/cle-fille_bouche_fermee.png',
+    eyesClosed: '/assets/adria/cle-fille_yeux_fermes.png',
+    both: '/assets/adria/cle-fille_bouche_yeux_fermes.png',
+  },
 };
 
 export const hasSpriteFrames = (avatarId) => Boolean(FRAMES[avatarId]);

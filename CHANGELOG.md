@@ -1,5 +1,9 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.23.1 - Nouveau personnage : Cle feminine (Septembre 2026)
+
+- **Nouveau** : la Cle feminine rejoint le selecteur de personnage de l'assistant IA (Personnalisation > Assistant IA), avec sa propre animation complete (clignement des yeux, levres qui bougent en parlant) fournie par l'utilisateur - meme principe que la Cle d'origine, sans aucune modification du systeme d'animation lui-meme.
+
 ## Version 1.23.0 - Adria deplacable, bouton d'aide en double retire (Septembre 2026)
 
 Retour direct sur la 1.22.0 : le personnage flottant se superposait visuellement au bouton d'aide contextuelle bleu ("?"), lui aussi capable d'ouvrir la conversation avec Adria - une redondance confuse. L'utilisateur a egalement demande la possibilite de repositionner le personnage lui-meme.

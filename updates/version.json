@@ -1,11 +1,10 @@
 {
-  "version": "1.23.0",
-  "versionName": "Adria deplacable, bouton d'aide en double retire",
+  "version": "1.23.1",
+  "versionName": "Nouveau personnage : Cle feminine",
   "releaseDate": "2026-09-15",
-  "description": "Le personnage flottant Adria peut desormais etre deplace a la souris n'importe ou sur l'ecran (position memorisee par utilisateur), et le bouton d'aide bleu qui se superposait a lui a ete retire",
+  "description": "Un 7e personnage rejoint le selecteur de l'assistant IA : la Cle feminine, animee (clignement des yeux, levres qui bougent) au meme titre que la Cle d'origine",
   "changes": [
-    "Le personnage Adria se deplace maintenant par glisser-deposer n'importe ou sur l'ecran - sa position est memorisee individuellement pour chaque utilisateur",
-    "Retrait du bouton d'aide contextuelle bleu qui se superposait visuellement au personnage flottant et ouvrait la meme conversation en double"
+    "Nouveau personnage selectionnable dans Personnalisation > Assistant IA : la Cle (feminine), avec sa propre animation complete (clignement des yeux, levres qui bougent en parlant)"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

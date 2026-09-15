@@ -6,6 +6,7 @@ import React from 'react';
 // encore d'images d'animation cligner/parler) ; reste affiche mais grise.
 export const ADRIA_AVATARS = [
   { id: 'cle', label: 'Clé', available: true },
+  { id: 'cle-fille', label: 'Clé (féminine)', available: true },
   { id: 'chariot', label: 'Chariot élévateur', available: false },
   { id: 'cafetiere', label: 'Cafetière', available: false },
   { id: 'ampoule', label: 'Ampoule', available: false },
