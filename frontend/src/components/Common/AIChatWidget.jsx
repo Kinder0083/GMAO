@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Send, User, Loader2, Trash2, Minimize2, Maximize2, Sparkles, Mic, MicOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
-import { Button } from '../ui/button';
+import { X, Send, Loader2, Trash2, Mic, MicOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import { useToast } from '../../hooks/use-toast';
 import api from '../../services/api';
@@ -9,7 +8,6 @@ import { AINavigationContext } from '../../contexts/AINavigationContext';
 import { executeCommand } from './adriaCommandHandlers';
 import useAdriaVoice from './useAdriaVoice';
 import useOnlineStatus from '../../hooks/useOnlineStatus';
-import AdriaAvatar, { DEFAULT_AVATAR } from './AdriaAvatar';
 
 const QUICK_ACTIONS = [
   { id: 'creer-ot', label: 'Créer un OT', icon: '📋' },
@@ -30,27 +28,22 @@ const ROUTE_MAP = {
   'settings': 'parametres', 'personnalisation': 'personnalisation'
 };
 
-const GUIDANCE_STEPS = {
-  'creer-ot': [
-    { route: '/work-orders', message: 'Bienvenue dans le module Ordres de Travail' },
-    { highlight: 'button:has-text("Créer"), button:has-text("+ Créer")', message: 'Cliquez sur ce bouton pour créer un nouvel ordre de travail', showHand: true },
-    { message: 'Remplissez le formulaire avec les informations de l\'intervention' }
-  ],
-  'creer-equipement': [
-    { route: '/assets', message: 'Bienvenue dans le module Équipements' },
-    { highlight: 'button:has-text("Ajouter"), button:has-text("+ Ajouter")', message: 'Cliquez ici pour ajouter un nouvel équipement', showHand: true },
-    { message: 'Remplissez les informations de l\'équipement (nom, type, emplacement...)' }
-  ]
-};
-
 const GAP = 12; // ecart en px entre le personnage flottant et la bulle
 const EDGE_MARGIN = 8;
+const BUBBLE_WIDTH = 260;
+const BUBBLE_HEIGHT_BUDGET = 300; // estimation large (nuage + actions + saisie) pour le calage vertical
 
-// Calcule la position de la bulle ancree au personnage flottant (`anchor`),
-// en preferant un affichage a gauche de lui, avec repli a droite ou centre
-// si la place manque, et le cote/decalage vertical de la pointe qui pointe
-// vers lui.
-function computeBalloonLayout(anchor, width, height) {
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
+}
+
+// Positionne le petit panneau (actions rapides + saisie + bulle nuage) a
+// cote du personnage flottant (qui peut etre n'importe ou a l'ecran depuis
+// qu'il est deplacable) : a gauche s'il y a la place, sinon a droite, sinon
+// centre. La bulle nuage reste toujours l'element le plus proche du
+// personnage (voir l'ordre du JSX plus bas), sa pointe est donc visee vers
+// le haut du corps du personnage plutot que son centre exact.
+function computeCloudLayout(anchor) {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
   const spaceLeft = anchor.left;
@@ -58,27 +51,30 @@ function computeBalloonLayout(anchor, width, height) {
 
   let left;
   let tailSide;
-  if (spaceLeft >= width + GAP) {
-    left = anchor.left - GAP - width;
+  if (spaceLeft >= BUBBLE_WIDTH + GAP) {
+    left = anchor.left - GAP - BUBBLE_WIDTH;
     tailSide = 'right';
-  } else if (spaceRight >= width + GAP) {
+  } else if (spaceRight >= BUBBLE_WIDTH + GAP) {
     left = anchor.left + anchor.size + GAP;
     tailSide = 'left';
   } else {
-    left = clamp(anchor.left + anchor.size / 2 - width / 2, EDGE_MARGIN, vw - width - EDGE_MARGIN);
+    left = clamp(anchor.left + anchor.size / 2 - BUBBLE_WIDTH / 2, EDGE_MARGIN, vw - BUBBLE_WIDTH - EDGE_MARGIN);
     tailSide = null;
   }
 
-  const top = clamp(anchor.top + anchor.size - height, EDGE_MARGIN, vh - height - EDGE_MARGIN);
-  const anchorCenterY = anchor.top + anchor.size / 2;
-  const tailY = clamp(anchorCenterY - top, 24, height - 24);
-
-  return { left, top, tailSide, tailY };
+  const bottomTarget = clamp(anchor.top + anchor.size * 0.62, EDGE_MARGIN + BUBBLE_HEIGHT_BUDGET, vh - EDGE_MARGIN);
+  const top = clamp(bottomTarget - BUBBLE_HEIGHT_BUDGET, EDGE_MARGIN, vh - BUBBLE_HEIGHT_BUDGET - EDGE_MARGIN);
+  return { left, top, tailSide };
 }
 
-function clamp(value, min, max) {
-  return Math.min(Math.max(value, min), max);
-}
+// Contour "nuage BD" (scallope) + pointes gauche/droite - genere a partir de
+// 9 points repartis sur une ellipse, relies par des courbes qui bombent vers
+// l'exterieur. Symetrique horizontalement, donc un seul contour sert pour
+// les deux orientations ; seule la pointe change de cote.
+const CLOUD_PATH = 'M 140.0 27.0 Q 192.5 7.6 209.4 40.6 Q 272.8 43.8 246.4 74.9 Q 291.0 99.3 233.5 114.0 Q 238.6 148.1 176.9 139.5 Q 140.0 167.4 103.1 139.5 Q 41.4 148.1 46.5 114.0 Q -11.0 99.3 33.6 74.9 Q 7.2 43.8 70.6 40.6 Q 87.5 7.6 140.0 27.0 Z';
+const TAIL_PATH_RIGHT = 'M 190 150 Q 210 175 230 185 Q 212 160 205 145 Z';
+const TAIL_PATH_LEFT = 'M 90 150 Q 70 175 50 185 Q 68 160 75 145 Z';
+const CLOUD_VIEWBOX_H = 190 / 310; // ratio hauteur/largeur du viewBox (-15 0 310 190)
 
 const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion = null, onSpeakingChange = null, anchor = null }) => {
   const { preferences } = usePreferences();
@@ -93,17 +89,14 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
-  const [minimized, setMinimized] = useState(false);
   const [showQuickActions, setShowQuickActions] = useState(true);
   const [hasProcessedInitialQuestion, setHasProcessedInitialQuestion] = useState(false);
   const [activeGuide, setActiveGuide] = useState(null);
   const [layout, setLayout] = useState(null);
 
-  const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const aiName = preferences?.ai_assistant_name || 'Adria';
   const aiGender = preferences?.ai_assistant_gender || 'female';
-  const aiAvatar = preferences?.ai_assistant_avatar || DEFAULT_AVATAR;
 
   // Hook vocal
   const handleTranscription = async (transcription) => {
@@ -131,22 +124,18 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
   }, [textBurstActive, voice.isPlayingAudio, onSpeakingChange]);
   useEffect(() => () => onSpeakingChange?.(false), [onSpeakingChange]);
 
-  // Position de la bulle, ancree au personnage flottant (qui peut etre
+  // Position du panneau, ancree au personnage flottant (qui peut etre
   // n'importe ou a l'ecran depuis qu'il est deplacable).
   useEffect(() => {
     if (!anchor) { setLayout(null); return undefined; }
-    const width = minimized ? 256 : 384;
-    const height = minimized ? 48 : 550;
-    const compute = () => setLayout(computeBalloonLayout(anchor, width, height));
+    const compute = () => setLayout(computeCloudLayout(anchor));
     compute();
     window.addEventListener('resize', compute);
     return () => window.removeEventListener('resize', compute);
-  }, [anchor, minimized]);
+  }, [anchor]);
 
-  // Scroll auto
-  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
   // Focus input
-  useEffect(() => { if (isOpen && inputRef.current && !minimized) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen, minimized]);
+  useEffect(() => { if (isOpen && inputRef.current) setTimeout(() => inputRef.current?.focus(), 100); }, [isOpen]);
   // Message de bienvenue
   useEffect(() => {
     if (isOpen && messages.length === 0) {
@@ -317,132 +306,90 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
 
   if (!isOpen || !layout) return null;
 
-  // Pointe triangulaire (technique CSS classique des bordures transparentes)
-  // pointant vers le personnage, du cote de la bulle qui lui fait face.
-  const tailStyle = layout.tailSide === 'right'
-    ? { right: -7, top: layout.tailY - 8, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderLeft: '8px solid #fff', filter: 'drop-shadow(1px 0 0 #e5e7eb)' }
-    : layout.tailSide === 'left'
-      ? { left: -7, top: layout.tailY - 8, borderTop: '8px solid transparent', borderBottom: '8px solid transparent', borderRight: '8px solid #fff', filter: 'drop-shadow(-1px 0 0 #e5e7eb)' }
-      : null;
+  const lastMessage = messages[messages.length - 1] || null;
+  const cloudIsUser = !loading && lastMessage?.role === 'user';
+  const cloudIsError = !loading && Boolean(lastMessage?.error);
+  const cloudKey = loading ? `loading-${messages.length}` : `msg-${messages.length}`;
+  const tailPath = layout.tailSide === 'left' ? TAIL_PATH_LEFT : layout.tailSide === 'right' ? TAIL_PATH_RIGHT : null;
+  const bubbleFill = cloudIsError ? '#fef2f2' : cloudIsUser ? '#7c3aed' : '#ffffff';
+  const bubbleStroke = cloudIsError ? '#dc2626' : '#5b21b6';
+  const textColor = cloudIsUser && !cloudIsError ? '#ffffff' : '#1e2433';
+  const bubbleHeight = Math.round(BUBBLE_WIDTH * CLOUD_VIEWBOX_H);
 
   return (
-    <div className="fixed transition-all duration-150" style={{ left: layout.left, top: layout.top, width: minimized ? 256 : 384, zIndex: 9999 }} data-testid="adria-chat-widget">
-      <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden flex flex-col"
-           style={{ maxHeight: minimized ? '48px' : '600px', height: minimized ? '48px' : '550px' }}>
-        {tailStyle && (
-          <span className="absolute w-0 h-0 z-10" style={tailStyle} />
-        )}
+    <div className="fixed flex flex-col items-end gap-2" style={{ left: layout.left, top: layout.top, width: BUBBLE_WIDTH, zIndex: 9999 }} data-testid="adria-chat-widget">
+      {/* Barre utilitaire minimale - pas d'en-tete plein, le personnage juste a cote joue deja ce role */}
+      <div className="flex items-center gap-1.5">
+        {!isOnline && <span className="text-red-500" title="Hors ligne"><WifiOff size={13} /></span>}
+        <button onClick={handleClearHistory} className="p-1.5 rounded-full bg-white hover:bg-gray-100 text-gray-500 shadow" title="Effacer l'historique" data-testid="adria-clear-btn">
+          <Trash2 size={13} />
+        </button>
+        <button onClick={onClose} className="p-1.5 rounded-full bg-white hover:bg-gray-100 text-gray-500 shadow" title="Fermer" data-testid="adria-close-btn">
+          <X size={13} />
+        </button>
+      </div>
 
-        {/* Header */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 flex items-center justify-between rounded-t-2xl" data-testid="adria-header">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white/30"><AdriaAvatar variant={aiAvatar} size={32} /></div>
-            <div>
-              <h3 className="font-semibold text-sm">{aiName}</h3>
-              {!minimized && <p className="text-xs text-purple-200">{aiGender === 'female' ? 'Assistante' : 'Assistant'} FSAO</p>}
-            </div>
-          </div>
-          <div className="flex items-center gap-1">
-            {!isOnline && <div className="p-1.5 text-red-200" title="Hors ligne"><WifiOff size={14} /></div>}
-            <button onClick={handleClearHistory} className="p-1.5 hover:bg-white/20 rounded transition-colors" title="Effacer l'historique" data-testid="adria-clear-btn"><Trash2 size={16} /></button>
-            <button onClick={() => setMinimized(!minimized)} className="p-1.5 hover:bg-white/20 rounded transition-colors" data-testid="adria-minimize-btn">
-              {minimized ? <Maximize2 size={16} /> : <Minimize2 size={16} />}
+      {showQuickActions && messages.length <= 1 && (
+        <div className="flex flex-wrap gap-1.5 justify-end" data-testid="adria-quick-actions">
+          {QUICK_ACTIONS.map(action => (
+            <button key={action.id} onClick={() => handleQuickAction(action.id)} data-testid={`quick-action-${action.id}`}
+              className="flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-purple-50 text-purple-700 border border-purple-200 rounded-full text-xs font-medium shadow-sm transition-colors">
+              <span>{action.icon}</span><span>{action.label}</span>
             </button>
-            <button onClick={onClose} className="p-1.5 hover:bg-white/20 rounded transition-colors" title="Fermer" data-testid="adria-close-btn"><X size={16} /></button>
-          </div>
+          ))}
         </div>
+      )}
 
-        {!minimized && (
-          <>
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50" style={{ maxHeight: '350px' }} data-testid="adria-messages">
-              {showQuickActions && messages.length <= 1 && (
-                <div className="mb-4">
-                  <p className="text-xs text-gray-500 mb-2 flex items-center gap-1"><Sparkles size={12} />Actions rapides</p>
-                  <div className="flex flex-wrap gap-2">
-                    {QUICK_ACTIONS.map(action => (
-                      <button key={action.id} onClick={() => handleQuickAction(action.id)} data-testid={`quick-action-${action.id}`}
-                        className="flex items-center gap-1 px-3 py-1.5 bg-purple-100 hover:bg-purple-200 text-purple-700 rounded-full text-xs font-medium transition-colors">
-                        <span>{action.icon}</span><span>{action.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {messages.map((msg, index) => (
-                <div key={index} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  {msg.role === 'user' ? (
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-600 text-white">
-                      <User size={16} />
-                    </div>
-                  ) : (
-                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
-                      <AdriaAvatar variant={aiAvatar} size={32} />
-                    </div>
-                  )}
-                  <div className={`max-w-[75%] rounded-lg px-3 py-2 ${
-                    msg.role === 'user' ? (msg.isQuickAction ? 'bg-purple-500 text-white' : 'bg-blue-600 text-white')
-                      : msg.error ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-white text-gray-800 border border-gray-200'
-                  }`}>
-                    <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
-                    <p className={`text-xs mt-1 ${msg.role === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>
-                      {new Date(msg.timestamp).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-
-              {loading && (
-                <div className="flex gap-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"><AdriaAvatar variant={aiAvatar} size={32} /></div>
-                  <div className="bg-white rounded-lg px-4 py-2 border border-gray-200">
-                    <div className="flex items-center gap-2 text-gray-500"><Loader2 size={16} className="animate-spin" /><span className="text-sm">{aiName} réfléchit...</span></div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="p-3 border-t border-gray-200 bg-white">
-              <div className="flex items-center justify-between mb-2 px-1">
-                <button onClick={() => voice.setIsTTSEnabled(!voice.isTTSEnabled)} data-testid="adria-tts-toggle"
-                  className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${voice.isTTSEnabled ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-500'}`}>
-                  {voice.isTTSEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-                  <span>{voice.isTTSEnabled ? 'Voix ON' : 'Voix OFF'}</span>
-                </button>
-                {voice.isPlayingAudio && (
-                  <button onClick={voice.stopAudio} className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-red-100 text-red-700" data-testid="adria-stop-audio">
-                    <VolumeX size={14} /><span>Arrêter</span>
-                  </button>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={voice.isRecording ? voice.stopRecording : voice.startRecording} disabled={loading}
-                  variant={voice.isRecording ? 'destructive' : 'outline'} className={`px-3 ${voice.isRecording ? 'animate-pulse bg-red-500 hover:bg-red-600' : ''}`}
-                  data-testid="adria-mic-btn">
-                  {voice.isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-                </Button>
-                <textarea ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                  placeholder={voice.isRecording ? 'Enregistrement en cours...' : `Posez votre question à ${aiName}...`}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 text-sm"
-                  rows={1} disabled={loading || voice.isRecording} data-testid="adria-input" />
-                <Button onClick={handleSend} disabled={!input.trim() || loading || voice.isRecording}
-                  className="bg-purple-600 hover:bg-purple-700 px-3" data-testid="adria-send-btn">
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
-                </Button>
-              </div>
-              {voice.isRecording && (
-                <div className="mt-2 flex items-center justify-center gap-2 text-red-600 text-sm">
-                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
-                  <span>Parlez maintenant... Cliquez sur le micro pour terminer</span>
-                </div>
-              )}
-            </div>
-          </>
+      <div className="w-full">
+        <div className="flex items-center gap-1 bg-white rounded-full shadow-lg pl-3 pr-1 py-1">
+          <button onClick={voice.isRecording ? voice.stopRecording : voice.startRecording} disabled={loading}
+            className={`p-1.5 rounded-full flex-shrink-0 transition-colors ${voice.isRecording ? 'bg-red-500 text-white animate-pulse' : 'text-gray-500 hover:bg-gray-100'}`}
+            data-testid="adria-mic-btn">
+            {voice.isRecording ? <MicOff size={15} /> : <Mic size={15} />}
+          </button>
+          <input ref={inputRef} value={input} onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSend(); } }}
+            placeholder={voice.isRecording ? 'Enregistrement…' : `Réponds à ${aiName}…`}
+            className="flex-1 min-w-0 text-sm border-none outline-none bg-transparent"
+            disabled={loading || voice.isRecording} data-testid="adria-input" />
+          <button onClick={() => voice.setIsTTSEnabled(!voice.isTTSEnabled)} data-testid="adria-tts-toggle"
+            className={`p-1.5 rounded-full flex-shrink-0 transition-colors ${voice.isTTSEnabled ? 'text-purple-600' : 'text-gray-400'}`} title="Voix">
+            {voice.isTTSEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+          </button>
+          <button onClick={handleSend} disabled={!input.trim() || loading || voice.isRecording}
+            className="p-1.5 rounded-full bg-purple-600 text-white disabled:opacity-40 flex-shrink-0" data-testid="adria-send-btn">
+            {loading ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+          </button>
+        </div>
+        {voice.isPlayingAudio && (
+          <div className="flex justify-end mt-1">
+            <button onClick={voice.stopAudio} className="text-xs px-2 py-0.5 rounded-full bg-red-100 text-red-700" data-testid="adria-stop-audio">Arrêter la voix</button>
+          </div>
         )}
+        {voice.isRecording && (
+          <div className="flex justify-end mt-1">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600">🔴 Parlez, recliquez le micro pour terminer</span>
+          </div>
+        )}
+      </div>
+
+      {/* Bulle nuage - toujours l'element le plus proche du personnage, pour
+          que sa pointe reste visee vers lui quelle que soit la conversation */}
+      <div className="relative" style={{ width: BUBBLE_WIDTH, height: bubbleHeight }} data-testid="adria-messages">
+        <svg viewBox="-15 0 310 190" width={BUBBLE_WIDTH} height={bubbleHeight} style={{ display: 'block', overflow: 'visible' }}>
+          {tailPath && <path d={tailPath} style={{ fill: bubbleFill, stroke: bubbleStroke, strokeWidth: 5, strokeLinejoin: 'round' }} />}
+          <path d={CLOUD_PATH} style={{ fill: bubbleFill, stroke: bubbleStroke, strokeWidth: 5, strokeLinejoin: 'round' }} />
+        </svg>
+        <div key={cloudKey} className="absolute flex flex-col justify-start items-center text-center px-1 overflow-y-auto animate-cloud-in"
+             style={{ left: '12.3%', top: '20%', width: '67.7%', height: '50%', fontSize: 12.5, lineHeight: 1.4, color: textColor, fontFamily: '"Comfortaa", sans-serif' }}>
+          {loading ? (
+            <span className="flex items-center gap-1.5 text-gray-500" style={{ fontFamily: 'inherit' }}>
+              <Loader2 size={14} className="animate-spin" />{aiName} réfléchit…
+            </span>
+          ) : (
+            <span className="whitespace-pre-wrap">{lastMessage?.content || ''}</span>
+          )}
+        </div>
       </div>
 
       {activeGuide && (

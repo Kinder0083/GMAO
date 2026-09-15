@@ -1,10 +1,12 @@
 {
-  "version": "1.23.1",
-  "versionName": "Nouveau personnage : Cle feminine",
+  "version": "1.24.0",
+  "versionName": "Une vraie bulle de bande dessinee",
   "releaseDate": "2026-09-15",
-  "description": "Un 7e personnage rejoint le selecteur de l'assistant IA : la Cle feminine, animee (clignement des yeux, levres qui bougent) au meme titre que la Cle d'origine",
+  "description": "La conversation avec Adria s'affiche desormais dans une vraie bulle de bande dessinee (contour scallote, pointe dirigee vers le personnage) au lieu d'un panneau de discussion classique - un seul message affiche a la fois, chaque reponse remplace la precedente",
   "changes": [
-    "Nouveau personnage selectionnable dans Personnalisation > Assistant IA : la Cle (feminine), avec sa propre animation complete (clignement des yeux, levres qui bougent en parlant)"
+    "La fenetre de discussion d'Adria devient une bulle de bande dessinee (contour scallote, pointe soudee dirigee vers le personnage) au lieu du panneau encadre classique",
+    "Un seul message affiche a la fois : chaque nouvelle reponse remplace la precedente en fondu, au lieu de s'empiler dans une liste",
+    "Toutes les fonctionnalites existantes sont conservees (actions rapides, vocal, historique, guides interactifs) - seule leur presentation change"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

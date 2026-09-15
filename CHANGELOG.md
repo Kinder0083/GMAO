@@ -1,5 +1,13 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.24.0 - Une vraie bulle de bande dessinee (Septembre 2026)
+
+Suite directe des retours sur la 1.22.0 : "ce n'est pas encore une vraie bulle de BD" (contour trop rectangulaire, pointe mal orientee) puis fourniture d'une image de reference precise. Deux propositions comparees (Artifact) avant integration - conversation persistante avec bulles ovales vs. vraie bulle scallotee a message unique - la seconde a ete retenue.
+
+- **Nouveau** : la conversation avec Adria s'affiche desormais dans une vraie bulle de bande dessinee - contour scallote (genere a partir de 9 points repartis sur une ellipse, relies par des courbes qui bombent vers l'exterieur), pointe triangulaire soudee au contour et dirigee vers le personnage, quel que soit l'endroit ou il a ete deplace sur l'ecran.
+- **Nouveau** : un seul message est affiche a la fois - chaque nouvelle reponse (ou question posee) remplace la precedente en fondu, au lieu de s'empiler dans une liste deroulante comme avant.
+- **Nettoyage** : l'ancien panneau encadre (en-tete plein, bouton minimiser, liste de messages) est retire au profit d'une barre d'icones minimale (effacer l'historique, fermer) posee au-dessus de la bulle. Toutes les fonctionnalites existantes sont conservees a l'identique (actions rapides, dictee et lecture vocale, historique de session, guides interactifs) - seule leur presentation change.
+
 ## Version 1.23.1 - Nouveau personnage : Cle feminine (Septembre 2026)
 
 - **Nouveau** : la Cle feminine rejoint le selecteur de personnage de l'assistant IA (Personnalisation > Assistant IA), avec sa propre animation complete (clignement des yeux, levres qui bougent en parlant) fournie par l'utilisateur - meme principe que la Cle d'origine, sans aucune modification du systeme d'animation lui-meme.
