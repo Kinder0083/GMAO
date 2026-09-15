@@ -2544,6 +2544,7 @@ class UserPreferences(BaseModel):
     # Préférences IA
     ai_assistant_name: str = "Adria"  # Nom de l'assistant IA
     ai_assistant_gender: str = "female"  # "male" ou "female"
+    ai_assistant_avatar: str = "robot"  # id du personnage - cf. ADRIA_AVATARS (frontend)
     ai_llm_provider: str = "gemini"  # "gemini", "openai", "anthropic", "deepseek", "mistral"
     ai_llm_model: str = "gemini-3.6-flash"  # Modèle LLM par défaut
     # Preference onglet Dashboard Service
@@ -2632,6 +2633,7 @@ class UserPreferencesUpdate(BaseModel):
     # Préférences IA
     ai_assistant_name: Optional[str] = None
     ai_assistant_gender: Optional[str] = None
+    ai_assistant_avatar: Optional[str] = None
     ai_llm_provider: Optional[str] = None
     ai_llm_model: Optional[str] = None
     # Preference onglet Dashboard Service

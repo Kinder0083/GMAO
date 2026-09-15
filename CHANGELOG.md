@@ -1,5 +1,10 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.21.0 - Personnage de l'assistant IA personnalisable (Septembre 2026)
+
+- **Nouveau** : l'assistant IA (Adria par defaut, deja renommable) affichait jusqu'ici une icone generique identique pour tous. Chaque utilisateur peut desormais choisir son personnage dans Personnalisation > Assistant IA parmi 6 propositions (Robot, Robot Technicien, Renard, Chouette, Chat, Abeille), chacune avec sa propre couleur d'accent. Le personnage choisi s'affiche partout ou l'assistant apparait : bouton d'ouverture, en-tete de la fenetre de discussion, bulles de reponse et indicateur de saisie.
+- **Constat au passage** : en cablant la sauvegarde de ce reglage, decouverte d'un deuxieme fichier de routes `/user-preferences` totalement inatteignable (enregistre apres un premier routeur identique dans le serveur, qui repond donc toujours en premier) - meme famille de bug que le routeur de notifications en double corrige en 1.19.0. Non modifie pour le moment, signale pour verification ulterieure.
+
 ## Version 1.20.1 - Script de mise a jour : verification de sante avant desactivation de la maintenance (Septembre 2026)
 
 Suite directe d'un incident reel survenu le 14/09/2026 : une mise a jour vers la 1.18.0 a rendu l'application totalement inaccessible (en local comme a distance) sans que rien ne le signale.

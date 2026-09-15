@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
-import { X, Send, Bot, User, Loader2, Trash2, Minimize2, Maximize2, Sparkles, Mic, MicOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
+import { X, Send, User, Loader2, Trash2, Minimize2, Maximize2, Sparkles, Mic, MicOff, Volume2, VolumeX, WifiOff } from 'lucide-react';
 import { Button } from '../ui/button';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import { useToast } from '../../hooks/use-toast';
@@ -9,6 +9,7 @@ import { AINavigationContext } from '../../contexts/AINavigationContext';
 import { executeCommand } from './adriaCommandHandlers';
 import useAdriaVoice from './useAdriaVoice';
 import useOnlineStatus from '../../hooks/useOnlineStatus';
+import AdriaAvatar, { DEFAULT_AVATAR } from './AdriaAvatar';
 
 const QUICK_ACTIONS = [
   { id: 'creer-ot', label: 'Créer un OT', icon: '📋' },
@@ -64,6 +65,7 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
   const inputRef = useRef(null);
   const aiName = preferences?.ai_assistant_name || 'Adria';
   const aiGender = preferences?.ai_assistant_gender || 'female';
+  const aiAvatar = preferences?.ai_assistant_avatar || DEFAULT_AVATAR;
 
   // Hook vocal
   const handleTranscription = async (transcription) => {
@@ -256,7 +258,7 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
         {/* Header */}
         <div className="bg-gradient-to-r from-purple-600 to-purple-700 text-white p-3 flex items-center justify-between" data-testid="adria-header">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center"><Bot size={20} /></div>
+            <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 ring-2 ring-white/30"><AdriaAvatar variant={aiAvatar} size={32} /></div>
             <div>
               <h3 className="font-semibold text-sm">{aiName}</h3>
               {!minimized && <p className="text-xs text-purple-200">{aiGender === 'female' ? 'Assistante' : 'Assistant'} FSAO</p>}
@@ -292,9 +294,15 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
 
               {messages.map((msg, index) => (
                 <div key={index} className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === 'user' ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'}`}>
-                    {msg.role === 'user' ? <User size={16} /> : <Bot size={16} />}
-                  </div>
+                  {msg.role === 'user' ? (
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-blue-600 text-white">
+                      <User size={16} />
+                    </div>
+                  ) : (
+                    <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
+                      <AdriaAvatar variant={aiAvatar} size={32} />
+                    </div>
+                  )}
                   <div className={`max-w-[75%] rounded-lg px-3 py-2 ${
                     msg.role === 'user' ? (msg.isQuickAction ? 'bg-purple-500 text-white' : 'bg-blue-600 text-white')
                       : msg.error ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-white text-gray-800 border border-gray-200'
@@ -309,7 +317,7 @@ const AIChatWidget = ({ isOpen, onClose, initialContext = null, initialQuestion 
 
               {loading && (
                 <div className="flex gap-2">
-                  <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center"><Bot size={16} className="text-white" /></div>
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0"><AdriaAvatar variant={aiAvatar} size={32} /></div>
                   <div className="bg-white rounded-lg px-4 py-2 border border-gray-200">
                     <div className="flex items-center gap-2 text-gray-500"><Loader2 size={16} className="animate-spin" /><span className="text-sm">{aiName} réfléchit...</span></div>
                   </div>

@@ -1,11 +1,12 @@
 {
-  "version": "1.20.1",
-  "versionName": "Script de mise a jour : verification de sante avant desactivation de la maintenance",
+  "version": "1.21.0",
+  "versionName": "Personnage de l'assistant IA personnalisable",
   "releaseDate": "2026-09-15",
-  "description": "Suite a un incident reel du 14/09/2026 : une dependance (slowapi) a echoue a s'installer pendant une mise a jour, le backend est reste en boucle de crash, et le script de mise a jour s'est quand meme declare reussi en desactivant la page de maintenance - rendant le site inaccessible sans la moindre alerte. MAJ_FSAO.sh verifie desormais que le backend repond reellement avant de toucher a la page de maintenance",
+  "description": "L'assistant IA (Adria par defaut, deja renommable) affichait une icone generique identique pour tout le monde. Chaque utilisateur peut desormais choisir son personnage parmi 6 propositions, visible partout ou l'assistant apparait",
   "changes": [
-    "Correction critique (fiabilite du deploiement) : MAJ_FSAO.sh redemarrait le backend et desactivait systematiquement la page de maintenance sans jamais verifier que l'application avait reellement redemarre avec succes - un incident reel a confirme qu'une dependance Python installee en echec (simple avertissement non bloquant) pouvait ainsi passer totalement inapercue, avec le site rendu inaccessible et la mise a jour pourtant marquee 'reussie'",
-    "Le script attend desormais jusqu'a 20 secondes que le backend reponde (GET /api/health) apres son redemarrage, et ne desactive la page de maintenance que si cette verification reussit ; sinon la maintenance reste active et le resultat de la mise a jour est explicitement marque en echec avec la raison"
+    "Nouveau : personnage de l'assistant IA personnalisable dans Personnalisation > Assistant IA - 6 choix (Robot, Robot Technicien, Renard, Chouette, Chat, Abeille), chacun avec sa propre couleur d'accent",
+    "Le personnage choisi s'affiche partout ou l'assistant apparait : bouton d'ouverture du chat, en-tete de la fenetre de discussion, bulles de reponse et indicateur de saisie",
+    "Au passage : en cablant la sauvegarde de ce nouveau reglage, decouvert qu'un deuxieme fichier de routes /user-preferences (jamais atteint car enregistre apres le premier dans le serveur - meme famille de bug que le routeur de notifications en double corrige en v1.19.0) existe en parallele du systeme reellement utilise. Non touche pour le moment - signale pour verification ulterieure"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

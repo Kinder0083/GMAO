@@ -5,15 +5,17 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { usePreferences } from '../../contexts/PreferencesContext';
 import { useToast } from '../../hooks/use-toast';
-import { Bot, Sparkles, Save, RefreshCw, QrCode } from 'lucide-react';
+import { Bot, Sparkles, Save, RefreshCw, QrCode, Check } from 'lucide-react';
 import api from '../../services/api';
+import AdriaAvatar, { ADRIA_AVATARS, DEFAULT_AVATAR } from '../Common/AdriaAvatar';
 
 const AISection = () => {
   const { preferences, updatePreferences } = usePreferences();
   const { toast } = useToast();
-  
+
   const [aiName, setAiName] = useState(preferences?.ai_assistant_name || 'Adria');
   const [aiGender, setAiGender] = useState(preferences?.ai_assistant_gender || 'female');
+  const [aiAvatar, setAiAvatar] = useState(preferences?.ai_assistant_avatar || DEFAULT_AVATAR);
   const [llmProvider, setLlmProvider] = useState(preferences?.ai_llm_provider || 'gemini');
   const [llmModel, setLlmModel] = useState(preferences?.ai_llm_model || 'gemini-2.5-flash');
   const [providers, setProviders] = useState([]);
@@ -36,6 +38,7 @@ const AISection = () => {
     if (preferences) {
       setAiName(preferences.ai_assistant_name || 'Adria');
       setAiGender(preferences.ai_assistant_gender || 'female');
+      setAiAvatar(preferences.ai_assistant_avatar || DEFAULT_AVATAR);
       setLlmProvider(preferences.ai_llm_provider || 'gemini');
       setLlmModel(preferences.ai_llm_model || 'gemini-2.5-flash');
     }
@@ -101,6 +104,7 @@ const AISection = () => {
       await updatePreferences({
         ai_assistant_name: aiName,
         ai_assistant_gender: aiGender,
+        ai_assistant_avatar: aiAvatar,
         ai_llm_provider: llmProvider,
         ai_llm_model: llmModel
       });
@@ -175,6 +179,33 @@ const AISection = () => {
           </div>
         </div>
 
+        {/* Personnage de l'assistant */}
+        <div className="space-y-2">
+          <Label>Personnage</Label>
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {ADRIA_AVATARS.map((avatar) => (
+              <button
+                key={avatar.id}
+                type="button"
+                onClick={() => setAiAvatar(avatar.id)}
+                data-testid={`ai-avatar-option-${avatar.id}`}
+                className={`relative flex flex-col items-center gap-1.5 p-2 rounded-lg border-2 transition-colors ${
+                  aiAvatar === avatar.id ? 'border-purple-500 bg-purple-50' : 'border-transparent hover:bg-gray-50'
+                }`}
+                title={avatar.label}
+              >
+                <AdriaAvatar variant={avatar.id} size={40} />
+                <span className="text-[11px] text-gray-600 text-center leading-tight">{avatar.label}</span>
+                {aiAvatar === avatar.id && (
+                  <span className="absolute -top-1 -right-1 bg-purple-600 rounded-full p-0.5">
+                    <Check size={10} className="text-white" />
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Fournisseur LLM */}
         <div className="space-y-2">
           <Label htmlFor="llm-provider">Fournisseur LLM</Label>
@@ -228,8 +259,8 @@ const AISection = () => {
         <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
           <h4 className="font-medium text-purple-800 mb-2">Apercu</h4>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-600 rounded-full flex items-center justify-center">
-              <Bot className="text-white" size={24} />
+            <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+              <AdriaAvatar variant={aiAvatar} size={40} />
             </div>
             <div>
               <p className="font-medium text-purple-900">{aiName}</p>
