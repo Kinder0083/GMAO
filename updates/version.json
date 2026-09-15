@@ -1,12 +1,11 @@
 {
-  "version": "1.21.0",
-  "versionName": "Personnage de l'assistant IA personnalisable",
+  "version": "1.21.1",
+  "versionName": "Personnage de l'assistant IA : vraies illustrations",
   "releaseDate": "2026-09-15",
-  "description": "L'assistant IA (Adria par defaut, deja renommable) affichait une icone generique identique pour tout le monde. Chaque utilisateur peut desormais choisir son personnage parmi 6 propositions, visible partout ou l'assistant apparait",
+  "description": "Les 6 personnages de l'assistant IA (Personnalisation > Assistant IA, introduits en 1.21.0) passent d'icones dessinees a de vraies illustrations - Cle, Chariot elevateur, Cafetiere, Ampoule, Voiture, Fusee",
   "changes": [
-    "Nouveau : personnage de l'assistant IA personnalisable dans Personnalisation > Assistant IA - 6 choix (Robot, Robot Technicien, Renard, Chouette, Chat, Abeille), chacun avec sa propre couleur d'accent",
-    "Le personnage choisi s'affiche partout ou l'assistant apparait : bouton d'ouverture du chat, en-tete de la fenetre de discussion, bulles de reponse et indicateur de saisie",
-    "Au passage : en cablant la sauvegarde de ce nouveau reglage, decouvert qu'un deuxieme fichier de routes /user-preferences (jamais atteint car enregistre apres le premier dans le serveur - meme famille de bug que le routeur de notifications en double corrige en v1.19.0) existe en parallele du systeme reellement utilise. Non touche pour le moment - signale pour verification ulterieure"
+    "Le selecteur de personnage de l'assistant IA affiche desormais de vraies illustrations detaillees pour chacun des 6 choix, a la place des icones simplifiees de la version precedente",
+    "Nouveaux personnages Voiture et Fusee, a la place de Robot et Robot Technicien"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

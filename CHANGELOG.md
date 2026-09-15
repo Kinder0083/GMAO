@@ -1,5 +1,9 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.21.1 - Personnage de l'assistant IA : vraies illustrations (Septembre 2026)
+
+- Les 6 personnages du selecteur (Personnalisation > Assistant IA) passent d'icones dessinees a de vraies illustrations detaillees, fournies par l'utilisateur : Cle, Chariot elevateur, Cafetiere, Ampoule, Voiture, Fusee. Robot et Robot Technicien sont retires au profit de Voiture et Fusee.
+
 ## Version 1.21.0 - Personnage de l'assistant IA personnalisable (Septembre 2026)
 
 - **Nouveau** : l'assistant IA (Adria par defaut, deja renommable) affichait jusqu'ici une icone generique identique pour tous. Chaque utilisateur peut desormais choisir son personnage dans Personnalisation > Assistant IA parmi 6 propositions (Robot, Robot Technicien, Renard, Chouette, Chat, Abeille), chacune avec sa propre couleur d'accent. Le personnage choisi s'affiche partout ou l'assistant apparait : bouton d'ouverture, en-tete de la fenetre de discussion, bulles de reponse et indicateur de saisie.
