@@ -1,11 +1,11 @@
 {
-  "version": "1.25.1",
-  "versionName": "Verification de mise a jour : echec reseau demasque",
+  "version": "1.25.2",
+  "versionName": "Erreurs vocales : le vrai message s'affiche enfin",
   "releaseDate": "2026-09-16",
-  "description": "Un echec de connexion a GitHub lors de la verification de mise a jour (timeout, reseau) etait jusqu'ici silencieusement affiche comme \"vous etes a jour\" - le vrai message d'erreur s'affiche desormais",
+  "description": "Les erreurs de dictee et de lecture a voix haute (Adria, RO 5) affichaient un vague \"Erreur serveur: 500\" au lieu de la vraie cause - le message reel du serveur (ex: cle API manquante, credits epuises...) s'affiche desormais",
   "changes": [
-    "Correction : si la verification de mise a jour echoue (reseau, timeout, DNS vers raw.githubusercontent.com), l'application l'affiche desormais clairement au lieu d'indiquer a tort que vous etes deja a jour",
-    "Correction : le bouton de verification rapide dans la cloche de notifications lisait le mauvais champ de la reponse et affichait toujours \"a jour\" meme quand une mise a jour etait reellement disponible"
+    "Correction : un echec de dictee vocale affichait \"Erreur serveur: 500\" au lieu du vrai message d'erreur (ex: credits API insuffisants) - le message reel s'affiche desormais",
+    "Correction : un echec de lecture a voix haute de la reponse d'Adria ne montrait aucune erreur du tout et bloquait l'etat \"en cours de lecture\" - une erreur claire s'affiche desormais"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

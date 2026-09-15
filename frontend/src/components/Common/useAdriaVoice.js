@@ -80,7 +80,14 @@ const useAdriaVoice = ({ toast, onTranscription }) => {
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       });
-      if (!response.ok) throw new Error(`Erreur serveur: ${response.status}`);
+      if (!response.ok) {
+        let detail = `Erreur serveur (${response.status})`;
+        try {
+          const errData = await response.json();
+          if (errData?.detail) detail = errData.detail;
+        } catch { /* corps de reponse non-JSON, on garde le message par defaut */ }
+        throw new Error(detail);
+      }
 
       const data = await response.json();
       if (data.success && data.transcription) {
@@ -104,7 +111,7 @@ const useAdriaVoice = ({ toast, onTranscription }) => {
         body: JSON.stringify({ text: text.replace(/\[\[.*?\]\]/g, '').trim(), voice: 'nova' })
       });
       const data = await response.json();
-      if (data.success && data.audio_base64) {
+      if (response.ok && data.success && data.audio_base64) {
         const audioData = atob(data.audio_base64);
         const view = new Uint8Array(audioData.length);
         for (let i = 0; i < audioData.length; i++) view[i] = audioData.charCodeAt(i);
@@ -116,12 +123,16 @@ const useAdriaVoice = ({ toast, onTranscription }) => {
         audio.onended = () => { setIsPlayingAudio(false); URL.revokeObjectURL(audioUrl); };
         audio.onerror = () => { setIsPlayingAudio(false); };
         await audio.play();
+      } else {
+        setIsPlayingAudio(false);
+        toast({ title: 'Erreur voix', description: data?.detail || 'Impossible de lire la réponse à voix haute.', variant: 'destructive' });
       }
     } catch (error) {
       console.error('Erreur TTS:', error);
       setIsPlayingAudio(false);
+      toast({ title: 'Erreur voix', description: error.message || 'Impossible de lire la réponse à voix haute.', variant: 'destructive' });
     }
-  }, [isTTSEnabled]);
+  }, [isTTSEnabled, toast]);
 
   const stopAudio = useCallback(() => {
     if (audioPlayerRef.current) {

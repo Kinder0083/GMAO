@@ -1,5 +1,13 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.25.2 - Erreurs vocales : le vrai message s'affiche enfin (Septembre 2026)
+
+Suite directe d'un signalement : "Erreur transcription: Erreur serveur: 500" en essayant de parler a Adria ou dans RO 5. Diagnostic en direct (appel de la fonction de transcription cote serveur) : la cause reelle etait que le compte OpenAI configure n'avait plus de credits - message parfaitement clair cote serveur, mais totalement masque cote frontend.
+
+- **Correction** : la dictee vocale (bouton micro, utilisee par Adria et par RO 5) affichait uniquement le code HTTP ("Erreur serveur: 500") sans jamais lire le message d'erreur reel renvoye par le serveur. Le vrai message (cle API manquante, credits insuffisants, etc.) s'affiche desormais directement.
+- **Correction** : la lecture a voix haute des reponses d'Adria (Text-to-Speech) n'affichait aucune erreur en cas d'echec et laissait l'indicateur "en cours de lecture" bloque indefiniment. Une erreur claire s'affiche desormais et l'etat se reinitialise correctement.
+- **A savoir** : la dictee et la lecture vocale utilisent specifiquement l'API OpenAI (Whisper/TTS), quel que soit le fournisseur choisi pour les conversations avec Adria (Gemini, Claude...). Une cle OpenAI valide et creditee est necessaire pour ces deux fonctions precises.
+
 ## Version 1.25.1 - Verification de mise a jour : echec reseau demasque (Septembre 2026)
 
 Suite directe d'un signalement utilisateur : apres avoir pousse la 1.25.0, le bouton "Verifier les mises a jour" en production continuait d'indiquer "vous etes a jour".
