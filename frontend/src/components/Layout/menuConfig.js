@@ -48,7 +48,8 @@ import {
   TrendingUp,
   GraduationCap,
   GitBranch,
-  Tv
+  Tv,
+  NotebookPen
 } from 'lucide-react';
 
 // Mapping des noms d'icônes vers les composants
@@ -99,7 +100,8 @@ export const iconMap = {
   'TrendingUp': TrendingUp,
   'GraduationCap': GraduationCap,
   'GitBranch': GitBranch,
-  'Tv': Tv
+  'Tv': Tv,
+  'NotebookPen': NotebookPen
 };
 
 // Liste par défaut des items du menu
@@ -108,6 +110,7 @@ export const getDefaultMenuItems = (isAdmin) => [
   { id: 'service-dashboard', icon: 'Presentation', label: 'Dashboard Service', path: '/service-dashboard', module: 'serviceDashboard', visible: true, order: 0.3 },
   { id: 'chat-live', icon: 'Mail', label: 'Chat Live', path: '/chat-live', module: 'chatLive', visible: true, order: 0.5 },
   { id: 'intervention-requests', icon: 'MessageSquare', label: 'Demandes d\'inter.', path: '/intervention-requests', module: 'interventionRequests', visible: true, order: 1 },
+  { id: 'ro5', icon: 'NotebookPen', label: 'RO 5 / RO 30 / TT', path: '/ro5', module: 'ro5', visible: true, order: 1.5 },
   { id: 'work-orders', icon: 'ClipboardList', label: 'Ordres de travail', path: '/work-orders', module: 'workOrders', visible: true, order: 2 },
   { id: 'improvement-requests', icon: 'Lightbulb', label: 'Demandes d\'amél.', path: '/improvement-requests', module: 'improvementRequests', visible: true, order: 3 },
   { id: 'improvements', icon: 'Sparkles', label: 'Améliorations', path: '/improvements', module: 'improvements', visible: true, order: 4 },

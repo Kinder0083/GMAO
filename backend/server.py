@@ -904,6 +904,7 @@ from routes.update_management import update_service
 from routes.notification_health import router as notification_health_router
 from routes.admin import router as admin_router
 from routes.data_integrity import router as data_integrity_router
+from routes.ro5_entries import router as ro5_entries_router
 
 api_router.include_router(work_orders_router)
 api_router.include_router(equipments_router)
@@ -929,6 +930,7 @@ api_router.include_router(update_management_router)
 api_router.include_router(notification_health_router)
 api_router.include_router(admin_router)
 api_router.include_router(data_integrity_router)
+api_router.include_router(ro5_entries_router)
 
 # ==================== MODULES EXTERNES ====================
 

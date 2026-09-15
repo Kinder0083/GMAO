@@ -1,12 +1,13 @@
 {
-  "version": "1.24.0",
-  "versionName": "Une vraie bulle de bande dessinee",
+  "version": "1.25.0",
+  "versionName": "Nouveau module RO 5 / RO 30 / TT",
   "releaseDate": "2026-09-15",
-  "description": "La conversation avec Adria s'affiche desormais dans une vraie bulle de bande dessinee (contour scallote, pointe dirigee vers le personnage) au lieu d'un panneau de discussion classique - un seul message affiche a la fois, chaque reponse remplace la precedente",
+  "description": "Nouveau carnet de bord quotidien : notez rapidement une observation au clavier ou a la voix, puis demandez a Adria d'analyser la journee - elle propose des demandes d'intervention structurees a confirmer ou corriger avant creation reelle",
   "changes": [
-    "La fenetre de discussion d'Adria devient une bulle de bande dessinee (contour scallote, pointe soudee dirigee vers le personnage) au lieu du panneau encadre classique",
-    "Un seul message affiche a la fois : chaque nouvelle reponse remplace la precedente en fondu, au lieu de s'empiler dans une liste",
-    "Toutes les fonctionnalites existantes sont conservees (actions rapides, vocal, historique, guides interactifs) - seule leur presentation change"
+    "Nouveau menu RO 5 / RO 30 / TT : carnet de bord quotidien avec calendrier, notes ecrites ou dictees a la voix",
+    "Adria analyse les notes non traitees d'une journee et propose une ou plusieurs demandes d'intervention structurees (titre, equipement, priorite, echeance) a confirmer ou corriger",
+    "Chaque demande creee reste tracee jusqu'a la note qui l'a generee",
+    "Le nouveau menu se deplace et se masque comme tout autre menu (Personnalisation), et ses droits se configurent par role (Parametres > Roles)"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

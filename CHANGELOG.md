@@ -1,5 +1,14 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.25.0 - Nouveau module RO 5 / RO 30 / TT (Septembre 2026)
+
+Nouveau carnet de bord quotidien, pense pour noter tres rapidement une observation ou une demande au fil de la journee (clavier ou dictee), sans avoir a decider sur le moment si ca deviendra une demande d'intervention. Plan valide avec l'utilisateur avant developpement (exploration du code existant, plusieurs allers-retours d'ajustement : DI uniquement - pas de creation directe d'OT, menu geree comme les autres dans Personnalisation et les droits par role).
+
+- **Nouveau** : menu "RO 5 / RO 30 / TT" - un calendrier mensuel pour naviguer entre les journees, une zone de saisie rapide (texte ou dictee vocale, reutilise le meme moteur de dictee que l'assistant Adria) et la liste des notes du jour selectionne, editables ou supprimables tant qu'elles ne sont pas traitees.
+- **Nouveau** : bouton "Analyser cette journee" - Adria relit toutes les notes non traitees du jour et propose une ou plusieurs demandes d'intervention structurees (titre, description, equipement reconnu automatiquement, priorite, echeance), avec une phrase d'interpretation en langage naturel pour chacune. Plusieurs sujets distincts dans une meme journee donnent plusieurs propositions separees, chacune avec ses champs modifiables avant confirmation.
+- **Nouveau** : chaque demande d'intervention creee reste tracee jusqu'a la ou les notes qui l'ont generee (badge visible dans le journal), pour ne jamais retraiter une note par erreur.
+- **Ergonomie** : comme tout autre menu, "RO 5 / RO 30 / TT" se deplace et se masque depuis Personnalisation > Organisation du Menu, et ses droits (voir/modifier/supprimer) se configurent par role depuis Parametres > Utilisateurs > Gestion des roles.
+
 ## Version 1.24.0 - Une vraie bulle de bande dessinee (Septembre 2026)
 
 Suite directe des retours sur la 1.22.0 : "ce n'est pas encore une vraie bulle de BD" (contour trop rectangulaire, pointe mal orientee) puis fourniture d'une image de reference precise. Deux propositions comparees (Artifact) avant integration - conversation persistante avec bulles ovales vs. vraie bulle scallotee a message unique - la seconde a ete retenue.

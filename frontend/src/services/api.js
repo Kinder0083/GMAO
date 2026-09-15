@@ -585,6 +585,17 @@ export const interventionRequestsAPI = {
   refuse: (id, data) => api.post(`/intervention-requests/${id}/refuse`, data),
 };
 
+// ==================== RO 5 / RO 30 / TT (carnet de bord quotidien) ====================
+export const ro5API = {
+  list: (startDate, endDate) => api.get('/ro5-entries', { params: { start_date: startDate, end_date: endDate } }),
+  create: (data) => api.post('/ro5-entries', data),
+  update: (id, content) => api.put(`/ro5-entries/${id}`, { content }),
+  delete: (id) => api.delete(`/ro5-entries/${id}`),
+  link: (id, data) => api.post(`/ro5-entries/${id}/link`, data),
+  analyze: (date) => api.post('/ro5-entries/analyze', { date }),
+};
+api.ro5 = ro5API;
+
 // ==================== IMPROVEMENT REQUESTS (DEMANDES D'AMÉLIORATION) ====================
 export const improvementRequestsAPI = {
   getAll: () => api.get('/improvement-requests'),

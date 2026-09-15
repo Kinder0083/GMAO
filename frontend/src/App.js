@@ -54,6 +54,7 @@ import Journal from "./pages/Journal";
 import Trash from "./pages/Trash";
 import Meters from "./pages/Meters";
 import InterventionRequests from "./pages/InterventionRequests";
+import RO5 from "./pages/RO5";
 import ImprovementRequests from "./pages/ImprovementRequests";
 import Improvements from "./pages/Improvements";
 import SurveillancePlan from "./pages/SurveillancePlan";
@@ -297,6 +298,7 @@ function App() {
             <Route path="trash" element={<Trash />} />
             <Route path="meters" element={<Meters />} />
             <Route path="intervention-requests" element={<InterventionRequests />} />
+            <Route path="ro5" element={<RO5 />} />
             <Route path="improvement-requests" element={<ImprovementRequests />} />
             <Route path="improvements" element={<Improvements />} />
             <Route path="surveillance-plan" element={<SurveillancePlan />} />

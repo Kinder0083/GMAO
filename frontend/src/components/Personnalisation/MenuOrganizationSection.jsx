@@ -95,6 +95,7 @@ const DEFAULT_MENU_ITEMS = [
   { id: 'service-dashboard', label: 'Dashboard Service', path: '/service-dashboard', icon: 'Presentation', module: 'serviceDashboard', visible: true, favorite: false, order: 0.5, category_id: null },
   { id: 'chat-live', label: 'Chat Live', path: '/chat-live', icon: 'Mail', module: 'chatLive', visible: true, favorite: false, order: 1, category_id: null },
   { id: 'intervention-requests', label: 'Demandes d\'inter.', path: '/intervention-requests', icon: 'MessageSquare', module: 'interventionRequests', visible: true, favorite: false, order: 2, category_id: null },
+  { id: 'ro5', label: 'RO 5 / RO 30 / TT', path: '/ro5', icon: 'NotebookPen', module: 'ro5', visible: true, favorite: false, order: 2.5, category_id: null },
   { id: 'work-orders', label: 'Ordres de travail', path: '/work-orders', icon: 'ClipboardList', module: 'workOrders', visible: true, favorite: false, order: 3, category_id: null },
   { id: 'improvement-requests', label: 'Demandes d\'amél.', path: '/improvement-requests', icon: 'Lightbulb', module: 'improvementRequests', visible: true, favorite: false, order: 4, category_id: null },
   { id: 'improvements', label: 'Améliorations', path: '/improvements', icon: 'Sparkles', module: 'improvements', visible: true, favorite: false, order: 5, category_id: null },

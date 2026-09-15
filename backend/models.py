@@ -77,6 +77,7 @@ class UserPermissions(BaseModel):
     aiAutomations: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Automatisations IA - Configuration des règles automatiques
     aiWidgets: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Widgets IA (Adria) - Création de widgets par l'assistant IA
     affichageDynamique: ModulePermission = ModulePermission(view=False, edit=False, delete=False)  # Affichage Dynamique - Écrans de signalétique personnalisables
+    ro5: ModulePermission = ModulePermission(view=True, edit=True, delete=False)  # RO 5 / RO 30 / TT - Carnet de bord quotidien
 
 # Fonction helper pour obtenir les permissions par défaut selon le rôle
 def get_default_permissions_by_role(role: str) -> UserPermissions:
@@ -133,7 +134,8 @@ def get_default_permissions_by_role(role: str) -> UserPermissions:
             aiDashboard=ModulePermission(view=True, edit=True, delete=True),
             aiAutomations=ModulePermission(view=True, edit=True, delete=True),
             aiWidgets=ModulePermission(view=True, edit=True, delete=True),
-            affichageDynamique=ModulePermission(view=True, edit=True, delete=True)
+            affichageDynamique=ModulePermission(view=True, edit=True, delete=True),
+            ro5=ModulePermission(view=True, edit=True, delete=True)
         )
     
     # Rôle spécial AFFICHAGE : Uniquement accès au tableau d'affichage
@@ -3953,3 +3955,52 @@ class MESTestMappingResult(BaseModel):
     extracted: Dict[str, Any] = {}
     missing: List[str] = []
     error: Optional[str] = None
+
+
+# ==================== RO 5 / RO 30 / TT (carnet de bord quotidien) ====================
+
+class RO5EntryCreate(BaseModel):
+    content: str
+    date: str  # "YYYY-MM-DD" - jour choisi dans le calendrier (par defaut aujourd'hui)
+    source: str = "text"  # "text" ou "voice"
+
+
+class RO5EntryUpdate(BaseModel):
+    content: str
+
+
+class RO5Entry(RO5EntryCreate):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    created_by: str
+    created_by_name: Optional[str] = None
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    status: str = "pending"  # "pending" ou "processed"
+    linked_documents: List[Dict[str, Any]] = Field(default_factory=list)
+
+
+class RO5LinkRequest(BaseModel):
+    """Relie une entree a la DI creee a partir d'elle (traçabilite)."""
+    type: str = "intervention_request"
+    id: str
+    numero: Optional[str] = None
+    titre: Optional[str] = None
+
+
+class RO5AnalyzeRequest(BaseModel):
+    date: str  # "YYYY-MM-DD"
+
+
+class RO5Proposal(BaseModel):
+    """Une proposition de Demande d'Intervention generee par l'IA a partir
+    des entrees non traitees d'une journee."""
+    titre: str
+    description: str
+    equipement_nom: Optional[str] = None
+    priorite: str = "NORMALE"
+    date_limite: Optional[str] = None  # "YYYY-MM-DD"
+    source_entry_ids: List[str] = Field(default_factory=list)
+    resume: str
+
+
+class RO5AnalyzeResponse(BaseModel):
+    proposals: List[RO5Proposal]

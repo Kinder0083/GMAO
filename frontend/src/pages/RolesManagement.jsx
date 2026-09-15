@@ -39,6 +39,7 @@ import api from '../services/api';
 const MODULES = [
   { key: 'dashboard', label: 'Tableau de bord' },
   { key: 'interventionRequests', label: 'Demandes d\'intervention' },
+  { key: 'ro5', label: 'RO 5 / RO 30 / TT' },
   { key: 'workOrders', label: 'Ordres de travail' },
   { key: 'improvementRequests', label: 'Demandes d\'amélioration' },
   { key: 'improvements', label: 'Améliorations' },
