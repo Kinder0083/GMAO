@@ -1,13 +1,11 @@
 {
-  "version": "1.20.0",
-  "versionName": "Quoi de neuf ? : contenu auto-genere, fin des popups en double",
+  "version": "1.20.1",
+  "versionName": "Script de mise a jour : verification de sante avant desactivation de la maintenance",
   "releaseDate": "2026-09-15",
-  "description": "L'icone Quoi de neuf ? du bandeau etait branchee correctement mais affichait un contenu fige depuis la version 1.7.1 (l'appli en est a la 1.19.0), et jusqu'a 3 mecanismes de popup differents et non synchronises coexistaient pour le meme besoin. Le panneau se genere desormais automatiquement a partir du CHANGELOG.md deja tenu a jour, et les popups redondants ont ete retires",
+  "description": "Suite a un incident reel du 14/09/2026 : une dependance (slowapi) a echoue a s'installer pendant une mise a jour, le backend est reste en boucle de crash, et le script de mise a jour s'est quand meme declare reussi en desactivant la page de maintenance - rendant le site inaccessible sans la moindre alerte. MAJ_FSAO.sh verifie desormais que le backend repond reellement avant de toucher a la page de maintenance",
   "changes": [
-    "Correction majeure : le panneau \"Quoi de neuf ?\" du bandeau affichait un contenu fige depuis la version 1.7.1 (ressaisie manuelle abandonnee il y a des mois) alors que l'application en est a la 1.19.0. Son contenu est desormais genere automatiquement a partir de CHANGELOG.md a chaque demarrage du serveur (donc a chaque vraie mise a jour) - plus aucune ressaisie manuelle necessaire pour rester a jour",
-    "Correction : la collection de donnees de ce panneau contenait jusqu'a 6 exemplaires de la meme version (reseed non protege contre les doublons a chaque redemarrage + formulaire de creation sans garde anti double-clic) - dedoublonnee et desormais protegee par un index unique",
-    "Nettoyage : 3 mecanismes de popup \"nouveautes\" distincts et non synchronises coexistaient (le panneau du bandeau, un popup de connexion lisant une autre collection, et un second popup dont la reponse du serveur ne correspondait meme plus au format attendu par le frontend - donc ne s'affichait plus jamais silencieusement). Unifies en une seule source et une seule interface : le panneau du bandeau",
-    "Fiabilite : le formulaire de creation manuelle d'une version (Parametres > section Changelog) est desormais protege par le meme index unique cote serveur, en plus du bouton deja desactive pendant l'enregistrement"
+    "Correction critique (fiabilite du deploiement) : MAJ_FSAO.sh redemarrait le backend et desactivait systematiquement la page de maintenance sans jamais verifier que l'application avait reellement redemarre avec succes - un incident reel a confirme qu'une dependance Python installee en echec (simple avertissement non bloquant) pouvait ainsi passer totalement inapercue, avec le site rendu inaccessible et la mise a jour pourtant marquee 'reussie'",
+    "Le script attend desormais jusqu'a 20 secondes que le backend reponde (GET /api/health) apres son redemarrage, et ne desactive la page de maintenance que si cette verification reussit ; sinon la maintenance reste active et le resultat de la mise a jour est explicitement marque en echec avec la raison"
   ],
   "minVersion": "1.13.0",
   "breaking": false,

@@ -14,8 +14,10 @@
 #   5. Git fetch + reset --hard (vers ref_git_cible, ou origin/main par défaut)
 #   6. Restauration des .env
 #   7. Installation dépendances (pip + yarn + build)
-#   8. Désactivation maintenance
-#   9. Redémarrage du service backend (supervisorctl restart) — pas de reboot OS
+#   8. Redémarrage du backend (supervisorctl restart, pas de reboot OS) puis
+#      vérification qu'il répond réellement (GET /api/health, jusqu'à 20s) -
+#      la page de maintenance n'est désactivée QUE si cette vérification
+#      réussit ; sinon elle reste active et le résultat est marqué en échec
 #
 # Résultat écrit dans /var/log/gmao-iris-update-result.json
 # ================================================================
@@ -333,25 +335,64 @@ rm -rf build_backup 2>/dev/null || true
 cd "$APP_ROOT"
 
 # ═══════════════════════════════════════════════════════════
-# ÉTAPE 8/8 : DÉSACTIVER MAINTENANCE + REDÉMARRAGE
+# ÉTAPE 8/8 : REDÉMARRAGE DU BACKEND + VÉRIFICATION DE SANTÉ
 # ═══════════════════════════════════════════════════════════
-echo "[8/8] Désactivation maintenance et redémarrage..."
+# Le backend est redémarré et sa santé VÉRIFIÉE avant de toucher à la page
+# de maintenance - dans cet ordre precis, et pas l'inverse. Incident du
+# 14/09/2026 : une dependance (slowapi) avait echoue a s'installer a
+# l'etape precedente (simple avertissement, non bloquant), le backend est
+# reste en boucle de crash au redemarrage, et l'ancienne version de ce
+# script desactivait quand meme la page de maintenance puis se declarait
+# "MISE A JOUR REUSSIE" - exposant un site inaccessible sans la moindre
+# alerte. Desormais, la page de maintenance reste active tant que le
+# backend n'a pas repondu.
+echo "[8/8] Redémarrage du backend et vérification de santé..."
 
-# Restaurer la config NGINX originale
-if [ -f "$NGINX_BACKUP" ]; then
-    cp "$NGINX_BACKUP" "$NGINX_REAL"
-    echo "  Config NGINX restaurée"
+RESTART_OK=false
+if command -v supervisorctl &> /dev/null; then
+    if supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1 \
+        || sudo supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1; then
+        RESTART_OK=true
+    else
+        step_fail "Redémarrage du service backend échoué"
+    fi
+else
+    step_fail "supervisorctl introuvable, impossible de redémarrer le backend"
 fi
 
-# Supprimer le flag
-rm -f "$MFLAG"
+BACKEND_HEALTHY=false
+if [ "$RESTART_OK" = true ]; then
+    echo "  Attente de la disponibilité du backend (jusqu'à 20s)..."
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        sleep 2
+        if curl -sf -o /dev/null --max-time 3 "http://127.0.0.1:8001/api/health" 2>/dev/null; then
+            BACKEND_HEALTHY=true
+            break
+        fi
+    done
+fi
 
-# Recharger NGINX
-if nginx -t 2>/dev/null && nginx -s reload 2>/dev/null; then
-    step_ok "NGINX rechargé, maintenance désactivée"
+if [ "$BACKEND_HEALTHY" = true ]; then
+    step_ok "Backend opérationnel (vérifié via /api/health)"
 else
-    systemctl reload nginx 2>/dev/null || true
-    step_warn "NGINX rechargé via systemctl"
+    step_fail "Le backend ne répond pas après redémarrage - page de maintenance CONSERVÉE. Consultez /var/log/gmao-iris-backend.err.log"
+fi
+
+# Désactiver la page de maintenance UNIQUEMENT si le backend répond
+if [ "$BACKEND_HEALTHY" = true ]; then
+    if [ -f "$NGINX_BACKUP" ]; then
+        cp "$NGINX_BACKUP" "$NGINX_REAL"
+        echo "  Config NGINX restaurée"
+    fi
+    rm -f "$MFLAG"
+    if nginx -t 2>/dev/null && nginx -s reload 2>/dev/null; then
+        step_ok "NGINX rechargé, maintenance désactivée"
+    else
+        systemctl reload nginx 2>/dev/null || true
+        step_warn "NGINX rechargé via systemctl"
+    fi
+else
+    echo "  Page de maintenance laissée active - le site reste dans cet état jusqu'à intervention manuelle"
 fi
 
 # ═══════════════════════════════════════════════════════════
@@ -374,21 +415,3 @@ else
 fi
 
 write_result "$SUCCESS"
-
-# ═══════════════════════════════════════════════════════════
-# REDÉMARRAGE DU SERVICE (pas de reboot complet du serveur)
-# ═══════════════════════════════════════════════════════════
-# Un simple redémarrage du programme Supervisor suffit à charger le nouveau
-# code (backend Python + build frontend déjà recompilé plus haut) : quelques
-# secondes au lieu d'un reboot OS complet (1 à plusieurs minutes), et
-# MongoDB/nginx ne sont jamais interrompus.
-echo ""
-echo "Redémarrage du service applicatif..."
-sleep 2
-if command -v supervisorctl &> /dev/null; then
-    supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1 \
-        || sudo supervisorctl restart "$SUPERVISOR_PROGRAM" >> "$LOG_FILE" 2>&1 \
-        || step_warn "Redémarrage du service backend échoué (redémarrez-le manuellement)"
-else
-    step_warn "supervisorctl introuvable, redémarrez le backend manuellement"
-fi

@@ -1,5 +1,12 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.20.1 - Script de mise a jour : verification de sante avant desactivation de la maintenance (Septembre 2026)
+
+Suite directe d'un incident reel survenu le 14/09/2026 : une mise a jour vers la 1.18.0 a rendu l'application totalement inaccessible (en local comme a distance) sans que rien ne le signale.
+
+- **Correction critique** : `MAJ_FSAO.sh` redemarrait le backend puis desactivait systematiquement la page de maintenance, sans jamais verifier que l'application avait reellement redemarre avec succes. Dans l'incident reel, une dependance Python (`slowapi`) avait echoue a s'installer - traite comme un simple avertissement non bloquant par le script - et le backend est reste en boucle de crash au redemarrage (`ModuleNotFoundError`). Le script s'est quand meme declare "MISE A JOUR REUSSIE" en coupant la page de maintenance, exposant un site casse sans la moindre alerte visible dans les logs de resultat.
+- Le script attend desormais jusqu'a 20 secondes que le backend reponde reellement (`GET /api/health`) apres son redemarrage, et ne desactive la page de maintenance que si cette verification reussit. En cas d'echec, la maintenance reste active et le resultat de la mise a jour est explicitement marque en echec avec la raison, au lieu d'un faux "succes".
+
 ## Version 1.20.0 - Quoi de neuf ? : contenu auto-genere, fin des popups en double (Septembre 2026)
 
 Suite a l'audit de l'icone "Quoi de neuf ?" du bandeau, demande apres avoir constate qu'elle ne semblait plus rien faire d'utile.
