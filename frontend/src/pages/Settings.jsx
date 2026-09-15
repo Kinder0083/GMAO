@@ -40,11 +40,37 @@ const Settings = () => {
     language: 'fr'
   });
   const [users, setUsers] = useState([]);
+  const [serverPushStatus, setServerPushStatus] = useState(null); // {status: 'active'|'expired'|'never', reason}
 
   useEffect(() => {
     loadUserProfile();
     loadUsers();
+    loadServerPushStatus();
   }, []);
+
+  // Vérifie côté serveur l'état réel du dernier abonnement push de cet utilisateur.
+  // Le navigateur peut croire qu'il est abonné (isSubscribed) alors que le serveur a
+  // désactivé cet abonnement suite à des échecs de livraison répétés (410 Gone, clé
+  // VAPID changée...) - ce décalage silencieux était invisible avant ce correctif.
+  const loadServerPushStatus = async () => {
+    try {
+      const response = await api.get('/web-push/subscriptions');
+      const subs = response.data?.subscriptions || [];
+      if (subs.length === 0) {
+        setServerPushStatus({ status: 'never' });
+        return;
+      }
+      const sorted = [...subs].sort((a, b) => new Date(b.updated_at || 0) - new Date(a.updated_at || 0));
+      const latest = sorted[0];
+      setServerPushStatus({
+        status: latest.is_active ? 'active' : 'expired',
+        reason: latest.deactivation_reason
+      });
+    } catch (error) {
+      // Silencieux : indicateur secondaire, ne doit pas bloquer le reste de la page
+      setServerPushStatus(null);
+    }
+  };
 
   // Charger le responsable de service quand le service change
   useEffect(() => {
@@ -353,6 +379,19 @@ const Settings = () => {
                   )}
                 </div>
 
+                {/* Alerte si le serveur a désactivé l'abonnement (échecs de livraison répétés)
+                    alors que le navigateur pense encore être abonné */}
+                {serverPushStatus?.status === 'expired' && permission === 'granted' && isSubscribed && (
+                  <div className="flex items-start gap-2 mb-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                    <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-sm text-amber-700">
+                      Le serveur a détecté que votre abonnement ne délivre plus les notifications
+                      {serverPushStatus.reason ? ` (${serverPushStatus.reason})` : ''} et l'a désactivé.
+                      Cliquez sur « Envoyer une notification test » pour le renouveler.
+                    </span>
+                  </div>
+                )}
+
                 <div className="flex gap-2">
                   <Button
                     variant={permission === 'granted' && isSubscribed ? 'outline' : 'default'}
@@ -419,6 +458,7 @@ const Settings = () => {
                         toast({ title: 'Erreur', variant: 'destructive' });
                       } finally {
                         setNotifLoading(false);
+                        loadServerPushStatus();
                       }
                     }}
                     data-testid="enable-notifications-btn"
@@ -442,6 +482,7 @@ const Settings = () => {
                           toast({ title: 'Erreur', variant: 'destructive' });
                         } finally {
                           setNotifLoading(false);
+                          loadServerPushStatus();
                         }
                       }}
                       data-testid="disable-notifications-btn"

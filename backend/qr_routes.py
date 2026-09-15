@@ -15,6 +15,7 @@ import os
 import logging
 
 from llm_service import ask_llm, LLMNotConfiguredError
+from background_tasks import fire_and_forget
 
 logger = logging.getLogger(__name__)
 
@@ -522,7 +523,7 @@ async def create_public_intervention_request(request: Request, data: dict):
     # serveur SMTP est indisponible.
     equip_nom = eq_info.get("nom", "N/A") if eq_info else "N/A"
     loc_nom = loc_info.get("nom", "") if loc_info else ""
-    asyncio.create_task(_notify_admins_public_intervention(
+    fire_and_forget(_notify_admins_public_intervention(
         request_id, titre, description, demandeur_nom, priorite, equip_nom, loc_nom
     ))
 
@@ -791,7 +792,7 @@ async def create_public_presqu_accident(request: Request, data: dict):
 
     # Notification email aux admins : lancee en arriere-plan (voir _notify_admins_public_intervention
     # pour la meme raison - ne jamais faire attendre le declarant pour un envoi SMTP potentiellement lent)
-    asyncio.create_task(_notify_admins_public_presqu_accident(
+    fire_and_forget(_notify_admins_public_presqu_accident(
         item_id, titre, description, declarant, severite, equipement_nom
     ))
 

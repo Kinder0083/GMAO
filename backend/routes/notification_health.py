@@ -6,6 +6,7 @@ from bson import ObjectId
 from datetime import datetime, timezone, timedelta
 from typing import List, Optional, Dict, Any
 from pathlib import Path
+import asyncio
 import logging
 import os
 
@@ -70,12 +71,6 @@ async def _check_notification_health_internal():
         # 3. Expo tokens
         active_tokens = await db.device_tokens.count_documents({"is_active": True})
         total_tokens = await db.device_tokens.count_documents({})
-        result["expo_tokens"] = {
-            "status": "ok",
-            "active": active_tokens,
-            "total": total_tokens,
-            "message": f"{active_tokens} actif(s) / {total_tokens} total"
-        }
 
         # 4. Recent notification activity (last 24h from logs in notification_health_logs)
         cutoff_24h = now - timedelta(hours=24)
@@ -85,6 +80,27 @@ async def _check_notification_health_internal():
         recent_failed = await db.notification_health_logs.count_documents({
             "type": "failed", "timestamp": {"$gte": cutoff_24h}
         })
+
+        # Activite propre au canal Expo (mobile) : avant le fix du 09/2026, seul le canal
+        # Web Push journalisait dans notification_health_logs - le canal mobile pouvait
+        # echouer silencieusement sans jamais apparaitre ici.
+        expo_recent_sent = await db.notification_health_logs.count_documents({
+            "type": "sent", "channel": "expo", "timestamp": {"$gte": cutoff_24h}
+        })
+        expo_recent_failed = await db.notification_health_logs.count_documents({
+            "type": "failed", "channel": "expo", "timestamp": {"$gte": cutoff_24h}
+        })
+        expo_status = "ok"
+        if active_tokens > 0 and expo_recent_failed > 0 and expo_recent_failed >= expo_recent_sent:
+            expo_status = "warning"
+        result["expo_tokens"] = {
+            "status": expo_status,
+            "active": active_tokens,
+            "total": total_tokens,
+            "recent_sent": expo_recent_sent,
+            "recent_failed": expo_recent_failed,
+            "message": f"{active_tokens} actif(s) / {total_tokens} total"
+        }
         # Get recent error details
         recent_errors = []
         async for err_doc in db.notification_health_logs.find(
@@ -183,13 +199,17 @@ async def check_notification_health_cron():
             try:
                 # Utiliser _id comme fallback si le champ "id" n'existe pas en DB
                 admin_cursor = db.users.find(
-                    {"role": "ADMIN", "statut": {"$in": ["actif", "ACTIF"]}}
+                    {"role": "ADMIN", "statut": {"$in": ["actif", "ACTIF"]}},
+                    {"_id": 1, "id": 1, "email": 1}
                 )
                 admin_ids = []
+                admin_emails = []
                 async for doc in admin_cursor:
                     uid = str(doc.get("id") or doc["_id"])
                     if uid:
                         admin_ids.append(uid)
+                    if doc.get("email"):
+                        admin_emails.append(doc["email"])
                 if admin_ids:
                     from web_push import send_web_push_to_users
                     await send_web_push_to_users(
@@ -199,6 +219,33 @@ async def check_notification_health_cron():
                         data={"type": "system_alert"},
                         tag="notif-health-alert"
                     )
+
+                # Repli email : si le canal en panne est justement le Web Push (ou tout le
+                # systeme), l'alerte ci-dessus ne peut jamais arriver aux admins. Limite a un
+                # envoi toutes les 4h tant que l'erreur persiste, pour ne pas spammer.
+                if admin_emails:
+                    last_alert = await db.notification_health_checks.find_one(
+                        {"check_type": "email_alert_sent"}, sort=[("timestamp", -1)]
+                    )
+                    cooldown_ok = True
+                    if last_alert and last_alert.get("timestamp"):
+                        age_h = (now - last_alert["timestamp"]).total_seconds() / 3600
+                        cooldown_ok = age_h >= 4
+                    if cooldown_ok:
+                        import email_service
+                        subject = "[FSAO Iris] Systeme de notification en erreur"
+                        html = (
+                            "<p>Le systeme de notification (cloche/push) de FSAO Iris est en erreur "
+                            "depuis au moins un cycle de verification (30 min).</p>"
+                            f"<p>{result.get('last_notifications', {}).get('message', '')}</p>"
+                            "<p>Consultez Parametres systeme &gt; Sante Systeme &gt; Notifications pour le detail.</p>"
+                        )
+                        for admin_email in admin_emails:
+                            await asyncio.to_thread(email_service.send_email, admin_email, subject, html)
+                        await db.notification_health_checks.insert_one({
+                            "check_type": "email_alert_sent",
+                            "timestamp": now
+                        })
             except Exception as alert_err:
                 logger.warning(f"[NOTIF HEALTH] Impossible d'alerter les admins: {alert_err}")
         else:

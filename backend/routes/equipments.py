@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import List, Optional
 import logging
 import asyncio
+from background_tasks import fire_and_forget
 
 from models import (
     Equipment, EquipmentCreate, EquipmentUpdate, EquipmentStatus,
@@ -393,8 +394,13 @@ async def update_equipment(eq_id: str, eq_update: EquipmentUpdate, current_user:
             if update_data.get("statut") == "HORS_SERVICE" and old_statut != "HORS_SERVICE":
                 try:
                     from web_push import notify_equipment_alert_web
-                    asyncio.create_task(
-                        notify_equipment_alert_web(db, {**existing_eq, **update_data}, "PANNE")
+                    from routes.notifications import notify_equipment_alert_bell
+                    merged_eq = {**existing_eq, **update_data}
+                    fire_and_forget(
+                        notify_equipment_alert_web(db, merged_eq, "PANNE")
+                    )
+                    fire_and_forget(
+                        notify_equipment_alert_bell(db, eq_id, merged_eq.get("nom", ""), "L'équipement est hors service")
                     )
                 except Exception as e:
                     logger.warning(f"[PUSH] Erreur alerte équipement (update): {e}")
@@ -584,7 +590,8 @@ async def update_equipment_status(
             if new_statut_value_check == "HORS_SERVICE" and old_statut != "HORS_SERVICE":
                 from notifications import notify_equipment_alert
                 from web_push import notify_equipment_alert_web
-                asyncio.create_task(
+                from routes.notifications import notify_equipment_alert_bell
+                fire_and_forget(
                     notify_equipment_alert(
                         db=db,
                         equipment_id=eq_id,
@@ -594,8 +601,12 @@ async def update_equipment_status(
                     )
                 )
                 # Web Push PWA
-                asyncio.create_task(
+                fire_and_forget(
                     notify_equipment_alert_web(db, equipment, "PANNE")
+                )
+                # Cloche in-app
+                fire_and_forget(
+                    notify_equipment_alert_bell(db, eq_id, equipment.get("nom", ""), "L'équipement est hors service")
                 )
             
             # Enregistrer dans l'historique (upsert pour écraser si même heure)

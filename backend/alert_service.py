@@ -1,11 +1,13 @@
 """
 Service de gestion des alertes et actions automatiques
 """
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import List, Dict, Optional
 from uuid import uuid4
 from models import AlertType, AlertSeverity, AlertAction
+import email_service
 
 logger = logging.getLogger(__name__)
 
@@ -157,13 +159,28 @@ class AlertService:
             if not recipients:
                 logger.warning("Aucun destinataire email configuré")
                 return False
-                
-            # TODO: Intégrer avec le service email existant
-            # Pour l'instant, on log juste
-            logger.info(f"Email d'alerte envoyé à {recipients}: {alert['title']}")
-            
-            return True
-            
+
+            subject = f"[Alerte {alert.get('severity', '')}] {alert.get('title', '')}"
+            details = ""
+            if alert.get("value") is not None:
+                details = f"<p><strong>Valeur :</strong> {alert.get('value')} (seuil : {alert.get('threshold')})</p>"
+            html_content = f"""
+                <h2>{alert.get('title', '')}</h2>
+                <p><strong>Source :</strong> {alert.get('source_name', '')}</p>
+                <p>{alert.get('message', '')}</p>
+                {details}
+                <p style="color:#888;font-size:12px;">Alerte générée automatiquement par FSAO Iris.</p>
+            """
+
+            all_sent = True
+            for recipient in recipients:
+                sent = await asyncio.to_thread(email_service.send_email, recipient, subject, html_content)
+                if not sent:
+                    all_sent = False
+
+            logger.info(f"Email d'alerte envoyé à {recipients}: {alert['title']} (succès={all_sent})")
+            return all_sent
+
         except Exception as e:
             logger.error(f"Erreur envoi email alerte: {e}")
             return False

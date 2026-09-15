@@ -4,11 +4,17 @@ Remplace les notifications Expo par des notifications Web Push standard.
 """
 import os
 import json
+import asyncio
 import logging
 from datetime import datetime, timezone, timedelta
 from pywebpush import webpush, WebPushException
 
 logger = logging.getLogger("web_push")
+
+# Codes HTTP transitoires (probleme cote service push, pas cote abonnement) : on retente
+# une fois avant d'abandonner. Les codes permanents (401/403/404/410...) ne sont jamais
+# retentes ici - ils passent directement en desactivation, cf. plus bas.
+_RETRYABLE_STATUS_CODES = {0, 429, 500, 502, 503, 504}
 
 
 def _get_vapid():
@@ -55,24 +61,34 @@ async def send_web_push_to_user(db, user_id: str, title: str, body: str, data: d
             continue
 
         try:
-            webpush(
-                subscription_info=subscription_info,
-                data=payload,
-                vapid_private_key=VAPID_PRIVATE_KEY,
-                vapid_claims={"sub": VAPID_SUBJECT},
-                # TTL=7 jours : FCM/Apple met le message en file d'attente
-                # si l'appareil est éteint ou hors ligne.
-                ttl=604800,
-                # Urgency=high : contourne le mode Doze Android (veille écran)
-                # et force la livraison immédiate même quand le téléphone est en veille.
-                # Sur iOS, cela équivaut à apns-priority=10 (livraison immédiate).
-                headers={"Urgency": "high"}
-            )
+            for attempt in (1, 2):
+                try:
+                    webpush(
+                        subscription_info=subscription_info,
+                        data=payload,
+                        vapid_private_key=VAPID_PRIVATE_KEY,
+                        vapid_claims={"sub": VAPID_SUBJECT},
+                        # TTL=7 jours : FCM/Apple met le message en file d'attente
+                        # si l'appareil est éteint ou hors ligne.
+                        ttl=604800,
+                        # Urgency=high : contourne le mode Doze Android (veille écran)
+                        # et force la livraison immédiate même quand le téléphone est en veille.
+                        # Sur iOS, cela équivaut à apns-priority=10 (livraison immédiate).
+                        headers={"Urgency": "high"}
+                    )
+                    break
+                except WebPushException as e:
+                    retry_status = e.response.status_code if getattr(e, 'response', None) is not None else 0
+                    if attempt == 1 and retry_status in _RETRYABLE_STATUS_CODES:
+                        logger.warning(f"[WEB PUSH] Erreur transitoire (HTTP {retry_status}) -> user {user_id}, nouvelle tentative...")
+                        await asyncio.sleep(1)
+                        continue
+                    raise
             sent += 1
             logger.info(f"[WEB PUSH] OK -> user {user_id} ({sub.get('browser', '?')})")
             try:
                 await db.notification_health_logs.insert_one({
-                    "type": "sent", "user_id": user_id,
+                    "type": "sent", "channel": "web_push", "user_id": user_id,
                     "timestamp": datetime.now(timezone.utc), "tag": tag
                 })
             except Exception:
@@ -132,7 +148,7 @@ async def send_web_push_to_user(db, user_id: str, title: str, body: str, data: d
             errors.append(error_msg[:200])
             try:
                 await db.notification_health_logs.insert_one({
-                    "type": "failed", "user_id": user_id,
+                    "type": "failed", "channel": "web_push", "user_id": user_id,
                     "timestamp": datetime.now(timezone.utc), "error": error_msg[:200]
                 })
             except Exception:

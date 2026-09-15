@@ -70,16 +70,30 @@ async def send_expo_push_notification(
 
     try:
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                EXPO_PUSH_URL,
-                json=messages,
-                headers={
-                    "Accept": "application/json",
-                    "Accept-Encoding": "gzip, deflate",
-                    "Content-Type": "application/json",
-                },
-                timeout=30.0
-            )
+            response = None
+            for attempt in (1, 2):
+                try:
+                    response = await client.post(
+                        EXPO_PUSH_URL,
+                        json=messages,
+                        headers={
+                            "Accept": "application/json",
+                            "Accept-Encoding": "gzip, deflate",
+                            "Content-Type": "application/json",
+                        },
+                        timeout=30.0
+                    )
+                    if attempt == 1 and response.status_code >= 500:
+                        logger.warning(f"Expo push HTTP {response.status_code}, nouvelle tentative...")
+                        await asyncio.sleep(1)
+                        continue
+                    break
+                except httpx.RequestError as e:
+                    if attempt == 1:
+                        logger.warning(f"Expo push erreur reseau ({e}), nouvelle tentative...")
+                        await asyncio.sleep(1)
+                        continue
+                    raise
             result = response.json()
             logger.info(f"Push notification sent: {len(messages)} message(s)")
 
@@ -89,6 +103,7 @@ async def send_expo_push_notification(
                 tickets_data = result.get("data", [])
                 receipts_to_insert = []
                 tokens_to_remove = []
+                health_logs_to_insert = []
                 now = datetime.now(timezone.utc)
 
                 for i, ticket in enumerate(tickets_data):
@@ -107,12 +122,21 @@ async def send_expo_push_notification(
                             "created_at": now,
                             "checked": False
                         })
+                        health_logs_to_insert.append({
+                            "type": "sent", "channel": "expo",
+                            "push_token": push_token[:30], "timestamp": now
+                        })
                     elif ticket_status == "error":
                         # Token immediately rejected - check if DeviceNotRegistered
                         error_detail = ticket.get("details", {}).get("error", "")
                         if error_detail == "DeviceNotRegistered":
                             tokens_to_remove.append(push_token)
                             logger.info(f"Token invalide (immediat): {push_token[:30]}...")
+                        health_logs_to_insert.append({
+                            "type": "failed", "channel": "expo",
+                            "error": error_detail or ticket.get("message", "")[:200],
+                            "timestamp": now
+                        })
 
                 # Store receipts for valid tickets
                 if receipts_to_insert:
@@ -121,6 +145,14 @@ async def send_expo_push_notification(
                         logger.info(f"Stored {len(receipts_to_insert)} push receipt ticket(s)")
                     except Exception as e:
                         logger.warning(f"Failed to store push receipts: {e}")
+
+                # Journaliser la sante du canal Expo (meme collection que le canal Web Push,
+                # pour que /health/notifications reflete aussi les echecs de livraison mobile)
+                if health_logs_to_insert:
+                    try:
+                        await use_db.notification_health_logs.insert_many(health_logs_to_insert)
+                    except Exception as e:
+                        logger.warning(f"Failed to store expo health logs: {e}")
 
                 # Immediately remove invalid tokens
                 if tokens_to_remove:
@@ -425,96 +457,31 @@ router = APIRouter(prefix="/push-notifications", tags=["Push Notifications"])
 async def register_device_token(
     token_data: DeviceTokenCreate,
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_database)
 ):
-    """Register a device push token for the current user.
-    Desactive automatiquement les anciens tokens du meme appareil."""
-    try:
-        user_id = str(current_user["id"])
-        now = datetime.now(timezone.utc)
-
-        # Desactiver les anciens tokens du meme appareil/utilisateur
-        # (important lors du remplacement d'un APK avec nouveau sender ID)
-        if token_data.device_name:
-            await db.device_tokens.update_many(
-                {
-                    "user_id": user_id,
-                    "device_name": token_data.device_name,
-                    "push_token": {"$ne": token_data.push_token}
-                },
-                {"$set": {"is_active": False, "updated_at": now}}
-            )
-
-        # Upsert: si le push_token existe deja, on met a jour
-        result = await db.device_tokens.update_one(
-            {"push_token": token_data.push_token},
-            {"$set": {
-                "user_id": user_id,
-                "platform": token_data.platform,
-                "device_name": token_data.device_name,
-                "updated_at": now,
-                "is_active": True
-            },
-            "$setOnInsert": {
-                "created_at": now
-            }},
-            upsert=True
-        )
-
-        if result.upserted_id:
-            logger.info(f"[PUSH REGISTER] Nouveau token pour user {user_id} device {token_data.device_name}")
-            return {"message": "Token registered", "token_id": str(result.upserted_id)}
-        logger.info(f"[PUSH REGISTER] Token mis a jour pour user {user_id}")
-        return {"message": "Token updated"}
-    except Exception as e:
-        logger.error(f"[PUSH REGISTER] ERROR: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    """[Alias legacy] Equivalent de POST /api/notifications/register.
+    Conserve pour compatibilite avec d'anciennes versions de l'app mobile qui
+    appelaient ce chemin - la logique vit desormais dans routes.notifications
+    (chemin documente dans PROMPT_AGENT_MOBILE_NOTIFICATIONS.md). Import local
+    pour eviter l'import circulaire (routes.notifications importe ce module)."""
+    from routes.notifications import mobile_register_device_token
+    return await mobile_register_device_token(token_data, current_user)
 
 @router.delete("/unregister")
 async def unregister_device_token(
     push_token: str,
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_database)
 ):
-    """Unregister a device push token."""
-    user_id = str(current_user["id"])
-
-    result = await db.device_tokens.update_one(
-        {"user_id": user_id, "push_token": push_token},
-        {"$set": {"is_active": False, "updated_at": datetime.now(timezone.utc)}}
-    )
-
-    if result.modified_count == 0:
-        raise HTTPException(status_code=404, detail="Token not found")
-
-    return {"message": "Token unregistered"}
+    """[Alias legacy] Equivalent de DELETE /api/notifications/unregister."""
+    from routes.notifications import mobile_unregister_device_token
+    return await mobile_unregister_device_token(push_token, current_user)
 
 @router.post("/test")
 async def test_notification(
     current_user: dict = Depends(get_current_user),
-    db=Depends(get_database)
 ):
-    """Send a test notification to the current user."""
-    user_id = str(current_user["id"])
-
-    tokens_cursor = db.device_tokens.find({
-        "user_id": user_id,
-        "is_active": True
-    })
-    tokens = [doc["push_token"] async for doc in tokens_cursor]
-
-    if not tokens:
-        raise HTTPException(status_code=404, detail="No registered devices")
-
-    result = await send_expo_push_notification(
-        push_tokens=tokens,
-        title="Test de notification",
-        body="Les notifications fonctionnent correctement !",
-        data={"type": "test"},
-        db=db
-    )
-
-    return result
+    """[Alias legacy] Equivalent de POST /api/notifications/test."""
+    from routes.notifications import mobile_test_notification
+    return await mobile_test_notification(current_user)
 
 
 @router.post("/test/{user_id}")

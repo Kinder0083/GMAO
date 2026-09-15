@@ -9,3 +9,4 @@ export { default as GuidedTourSettings } from './GuidedTourSettings';
 export { default as DataResetSettings } from './DataResetSettings';
 export { default as ChangelogAdmin } from './ChangelogAdmin';
 export { default as QRActionsAdmin } from './QRActionsAdmin';
+export { default as NotificationHealthPointer } from './NotificationHealthPointer';

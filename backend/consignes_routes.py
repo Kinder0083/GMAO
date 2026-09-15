@@ -17,6 +17,7 @@ from websocket_manager import manager as chat_ws_manager
 from routes.shared import find_user_flexible
 # Import web push pour les notifications même app fermée
 from web_push import send_web_push_to_user
+from background_tasks import fire_and_forget
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -263,6 +264,23 @@ async def send_consigne(
                 logger.debug(f"   - Web Push: aucun abonnement actif pour {recipient_name}")
         except Exception as e:
             logger.warning(f"⚠️ Erreur Web Push consigne: {e}")
+
+        # Cloche in-app (persiste même si la popup temps réel est manquée)
+        try:
+            from routes.notifications import create_notification
+            fire_and_forget(
+                create_notification(
+                    user_id=normalized_recipient_id,
+                    notif_type="consigne",
+                    title=f"Consigne de {sender_name}",
+                    message=data.message[:200] if len(data.message) > 200 else data.message,
+                    priority="high",
+                    link=None,
+                    metadata={"consigne_id": consigne_id}
+                )
+            )
+        except Exception as e:
+            logger.warning(f"⚠️ Erreur notification cloche consigne: {e}")
 
         # Log dans le journal d'audit
         if audit_service:

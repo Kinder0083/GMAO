@@ -218,6 +218,7 @@ async def web_push_users_status(
     return {"users": result}
 
 
+@router.get("/web-push/subscriptions", tags=["Web Push PWA"])
 async def web_push_list_subscriptions(
     current_user: dict = Depends(get_current_user),
 ):
@@ -739,13 +740,12 @@ async def create_rp_notification(
                 "read_at": None
             }
             await db.notifications.insert_one(notification)
-            
-            # Émettre via WebSocket
+
+            # Émettre via WebSocket (ne pas exclure le destinataire, cf. create_notification)
             await _get_realtime_manager().emit_event(
                 "notification",
                 "created",
-                notification,
-                user_id=user_id
+                notification
             )
             notifications_created += 1
         
@@ -779,19 +779,47 @@ async def create_notification(
             "read_at": None
         }
         await db.notifications.insert_one(notification)
-        
-        # Émettre via WebSocket pour notification temps réel
+
+        # Émettre via WebSocket pour notification temps réel.
+        # Ne PAS passer user_id ici : ce paramètre exclut son destinataire du
+        # broadcast (il sert à exclure l'auteur d'une action de son propre
+        # écho), et user_id désigne ici le destinataire de la notification -
+        # l'exclure l'empêchait de recevoir son propre événement temps réel.
         await _get_realtime_manager().emit_event(
             "notification",
             "created",
-            notification,
-            user_id=user_id
+            notification
         )
-        
+
         return notification
     except Exception as e:
         logger.error(f"Erreur création notification: {e}")
         return None
+
+
+async def notify_equipment_alert_bell(db, equipment_id: str, equipment_name: str, alert_message: str):
+    """Crée une notification in-app (cloche) pour les admins/techniciens actifs lors d'une alerte équipement.
+    Utilise la même définition des destinataires que web_push.notify_equipment_alert_web."""
+    try:
+        user_ids = []
+        async for user in db.users.find(
+            {"statut": {"$in": ["ACTIF", "actif"]}, "role": {"$in": ["ADMIN", "TECHNICIEN"]}},
+            {"_id": 0, "id": 1}
+        ):
+            if user.get("id"):
+                user_ids.append(str(user["id"]))
+        for uid in user_ids:
+            await create_notification(
+                user_id=uid,
+                notif_type="equipment_status",
+                title="Alerte équipement",
+                message=f"{equipment_name} : {alert_message}",
+                priority="high",
+                link=f"/assets/{equipment_id}",
+                metadata={"equipment_id": equipment_id}
+            )
+    except Exception as e:
+        logger.error(f"Erreur création notification cloche alerte équipement: {e}")
 
 async def check_pm_notifications():
     """

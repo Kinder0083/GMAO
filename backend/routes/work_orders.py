@@ -14,6 +14,7 @@ import mimetypes
 import asyncio
 import aiofiles
 import logging
+from background_tasks import fire_and_forget
 
 from models import (
     WorkOrder, WorkOrderCreate, WorkOrderUpdate, WorkOrderStatus,
@@ -60,12 +61,14 @@ async def notify_service_assignment(wo_dict: dict, service_name: str, current_us
             **NOT_DELETED
         }, {"_id": 0, "id": 1}).to_list(length=200)
 
+        from routes.notifications import create_notification
+
         notified = 0
         for member in members:
             uid = member.get("id")
             if uid and uid != current_user_id:
                 etapes_count = len(wo_dict.get("etapes_realisation") or [])
-                asyncio.create_task(
+                fire_and_forget(
                     notify_work_order_assigned(
                         db=db,
                         work_order_id=wo_dict.get("id", ""),
@@ -75,8 +78,19 @@ async def notify_service_assignment(wo_dict: dict, service_name: str, current_us
                         etapes_count=etapes_count
                     )
                 )
-                asyncio.create_task(
+                fire_and_forget(
                     notify_work_order_assigned_web(db, wo_dict, uid, current_user_id)
+                )
+                fire_and_forget(
+                    create_notification(
+                        user_id=uid,
+                        notif_type="wo_assigned",
+                        title="Nouveau bon de travail assigné",
+                        message=f"#{wo_dict.get('numero', '')} : {wo_dict.get('titre', '')}",
+                        priority="medium",
+                        link="/work-orders",
+                        metadata={"work_order_id": wo_dict.get("id", "")}
+                    )
                 )
                 notified += 1
         logger.info(f"[PUSH] Notification service {service_name}: {notified} membre(s) notifié(s) (sur {len(members)} trouvé(s))")
@@ -294,14 +308,15 @@ async def create_work_order(wo_create: WorkOrderCreate, current_user: dict = Dep
     # Notification push
     logger.info(f"[PUSH TRIGGER CREATE] assigne_a_id={wo_create.assigne_a_id}, assigne_type={wo_create.assigne_type}, assigne_service={wo_create.assigne_service}")
     if wo_create.assigne_type == "service" and wo_create.assigne_service:
-        asyncio.create_task(
+        fire_and_forget(
             notify_service_assignment(wo, wo_create.assigne_service, current_user.get("id"))
         )
     elif wo_create.assigne_a_id and wo_create.assigne_a_id != current_user.get("id"):
         from notifications import notify_work_order_assigned
         from web_push import notify_work_order_assigned_web
+        from routes.notifications import create_notification
         logger.info(f"[PUSH TRIGGER CREATE] Envoi notification a {wo_create.assigne_a_id}")
-        asyncio.create_task(
+        fire_and_forget(
             notify_work_order_assigned(
                 db=db, work_order_id=wo.get("id", ""),
                 work_order_title=wo_create.titre, work_order_numero=numero,
@@ -309,8 +324,19 @@ async def create_work_order(wo_create: WorkOrderCreate, current_user: dict = Dep
                 etapes_count=len(wo_dict.get("etapes_realisation") or [])
             )
         )
-        asyncio.create_task(
+        fire_and_forget(
             notify_work_order_assigned_web(db, wo, wo_create.assigne_a_id, current_user.get("id"))
+        )
+        fire_and_forget(
+            create_notification(
+                user_id=wo_create.assigne_a_id,
+                notif_type="wo_assigned",
+                title="Nouveau bon de travail assigné",
+                message=f"#{numero} : {wo_create.titre}",
+                priority="medium",
+                link="/work-orders",
+                metadata={"work_order_id": wo.get("id", "")}
+            )
         )
     elif wo_create.assigne_a_id == current_user.get("id"):
         logger.info("[PUSH TRIGGER CREATE] Auto-assignation, pas de notification")
@@ -438,17 +464,18 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
         # Notifications push
         from notifications import notify_work_order_assigned, notify_work_order_status_changed
         from web_push import notify_work_order_assigned_web, notify_work_order_status_changed_web
+        from routes.notifications import create_notification
 
         logger.info(f"[PUSH TRIGGER UPDATE] update_data keys={list(update_data.keys())}")
         if "assigne_type" in update_data and update_data.get("assigne_type") == "service" and update_data.get("assigne_service"):
-            asyncio.create_task(notify_service_assignment(wo, update_data["assigne_service"], current_user.get("id")))
+            fire_and_forget(notify_service_assignment(wo, update_data["assigne_service"], current_user.get("id")))
         elif "assigne_a_id" in update_data and update_data.get("assigne_a_id"):
             new_assigne = update_data["assigne_a_id"]
             old_assigne = existing_wo.get("assigne_a_id")
             logger.info(f"[PUSH TRIGGER UPDATE] Assignation: old={old_assigne} -> new={new_assigne}")
             if new_assigne != old_assigne:
                 etapes_count_update = len(wo.get("etapes_realisation") or existing_wo.get("etapes_realisation") or [])
-                asyncio.create_task(
+                fire_and_forget(
                     notify_work_order_assigned(
                         db=db, work_order_id=wo.get("id", ""),
                         work_order_title=existing_wo.get("titre", ""),
@@ -457,7 +484,18 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
                         etapes_count=etapes_count_update
                     )
                 )
-                asyncio.create_task(notify_work_order_assigned_web(db, wo, new_assigne, current_user.get("id")))
+                fire_and_forget(notify_work_order_assigned_web(db, wo, new_assigne, current_user.get("id")))
+                fire_and_forget(
+                    create_notification(
+                        user_id=new_assigne,
+                        notif_type="wo_assigned",
+                        title="Nouveau bon de travail assigné",
+                        message=f"#{existing_wo.get('numero', '')} : {existing_wo.get('titre', '')}",
+                        priority="medium",
+                        link="/work-orders",
+                        metadata={"work_order_id": wo.get("id", "")}
+                    )
+                )
 
         if "statut" in update_data and existing_wo.get("statut") != update_data["statut"]:
             notify_ids = []
@@ -467,7 +505,7 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
                 notify_ids.append(str(existing_wo["assigne_a_id"]))
             notify_ids = list(set(notify_ids) - {str(current_user.get("id"))})
             if notify_ids:
-                asyncio.create_task(
+                fire_and_forget(
                     notify_work_order_status_changed(
                         db=db, work_order_id=wo.get("id", ""),
                         work_order_title=existing_wo.get("titre", ""),
@@ -477,9 +515,21 @@ async def update_work_order(wo_id: str, wo_update: WorkOrderUpdate, current_user
                         notify_user_ids=notify_ids
                     )
                 )
-                asyncio.create_task(
+                fire_and_forget(
                     notify_work_order_status_changed_web(db, wo, existing_wo.get("statut", ""), update_data["statut"], current_user.get("id"))
                 )
+                for _notify_uid in notify_ids:
+                    fire_and_forget(
+                        create_notification(
+                            user_id=_notify_uid,
+                            notif_type="wo_status",
+                            title="Statut du bon de travail modifié",
+                            message=f"#{existing_wo.get('numero', '')} {existing_wo.get('titre', '')[:40]} → {update_data['statut']}",
+                            priority="medium",
+                            link="/work-orders",
+                            metadata={"work_order_id": wo.get("id", "")}
+                        )
+                    )
 
         from realtime_manager import realtime_manager
         from realtime_events import EntityType as RealtimeEntityType, EventType as RealtimeEventType

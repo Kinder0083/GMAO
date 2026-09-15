@@ -9,7 +9,8 @@ import {
   LlmKeysSettings,
   TimezoneSettings,
   DataResetSettings,
-  QRActionsAdmin
+  QRActionsAdmin,
+  NotificationHealthPointer
 } from '../components/Settings';
 import FormAIModelSettings from '../components/Settings/FormAIModelSettings';
 import MESAIModelSettings from '../components/Settings/MESAIModelSettings';
@@ -63,6 +64,9 @@ const SpecialSettings = () => {
 
           {/* Configuration MQTT */}
           <MqttSettings />
+
+          {/* Diagnostic notifications — renvoie vers Santé Système */}
+          <NotificationHealthPointer />
 
           {/* Clés API LLM */}
           <LlmKeysSettings />

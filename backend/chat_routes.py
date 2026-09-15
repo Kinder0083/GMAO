@@ -16,6 +16,7 @@ import os
 import uuid
 import shutil
 from email_service import send_email
+from background_tasks import fire_and_forget
 
 logger = logging.getLogger(__name__)
 
@@ -353,7 +354,7 @@ async def create_message(
     if message_data.recipient_ids:
         import asyncio
         from notifications import notify_chat_message
-        asyncio.create_task(
+        fire_and_forget(
             notify_chat_message(
                 db=db,
                 sender_name=user_name,
@@ -363,9 +364,25 @@ async def create_message(
         )
         # Web Push PWA
         from web_push import notify_chat_message_web
-        asyncio.create_task(
+        fire_and_forget(
             notify_chat_message_web(db, user_name, message_data.message, message_data.recipient_ids, current_user.get("id"))
         )
+        # Cloche in-app
+        from routes.notifications import create_notification
+        chat_preview = message_data.message[:50] + "..." if message_data.message and len(message_data.message) > 50 else (message_data.message or "Fichier partagé")
+        for _recipient_id in message_data.recipient_ids:
+            if str(_recipient_id) != str(current_user.get("id")):
+                fire_and_forget(
+                    create_notification(
+                        user_id=_recipient_id,
+                        notif_type="chat_message",
+                        title=user_name,
+                        message=chat_preview,
+                        priority="low",
+                        link="/chat-live",
+                        metadata={"sender_id": current_user.get("id")}
+                    )
+                )
     
     # Créer une copie propre pour la réponse (sans _id MongoDB)
     response_message = {
@@ -842,7 +859,7 @@ async def create_message_with_files(
         import asyncio
         from notifications import notify_chat_message
         sender_display = f"{current_user.get('prenom', '')} {current_user.get('nom', '')}".strip()
-        asyncio.create_task(
+        fire_and_forget(
             notify_chat_message(
                 db=db,
                 sender_name=sender_display,
@@ -852,9 +869,25 @@ async def create_message_with_files(
         )
         # Web Push PWA
         from web_push import notify_chat_message_web
-        asyncio.create_task(
+        fire_and_forget(
             notify_chat_message_web(db, sender_display, message if message else "Fichier partage", recipient_ids_list, current_user.get("id"))
         )
+        # Cloche in-app
+        from routes.notifications import create_notification
+        chat_preview = message[:50] + "..." if message and len(message) > 50 else (message or "Fichier partagé")
+        for _recipient_id in recipient_ids_list:
+            if str(_recipient_id) != str(current_user.get("id")):
+                fire_and_forget(
+                    create_notification(
+                        user_id=_recipient_id,
+                        notif_type="chat_message",
+                        title=sender_display,
+                        message=chat_preview,
+                        priority="low",
+                        link="/chat-live",
+                        metadata={"sender_id": current_user.get("id")}
+                    )
+                )
     
     # Créer copie propre pour broadcast
     clean_message = {k: v for k, v in chat_message.items() if k != "_id"}

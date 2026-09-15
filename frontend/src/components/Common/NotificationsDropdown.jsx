@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Check, CheckCheck, Trash2, Clock, AlertTriangle, Wrench, X, Zap } from 'lucide-react';
+import { Bell, Check, CheckCheck, Trash2, Clock, AlertTriangle, Wrench, X, Zap, MessageSquare, ClipboardList } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 import { notificationsAPI } from '../../services/api';
@@ -49,12 +49,24 @@ const NotificationsDropdown = () => {
   useEffect(() => {
     loadUnreadCount();
     loadNotifications(); // Charger aussi les notifications pour le compteur RP
-    // Auto-refresh toutes les 30 secondes
+    // Auto-refresh toutes les 30 secondes (filet de sécurité si le WebSocket est indisponible)
     const interval = setInterval(() => {
       loadUnreadCount();
       loadNotifications();
     }, 30000);
-    return () => clearInterval(interval);
+
+    // Rafraîchissement instantané : diffusé par useHeaderWebSocket dès qu'une
+    // notification est créée côté serveur (voir EVENT_MAP côté hook)
+    const handleNotificationCreated = () => {
+      loadUnreadCount();
+      loadNotifications();
+    };
+    window.addEventListener('notificationCreated', handleNotificationCreated);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('notificationCreated', handleNotificationCreated);
+    };
   }, []);
 
   useEffect(() => {
@@ -163,6 +175,10 @@ const NotificationsDropdown = () => {
         return <AlertTriangle className="text-yellow-500" size={18} />;
       case 'sensor_alert':
         return <Zap className="text-red-500" size={18} />;
+      case 'chat_message':
+        return <MessageSquare className="text-purple-500" size={18} />;
+      case 'consigne':
+        return <ClipboardList className="text-indigo-500" size={18} />;
       default:
         return <Bell className="text-gray-500" size={18} />;
     }
