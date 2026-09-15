@@ -1,17 +1,15 @@
 {
-  "version": "1.25.0",
-  "versionName": "Nouveau module RO 5 / RO 30 / TT",
-  "releaseDate": "2026-09-15",
-  "description": "Nouveau carnet de bord quotidien : notez rapidement une observation au clavier ou a la voix, puis demandez a Adria d'analyser la journee - elle propose des demandes d'intervention structurees a confirmer ou corriger avant creation reelle",
+  "version": "1.25.1",
+  "versionName": "Verification de mise a jour : echec reseau demasque",
+  "releaseDate": "2026-09-16",
+  "description": "Un echec de connexion a GitHub lors de la verification de mise a jour (timeout, reseau) etait jusqu'ici silencieusement affiche comme \"vous etes a jour\" - le vrai message d'erreur s'affiche desormais",
   "changes": [
-    "Nouveau menu RO 5 / RO 30 / TT : carnet de bord quotidien avec calendrier, notes ecrites ou dictees a la voix",
-    "Adria analyse les notes non traitees d'une journee et propose une ou plusieurs demandes d'intervention structurees (titre, equipement, priorite, echeance) a confirmer ou corriger",
-    "Chaque demande creee reste tracee jusqu'a la note qui l'a generee",
-    "Le nouveau menu se deplace et se masque comme tout autre menu (Personnalisation), et ses droits se configurent par role (Parametres > Roles)"
+    "Correction : si la verification de mise a jour echoue (reseau, timeout, DNS vers raw.githubusercontent.com), l'application l'affiche desormais clairement au lieu d'indiquer a tort que vous etes deja a jour",
+    "Correction : le bouton de verification rapide dans la cloche de notifications lisait le mauvais champ de la reponse et affichait toujours \"a jour\" meme quand une mise a jour etait reellement disponible"
   ],
   "minVersion": "1.13.0",
   "breaking": false,
   "downloadUrl": "https://github.com/Kinder0083/GMAO",
   "author": "Greg",
-  "lastUpdate": "2026-09-15T00:00:00.000000+00:00"
+  "lastUpdate": "2026-09-16T00:00:00.000000+00:00"
 }

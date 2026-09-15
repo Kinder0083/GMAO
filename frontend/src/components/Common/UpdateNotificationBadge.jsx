@@ -56,24 +56,26 @@ const UpdateNotificationBadge = () => {
       const response = await axios.get(`${BACKEND_URL}/api/updates/check`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
-      if (response.data.available) {
+
+      // Forme reelle de la reponse de /api/updates/check (update_routes.py) :
+      // { current_version, latest_version: {version, versionName, ...}, update_available }
+      if (response.data.update_available) {
         setUpdateAvailable(true);
         setUpdateInfo(response.data);
         toast({
           title: 'Mise à jour disponible',
-          description: `Version ${response.data.new_version} - ${response.data.version_name}`,
+          description: `Version ${response.data.latest_version?.version} - ${response.data.latest_version?.versionName || ''}`,
         });
       } else {
         toast({
           title: 'Application à jour',
-          description: response.data.message || 'Vous disposez de la dernière version',
+          description: 'Vous disposez de la dernière version',
         });
       }
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Impossible de vérifier les mises à jour',
+        description: error.response?.data?.detail || 'Impossible de vérifier les mises à jour',
         variant: 'destructive'
       });
     }

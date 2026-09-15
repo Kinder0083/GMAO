@@ -227,36 +227,33 @@ const Updates = () => {
       setChangelog(changelogRes.data.changelog || []);
       setHistory(historyRes.data.data || []);
       setGitHistory(gitHistoryRes.data.commits || []);
+      return { success: true, updateAvailable: checkRes.data.update_available };
     } catch (error) {
       toast({
         title: 'Erreur',
-        description: 'Impossible de charger les informations de mise à jour',
+        description: error.response?.data?.detail || 'Impossible de charger les informations de mise à jour',
         variant: 'destructive'
       });
+      return { success: false };
     } finally {
       setLoading(false);
     }
   };
 
   const handleCheckUpdates = async () => {
-    try {
-      setLoading(true);
-      await loadUpdateInfo();
+    setLoading(true);
+    const result = await loadUpdateInfo();
+    // loadUpdateInfo affiche deja son propre toast d'erreur en cas d'echec
+    // (reseau, timeout...) - ne pas le recouvrir par un faux "a jour" ici.
+    if (result.success) {
       toast({
         title: 'Vérification terminée',
-        description: updateAvailable 
-          ? '✨ Une nouvelle version est disponible !' 
+        description: result.updateAvailable
+          ? '✨ Une nouvelle version est disponible !'
           : '✅ Vous utilisez la dernière version'
       });
-    } catch (error) {
-      toast({
-        title: 'Erreur',
-        description: 'Impossible de vérifier les mises à jour',
-        variant: 'destructive'
-      });
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const handleApplyUpdate = async () => {

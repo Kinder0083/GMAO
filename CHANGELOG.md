@@ -1,5 +1,13 @@
 # GMAO Iris - Notes de Version
 
+## Version 1.25.1 - Verification de mise a jour : echec reseau demasque (Septembre 2026)
+
+Suite directe d'un signalement utilisateur : apres avoir pousse la 1.25.0, le bouton "Verifier les mises a jour" en production continuait d'indiquer "vous etes a jour".
+
+- **Correction critique** : si la verification de mise a jour echouait (timeout, probleme reseau/DNS vers `raw.githubusercontent.com`), le code capturait silencieusement l'exception et retournait `None`, que la route convertissait ensuite en "aucune mise a jour disponible" - strictement indiscernable d'un vrai "vous etes a jour". Meme famille de piege que l'incident du 14/09/2026 (page de maintenance desactivee a tort). Un echec de verification est desormais explicitement signale avec le message d'erreur reel (timeout, erreur reseau, code HTTP...), au lieu d'etre maquille en succes.
+- **Correction** : le bouton de verification rapide dans la cloche de notifications (`UpdateNotificationBadge.jsx`) lisait `response.data.available`/`new_version` alors que la reponse reelle de `/api/updates/check` expose `update_available`/`latest_version.version` - il affichait donc systematiquement "application a jour", meme quand une mise a jour etait reellement detectee.
+- **Constat au passage (non traite ici)** : deux mecanismes de verification de mise a jour distincts coexistent (`update_manager.py`, utilise par la page Mise a jour, et `update_service.py`, utilise par une route `/updates/status` qui ne compare meme pas la version distante) - meme famille de duplication que le routeur `/user-preferences` signale en 1.21.0. A unifier plus tard.
+
 ## Version 1.25.0 - Nouveau module RO 5 / RO 30 / TT (Septembre 2026)
 
 Nouveau carnet de bord quotidien, pense pour noter tres rapidement une observation ou une demande au fil de la journee (clavier ou dictee), sans avoir a decider sur le moment si ca deviendra une demande d'intervention. Plan valide avec l'utilisateur avant developpement (exploration du code existant, plusieurs allers-retours d'ajustement : DI uniquement - pas de creation directe d'OT, menu geree comme les autres dans Personnalisation et les droits par role).

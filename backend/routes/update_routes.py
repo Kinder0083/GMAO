@@ -34,7 +34,16 @@ async def check_updates(current_user: dict = Depends(get_current_admin_user)):
     """Vérifie si une mise à jour est disponible (admin uniquement)"""
     current = await update_manager.get_current_version()
     latest = await update_manager.check_github_version()
-    
+
+    if latest and latest.get("error"):
+        # Echec reel de la verification (reseau, timeout, DNS...) - a distinguer
+        # explicitement de "pas de mise a jour disponible", sans quoi l'admin
+        # voit a tort "vous etes a jour" alors que la verification a echoue.
+        raise HTTPException(
+            status_code=502,
+            detail=f"Impossible de vérifier les mises à jour sur GitHub : {latest['error']}"
+        )
+
     return {
         "current_version": current,
         "latest_version": latest,

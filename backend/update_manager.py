@@ -5,10 +5,14 @@ import os
 import subprocess
 import asyncio
 import json
+import logging
 from datetime import datetime
 from typing import Optional, Dict, List
 import aiohttp
 from pathlib import Path
+
+logger = logging.getLogger(__name__)
+
 
 class UpdateManager:
     def __init__(self, db):
@@ -98,14 +102,14 @@ class UpdateManager:
             async with aiohttp.ClientSession() as session:
                 async with session.get(version_url, timeout=aiohttp.ClientTimeout(total=8)) as vresp:
                     if vresp.status != 200:
-                        return None
+                        return {"error": f"GitHub a répondu {vresp.status} pour {version_url}"}
                     # raw.githubusercontent.com sert le JSON avec Content-Type: text/plain,
                     # donc content_type=None pour ne pas faire échouer le parsing aiohttp.
                     version_data = await vresp.json(content_type=None)
 
             remote_version = version_data.get("version", "")
             if not remote_version:
-                return None
+                return {"error": "Le fichier version.json distant ne contient pas de champ 'version'"}
 
             self._load_version()
             update_available = self._compare_versions(remote_version, self.current_version) > 0
@@ -138,9 +142,15 @@ class UpdateManager:
                 "changes": version_data.get("changes", [])
             }
 
+        except asyncio.TimeoutError:
+            logger.error("Timeout lors de la vérification de la version GitHub (raw.githubusercontent.com injoignable en 8s)")
+            return {"error": "Timeout - raw.githubusercontent.com n'a pas répondu dans les 8 secondes (accès réseau sortant bloqué ?)"}
+        except aiohttp.ClientError as e:
+            logger.error(f"Erreur réseau lors de la vérification de la version GitHub: {e}")
+            return {"error": f"Erreur réseau : {e}"}
         except Exception as e:
-            print(f"Erreur vérification version GitHub: {e}")
-            return None
+            logger.error(f"Erreur vérification version GitHub: {e}")
+            return {"error": str(e)}
     
     async def get_changelog(self, from_version: str = None) -> List[Dict]:
         """Récupère le changelog depuis GitHub"""
